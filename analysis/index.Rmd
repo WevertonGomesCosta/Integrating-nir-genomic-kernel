@@ -1,11 +1,165 @@
 ---
-title: "Home"
+title: "Integrating NIR Spectroscopy & Genomic Data"
+author: 
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
 site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
-    toc: false
+    toc: FALSE
 editor_options:
   chunk_output_type: console
+github-repo: wevertongomescosta/Integrating-nir-genomic-kernel
 ---
 
-Welcome to my research website.
+# Integrating NIR Spectroscopy & Genomic Data
+
+Bem-vindo! Este repositório reúne código, dados e relatórios associados ao estudo da **integração de espectroscopia no infravermelho próximo (NIR) e dados genômicos para aprimorar a predição fenômica**, utilizando métodos de kernel para capturar relações não lineares e interações complexas entre genótipo, ambiente e espectro.  
+O objetivo é avaliar se a fusão dessas fontes de dados pode aumentar a acurácia preditiva e apoiar programas de melhoramento genético mais eficientes.
+
+![Pipeline de Análise](images/analysis_pipeline.png)
+
+## Publicação Associada
+
+Este trabalho faz parte do Projeto de Pesquisa:
+
+- **Processo**:  
+- **Chamada**:  
+- **Período**:  
+
+## Sobre o LICAE
+
+Este projeto foi desenvolvido no âmbito das pesquisas do [Laboratório de Inteligência Computacional e Aprendizado Estatístico (LICAE)](https://www.licae.ufv.br/) da Universidade Federal de Viçosa (UFV), especializado em aplicações avançadas de inteligência computacional e modelagem estatística em problemas genômicos complexos.
+
+## Recursos Disponíveis
+
+1. **Código de Análise**: Scripts R para pré-processamento, modelagem e avaliação.  
+2. **Dados**:  
+   - **NIR**: espectros pré-processados de amostras biológicas.  
+   - **Genotípicos**: SNPs de genótipos avaliados.  
+   - **Fenotípicos**: produtividade e características agronômicas.  
+   - **Ambientais**: informações de locais, anos e delineamentos experimentais.  
+3. **Notebooks**: Exemplos interativos de análise exploratória, modelagem preditiva e integração de dados.  
+4. **Visualizações**: Gráficos de variância por componente, acurácia (R²), RMSE e rankings de genótipos.
+
+![Arquitetura do Modelo](images/model_architecture.png)
+
+## Como Utilizar
+
+1. Clone o repositório:  
+   ```bash
+   git clone https://github.com/wevertongomescosta/Integrating-nir-genomic-kernel.git
+   ```
+2. Instale as dependências:  
+   ```r
+   renv::restore()
+   ```
+3. Execute o pipeline principal:  
+   ```bash
+   Rscript scripts/main_analysis.R
+   ```
+
+## Contribuição
+
+Contribuições são bem-vindas mediante:  
+- Abertura de *issues* para discussão de melhorias  
+- Submissão de *pull requests* para correções críticas  
+- Sugestões de extensões metodológicas
+
+## Licença
+
+Este trabalho está licenciado sob [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).  
+Para uso comercial ou modificações significativas, contate os autores.
+
+## Contato
+
+**Coordenador**  
+Moyses Nascimento  
+Professor Adjunto - Departamento de Estatística - UFV  
+moysesnascim@ufv.br  
+
+**Bolsista**  
+Weverton Gomes da Costa  
+Pós-Doutorando - Departamento de Estatística - UFV  
+weverton.costa@ufv.br  
+
+**Laboratório LICAE**:  
+licae@ufv.br | [https://www.licae.ufv.br/](https://www.licae.ufv.br/)
+
+
+---
+
+# Integrating NIR Spectroscopy & Genomic Data
+
+Welcome! This repository contains code, data, and reports related to the study of **integrating near-infrared reflectance spectroscopy (NIR) and genomic data to improve phenomic prediction**, using kernel methods to capture non-linear relationships and complex genotype × environment × spectrum interactions.  
+The goal is to assess whether merging these data sources can increase predictive accuracy and support more efficient breeding programs.
+
+![Analysis Pipeline](images/analysis_pipeline.png)
+
+## Associated Publication
+
+This work is part of the Research Project:
+
+- **Process**:  
+- **Call**:  
+- **Period**:  
+
+## About LICAE
+
+This project was developed within the research activities of the [Computational Intelligence and Statistical Learning Laboratory (LICAE)](https://www.licae.ufv.br/) at the Federal University of Viçosa (UFV), specialized in advanced computational intelligence and statistical modeling for complex genomic problems.
+
+## Available Resources
+
+1. **Analysis Code**: R scripts for preprocessing, modeling, and evaluation.  
+2. **Data**:  
+   - **NIR**: preprocessed spectra from biological samples.  
+   - **Genotypic**: SNP data from evaluated genotypes.  
+   - **Phenotypic**: yield and agronomic traits.  
+   - **Environmental**: location, year, and experimental design information.  
+3. **Notebooks**: Interactive examples of exploratory data analysis, predictive modeling, and data integration.  
+4. **Visualizations**: Variance component plots, accuracy (R²), RMSE, and genotype rankings.
+
+![Model Architecture](images/model_architecture.png)
+
+## How to Use
+
+1. Clone the repository:  
+   ```bash
+   git clone https://github.com/wevertongomescosta/Integrating-nir-genomic-kernel.git
+   ```
+2. Install dependencies:  
+   ```r
+   renv::restore()
+   ```
+3. Run the main pipeline:  
+   ```bash
+   Rscript scripts/main_analysis.R
+   ```
+
+## Contribution
+
+Contributions are welcome via:  
+- Opening issues for improvement discussions  
+- Submitting pull requests for critical fixes  
+- Suggesting methodological extensions
+
+## License
+
+This work is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).  
+For commercial use or significant modifications, please contact the authors.
+
+## Contact
+
+**Project Coordinator**  
+Moyses Nascimento  
+Associate Professor – Department of Statistics – UFV  
+moysesnascim@ufv.br  
+
+**Research Fellow**  
+Weverton Gomes da Costa  
+Post-Doctoral Researcher – Department of Statistics – UFV  
+weverton.costa@ufv.br  
+
+**LICAE Laboratory**:  
+licae@ufv.br | [https://www.licae.ufv.br/](https://www.licae.ufv.br/)

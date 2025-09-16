@@ -1,21 +1,49 @@
 ---
 title: "License"
+author: 
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
-    toc: false
+    toc: FALSE
+  highlight: github
 editor_options:
   chunk_output_type: console
+github-repo: wevertongomescosta/Integrating-nir-genomic-kernel
 ---
 
-What license are you using for your code? See [choosealicense.com][choose] for
-help deciding. It's a convention to save a file `LICENSE` in the root of your
-Git repo that contains the license text.
+Este material foi produzido por [Costa, W. G.](https://github.com/WevertonGomesCosta) e está licenciado sob a **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License**.
 
-What license are you using for the written content on your site? It is
-traditional to choose a [Creative Commons][cc] license for this type of content.
+Isso significa que você é livre para:
 
-[choose]: https://choosealicense.com/
-[cc]: https://creativecommons.org/choose/
+- **Compartilhar** – copiar e redistribuir o material em qualquer formato ou mídia  
+- **Adaptar** – remixar, transformar e construir sobre o material  
 
-How should others cite your work? It's a convention to save a file `CITATION`
-in the root of your Git repo that contains the citation information.
+Desde que você siga os termos da licença:
+
+- **Atribuição** – Você deve dar crédito apropriado, fornecer um link para a licença e indicar se foram feitas alterações. Deve fazê-lo de maneira razoável, mas não de forma a sugerir que o licenciante apoia você ou o seu uso.  
+- **Não Comercial** – Você não pode usar o material para fins comerciais.  
+- **Compartilhamento pela mesma licença** – Se você remixar, transformar ou construir sobre o material, deve distribuir suas contribuições sob a mesma licença que o original.  
+
+Para mais informações, consulte a licença completa em:  
+[https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.pt](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.pt)
+
+---
+
+This material was produced by [Costa, W. G.](https://github.com/WevertonGomesCosta) and is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License**.
+
+This means you are free to:
+
+- **Share** – copy and redistribute the material in any format or medium  
+- **Adapt** – remix, transform, and build upon the material  
+
+As long as you follow the license terms:
+
+- **Attribution** – You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.  
+- **Non-Commercial** – You may not use the material for commercial purposes.  
+- **ShareAlike** – If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.  
+
+For more information, see the full license at:  
+[https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)

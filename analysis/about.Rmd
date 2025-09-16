@@ -1,10 +1,49 @@
 ---
 title: "About"
+author: 
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
-    toc: false
+    toc: FALSE
+  highlight: github
 editor_options:
   chunk_output_type: console
+github-repo: wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 ---
 
-Describe your project.
+## 📌 Sobre o Projeto | About the Project  
+
+Este repositório reúne e documenta os dados, códigos e análises utilizados no estudo **"Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Phenomic Prediction Using Kernel Methods"**, que investiga o potencial da integração de espectroscopia no infravermelho próximo (NIR) e dados genômicos para aprimorar a predição fenômica em programas de melhoramento genético.  
+
+O conjunto de dados inclui:  
+- **Espectroscopia NIR**: leituras espectrais de amostras biológicas, abrangendo milhares de bandas no intervalo de 4.000 a 10.000 cm⁻¹, pré-processadas para remoção de ruído e correção de espalhamento.  
+- **Genótipo**: dados de marcadores SNP obtidos por tecnologias de sequenciamento de alta densidade e devidamente filtrados e imputados.  
+- **Fenótipo**: características agronômicas e produtivas medidas em múltiplos ambientes experimentais.  
+- **Ambiente**: informações sobre locais, anos, delineamentos experimentais e repetições.  
+- **Metadados**: estrutura experimental detalhada para permitir análises de variância multiambiente e modelagem de efeitos aleatórios.  
+
+**Objetivo**: avaliar se a fusão de dados espectrais e genômicos, aliada a métodos de kernel, pode aumentar a acurácia da predição fenotípica, capturando relações não lineares e interações complexas entre genótipo, ambiente e espectro.  
+
+**Extensão metodológica**: além da análise de predição, o projeto também explora a decomposição de variância por componentes (Pedigree, Ambiente, Interação G×E, etc.) ao longo das bandas NIR, permitindo identificar regiões espectrais mais informativas para a seleção assistida.  
+
+Este projeto integra as atividades do [LICAE (Laboratório de Inteligência Computacional e Aprendizado Estatístico) da UFV](https://www.licae.ufv.br/).
+
+---
+
+This repository compiles and documents the datasets, code, and analyses used in the study **"Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Phenomic Prediction Using Kernel Methods"**, which investigates the potential of combining near-infrared reflectance spectroscopy (NIR) and genomic data to enhance phenomic prediction in plant breeding programs.  
+
+The dataset includes:  
+- **NIR Spectroscopy**: spectral readings from biological samples, covering thousands of bands in the 4,000–10,000 cm⁻¹ range, preprocessed for noise removal and scatter correction.  
+- **Genotype**: SNP marker data obtained through high-density sequencing technologies, filtered and imputed.  
+- **Phenotype**: agronomic and yield traits measured across multiple experimental environments.  
+- **Environment**: information on locations, years, experimental designs, and replications.  
+- **Metadata**: detailed experimental structure enabling multi-environment variance component analysis and random effects modeling.  
+
+**Goal**: assess whether merging spectral and genomic data, combined with kernel methods, can improve phenotypic prediction accuracy by capturing non-linear relationships and complex genotype × environment × spectrum interactions.  
+
+**Methodological extension**: beyond prediction analysis, the project also explores variance component decomposition (Pedigree, Environment, G×E interaction, etc.) across NIR bands, enabling the identification of spectral regions most informative for assisted selection.  
+
+This project is part of the activities at the [LICAE Laboratory, UFV](https://www.licae.ufv.br/).
