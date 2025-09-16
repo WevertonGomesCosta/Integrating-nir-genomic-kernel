@@ -1,4 +1,11 @@
-# Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Phenomic Prediction Using Kernel Methods
+# Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Phenomic Prediction Using Kernel Methods  
+
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+![R](https://img.shields.io/badge/Made%20with-R-blue.svg)
+![GitHub repo size](https://img.shields.io/github/repo-size/wevertongomescosta/Integrating-nir-genomic-kernel)
+![GitHub last commit](https://img.shields.io/github/last-commit/wevertongomescosta/Integrating-nir-genomic-kernel)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.xxxxxxx.svg)](https://doi.org/10.5281/zenodo.xxxxxxx)
+[![Website](https://img.shields.io/badge/Project%20Site-online-brightgreen)](https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/)
 
 ## 🇧🇷 **Descrição (Português)**
 
