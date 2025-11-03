@@ -2,7 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
-/*.tiff
+*.tiff
 output/results/*.csv
 output/componentes_variance/*.dat
 output/componentes_variance/*.rds
+output/ajuste_modelo/*.dat
+output/ajuste_modelo/*.dat
