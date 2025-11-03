@@ -245,7 +245,7 @@ NIR.all <- rbind(NIR.a, NIR.b, NIR.c, NIR.d)
 dim(NIR.all)
 ```
 
-```{r zp, eval = FALSE}
+```{r zp-2, eval = FALSE}
 # Calcula matriz de relacionamento fenômico
 ZP <- tcrossprod(as.matrix(NIR.all)) / ncol(NIR.all)
 ```
@@ -582,7 +582,7 @@ ZD <- tcrossprod(Z, DG)
 DG_proj <- tcrossprod(ZD, Z)
 ```
 
-```{r ggk, eval = FALSE}
+```{r ggk-1, eval = FALSE}
 # Otimização
 solG <- optim(c(1, 1), margh.fun, y = Pheno$GY, D = DG_proj, q = q05G,
               method = "L-BFGS-B", lower = c(0.05, 0.05), upper = c(6, 30))
@@ -629,7 +629,7 @@ ZD <- tcrossprod(Z0, DP)
 DP_proj <- tcrossprod(ZD, Z0)
 ```
 
-```{r pgk, eval = FALSE}
+```{r pgk-1, eval = FALSE}
 # Otimização
 solP <- optim(c(1, 1), margh.fun, y = Pheno$GY, D = DP_proj, q = q05P,
               method = "L-BFGS-B", lower = c(0.05, 0.05), upper = c(6, 30))
@@ -2296,7 +2296,7 @@ df <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.csv") %>%
     Model = sub("^Eta", "M", sub("\\.csv$", "", ModelRaw))) %>%
   dplyr::select(Model, CV, Trait, Env_Val, Env, Rep, cor)  # remove colunas auxiliares
 
-write.csv(df, "output/Pred.ability/Pred.ability.CV0.CV00.csv")  # Salva consolidação
+write.csv(df, "output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")  # Salva consolidação
 ```
 
 ### 15.3) Consolidação dos resultados dos esquemas CV1 e CV2
@@ -2358,7 +2358,7 @@ df <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.csv") %>%
     Model = sub("^Eta", "M", sub("\\.csv$", "", ModelRaw))) %>%
   dplyr::select(Model, CV, Trait, Env, Rep, cor)  # remove colunas auxiliares
 
-write.csv(df, "output/Pred.ability/Pred.ability.CV1.CV2.csv")  # Salva consolidação
+write.csv(df, "output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")  # Salva consolidação
 ```
 
 Este é o **ponto final deste script de análise**. Os *kernels* e outros objetos gigantes são removidos da memória, deixando apenas os dados fenotípicos brutos.
@@ -2386,7 +2386,7 @@ O primeiro passo é preparar os dados para plotagem.
 
 ```{r pred-ability}
 # Agrupa por modelo, tipo de validação e traço
-df <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.csv")
+df <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")
 
 
 df_cor <- as.data.frame(df %>%
@@ -2620,7 +2620,7 @@ O primeiro passo é preparar os dados para plotagem.
 
 ```{r pred-ability-cv1-cv2-summary}
 # Agrupa por modelo, tipo de validação e traço
-df <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.csv")
+df <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")
 
 df_cor <- as.data.frame(df %>%
                           group_by(Model, CV, Trait) %>%
