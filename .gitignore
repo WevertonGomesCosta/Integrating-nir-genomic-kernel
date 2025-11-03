@@ -4,5 +4,5 @@
 .Ruserdata
 *.tiff
 output/results/*.csv
-.dat
-.rds
+*.dat
+*.rds
