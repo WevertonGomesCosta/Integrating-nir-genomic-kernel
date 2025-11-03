@@ -2,3 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+/*.tiff
+output/results/*.csv
+output/componentes_variance/*.dat
+output/componentes_variance/*.rds
