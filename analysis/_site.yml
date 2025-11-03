@@ -1,17 +1,29 @@
 name: "Integrating-nir-genomic-kernel"
 output_dir: ../docs
 navbar:
-  title: "Integrating-nir-genomic-kernel"
+  title: "NIR and Genomic Kernel Integration"
   left:
   - text: Home
     href: index.html
+  - text: Climate date
+    href: climate_data.html
+  - text: Componentes de Variância
+    href: components_variance.html
+  - text: Análise
+    href: analysis.html
   - text: About
     href: about.html
   - text: License
     href: license.html
+  right:
+  - icon: fa-github
+    text: Source code
+    href: https://github.com/wevertongomescosta/Integrating-nir-genomic-kernel
+
 output:
   workflowr::wflow_html:
     toc: yes
     toc_float: yes
     theme: cosmo
     highlight: textmate
+    df_print: paged
