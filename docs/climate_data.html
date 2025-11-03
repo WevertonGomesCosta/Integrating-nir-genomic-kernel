@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Costa, W. G." />
+
+<meta name="date" content="2025-11-03" />
+
+<title>Tutorial: Preparação de Dados Climáticos (NASA POWER)</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">NIR and Genomic Kernel Integration</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="climate_data.html">Climate date</a>
+</li>
+<li>
+  <a href="components_variance.html">Componentes de Variância</a>
+</li>
+<li>
+  <a href="analysis.html">Análise</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/wevertongomescosta/Integrating-nir-genomic-kernel">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Tutorial: Preparação de Dados Climáticos
+(NASA POWER)</h1>
+<h4 class="author">Costa, W. G.<a href="#fn1" class="footnote-ref"
+id="fnref1"><sup>1</sup></a></h4>
+<h4 class="date">2025-11-03</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2025-11-03
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Integrating-nir-genomic-kernel/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has staged changes. To know which version of the
+R Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20250829code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20250829)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20250829code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20250829)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree80b33044cbb4bb4d42907a12e45b35b81a7ea684targetblank80b3304a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/80b33044cbb4bb4d42907a12e45b35b81a7ea684" target="_blank">80b3304</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree80b33044cbb4bb4d42907a12e45b35b81a7ea684targetblank80b3304a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/80b33044cbb4bb4d42907a12e45b35b81a7ea684" target="_blank">80b3304</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+
+Untracked files:
+    Untracked:  analysis/analysis.Rmd
+    Untracked:  analysis/code_NIRS_kernels.R
+    Untracked:  analysis/code_for_GBLUP.R
+    Untracked:  analysis/code_for_GBLUP_pt.R
+    Untracked:  analysis/process_climate_data.Rmd
+    Untracked:  data/Article_documents/
+    Untracked:  data/GAPIT.Genotype.Numerical.txt
+    Untracked:  data/Maize-NIRS-GBS-main/
+    Untracked:  data/NIR.csv
+    Untracked:  data/Pheno.rds
+    Untracked:  output/
+
+Unstaged changes:
+    Modified:   analysis/climate_data.Rmd
+
+Staged changes:
+    New:        analysis/climate_data.Rmd
+    New:        analysis/components_variance.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="introdução" class="section level2">
+<h2>1. Introdução</h2>
+<p>Este tutorial detalha o processo de obtenção e processamento de dados
+climáticos diários para os experimentos de milho no Texas (College
+Station, TX) realizados em 2011 e 2012.</p>
+<p>O <strong>objetivo principal</strong> deste script não é apenas
+baixar os dados, mas transformá-los de séries temporais diárias (ex: 150
+dias de temperatura) em um conjunto conciso de <strong>Covariáveis
+Ambientais (ECs)</strong>. Essas ECs (ex: “total de dias de estresse
+térmico”, “GDD acumulado”, “VPD médio”) quantificam as características
+macroambientais de cada ano.</p>
+<p>Essas ECs são o componente “W” (de <em>Weather</em>, ou Clima) em
+nossos modelos preditivos (<span class="math inline">\(G + E +
+W\)</span>). Elas serão usadas posteriormente para construir uma matriz
+de parentesco climático (ou <em>kernel</em>, <span
+class="math inline">\(K_W\)</span>), que nos permite modelar as
+interações <span class="math inline">\(G \times W\)</span> e melhorar a
+precisão da predição genômica.</p>
+<ul>
+<li><strong>Local:</strong> College Station, TX.</li>
+<li><strong>Períodos:</strong> Estação de crescimento (1 de Maio a 30 de
+Setembro) para os anos de <strong>2011 e 2012</strong>.</li>
+</ul>
+</div>
+<div id="configuração-do-ambiente-r" class="section level2">
+<h2>2. Configuração do Ambiente R</h2>
+<p>Primeiro, carregamos nossa “caixa de ferramentas”. Cada pacote R tem
+uma função específica:</p>
+<ul>
+<li><code>nasapower</code>: O pacote principal. Ele fornece uma
+interface de cliente R para a API <a
+href="https://power.larc.nasa.gov/">NASA POWER</a>, permitindo-nos
+baixar dados climáticos globais diretamente para o R.</li>
+<li><code>dplyr</code> e <code>lubridate</code>: Nossas ferramentas de
+manipulação de dados. <code>dplyr</code> é usado para filtrar, agrupar e
+resumir os dados, enquanto <code>lubridate</code> facilita o trabalho
+com datas.</li>
+<li><code>ggplot2</code>: Usado para a análise exploratória visual,
+permitindo-nos “ver” as condições climáticas de cada ano.</li>
+</ul>
+<pre class="r"><code># Se os pacotes não estiverem instalados, descomente e execute as linhas abaixo
+# install.packages(&quot;nasapower&quot;)
+# install.packages(&quot;dplyr&quot;)
+# install.packages(&quot;ggplot2&quot;)
+# install.packages(&quot;lubridate&quot;)
+
+# Carregar os pacotes
+library(nasapower)
+library(dplyr)
+library(ggplot2)
+library(lubridate)</code></pre>
+</div>
+<div id="definição-dos-parâmetros" class="section level2">
+<h2>3. Definição dos Parâmetros</h2>
+<p>Definimos as constantes para nossa consulta à API.</p>
+<ul>
+<li><code>coords_texas</code>: As coordenadas geográficas exatas do
+local do experimento.</li>
+<li><code>dates</code>: As datas de início e fim da estação de
+crescimento do milho para cada ano (Maio a Setembro).</li>
+<li><code>params</code>: Os parâmetros climáticos específicos que
+solicitamos à NASA. Escolhemos estes porque são os “ingredientes brutos”
+necessários para nossas Covariáveis Ambientais (ECs). Por exemplo,
+<code>T2M_MAX</code> e <code>T2M_MIN</code> são necessários para
+calcular os Graus-Dia Acumulados (GDD), e <code>RH2M</code> é usado para
+calcular o Déficit de Pressão de Vapor (VPD).</li>
+</ul>
+<pre class="r"><code># Coordenadas do local de experimento no Texas
+coords_texas &lt;- c(lon = -96.3344, lat = 30.6282)
+
+# Período de interesse (estação de crescimento do milho)
+start_date_2011 &lt;- &quot;2011-05-01&quot;
+end_date_2011 &lt;- &quot;2011-09-30&quot;
+
+start_date_2012 &lt;- &quot;2012-05-01&quot;
+end_date_2012 &lt;- &quot;2012-09-30&quot;
+
+# Parâmetros climáticos a serem baixados
+# PRECTOTCORR = Precipitação Total Corrigida (mm/dia)
+# T2M_MAX = Temperatura Máxima a 2 metros (°C)
+# T2M_MIN = Temperatura Mínima a 2 metros (°C)
+# RH2M = Umidade Relativa a 2 metros (%)
+params &lt;- c(&quot;PRECTOTCORR&quot;, &quot;T2M_MAX&quot;, &quot;T2M_MIN&quot;, &quot;RH2M&quot;,   # Originais
+            &quot;ALLSKY_SFC_SW_DWN&quot;,                          # Radiação Solar
+            &quot;WS2M&quot;)                                       # Velocidade do Vento</code></pre>
+</div>
+<div id="obtenção-dos-dados-via-api-nasa-power" class="section level2">
+<h2>4. Obtenção dos Dados via API NASA POWER</h2>
+<p>Com nossos parâmetros definidos, usamos a função
+<code>get_power()</code> para consultar os servidores da NASA.</p>
+<p>Fazemos duas chamadas separadas: uma para a estação de 2011 e outra
+para 2012. Em seguida, usamos <code>bind_rows()</code> do
+<code>dplyr</code> para empilhar esses dois conjuntos de dados em um
+único <em>dataframe</em> (<code>texas_climate_data</code>).</p>
+<p>Por fim, convertemos a coluna de data (que vem como
+<code>YYYYMMDD</code>) para um formato de data R adequado usando
+<code>lubridate::ymd()</code>. Salvamos este arquivo “bruto” como um CSV
+para reprodutibilidade, garantindo que não precisemos baixar os dados
+novamente.</p>
+<pre class="r"><code># Obter dados para Texas 2011
+data_tx_2011 &lt;- get_power(
+  community = &quot;AG&quot;,
+  lonlat = coords_texas,
+  pars = params,
+  dates = c(start_date_2011, end_date_2011),
+  temporal_api = &quot;DAILY&quot;
+) %&gt;% mutate(year = 2011)
+
+# Obter dados para Texas 2012
+data_tx_2012 &lt;- get_power(
+  community = &quot;AG&quot;,
+  lonlat = coords_texas,
+  pars = params,
+  dates = c(start_date_2012, end_date_2012),
+  temporal_api = &quot;DAILY&quot;
+) %&gt;% mutate(year = 2012)</code></pre>
+<pre class="r"><code># Combinar os dados do Texas em um único dataframe
+texas_climate_data &lt;- bind_rows(data_tx_2011, data_tx_2012)
+
+# Transformar a data para o formato correto e adicionar mês para facilitar a plotagem
+texas_climate_data &lt;- texas_climate_data %&gt;%
+  mutate(date = ymd(YYYYMMDD))
+
+# Visualizar as primeiras linhas da tabela de dados
+knitr::kable(head(texas_climate_data), caption = &quot;Amostra dos Dados Climáticos do Texas&quot;)</code></pre>
+<table>
+<caption>Amostra dos Dados Climáticos do Texas</caption>
+<colgroup>
+<col width="7%" />
+<col width="6%" />
+<col width="4%" />
+<col width="2%" />
+<col width="2%" />
+<col width="3%" />
+<col width="9%" />
+<col width="10%" />
+<col width="6%" />
+<col width="6%" />
+<col width="5%" />
+<col width="15%" />
+<col width="4%" />
+<col width="4%" />
+<col width="9%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">LON</th>
+<th align="right">LAT</th>
+<th align="right">YEAR</th>
+<th align="right">MM</th>
+<th align="right">DD</th>
+<th align="right">DOY</th>
+<th align="left">YYYYMMDD</th>
+<th align="right">PRECTOTCORR</th>
+<th align="right">T2M_MAX</th>
+<th align="right">T2M_MIN</th>
+<th align="right">RH2M</th>
+<th align="right">ALLSKY_SFC_SW_DWN</th>
+<th align="right">WS2M</th>
+<th align="right">year</th>
+<th align="left">date</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">1</td>
+<td align="right">121</td>
+<td align="left">2011-05-01</td>
+<td align="right">0.00</td>
+<td align="right">33.95</td>
+<td align="right">16.93</td>
+<td align="right">66.05</td>
+<td align="right">18.35</td>
+<td align="right">4.13</td>
+<td align="right">2011</td>
+<td align="left">2011-05-01</td>
+</tr>
+<tr class="even">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">2</td>
+<td align="right">122</td>
+<td align="left">2011-05-02</td>
+<td align="right">0.99</td>
+<td align="right">20.62</td>
+<td align="right">11.77</td>
+<td align="right">69.83</td>
+<td align="right">8.63</td>
+<td align="right">3.73</td>
+<td align="right">2011</td>
+<td align="left">2011-05-02</td>
+</tr>
+<tr class="odd">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">3</td>
+<td align="right">123</td>
+<td align="left">2011-05-03</td>
+<td align="right">0.14</td>
+<td align="right">25.13</td>
+<td align="right">10.30</td>
+<td align="right">50.50</td>
+<td align="right">28.29</td>
+<td align="right">3.67</td>
+<td align="right">2011</td>
+<td align="left">2011-05-03</td>
+</tr>
+<tr class="even">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">4</td>
+<td align="right">124</td>
+<td align="left">2011-05-04</td>
+<td align="right">0.00</td>
+<td align="right">27.91</td>
+<td align="right">9.52</td>
+<td align="right">36.35</td>
+<td align="right">28.73</td>
+<td align="right">1.69</td>
+<td align="right">2011</td>
+<td align="left">2011-05-04</td>
+</tr>
+<tr class="odd">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">5</td>
+<td align="right">125</td>
+<td align="left">2011-05-05</td>
+<td align="right">0.01</td>
+<td align="right">30.96</td>
+<td align="right">12.09</td>
+<td align="right">38.21</td>
+<td align="right">29.31</td>
+<td align="right">1.22</td>
+<td align="right">2011</td>
+<td align="left">2011-05-05</td>
+</tr>
+<tr class="even">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">6</td>
+<td align="right">126</td>
+<td align="left">2011-05-06</td>
+<td align="right">0.00</td>
+<td align="right">32.76</td>
+<td align="right">13.95</td>
+<td align="right">50.22</td>
+<td align="right">28.19</td>
+<td align="right">2.39</td>
+<td align="right">2011</td>
+<td align="left">2011-05-06</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># Salvar os dados brutos para referência futura
+write.csv(texas_climate_data, &quot;output/climate_results/texas_climate_data_raw.csv&quot;, row.names = FALSE)</code></pre>
+</div>
+<div id="análise-exploratória-e-visualização-eda"
+class="section level2">
+<h2>5. Análise Exploratória e Visualização (EDA)</h2>
+<p>Antes de processar os dados, devemos sempre visualizá-los. Esta etapa
+de Análise Exploratória de Dados (EDA) é vital para:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Validação:</strong> Confirmar se os dados parecem razoáveis
+(sem picos ou vales absurdos).</li>
+<li><strong>Compreensão:</strong> Entender a natureza dos ambientes. Os
+artigos originais descrevem 2011 como um ano de seca severa. Nossos
+gráficos devem confirmar isso.</li>
+</ol>
+<div id="precipitação-diária-mmdia" class="section level3">
+<h3>5.1 Precipitação Diária (mm/dia)</h3>
+<p>Este gráfico nos permite “ver” o estresse hídrico. A diferença entre
+os dois anos é nítida: 2011 teve precipitação quase nula durante a maior
+parte da estação de crescimento, confirmando as condições de seca. 2012
+teve eventos de chuva mais significativos e distribuídos.</p>
+<pre class="r"><code>ggplot(texas_climate_data, aes(x = date, y = PRECTOTCORR)) +
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;steelblue&quot;, alpha = 0.8) +
+  facet_wrap(~ year, scales = &quot;free_x&quot;) +
+  labs(
+    title = &quot;Precipitação Diária em College Station, TX (2011-2012)&quot;,
+    subtitle = &quot;Dados obtidos da API NASA POWER&quot;,
+    x = &quot;Data&quot;,
+    y = &quot;Precipitação (mm/dia)&quot;
+  ) +
+  theme_minimal() +
+  scale_x_date(date_labels = &quot;%b&quot;, date_breaks = &quot;1 month&quot;) # Mostra o mês</code></pre>
+<p><img src="figure/climate_data.Rmd/plot_precipitation-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;output/climate_results/precipitation_plot.tiff&quot;)</code></pre>
+</div>
+<div id="temperatura-máxima-diária-c" class="section level3">
+<h3>5.2 Temperatura Máxima Diária (°C)</h3>
+<p>Este gráfico nos ajuda a identificar o estresse térmico. Ambos os
+anos mostram longos períodos de calor extremo (acima de 35°C), mas 2011
+parece ter um período de calor intenso mais sustentado. Na próxima
+seção, quantificaremos isso contando os “dias de estresse térmico”.</p>
+<pre class="r"><code>ggplot(texas_climate_data, aes(x = date, y = T2M_MAX)) +
+  geom_line(color = &quot;firebrick&quot;, alpha = 0.8) +
+  geom_smooth(method = &quot;loess&quot;, se = FALSE, linetype = &quot;dashed&quot;, color = &quot;black&quot;) +
+  facet_wrap(~ year, scales = &quot;free_x&quot;) +
+  labs(
+    title = &quot;Temperatura Máxima Diária em College Station, TX (2011-2012)&quot;,
+    subtitle = &quot;Linha pontilhada representa a tendência suavizada&quot;,
+    x = &quot;Data&quot;,
+    y = &quot;Temperatura Máxima (°C)&quot;
+  ) +
+  theme_minimal() +
+  scale_x_date(date_labels = &quot;%b&quot;, date_breaks = &quot;1 month&quot;)</code></pre>
+<p><img src="figure/climate_data.Rmd/plot_temperature-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;output/climate_results/temperature_plot.tiff&quot;)</code></pre>
+</div>
+</div>
+<div id="engenharia-de-atributos-criação-das-covariáveis-ambientais-ecs"
+class="section level2">
+<h2>6. Engenharia de Atributos: Criação das Covariáveis Ambientais
+(ECs)</h2>
+<p>Esta é a etapa mais crítica do script. Transformamos os dados de
+séries temporais diárias (~150 linhas por ano) em apenas <strong>uma
+linha por ano</strong>, onde cada coluna representa uma característica
+resumida daquele ambiente.</p>
+<div id="cálculo-de-métricas-diárias" class="section level3">
+<h3>6.1. Cálculo de Métricas Diárias</h3>
+<p>Primeiro, usamos <code>mutate()</code> para calcular novas métricas
+<em>para cada dia</em>:</p>
+<ul>
+<li><strong>GDD (Growing Degree Days):</strong> Uma medida agronômica
+padrão de acúmulo de calor para o desenvolvimento da planta. Usamos a
+fórmula padrão para milho (Base 10°C, Teto 30°C).</li>
+<li><strong>DTR (Diurnal Temperature Range):</strong> A diferença entre
+o máximo e o mínimo do dia.</li>
+<li><strong>VPD_DAILY (Vapor Pressure Deficit):</strong> Uma métrica
+crucial que combina temperatura e umidade. É um indicador muito melhor
+do “estresse de seca” atmosférico do que a umidade relativa sozinha.
+Calculamos manualmente usando a fórmula de Tetens.</li>
+</ul>
+</div>
+<div id="agregação-por-ano" class="section level3">
+<h3>6.2. Agregação por Ano</h3>
+<p>Em seguida, usamos <code>group_by(year)</code> e
+<code>summarise()</code> para agregar essas métricas diárias em
+<strong>Covariáveis Ambientais (ECs)</strong> anuais. Por exemplo:</p>
+<ul>
+<li><code>GDD_CUM</code>: A <em>soma</em> de todos os GDDs diários da
+estação.</li>
+<li><code>HEAT_STRESS_DAYS</code>: A <em>contagem</em> de dias em que
+<code>T2M_MAX &gt; 35</code>.</li>
+<li><code>PRECTOT</code>: A <em>soma</em> de toda a precipitação.</li>
+<li><code>VPD_AVG</code>: A <em>média</em> do VPD diário ao longo da
+estação.</li>
+</ul>
+<p>O resultado, <code>environmental_covariates</code>, é um
+<em>dataframe</em> pequeno (neste caso, 2 linhas x ~20 colunas) que
+captura numericamente a essência de cada ambiente. Por fim, juntamos
+essas ECs de volta ao dataframe original para manter a estrutura
+completa.</p>
+<pre class="r"><code># Calcula GDD diário, DTR diário e VPD diário
+texas_climate_data &lt;- texas_climate_data %&gt;%
+  mutate(
+    # --- Cálculos de Temperatura ---
+    T_base = 10,
+    T_upper = 30,
+    T_eff_min = if_else(T2M_MIN &lt; T_base, T_base, T2M_MIN),
+    T_eff_max = if_else(T2M_MAX &gt; T_upper, T_upper, T2M_MAX),
+    T_avg_eff = (T_eff_min + T_eff_max) / 2,
+    GDD = T_avg_eff - T_base,
+    DTR = T2M_MAX - T2M_MIN,
+    T_AVG_DAILY = (T2M_MAX + T2M_MIN) / 2,
+    
+    # --- CÁLCULO MANUAL DE VPD (O SUBSTITUTO) ---
+    # 1. Pressão de Saturação de Vapor (e_s) em kPa (usando T_AVG_DAILY)
+    #    (Fórmula de Tetens)
+    SAT_VAP_PRES = 0.6108 * exp((17.27 * T_AVG_DAILY) / (T_AVG_DAILY + 237.3)),
+    
+    # 2. Pressão de Vapor Atual (e_a) em kPa (usando RH2M)
+    ACT_VAP_PRES = SAT_VAP_PRES * (RH2M / 100),
+    
+    # 3. Déficit de Pressão de Vapor (VPD) diário
+    VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES
+  )
+
+# Agrega os dados por ano para criar as ECs
+# Este é o dataframe final que será usado para construir o kernel W
+environmental_covariates &lt;- texas_climate_data %&gt;%
+  group_by(year) %&gt;%
+  summarise(
+    # Covariáveis de Temperatura (Originais)
+    TMAX_AVG = mean(T2M_MAX, na.rm = TRUE),
+    TMIN_AVG = mean(T2M_MIN, na.rm = TRUE),
+    GDD_CUM = sum(GDD, na.rm = TRUE),
+    HEAT_STRESS_DAYS = sum(T2M_MAX &gt; 35, na.rm = TRUE),
+    
+    # Covariáveis Hídricas (Originais)
+    PRECTOT = sum(PRECTOTCORR, na.rm = TRUE),
+    DRY_DAYS = sum(PRECTOTCORR == 0, na.rm = TRUE),
+    RH_AVG = mean(RH2M, na.rm = TRUE),
+    
+    # Vento e Radiação (Originais)
+    WS2M_AVG = mean(WS2M, na.rm = TRUE),
+    RAD_CUM = sum(ALLSKY_SFC_SW_DWN, na.rm = TRUE),
+    
+    # Covariáveis de Temperatura (Adicionais)
+    T_AVG = mean(T_AVG_DAILY, na.rm = TRUE),
+    DTR_AVG = mean(DTR, na.rm = TRUE),
+    COLD_STRESS_DAYS = sum(T2M_MIN &lt; 10, na.rm = TRUE),
+    
+    # Covariáveis Hídricas (Adicionais)
+    RAINY_DAYS = sum(PRECTOTCORR &gt; 0, na.rm = TRUE),
+    PREC_INTENSITY = ifelse(RAINY_DAYS &gt; 0, PRECTOT / RAINY_DAYS, 0),
+    LOW_RH_DAYS = sum(RH2M &lt; 30, na.rm = TRUE),
+
+    # --- NOVAS ECs (SUBSTITUTOS DE VPD/PET) ---
+    VPD_AVG = mean(VPD_DAILY, na.rm = TRUE),
+    VPD_STRESS_DAYS = sum(VPD_DAILY &gt; 1.5, na.rm = TRUE), # Limiar de 1.5 kPa
+    
+    .groups = &#39;drop&#39;
+  )
+
+
+# Replica as linhas para cada combinação de manejo hídrico (WS e WW)
+# No seu modelo, a diferença WS/WW já é capturada pelo efeito de ambiente (E)
+# As ECs representam o &quot;macro-ambiente&quot; (ano).
+ecs_final &lt;- texas_climate_data %&gt;%
+  full_join(environmental_covariates)
+
+# Visualiza as covariáveis finais
+head(ecs_final)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["LON"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["LAT"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["YEAR"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["MM"],"name":[4],"type":["int"],"align":["right"]},{"label":["DD"],"name":[5],"type":["int"],"align":["right"]},{"label":["DOY"],"name":[6],"type":["int"],"align":["right"]},{"label":["YYYYMMDD"],"name":[7],"type":["date"],"align":["right"]},{"label":["PRECTOTCORR"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["T2M_MAX"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["T2M_MIN"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["RH2M"],"name":[11],"type":["dbl"],"align":["right"]},{"label":["ALLSKY_SFC_SW_DWN"],"name":[12],"type":["dbl"],"align":["right"]},{"label":["WS2M"],"name":[13],"type":["dbl"],"align":["right"]},{"label":["year"],"name":[14],"type":["dbl"],"align":["right"]},{"label":["date"],"name":[15],"type":["date"],"align":["right"]},{"label":["T_base"],"name":[16],"type":["dbl"],"align":["right"]},{"label":["T_upper"],"name":[17],"type":["dbl"],"align":["right"]},{"label":["T_eff_min"],"name":[18],"type":["dbl"],"align":["right"]},{"label":["T_eff_max"],"name":[19],"type":["dbl"],"align":["right"]},{"label":["T_avg_eff"],"name":[20],"type":["dbl"],"align":["right"]},{"label":["GDD"],"name":[21],"type":["dbl"],"align":["right"]},{"label":["DTR"],"name":[22],"type":["dbl"],"align":["right"]},{"label":["T_AVG_DAILY"],"name":[23],"type":["dbl"],"align":["right"]},{"label":["SAT_VAP_PRES"],"name":[24],"type":["dbl"],"align":["right"]},{"label":["ACT_VAP_PRES"],"name":[25],"type":["dbl"],"align":["right"]},{"label":["VPD_DAILY"],"name":[26],"type":["dbl"],"align":["right"]},{"label":["TMAX_AVG"],"name":[27],"type":["dbl"],"align":["right"]},{"label":["TMIN_AVG"],"name":[28],"type":["dbl"],"align":["right"]},{"label":["GDD_CUM"],"name":[29],"type":["dbl"],"align":["right"]},{"label":["HEAT_STRESS_DAYS"],"name":[30],"type":["int"],"align":["right"]},{"label":["PRECTOT"],"name":[31],"type":["dbl"],"align":["right"]},{"label":["DRY_DAYS"],"name":[32],"type":["int"],"align":["right"]},{"label":["RH_AVG"],"name":[33],"type":["dbl"],"align":["right"]},{"label":["WS2M_AVG"],"name":[34],"type":["dbl"],"align":["right"]},{"label":["RAD_CUM"],"name":[35],"type":["dbl"],"align":["right"]},{"label":["T_AVG"],"name":[36],"type":["dbl"],"align":["right"]},{"label":["DTR_AVG"],"name":[37],"type":["dbl"],"align":["right"]},{"label":["COLD_STRESS_DAYS"],"name":[38],"type":["int"],"align":["right"]},{"label":["RAINY_DAYS"],"name":[39],"type":["int"],"align":["right"]},{"label":["PREC_INTENSITY"],"name":[40],"type":["dbl"],"align":["right"]},{"label":["LOW_RH_DAYS"],"name":[41],"type":["int"],"align":["right"]},{"label":["VPD_AVG"],"name":[42],"type":["dbl"],"align":["right"]},{"label":["VPD_STRESS_DAYS"],"name":[43],"type":["int"],"align":["right"]}],"data":[{"1":"-96.3344","2":"30.6282","3":"2011","4":"5","5":"1","6":"121","7":"2011-05-01","8":"0.00","9":"33.95","10":"16.93","11":"66.05","12":"18.35","13":"4.13","14":"2011","15":"2011-05-01","16":"10","17":"30","18":"16.93","19":"30.00","20":"23.465","21":"13.465","22":"17.02","23":"25.440","24":"3.251756","25":"2.1477848","26":"1.1039712","27":"37.65373","28":"23.22837","29":"2530.04","30":"120","31":"168.36","32":"74","33":"51.71516","34":"2.58549","35":"3687.1","36":"30.44105","37":"14.42536","38":"1","39":"79","40":"2.131139","41":"4","42":"2.15913","43":"125"},{"1":"-96.3344","2":"30.6282","3":"2011","4":"5","5":"2","6":"122","7":"2011-05-02","8":"0.99","9":"20.62","10":"11.77","11":"69.83","12":"8.63","13":"3.73","14":"2011","15":"2011-05-02","16":"10","17":"30","18":"11.77","19":"20.62","20":"16.195","21":"6.195","22":"8.85","23":"16.195","24":"1.841058","25":"1.2856108","26":"0.5554472","27":"37.65373","28":"23.22837","29":"2530.04","30":"120","31":"168.36","32":"74","33":"51.71516","34":"2.58549","35":"3687.1","36":"30.44105","37":"14.42536","38":"1","39":"79","40":"2.131139","41":"4","42":"2.15913","43":"125"},{"1":"-96.3344","2":"30.6282","3":"2011","4":"5","5":"3","6":"123","7":"2011-05-03","8":"0.14","9":"25.13","10":"10.30","11":"50.50","12":"28.29","13":"3.67","14":"2011","15":"2011-05-03","16":"10","17":"30","18":"10.30","19":"25.13","20":"17.715","21":"7.715","22":"14.83","23":"17.715","24":"2.027292","25":"1.0237823","26":"1.0035094","27":"37.65373","28":"23.22837","29":"2530.04","30":"120","31":"168.36","32":"74","33":"51.71516","34":"2.58549","35":"3687.1","36":"30.44105","37":"14.42536","38":"1","39":"79","40":"2.131139","41":"4","42":"2.15913","43":"125"},{"1":"-96.3344","2":"30.6282","3":"2011","4":"5","5":"4","6":"124","7":"2011-05-04","8":"0.00","9":"27.91","10":"9.52","11":"36.35","12":"28.73","13":"1.69","14":"2011","15":"2011-05-04","16":"10","17":"30","18":"10.00","19":"27.91","20":"18.955","21":"8.955","22":"18.39","23":"18.715","24":"2.158626","25":"0.7846604","26":"1.3739653","27":"37.65373","28":"23.22837","29":"2530.04","30":"120","31":"168.36","32":"74","33":"51.71516","34":"2.58549","35":"3687.1","36":"30.44105","37":"14.42536","38":"1","39":"79","40":"2.131139","41":"4","42":"2.15913","43":"125"},{"1":"-96.3344","2":"30.6282","3":"2011","4":"5","5":"5","6":"125","7":"2011-05-05","8":"0.01","9":"30.96","10":"12.09","11":"38.21","12":"29.31","13":"1.22","14":"2011","15":"2011-05-05","16":"10","17":"30","18":"12.09","19":"30.00","20":"21.045","21":"11.045","22":"18.87","23":"21.525","24":"2.568345","25":"0.9813647","26":"1.5869804","27":"37.65373","28":"23.22837","29":"2530.04","30":"120","31":"168.36","32":"74","33":"51.71516","34":"2.58549","35":"3687.1","36":"30.44105","37":"14.42536","38":"1","39":"79","40":"2.131139","41":"4","42":"2.15913","43":"125"},{"1":"-96.3344","2":"30.6282","3":"2011","4":"5","5":"6","6":"126","7":"2011-05-06","8":"0.00","9":"32.76","10":"13.95","11":"50.22","12":"28.19","13":"2.39","14":"2011","15":"2011-05-06","16":"10","17":"30","18":"13.95","19":"30.00","20":"21.975","21":"11.975","22":"18.81","23":"23.355","24":"2.870330","25":"1.4414797","26":"1.4288502","27":"37.65373","28":"23.22837","29":"2530.04","30":"120","31":"168.36","32":"74","33":"51.71516","34":"2.58549","35":"3687.1","36":"30.44105","37":"14.42536","38":"1","39":"79","40":"2.131139","41":"4","42":"2.15913","43":"125"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+</div>
+<div id="salvar-as-covariáveis" class="section level2">
+<h2>7. Salvar as Covariáveis</h2>
+<p>Finalmente, salvamos nosso <em>dataframe</em> agregado
+<code>ecs_final</code> em um arquivo CSV.</p>
+<p>Este arquivo é o <strong>produto final</strong> deste script. Ele
+será carregado pelo script principal da análise (não mostrado aqui) para
+construir a matriz de parentesco climático (Kernel W), que quantifica a
+similaridade entre os ambientes (anos) com base em seus perfis
+climáticos.</p>
+<pre class="r"><code># Garante que a pasta &#39;output/climate_results&#39; exista
+if (!dir.exists(&quot;output/climate_results&quot;)) dir.create(&quot;output/climate_results&quot;)
+
+# Salva o arquivo de *covariáveis agregadas*
+write.csv(ecs_final, &quot;output/climate_results/environmental_covariates.csv&quot;, row.names = FALSE)
+
+cat(&quot;Arquivo &#39;environmental_covariates.csv&#39; salvo com sucesso na pasta &#39;output/climate_results&#39;!&quot;)</code></pre>
+<pre><code>Arquivo &#39;environmental_covariates.csv&#39; salvo com sucesso na pasta &#39;output/climate_results&#39;!</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] lubridate_1.9.4 ggplot2_4.0.0   dplyr_1.1.4     nasapower_4.2.5
+[5] workflowr_1.7.2
+
+loaded via a namespace (and not attached):
+ [1] gtable_0.3.6       xfun_0.53          bslib_0.9.0        processx_3.8.6    
+ [5] lattice_0.22-7     callr_3.7.6        tzdb_0.5.0         vctrs_0.6.5       
+ [9] tools_4.5.1        ps_1.9.1           generics_0.1.4     curl_7.0.0        
+[13] parallel_4.5.1     tibble_3.3.0       pkgconfig_2.0.3    Matrix_1.7-3      
+[17] RColorBrewer_1.1-3 S7_0.2.0           lifecycle_1.0.4    compiler_4.5.1    
+[21] farver_2.1.2       stringr_1.5.2      git2r_0.36.2       textshaping_1.0.3 
+[25] getPass_0.2-4      httpuv_1.6.16      htmltools_0.5.8.1  sass_0.4.10       
+[29] yaml_2.3.10        later_1.4.4        pillar_1.11.1      crayon_1.5.3      
+[33] jquerylib_0.1.4    whisker_0.4.1      cachem_1.1.0       nlme_3.1-168      
+[37] tidyselect_1.2.1   digest_0.6.37      stringi_1.8.7      splines_4.5.1     
+[41] labeling_0.4.3     rprojroot_2.1.1    fastmap_1.2.0      grid_4.5.1        
+[45] cli_3.6.5          magrittr_2.0.4     triebeard_0.4.1    crul_1.6.0        
+[49] readr_2.1.5        withr_3.0.2        scales_1.4.0       promises_1.3.3    
+[53] bit64_4.6.0-1      timechange_0.3.0   rmarkdown_2.29     httr_1.4.7        
+[57] bit_4.6.0          ragg_1.5.0         hms_1.1.3          evaluate_1.0.5    
+[61] knitr_1.50         mgcv_1.9-3         rlang_1.1.6        urltools_1.7.3.1  
+[65] Rcpp_1.1.0         glue_1.8.0         httpcode_0.3.0     rstudioapi_0.17.1 
+[69] vroom_1.6.5        jsonlite_2.0.0     R6_2.6.1           systemfonts_1.2.3 
+[73] fs_1.6.6          </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Weverton Gomes da Costa, Pós-Doutorando, Departamento de
+Estatística - Universidade Federal de Viçosa, <a
+href="mailto:wevertonufv@gmail.com"
+class="email">wevertonufv@gmail.com</a><a href="#fnref1"
+class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

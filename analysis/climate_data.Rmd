@@ -1,0 +1,288 @@
+---
+title: "Tutorial: Preparação de Dados Climáticos (NASA POWER)"
+author: 
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: TRUE
+    toc_depth: 3
+    toc_float: TRUE
+  highlight: github
+  code_download: yes
+editor_options:
+  chunk_output_type: console
+github-repo: wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, out.width = "100%")
+```
+
+## 1. Introdução
+
+Este tutorial detalha o processo de obtenção e processamento de dados climáticos diários para os experimentos de milho no Texas (College Station, TX) realizados em 2011 e 2012.
+
+O **objetivo principal** deste script não é apenas baixar os dados, mas transformá-los de séries temporais diárias (ex: 150 dias de temperatura) em um conjunto conciso de **Covariáveis Ambientais (ECs)**. Essas ECs (ex: "total de dias de estresse térmico", "GDD acumulado", "VPD médio") quantificam as características macroambientais de cada ano.
+
+Essas ECs são o componente "W" (de *Weather*, ou Clima) em nossos modelos preditivos ($G + E + W$). Elas serão usadas posteriormente para construir uma matriz de parentesco climático (ou *kernel*, $K_W$), que nos permite modelar as interações $G \times W$ e melhorar a precisão da predição genômica.
+
+* **Local:** College Station, TX.
+* **Períodos:** Estação de crescimento (1 de Maio a 30 de Setembro) para os anos de **2011 e 2012**.
+
+## 2. Configuração do Ambiente R
+
+Primeiro, carregamos nossa "caixa de ferramentas". Cada pacote R tem uma função específica:
+
+* `nasapower`: O pacote principal. Ele fornece uma interface de cliente R para a API [NASA POWER](https://power.larc.nasa.gov/), permitindo-nos baixar dados climáticos globais diretamente para o R.
+* `dplyr` e `lubridate`: Nossas ferramentas de manipulação de dados. `dplyr` é usado para filtrar, agrupar e resumir os dados, enquanto `lubridate` facilita o trabalho com datas.
+* `ggplot2`: Usado para a análise exploratória visual, permitindo-nos "ver" as condições climáticas de cada ano.
+
+```{r packages, message=FALSE, warning=FALSE}
+# Se os pacotes não estiverem instalados, descomente e execute as linhas abaixo
+# install.packages("nasapower")
+# install.packages("dplyr")
+# install.packages("ggplot2")
+# install.packages("lubridate")
+
+# Carregar os pacotes
+library(nasapower)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+```
+
+## 3. Definição dos Parâmetros
+
+Definimos as constantes para nossa consulta à API.
+
+  * `coords_texas`: As coordenadas geográficas exatas do local do experimento.
+  * `dates`: As datas de início e fim da estação de crescimento do milho para cada ano (Maio a Setembro).
+  * `params`: Os parâmetros climáticos específicos que solicitamos à NASA. Escolhemos estes porque são os "ingredientes brutos" necessários para nossas Covariáveis Ambientais (ECs). Por exemplo, `T2M_MAX` e `T2M_MIN` são necessários para calcular os Graus-Dia Acumulados (GDD), e `RH2M` é usado para calcular o Déficit de Pressão de Vapor (VPD).
+
+```{r parameters}
+# Coordenadas do local de experimento no Texas
+coords_texas <- c(lon = -96.3344, lat = 30.6282)
+
+# Período de interesse (estação de crescimento do milho)
+start_date_2011 <- "2011-05-01"
+end_date_2011 <- "2011-09-30"
+
+start_date_2012 <- "2012-05-01"
+end_date_2012 <- "2012-09-30"
+
+# Parâmetros climáticos a serem baixados
+# PRECTOTCORR = Precipitação Total Corrigida (mm/dia)
+# T2M_MAX = Temperatura Máxima a 2 metros (°C)
+# T2M_MIN = Temperatura Mínima a 2 metros (°C)
+# RH2M = Umidade Relativa a 2 metros (%)
+params <- c("PRECTOTCORR", "T2M_MAX", "T2M_MIN", "RH2M",   # Originais
+            "ALLSKY_SFC_SW_DWN",                          # Radiação Solar
+            "WS2M")                                       # Velocidade do Vento
+```
+
+## 4. Obtenção dos Dados via API NASA POWER
+
+Com nossos parâmetros definidos, usamos a função `get_power()` para consultar os servidores da NASA.
+
+Fazemos duas chamadas separadas: uma para a estação de 2011 e outra para 2012. Em seguida, usamos `bind_rows()` do `dplyr` para empilhar esses dois conjuntos de dados em um único *dataframe* (`texas_climate_data`).
+
+Por fim, convertemos a coluna de data (que vem como `YYYYMMDD`) para um formato de data R adequado usando `lubridate::ymd()`. Salvamos este arquivo "bruto" como um CSV para reprodutibilidade, garantindo que não precisemos baixar os dados novamente.
+
+```{r get_data}
+# Obter dados para Texas 2011
+data_tx_2011 <- get_power(
+  community = "AG",
+  lonlat = coords_texas,
+  pars = params,
+  dates = c(start_date_2011, end_date_2011),
+  temporal_api = "DAILY"
+) %>% mutate(year = 2011)
+
+# Obter dados para Texas 2012
+data_tx_2012 <- get_power(
+  community = "AG",
+  lonlat = coords_texas,
+  pars = params,
+  dates = c(start_date_2012, end_date_2012),
+  temporal_api = "DAILY"
+) %>% mutate(year = 2012)
+```
+
+```{r get_data2}
+# Combinar os dados do Texas em um único dataframe
+texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012)
+
+# Transformar a data para o formato correto e adicionar mês para facilitar a plotagem
+texas_climate_data <- texas_climate_data %>%
+  mutate(date = ymd(YYYYMMDD))
+
+# Visualizar as primeiras linhas da tabela de dados
+knitr::kable(head(texas_climate_data), caption = "Amostra dos Dados Climáticos do Texas")
+
+# Salvar os dados brutos para referência futura
+write.csv(texas_climate_data, "output/climate_results/texas_climate_data_raw.csv", row.names = FALSE)
+```
+
+## 5. Análise Exploratória e Visualização (EDA)
+
+Antes de processar os dados, devemos sempre visualizá-los. Esta etapa de Análise Exploratória de Dados (EDA) é vital para:
+
+1.  **Validação:** Confirmar se os dados parecem razoáveis (sem picos ou vales absurdos).
+2.  **Compreensão:** Entender a natureza dos ambientes. Os artigos originais descrevem 2011 como um ano de seca severa. Nossos gráficos devem confirmar isso.
+
+### 5.1 Precipitação Diária (mm/dia)
+
+Este gráfico nos permite "ver" o estresse hídrico. A diferença entre os dois anos é nítida: 2011 teve precipitação quase nula durante a maior parte da estação de crescimento, confirmando as condições de seca. 2012 teve eventos de chuva mais significativos e distribuídos.
+
+```{r plot_precipitation, fig.width=10, fig.height=6}
+ggplot(texas_climate_data, aes(x = date, y = PRECTOTCORR)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Precipitação Diária em College Station, TX (2011-2012)",
+    subtitle = "Dados obtidos da API NASA POWER",
+    x = "Data",
+    y = "Precipitação (mm/dia)"
+  ) +
+  theme_minimal() +
+  scale_x_date(date_labels = "%b", date_breaks = "1 month") # Mostra o mês
+
+ggsave("output/climate_results/precipitation_plot.tiff")
+```
+
+### 5.2 Temperatura Máxima Diária (°C)
+
+Este gráfico nos ajuda a identificar o estresse térmico. Ambos os anos mostram longos períodos de calor extremo (acima de 35°C), mas 2011 parece ter um período de calor intenso mais sustentado. Na próxima seção, quantificaremos isso contando os "dias de estresse térmico".
+
+```{r plot_temperature, fig.width=10, fig.height=6}
+ggplot(texas_climate_data, aes(x = date, y = T2M_MAX)) +
+  geom_line(color = "firebrick", alpha = 0.8) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black") +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Temperatura Máxima Diária em College Station, TX (2011-2012)",
+    subtitle = "Linha pontilhada representa a tendência suavizada",
+    x = "Data",
+    y = "Temperatura Máxima (°C)"
+  ) +
+  theme_minimal() +
+  scale_x_date(date_labels = "%b", date_breaks = "1 month")
+
+ggsave("output/climate_results/temperature_plot.tiff")
+```
+
+## 6. Engenharia de Atributos: Criação das Covariáveis Ambientais (ECs)
+
+Esta é a etapa mais crítica do script. Transformamos os dados de séries temporais diárias (\~150 linhas por ano) em apenas **uma linha por ano**, onde cada coluna representa uma característica resumida daquele ambiente.
+
+### 6.1. Cálculo de Métricas Diárias
+
+Primeiro, usamos `mutate()` para calcular novas métricas *para cada dia*:
+
+  * **GDD (Growing Degree Days):** Uma medida agronômica padrão de acúmulo de calor para o desenvolvimento da planta. Usamos a fórmula padrão para milho (Base 10°C, Teto 30°C).
+  * **DTR (Diurnal Temperature Range):** A diferença entre o máximo e o mínimo do dia.
+  * **VPD\_DAILY (Vapor Pressure Deficit):** Uma métrica crucial que combina temperatura e umidade. É um indicador muito melhor do "estresse de seca" atmosférico do que a umidade relativa sozinha. Calculamos manualmente usando a fórmula de Tetens.
+
+### 6.2. Agregação por Ano
+
+Em seguida, usamos `group_by(year)` e `summarise()` para agregar essas métricas diárias em **Covariáveis Ambientais (ECs)** anuais. Por exemplo:
+
+  * `GDD_CUM`: A *soma* de todos os GDDs diários da estação.
+  * `HEAT_STRESS_DAYS`: A *contagem* de dias em que `T2M_MAX > 35`.
+  * `PRECTOT`: A *soma* de toda a precipitação.
+  * `VPD_AVG`: A *média* do VPD diário ao longo da estação.
+
+O resultado, `environmental_covariates`, é um *dataframe* pequeno (neste caso, 2 linhas x \~20 colunas) que captura numericamente a essência de cada ambiente. Por fim, juntamos essas ECs de volta ao dataframe original para manter a estrutura completa.
+
+```{r feature_engineering}
+# Calcula GDD diário, DTR diário e VPD diário
+texas_climate_data <- texas_climate_data %>%
+  mutate(
+    # --- Cálculos de Temperatura ---
+    T_base = 10,
+    T_upper = 30,
+    T_eff_min = if_else(T2M_MIN < T_base, T_base, T2M_MIN),
+    T_eff_max = if_else(T2M_MAX > T_upper, T_upper, T2M_MAX),
+    T_avg_eff = (T_eff_min + T_eff_max) / 2,
+    GDD = T_avg_eff - T_base,
+    DTR = T2M_MAX - T2M_MIN,
+    T_AVG_DAILY = (T2M_MAX + T2M_MIN) / 2,
+    
+    # --- CÁLCULO MANUAL DE VPD (O SUBSTITUTO) ---
+    # 1. Pressão de Saturação de Vapor (e_s) em kPa (usando T_AVG_DAILY)
+    #    (Fórmula de Tetens)
+    SAT_VAP_PRES = 0.6108 * exp((17.27 * T_AVG_DAILY) / (T_AVG_DAILY + 237.3)),
+    
+    # 2. Pressão de Vapor Atual (e_a) em kPa (usando RH2M)
+    ACT_VAP_PRES = SAT_VAP_PRES * (RH2M / 100),
+    
+    # 3. Déficit de Pressão de Vapor (VPD) diário
+    VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES
+  )
+
+# Agrega os dados por ano para criar as ECs
+# Este é o dataframe final que será usado para construir o kernel W
+environmental_covariates <- texas_climate_data %>%
+  group_by(year) %>%
+  summarise(
+    # Covariáveis de Temperatura (Originais)
+    TMAX_AVG = mean(T2M_MAX, na.rm = TRUE),
+    TMIN_AVG = mean(T2M_MIN, na.rm = TRUE),
+    GDD_CUM = sum(GDD, na.rm = TRUE),
+    HEAT_STRESS_DAYS = sum(T2M_MAX > 35, na.rm = TRUE),
+    
+    # Covariáveis Hídricas (Originais)
+    PRECTOT = sum(PRECTOTCORR, na.rm = TRUE),
+    DRY_DAYS = sum(PRECTOTCORR == 0, na.rm = TRUE),
+    RH_AVG = mean(RH2M, na.rm = TRUE),
+    
+    # Vento e Radiação (Originais)
+    WS2M_AVG = mean(WS2M, na.rm = TRUE),
+    RAD_CUM = sum(ALLSKY_SFC_SW_DWN, na.rm = TRUE),
+    
+    # Covariáveis de Temperatura (Adicionais)
+    T_AVG = mean(T_AVG_DAILY, na.rm = TRUE),
+    DTR_AVG = mean(DTR, na.rm = TRUE),
+    COLD_STRESS_DAYS = sum(T2M_MIN < 10, na.rm = TRUE),
+    
+    # Covariáveis Hídricas (Adicionais)
+    RAINY_DAYS = sum(PRECTOTCORR > 0, na.rm = TRUE),
+    PREC_INTENSITY = ifelse(RAINY_DAYS > 0, PRECTOT / RAINY_DAYS, 0),
+    LOW_RH_DAYS = sum(RH2M < 30, na.rm = TRUE),
+
+    # --- NOVAS ECs (SUBSTITUTOS DE VPD/PET) ---
+    VPD_AVG = mean(VPD_DAILY, na.rm = TRUE),
+    VPD_STRESS_DAYS = sum(VPD_DAILY > 1.5, na.rm = TRUE), # Limiar de 1.5 kPa
+    
+    .groups = 'drop'
+  )
+
+
+# Replica as linhas para cada combinação de manejo hídrico (WS e WW)
+# No seu modelo, a diferença WS/WW já é capturada pelo efeito de ambiente (E)
+# As ECs representam o "macro-ambiente" (ano).
+ecs_final <- texas_climate_data %>%
+  full_join(environmental_covariates)
+
+# Visualiza as covariáveis finais
+head(ecs_final)
+```
+
+## 7. Salvar as Covariáveis
+
+Finalmente, salvamos nosso *dataframe* agregado `ecs_final` em um arquivo CSV.
+
+Este arquivo é o **produto final** deste script. Ele será carregado pelo script principal da análise (não mostrado aqui) para construir a matriz de parentesco climático (Kernel W), que quantifica a similaridade entre os ambientes (anos) com base em seus perfis climáticos.
+
+```{r save_csv}
+# Garante que a pasta 'output/climate_results' exista
+if (!dir.exists("output/climate_results")) dir.create("output/climate_results")
+
+# Salva o arquivo de *covariáveis agregadas*
+write.csv(ecs_final, "output/climate_results/environmental_covariates.csv", row.names = FALSE)
+
+cat("Arquivo 'environmental_covariates.csv' salvo com sucesso na pasta 'output/climate_results'!")
+```
