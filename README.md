@@ -1,4 +1,4 @@
-# Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Phenomic Prediction Using Kernel Methods  
+# Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Prediction Using Kernel Methods  
 
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 ![R](https://img.shields.io/badge/Made%20with-R-blue.svg)
@@ -9,7 +9,7 @@
 
 ## 🇧🇷 **Descrição (Português)**
 
-Este repositório contém os códigos, dados e análises relacionados ao artigo **"Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Phenomic Prediction Using Kernel Methods"**.  
+Este repositório contém os códigos, dados e análises relacionados ao artigo **"Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Prediction Using Kernel Methods"**.  
 O estudo apresenta uma abordagem inovadora que combina espectroscopia no infravermelho próximo (NIR) e dados genômicos para aprimorar a predição fenômica em programas de melhoramento genético, utilizando métodos de kernel para capturar relações não lineares entre variáveis.
 
 **🔍 Principais componentes:**
@@ -26,8 +26,8 @@ Demonstrar que a fusão de dados espectrais e genômicos pode aumentar significa
 
 ## 🇺🇸 **Description (English)**
 
-This repository contains the code, data, and analyses related to the article **"Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Phenomic Prediction Using Kernel Methods"**.  
-The study presents an innovative approach that combines near-infrared reflectance spectroscopy (NIR) and genomic data to enhance phenomic prediction in plant breeding programs, using kernel methods to capture non-linear relationships between variables.
+This repository contains the code, data, and analyses related to the article **"Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Prediction Using Kernel Methods"**.  
+The study presents an innovative approach that combines near-infrared reflectance spectroscopy (NIR) and genomic data to enhance Prediction in plant breeding programs, using kernel methods to capture non-linear relationships between variables.
 
 **🔍 Main components:**
 - Preprocessing of NIR spectra  
