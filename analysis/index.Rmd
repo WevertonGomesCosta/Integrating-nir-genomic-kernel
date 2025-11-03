@@ -18,8 +18,6 @@ github-repo: wevertongomescosta/Integrating-nir-genomic-kernel
 Bem-vindo! Este repositório reúne código, dados e relatórios associados ao estudo da **integração de espectroscopia no infravermelho próximo (NIR) e dados genômicos para aprimorar a predição fenômica**, utilizando métodos de kernel para capturar relações não lineares e interações complexas entre genótipo, ambiente e espectro.  
 O objetivo é avaliar se a fusão dessas fontes de dados pode aumentar a acurácia preditiva e apoiar programas de melhoramento genético mais eficientes.
 
-![Pipeline de Análise](images/analysis_pipeline.png)
-
 ## Publicação Associada
 
 Este trabalho faz parte do Projeto de Pesquisa:
@@ -41,24 +39,7 @@ Este projeto foi desenvolvido no âmbito das pesquisas do [Laboratório de Intel
    - **Fenotípicos**: produtividade e características agronômicas.  
    - **Ambientais**: informações de locais, anos e delineamentos experimentais.  
 3. **Notebooks**: Exemplos interativos de análise exploratória, modelagem preditiva e integração de dados.  
-4. **Visualizações**: Gráficos de variância por componente, acurácia (R²), RMSE e rankings de genótipos.
-
-![Arquitetura do Modelo](images/model_architecture.png)
-
-## Como Utilizar
-
-1. Clone o repositório:  
-   ```bash
-   git clone https://github.com/wevertongomescosta/Integrating-nir-genomic-kernel.git
-   ```
-2. Instale as dependências:  
-   ```r
-   renv::restore()
-   ```
-3. Execute o pipeline principal:  
-   ```bash
-   Rscript scripts/main_analysis.R
-   ```
+4. **Visualizações**: Gráficos de acurácia (R²) dos modelos.
 
 ## Contribuição
 
@@ -87,15 +68,12 @@ weverton.costa@ufv.br
 **Laboratório LICAE**:  
 licae@ufv.br | [https://www.licae.ufv.br/](https://www.licae.ufv.br/)
 
-
 ---
 
 # Integrating NIR Spectroscopy & Genomic Data
 
 Welcome! This repository contains code, data, and reports related to the study of **integrating near-infrared reflectance spectroscopy (NIR) and genomic data to improve phenomic prediction**, using kernel methods to capture non-linear relationships and complex genotype × environment × spectrum interactions.  
 The goal is to assess whether merging these data sources can increase predictive accuracy and support more efficient breeding programs.
-
-![Analysis Pipeline](images/analysis_pipeline.png)
 
 ## Associated Publication
 
@@ -118,24 +96,7 @@ This project was developed within the research activities of the [Computational 
    - **Phenotypic**: yield and agronomic traits.  
    - **Environmental**: location, year, and experimental design information.  
 3. **Notebooks**: Interactive examples of exploratory data analysis, predictive modeling, and data integration.  
-4. **Visualizations**: Variance component plots, accuracy (R²), RMSE, and genotype rankings.
-
-![Model Architecture](images/model_architecture.png)
-
-## How to Use
-
-1. Clone the repository:  
-   ```bash
-   git clone https://github.com/wevertongomescosta/Integrating-nir-genomic-kernel.git
-   ```
-2. Install dependencies:  
-   ```r
-   renv::restore()
-   ```
-3. Run the main pipeline:  
-   ```bash
-   Rscript scripts/main_analysis.R
-   ```
+4. **Visualizations**: accuracy (R²) plots.
 
 ## Contribution
 

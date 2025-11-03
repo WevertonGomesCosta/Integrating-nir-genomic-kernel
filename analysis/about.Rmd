@@ -21,13 +21,11 @@ Este repositório reúne e documenta os dados, códigos e análises utilizados n
 O conjunto de dados inclui:  
 - **Espectroscopia NIR**: leituras espectrais de amostras biológicas, abrangendo milhares de bandas no intervalo de 4.000 a 10.000 cm⁻¹, pré-processadas para remoção de ruído e correção de espalhamento.  
 - **Genótipo**: dados de marcadores SNP obtidos por tecnologias de sequenciamento de alta densidade e devidamente filtrados e imputados.  
-- **Fenótipo**: características agronômicas e produtivas medidas em múltiplos ambientes experimentais.  
+- **Fenótipo**: características agronômicas em múltiplos ambientes experimentais.  
 - **Ambiente**: informações sobre locais, anos, delineamentos experimentais e repetições.  
 - **Metadados**: estrutura experimental detalhada para permitir análises de variância multiambiente e modelagem de efeitos aleatórios.  
 
 **Objetivo**: avaliar se a fusão de dados espectrais e genômicos, aliada a métodos de kernel, pode aumentar a acurácia da predição fenotípica, capturando relações não lineares e interações complexas entre genótipo, ambiente e espectro.  
-
-**Extensão metodológica**: além da análise de predição, o projeto também explora a decomposição de variância por componentes (Pedigree, Ambiente, Interação G×E, etc.) ao longo das bandas NIR, permitindo identificar regiões espectrais mais informativas para a seleção assistida.  
 
 Este projeto integra as atividades do [LICAE (Laboratório de Inteligência Computacional e Aprendizado Estatístico) da UFV](https://www.licae.ufv.br/).
 
@@ -43,7 +41,5 @@ The dataset includes:
 - **Metadata**: detailed experimental structure enabling multi-environment variance component analysis and random effects modeling.  
 
 **Goal**: assess whether merging spectral and genomic data, combined with kernel methods, can improve phenotypic prediction accuracy by capturing non-linear relationships and complex genotype × environment × spectrum interactions.  
-
-**Methodological extension**: beyond prediction analysis, the project also explores variance component decomposition (Pedigree, Environment, G×E interaction, etc.) across NIR bands, enabling the identification of spectral regions most informative for assisted selection.  
 
 This project is part of the activities at the [LICAE Laboratory, UFV](https://www.licae.ufv.br/).
