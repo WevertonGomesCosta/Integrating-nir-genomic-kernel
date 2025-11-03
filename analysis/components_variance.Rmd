@@ -208,6 +208,11 @@ Finalmente, salvamos esta tabela consolidada em um arquivo CSV. Este é o nosso 
 
 ***Nota:** Este bloco está com `eval=FALSE` para que o tutorial possa ser compilado rapidamente. Para executar a análise, mude a opção do chunk para `{r parallel-model-optimized}` e execute-o.*
 
+```{r create-dirs}
+# Cria diretórios de saída para armazenar resultados
+dir.create("output/componentes_variancia", recursive = TRUE, showWarnings = FALSE)
+```
+
 ```{r parallel-model-optimized, cache=FALSE, eval=FALSE}
 # Paraleliza e **coleta os resultados** em 'results_list'
 results_list <- foreach(i = seq_len(nrow(combos)),
