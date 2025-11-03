@@ -1933,7 +1933,7 @@ rm(list = setdiff(ls(), c("Pheno", "Pedigree", "Models_full_set",
                          "num_rep", "num_fold",
                          "envs_leaveout",
                          "run_bglr", "calc_cor_by_env",
-                         "combos", "n_hybrids")))
+                         "combos", "n_hybrids", "model_info")))
 ```
 
 ## 14) Ajuste de modelos
@@ -2458,7 +2458,7 @@ Em vez de copiar e colar o código de plotagem dezenas de vezes, este bloco usa 
 
 Este *loop* irá gerar automaticamente todos os gráficos de resultados para CV0 e CV00, salvando-os no disco.
 
-```{r}
+```{r, eval=FALSE}
 #-----------------------------------------------------------------------
 # 1. CONFIGURAÇÃO INICIAL
 #-----------------------------------------------------------------------
@@ -2485,7 +2485,7 @@ combinacoes <- df_cor %>%
 
 # Exibir as combinações encontradas (opcional, bom para verificação)
 print("Combinações encontradas para gerar gráficos:")
-print(combinacoes)
+head(combinacoes)
 
 # Iniciar o loop para iterar sobre cada linha do dataframe 'combinacoes'
 for (i in 1:nrow(combinacoes)) {
@@ -2686,7 +2686,7 @@ Este *loop* `for` é idêntico ao da Seção 15.7, mas opera sobre os dados de C
 
 Este *loop* irá gerar automaticamente todos os gráficos de resultados para CV1 e CV2, salvando-os no disco.
 
-```{r loop-plot-cv1-cv2}
+```{r loop-plot-cv1-cv2, eval=FALSE}
 #-----------------------------------------------------------------------
 # 1. CONFIGURAÇÃO INICIAL
 #-----------------------------------------------------------------------

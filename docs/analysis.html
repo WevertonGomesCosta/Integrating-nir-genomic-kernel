@@ -1,0 +1,4471 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Costa, W. G." />
+
+<meta name="date" content="2025-11-03" />
+
+<title>Analysis of NIR and Genomic Kernel Integration</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">NIR and Genomic Kernel Integration</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="climate_data.html">Climate date</a>
+</li>
+<li>
+  <a href="components_variance.html">Componentes de Variância</a>
+</li>
+<li>
+  <a href="analysis.html">Análise</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/wevertongomescosta/Integrating-nir-genomic-kernel">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Analysis of NIR and Genomic Kernel
+Integration</h1>
+<h4 class="author">Costa, W. G.<a href="#fn1" class="footnote-ref"
+id="fnref1"><sup>1</sup></a></h4>
+<h4 class="date">2025-11-03</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2025-11-03
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Integrating-nir-genomic-kernel/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20250829code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20250829)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20250829code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20250829)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltreec6199f984a849b6ac1e98891732d4bf096b19848targetblankc6199f9a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/c6199f984a849b6ac1e98891732d4bf096b19848" target="_blank">c6199f9</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltreec6199f984a849b6ac1e98891732d4bf096b19848targetblankc6199f9a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/c6199f984a849b6ac1e98891732d4bf096b19848" target="_blank">c6199f9</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    data/Article_documents/
+    Ignored:    data/Maize-NIRS-GBS-main/
+    Ignored:    output/ajuste_modelo/
+    Ignored:    output/componentes_variancia/Variance.Components.DAT.Means.Parsed.csv
+    Ignored:    output/componentes_variancia/Variance.Components.DAT.Means.csv
+    Ignored:    output/componentes_variancia/rep_1/Eta1/full_Eta1_GY_rep1_ETA_E_varB.dat
+    Ignored:    output/componentes_variancia/rep_1/Eta1/full_Eta1_GY_rep1_ETA_G_varU.dat
+    Ignored:    output/componentes_variancia/variance_components_percentage_GY.tiff
+    Ignored:    output/componentes_variancia/variance_components_percentage_KW.tiff
+    Ignored:    output/results/
+
+Unstaged changes:
+    Modified:   analysis/analysis.Rmd
+    Modified:   output/Pred.ability/Pred.ability.CV0.CV00.classified.csv
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/analysis.Rmd</code>) and HTML
+(<code>docs/analysis.html</code>) files. If you’ve configured a remote
+Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/904b83ca49badc9d520936ebca2a1659ec013b34/analysis/analysis.Rmd" target="_blank">904b83c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-03
+</td>
+<td>
+Remove arquivos de output antigos
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/fe31a330bfc5596474c3f35b6ea009183b893997/analysis/analysis.Rmd" target="_blank">fe31a33</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-03
+</td>
+<td>
+add analysis.rmd script
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="analysis-of-nir-and-genomic-kernel-integration"
+class="section level1">
+<h1>Analysis of NIR and Genomic Kernel Integration</h1>
+<p>Este documento detalha o <em>pipeline</em> de análise para integrar
+dados de Espectroscopia de Refletância no Infravermelho Próximo (NIR),
+dados genômicos e climáticos usando métodos de <em>kernel</em> para
+aumentar a precisão da predição. A análise inclui o pré-processamento de
+dados, ajuste de modelos e avaliação do desempenho preditivo.</p>
+<p>Este script foca especificamente nas etapas iniciais e cruciais de
+<strong>carregamento, limpeza e alinhamento</strong> dos diferentes
+tipos de dados.</p>
+<div id="load-required-libraries-and-data" class="section level2">
+<h2>1) Load Required Libraries and Data</h2>
+<p>Nesta etapa, carregamos nosso “kit de ferramentas” de pacotes R. Cada
+um deles é essencial para diferentes partes da análise:</p>
+<ul>
+<li><code>tidyverse</code>: Uma coleção de pacotes (como
+<code>dplyr</code> e <code>tidyr</code>) para a manipulação, limpeza e
+organização geral dos dados.</li>
+<li><code>data.table</code>: Extremamente eficiente para ler e manipular
+arquivos de dados muito grandes, como nossas matrizes genômicas (SNPs) e
+espectrais (NIR).</li>
+<li><code>BGLR</code>: O pacote central para a modelagem Bayesiana. Ele
+será usado posteriormente para ajustar os modelos de predição genômica
+usando os <em>kernels</em> que prepararemos.</li>
+<li><code>parallel</code> &amp; <code>doParallel</code>: Ferramentas
+para paralelizar nossos cálculos. Essenciais para rodar as análises de
+validação cruzada (CV) em tempo hábil.</li>
+<li><code>MASS</code>: Contém funções estatísticas adicionais que podem
+ser úteis.</li>
+</ul>
+<pre class="r"><code># Pacotes principais
+library(tidyverse)    # Manipulação de dados
+library(data.table)   # Leitura eficiente de grandes arquivos
+library(BGLR)         # Modelagem Bayesiana para predição genômica
+
+# Paralelismo
+library(parallel)     
+library(doParallel)   
+
+# Funções estatísticas adicionais
+library(MASS)                                     # Funções estatísticas</code></pre>
+</div>
+<div id="data-loading-and-preprocessing" class="section level2">
+<h2>2) Data Loading and Preprocessing</h2>
+<p>Os dados utilizados nesta análise vêm de três fontes principais. O
+objetivo desta seção é carregá-los e garantir que estejam consistentes
+entre si.</p>
+<div id="carregamento-dos-dados" class="section level3">
+<h3>2.1) Carregamento dos Dados</h3>
+<p>Primeiro, carregamos os arquivos brutos do disco.</p>
+<ul>
+<li><strong>NIR.csv</strong>: Este é um arquivo rico que contém
+múltiplos tipos de informação:
+<ol style="list-style-type: decimal">
+<li>IDs (<code>Pedigree</code>, <code>Env</code>).</li>
+<li>As variáveis de resposta (traits) que queremos prever, como
+<code>GY</code> (Produtividade) e <code>KW</code> (Peso de Grão), que
+provavelmente são BLUPs calculados anteriormente.</li>
+<li>As próprias leituras espectrais (bandas do NIR), que usaremos como
+preditores.</li>
+</ol></li>
+<li><strong>GAPIT.Genotype.Numerical.txt</strong>: Contém os dados
+genotípicos.
+<ol style="list-style-type: decimal">
+<li><code>taxa</code>: O ID do genótipo.</li>
+<li>Colunas de marcadores (SNPs) em formato numérico (ex: -1, 0, 1), que
+é o formato ideal para construir uma matriz de parentesco genômico
+(Kernel G).</li>
+</ol></li>
+<li><strong>Pheno</strong>: Este objeto não é carregado de um arquivo.
+Em vez disso, ele é <strong>extraído</strong> do arquivo
+<code>NIR</code> para isolar as variáveis de resposta (fenótipos) que
+nossos modelos tentarão prever.</li>
+</ul>
+<p>Dados fenotípicos com leituras espectrais e os blups</p>
+<pre class="r"><code># Carrega dados fenômicos (NIR)
+NIR &lt;- fread(&quot;data/NIR.csv&quot;) %&gt;% as.data.frame()
+
+# Visualização inicial
+head(NIR[, 1:7])    # primeiras colunas</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Pedigree"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Env"],"name":[2],"type":["chr"],"align":["left"]},{"label":["interaction"],"name":[3],"type":["chr"],"align":["left"]},{"label":["KW"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["GY"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["X3999.640137"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["X4001.568604"],"name":[7],"type":["dbl"],"align":["right"]}],"data":[{"1":"A188","2":"CS11_WS","3":"A188:CS11_WS","4":"76.43399","5":"17.64539","6":"1.235389","7":"1.235369","_rn_":"1"},{"1":"A188","2":"CS11_WW","3":"A188:CS11_WW","4":"100.66790","5":"67.05719","6":"1.254336","7":"1.254717","_rn_":"2"},{"1":"A188","2":"CS12_WS","3":"A188:CS12_WS","4":"109.77335","5":"73.91004","6":"1.284487","7":"1.284751","_rn_":"3"},{"1":"A188","2":"CS12_WW","3":"A188:CS12_WW","4":"137.50616","5":"116.77627","6":"1.308972","7":"1.309204","_rn_":"4"},{"1":"A214N","2":"CS11_WS","3":"A214N:CS11_WS","4":"96.46919","5":"21.30841","6":"1.284878","7":"1.284744","_rn_":"5"},{"1":"A214N","2":"CS11_WW","3":"A214N:CS11_WW","4":"105.08275","5":"55.31787","6":"1.275704","7":"1.275768","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>unique(NIR$Env)     # ambientes disponíveis</code></pre>
+<pre><code>[1] &quot;CS11_WS&quot; &quot;CS11_WW&quot; &quot;CS12_WS&quot; &quot;CS12_WW&quot;</code></pre>
+<p>Dados genotípicos com marcadores SNP</p>
+<pre class="r"><code># Carrega dados genotípicos (SNPs processados pelo GAPIT)
+Geno &lt;- fread(&quot;data/GAPIT.Genotype.Numerical.txt&quot;) %&gt;% as.data.frame()
+
+# Visualização inicial
+head(Geno[, 1:5])</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["taxa"],"name":[1],"type":["chr"],"align":["left"]},{"label":["S1_517642"],"name":[2],"type":["int"],"align":["right"]},{"label":["S1_1000282"],"name":[3],"type":["int"],"align":["right"]},{"label":["S1_1763292"],"name":[4],"type":["int"],"align":["right"]},{"label":["S1_1763397"],"name":[5],"type":["int"],"align":["right"]}],"data":[{"1":"GA209","2":"0","3":"0","4":"2","5":"0","_rn_":"1"},{"1":"NC230","2":"0","3":"0","4":"2","5":"0","_rn_":"2"},{"1":"NC232","2":"0","3":"0","4":"2","5":"2","_rn_":"3"},{"1":"NC236","2":"0","3":"0","4":"2","5":"0","_rn_":"4"},{"1":"NC238","2":"0","3":"0","4":"2","5":"0","_rn_":"5"},{"1":"VaW6","2":"0","3":"2","4":"2","5":"0","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p>Dados fenotipicos com BLUPs</p>
+<pre class="r"><code># Extrai as colunas de ID (Pedigree, Env) e as traits (GY, KW) do 
+# dataframe NIR para criar nosso dataframe &#39;Pheno&#39; (fenótipos).
+Pheno &lt;- NIR[, c(&quot;Pedigree&quot;, &quot;Env&quot;, &quot;GY&quot;, &quot;KW&quot;)]  %&gt;% 
+  arrange(Env, Pedigree) # Ordena os dados para consistência
+
+# Visualização inicial
+head(Pheno)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Pedigree"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Env"],"name":[2],"type":["chr"],"align":["left"]},{"label":["GY"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["KW"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"A188","2":"CS11_WS","3":"17.64539","4":"76.43399","_rn_":"1"},{"1":"A214N","2":"CS11_WS","3":"21.30841","4":"96.46919","_rn_":"2"},{"1":"A4415","2":"CS11_WS","3":"19.68995","4":"72.00986","_rn_":"3"},{"1":"A632","2":"CS11_WS","3":"22.93817","4":"71.81618","_rn_":"4"},{"1":"A634","2":"CS11_WS","3":"22.63998","4":"98.10547","_rn_":"5"},{"1":"A679","2":"CS11_WS","3":"11.01499","4":"62.90378","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div id="alinhamento-de-genótipos" class="section level3">
+<h3>2.2) Alinhamento de Genótipos</h3>
+<p>Esta é uma etapa <strong>crítica</strong>. Nossos modelos assumem que
+a linha <em>i</em> da matriz genômica (<code>Geno</code>) corresponde ao
+indivíduo da linha <em>i</em> da matriz fenotípica (<code>Pheno</code>).
+Se os dados não estiverem perfeitamente alinhados, os resultados serão
+inválidos.</p>
+<p>Aqui, garantimos que todos os <em>dataframes</em> (<code>NIR</code>,
+<code>Geno</code>, <code>Pheno</code>) contenham <strong>exatamente o
+mesmo conjunto de genótipos</strong>.</p>
+<p>Filtra os dados para manter apenas os genótipos compartilhados em
+ambos os conjuntos</p>
+<pre class="r"><code># Identifica genótipos compartilhados
+# A função &#39;intersect&#39; encontra os IDs de genótipos (Pedigree/taxa) 
+# que estão presentes EM AMBOS os arquivos, Geno e NIR.
+Pedigree &lt;- intersect(Geno$taxa, NIR$Pedigree)
+
+# Filtra os dataframes para manter APENAS os genótipos compartilhados
+NIR   &lt;- NIR[NIR$Pedigree %in% Pedigree, ]
+Geno  &lt;- Geno[Geno$taxa %in% Pedigree, ]
+Pheno &lt;- Pheno[Pheno$Pedigree %in% Pedigree, ]
+
+# Checagem de sanidade: verifica se o número de genótipos únicos
+# é o mesmo em todos os objetos de dados.
+cat(&quot;Genótipos em NIR:&quot;, length(unique(NIR$Pedigree)), &quot;\n&quot;)</code></pre>
+<pre><code>Genótipos em NIR: 329 </code></pre>
+<pre class="r"><code>cat(&quot;Genótipos em Geno:&quot;, length(Geno$taxa), &quot;\n&quot;)</code></pre>
+<pre><code>Genótipos em Geno: 329 </code></pre>
+<pre class="r"><code>cat(&quot;Genótipos em Pheno:&quot;, length(unique(Pheno$Pedigree)), &quot;\n&quot;)</code></pre>
+<pre><code>Genótipos em Pheno: 329 </code></pre>
+</div>
+</div>
+<div id="dividindo-os-dados-nir-por-ambiente" class="section level2">
+<h2>3) Dividindo os dados NIR por ambiente</h2>
+<p>Para modelar as interações Genótipo-por-Ambiente (GxE), muitas vezes
+precisamos analisar os dados por ambiente ou construir <em>kernels</em>
+específicos para cada ambiente.</p>
+<p>Esta seção prepara os dados para essa análise, separando o
+<em>dataframe</em> <code>NIR</code> (que contém os dados espectrais) em
+quatro subconjuntos, um para cada ambiente experimental.</p>
+<p>Separa NIR em quatro subconjuntos (a, b, c, d), correspondentes aos
+ambientes CS11_WS, CS11_WW, CS12_WS e CS12_WW.</p>
+<pre class="r"><code># Cria um dataframe separado para cada um dos quatro ambientes
+a &lt;- NIR[NIR$Env == &quot;CS11_WS&quot;, ]
+b &lt;- NIR[NIR$Env == &quot;CS11_WW&quot;, ]
+c &lt;- NIR[NIR$Env == &quot;CS12_WS&quot;, ]
+d &lt;- NIR[NIR$Env == &quot;CS12_WW&quot;, ]
+
+# Define nomes de linhas
+# Define o &#39;Pedigree&#39; como o nome da linha (rownames).
+# Isso é essencial para alinhar matrizes e kernels posteriormente.
+rownames(a) &lt;- a$Pedigree
+rownames(b) &lt;- b$Pedigree
+rownames(c) &lt;- c$Pedigree
+rownames(d) &lt;- d$Pedigree
+
+# Ordena por Pedigree
+# Garante que as linhas em cada dataframe ambiental estejam
+# na mesma ordem alfabética de &#39;Pedigree&#39;.
+a &lt;- a[order(rownames(a)), ]
+b &lt;- b[order(rownames(b)), ]
+c &lt;- c[order(rownames(c)), ]
+d &lt;- d[order(rownames(d)), ]</code></pre>
+<div id="identificação-de-genótipos-comuns-a-todos-os-ambientes"
+class="section level3">
+<h3>3.1) Identificação de Genótipos Comuns a Todos os Ambientes</h3>
+<p>Embora já tenhamos filtrado os genótipos comuns entre
+<code>Geno</code> e <code>NIR</code>, alguns genótipos podem não ter
+sido cultivados em <em>todos</em> os quatro ambientes.</p>
+<p>Para análises de interação GxE que exigem dados balanceados (ou para
+criar a matriz de parentesco principal), geralmente usamos apenas o
+conjunto de genótipos que têm dados em <em>todos</em> os ambientes.</p>
+<p>Identifica os genótipos presentes em todos os ambientes</p>
+<pre class="r"><code># Identifica os genótipos presentes em todos os ambientes
+# &#39;Reduce(intersect, ...)&#39; aplica a função &#39;intersect&#39; cumulativamente
+# à lista de IDs de pedigree dos 4 ambientes (a, b, c, d) e do &#39;Geno&#39;.
+# O resultado é a lista de genótipos que estão presentes em TODO LUGAR.
+Pedigree_communs &lt;- Reduce(intersect, list(Geno$taxa, a$Pedigree, b$Pedigree, c$Pedigree, d$Pedigree))
+length(Pedigree_communs)  # Número de genótipos consistentes</code></pre>
+<pre><code>[1] 146</code></pre>
+</div>
+</div>
+<div id="criando-a-matriz-de-relacionamento-genômico-zg"
+class="section level2">
+<h2>4) Criando a matriz de relacionamento genômico (ZG)</h2>
+<p>Nesta seção, criamos o <em>kernel</em> genômico, <code>ZG</code>. Um
+“kernel” é fundamentalmente uma matriz de parentesco ou
+similaridade.</p>
+<p>O passo crucial aqui é que, em vez de criar um kernel único para os
+300+ genótipos únicos, estamos criando um kernel para as
+<strong>observações</strong> (genótipo <em>dentro</em> de um ambiente).
+A lógica é:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Ordenar e Preparar <code>Geno</code></strong>: Asseguramos
+que a matriz genômica (<code>Geno</code>) esteja ordenada
+alfabeticamente por genótipo (<code>taxa</code>), definimos os
+<code>rownames</code> e removemos a coluna de ID, deixando apenas os
+marcadores numéricos.</li>
+<li><strong>Escalonar <em>Por</em> Ambiente</strong>: Este é o passo
+mais importante. Usamos <code>scale(subset(Geno, ...))</code> para
+padronizar (centralizar e escalonar) os marcadores SNP. Note que isso é
+feito <em>separadamente</em> para o conjunto de genótipos em cada
+ambiente (a, b, c, d). Isso padroniza os alelos com base na média e
+variância daquele subconjunto específico de indivíduos.</li>
+<li><strong>Empilhar (<code>rbind</code>)</strong>: Combinamos as quatro
+matrizes genômicas escalonadas (Geno.a, Geno.b, Geno.c, Geno.d) em uma
+única matriz grande, <code>Geno.all</code>. A ordem das linhas em
+<code>Geno.all</code> agora corresponde à ordem das observações no
+<em>dataframe</em> <code>Pheno</code>.</li>
+<li><strong>Calcular o Kernel (<code>tcrossprod</code>)</strong>: Usamos
+o produto cruzado (<code>tcrossprod</code>) dividido pelo número de
+marcadores (<code>ncol</code>) para calcular a matriz de parentesco
+genômico (similar ao método 1 de VanRaden).</li>
+</ol>
+<p>O resultado, <code>ZG</code>, é uma grande matriz de parentesco (N
+total de observações x N total de observações) que representa a
+similaridade genômica entre todas as observações.</p>
+<pre class="r"><code># Ordena os dados genotípicos por taxa
+Geno &lt;- Geno[order(Geno$taxa), ]
+rownames(Geno) &lt;- Geno$taxa
+Geno &lt;- Geno[, -1]  # remove coluna taxa
+
+# Escalonamento por ambiente
+Geno.a &lt;- scale(subset(Geno, rownames(Geno) %in% a$Pedigree), center = TRUE, scale = TRUE)
+Geno.b &lt;- scale(subset(Geno, rownames(Geno) %in% b$Pedigree), center = TRUE, scale = TRUE)
+Geno.c &lt;- scale(subset(Geno, rownames(Geno) %in% c$Pedigree), center = TRUE, scale = TRUE)
+Geno.d &lt;- scale(subset(Geno, rownames(Geno) %in% d$Pedigree), center = TRUE, scale = TRUE)
+
+# Combina todos os ambientes
+Geno.all &lt;- rbind(Geno.a, Geno.b, Geno.c, Geno.d)
+dim(Geno.all)</code></pre>
+<pre><code>[1]   982 41456</code></pre>
+<pre class="r"><code># Calcula matriz de relacionamento genômico
+ZG &lt;- tcrossprod(as.matrix(Geno.all)) / ncol(Geno.all)</code></pre>
+<p>Uma rápida verificação das dimensões e dos primeiros elementos da
+matriz <code>ZG</code> para garantir que o cálculo foi bem-sucedido.</p>
+<pre class="r"><code># Checagem
+dim(ZG)</code></pre>
+<pre><code>[1] 982 982</code></pre>
+<pre class="r"><code>ZG[1:5, 1:5]</code></pre>
+<pre><code>              A188        A214N       A4415        A632        A634
+A188   1.081262206 -0.007936875  0.02849732 -0.01341945  0.01086622
+A214N -0.007936875  1.106776982 -0.01406327  0.30335381  0.51863619
+A4415  0.028497322 -0.014063270  0.97459897 -0.01030808 -0.01225142
+A632  -0.013419454  0.303353810 -0.01030808  0.81053742  0.46287155
+A634   0.010866216  0.518636190 -0.01225142  0.46287155  1.07224004</code></pre>
+</div>
+<div id="criando-a-matriz-de-relacionamento-fenômica-zp"
+class="section level2">
+<h2>5) Criando a matriz de relacionamento fenômica (ZP)</h2>
+<p>Seguimos uma lógica <strong>idêntica</strong> à da seção anterior,
+mas desta vez usamos os dados espectrais do NIR (que chamamos de ‘P’ de
+<em>phenomic</em> ou <em>proximal sensing</em>).</p>
+<ol style="list-style-type: decimal">
+<li><strong>Preparar <code>NIR</code></strong>: Para cada ambiente (a,
+b, c, d), removemos as 5 primeiras colunas de metadados (IDs, traits) e
+usamos <code>scale()</code> para padronizar os valores de cada banda
+espectral.</li>
+<li><strong>Empilhar (<code>rbind</code>)</strong>: Combinamos as quatro
+matrizes NIR escalonadas em <code>NIR.all</code>.</li>
+<li><strong>Calcular o Kernel (<code>tcrossprod</code>)</strong>:
+Calculamos <code>ZP</code>.</li>
+</ol>
+<p>O resultado, <code>ZP</code>, é uma matriz (N total x N total) que
+mede a <strong>similaridade espectral</strong> entre cada par de
+observações. A hipótese é que indivíduos com espectros NIR similares
+podem compartilhar características fisiológicas ou de composição,
+independentemente de seu parentesco genômico.</p>
+<pre class="r"><code># Remove colunas de identificação
+NIR.a &lt;- scale(a[,-c(1:5)],center=TRUE,scale=TRUE)
+NIR.b &lt;- scale(b[,-c(1:5)],center=TRUE,scale=TRUE)
+NIR.c &lt;- scale(c[,-c(1:5)],center=TRUE,scale=TRUE)
+NIR.d &lt;- scale(d[,-c(1:5)],center=TRUE,scale=TRUE)
+
+# Combina todos os ambientes
+NIR.all &lt;- rbind(NIR.a, NIR.b, NIR.c, NIR.d)
+dim(NIR.all)</code></pre>
+<pre><code>[1]  982 3112</code></pre>
+<pre class="r"><code># Calcula matriz de relacionamento fenômico
+ZP &lt;- tcrossprod(as.matrix(NIR.all)) / ncol(NIR.all)</code></pre>
+<p>Novamente, verificamos as dimensões e o conteúdo da matriz
+<code>ZP</code>.</p>
+<pre class="r"><code># Checagem
+dim(ZP)</code></pre>
+<pre><code>[1] 982 982</code></pre>
+<pre class="r"><code>ZP[1:5, 1:5]</code></pre>
+<pre><code>            A188       A214N       A4415        A632        A634
+A188   2.0689756  0.12794826 -0.96853101  1.20893618  0.65051847
+A214N  0.1279483  0.01220063 -0.05604141  0.06624954  0.03393302
+A4415 -0.9685310 -0.05604141  0.46231635 -0.56784147 -0.29814444
+A632   1.2089362  0.06624954 -0.56784147  0.82350392  0.52022985
+A634   0.6505185  0.03393302 -0.29814444  0.52022985  0.38209739</code></pre>
+</div>
+<div id="criando-a-matriz-de-relacionamento-ambiental-ze"
+class="section level2">
+<h2>6) Criando a matriz de relacionamento ambiental (ZE)</h2>
+<p>Esta é a forma mais <strong>simples</strong> de criar um kernel
+ambiental.</p>
+<ol style="list-style-type: decimal">
+<li><strong>Matriz de Incidência (<code>ZE</code>)</strong>:
+<code>model.matrix</code> cria uma matriz “dummy” (ou <em>one-hot
+encoding</em>). Ela tem uma linha para cada observação e uma coluna para
+cada ambiente (4 colunas no total). Um valor ‘1’ é colocado na coluna
+correspondente ao ambiente daquela observação.</li>
+<li><strong>Kernel (<code>ZEZE</code>)</strong>: Ao calcular
+<code>tcrossprod(ZE)</code>, criamos uma matriz (N total x N total) onde
+o elemento <code>[i, j]</code> é ‘1’ se as observações <em>i</em> e
+<em>j</em> são do <strong>mesmo ambiente</strong>, e ‘0’ caso
+contrário.</li>
+</ol>
+<p>Este kernel modela um efeito ambiental “clássico” (ou de bloco), onde
+todas as observações dentro de um mesmo ambiente são tratadas como 100%
+relacionadas entre si (em termos de ambiente) e 0% relacionadas a
+observações de outros ambientes.</p>
+<pre class="r"><code># Cria matriz de incidência de ambientes (0/1)
+ZE &lt;- model.matrix(~ as.factor(Pheno$Env) - 1)
+
+# Calcula matriz de relacionamento ambiental (produto cruzado)
+ZEZE &lt;- tcrossprod(ZE)
+
+# Checagens
+cat(&quot;Dimensões da matriz ZE:&quot;, dim(ZE), &quot;\n&quot;)</code></pre>
+<pre><code>Dimensões da matriz ZE: 982 4 </code></pre>
+<pre class="r"><code>cat(&quot;Dimensões da matriz ZEZE:&quot;, dim(ZEZE), &quot;\n&quot;)</code></pre>
+<pre><code>Dimensões da matriz ZEZE: 982 982 </code></pre>
+<pre class="r"><code># Visualiza primeiras linhas
+dim(ZE)</code></pre>
+<pre><code>[1] 982   4</code></pre>
+<pre class="r"><code>ZEZE[1:5, 1:5]</code></pre>
+<pre><code>  1 2 3 4 5
+1 1 1 1 1 1
+2 1 1 1 1 1
+3 1 1 1 1 1
+4 1 1 1 1 1
+5 1 1 1 1 1</code></pre>
+</div>
+<div
+id="criando-a-matriz-de-relacionamento-ambiental-com-dados-climáticos-w"
+class="section level2">
+<h2>6.1) Criando a Matriz de Relacionamento Ambiental com Dados
+Climáticos (W)</h2>
+<p>Esta é uma abordagem muito mais <strong>sofisticada</strong> para
+modelar o ambiente, em vez de apenas usar os blocos da Seção 6. O
+objetivo é criar um kernel <code>ZW</code> (W de <em>Weather</em>,
+Clima) onde a similaridade entre duas observações é baseada na
+<strong>similaridade climática real</strong> dos seus ambientes.</p>
+<p>A construção desta matriz <code>W</code> é complexa:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Carregar ECs</strong>: Carregamos as Covariáveis Ambientais
+(ECs) do script anterior.</li>
+<li><strong>Separar Dados</strong>: O código inteligentemente separa os
+dados climáticos em dois tipos:
+<ul>
+<li><strong>Agregados</strong>: Dados que são um <em>único valor</em>
+para o ano (ex: <code>TMAX_AVG</code>, <code>GDD_CUM</code>).
+<code>ECs.2011</code> e <code>ECs.2012</code> armazenam esses
+vetores.</li>
+<li><strong>Diários</strong>: Dados que têm um valor por dia (ex:
+<code>PRECTOTCORR</code>).</li>
+</ul></li>
+<li><strong>Criar “Assinatura Climática”</strong>: O
+<code>pivot_wider</code> é usado para transformar os dados
+<em>diários</em> de um formato “longo” (muitas linhas) para “largo”. O
+resultado (<code>env_wide_2011</code>) é uma <strong>única
+linha</strong> (um vetor) que contém a “assinatura climática” completa
+daquele ano (ex: T2M_dia1, T2M_dia2, …, T2M_dia150).</li>
+<li><strong>Construir Matriz por Observação</strong>: Para cada
+observação (linha) em um ambiente (ex: ambiente ‘a’, que é 2011):
+<ul>
+<li>Anexamos a “assinatura diária” de 2011 (replicada para aquela
+linha).</li>
+<li>Anexamos as colunas para os dados diários de 2012, preenchidas com
+<code>NA</code>.</li>
+<li>Anexamos o vetor de dados “agregados” de 2011.</li>
+<li>Isso é repetido para todos os ambientes (a, b, c, d), preenchendo
+com <code>NA</code> os anos que não se aplicam.</li>
+</ul></li>
+<li><strong>Empilhar e Limpar</strong>: <code>rbind</code> combina tudo
+na matriz <code>W</code>. <code>W[is.na(W)] &lt;- 0</code> substitui os
+<code>NA</code>s por 0. Isso assume que a “não aplicabilidade” (ex:
+dados de 2012 para uma observação de 2011) contribui com 0 para a
+similaridade.</li>
+<li><strong>Calcular Kernel <code>ZW</code></strong>: Finalmente,
+<code>tcrossprod(W)</code> cria o kernel. <code>ZW</code> é uma matriz
+(N total x N total) que mede a similaridade climática detalhada entre
+cada par de observações, usando tanto dados diários quanto
+agregados.</li>
+</ol>
+<pre class="r"><code># --- 1. Preparação Inicial dos Dados Climáticos (Feita uma vez) ---
+
+# Carrega os dados climáticos
+ECs_data &lt;- read.csv(&quot;output/climate_results/environmental_covariates.csv&quot;) %&gt;%
+  dplyr::select(PRECTOTCORR:date, T_eff_min:VPD_STRESS_DAYS)
+
+# --- 2. Escalonamento dos Dados Climáticos (Feito 1x) ---
+# Seleciona apenas as covariáveis AGREGADAS (médias, somas)
+ECs_data_scaled &lt;- ECs_data %&gt;%
+  dplyr::select(TMAX_AVG:VPD_STRESS_DAYS) %&gt;%
+  scale(., center = TRUE, scale = TRUE) %&gt;% unique()
+
+# Cria ECs.2011 (1 linha com dados agregados e escalonados de 2011)
+ECs.2011 &lt;- matrix(ECs_data_scaled[1, ], nrow = 1)
+colnames(ECs.2011) &lt;- colnames(ECs_data_scaled)
+
+# Cria ECs.2012 (1 linha com dados agregados e escalonados de 2012)
+ECs.2012 &lt;- matrix(ECs_data_scaled[2, ], nrow = 1)
+colnames(ECs.2012) &lt;- colnames(ECs_data_scaled)
+
+# Prepara 2011: Filtra dados DIÁRIOS, extrai datas e escala
+ECs.2011_filtered &lt;- ECs_data %&gt;% filter(year == 2011)
+ECs.2011_scaled &lt;- ECs.2011_filtered %&gt;%
+  dplyr::select(-year, -date, -(TMAX_AVG:VPD_STRESS_DAYS)) %&gt;%
+  scale(. , center = TRUE, scale = TRUE)
+ECs.2011_dates &lt;- ECs.2011_filtered$date
+
+# Prepara 2012: Filtra dados DIÁRIOS, extrai datas e escala
+ECs.2012_filtered &lt;- ECs_data %&gt;% filter(year == 2012)
+ECs.2012_scaled &lt;-    ECs.2012_filtered %&gt;%
+  dplyr::select(-year, -date, -(TMAX_AVG:VPD_STRESS_DAYS)) %&gt;%
+  scale(., center = TRUE, scale = TRUE)
+ECs.2012_dates &lt;- ECs.2012_filtered$date
+
+# --- 3. Criar a Linha Única de Dados Climáticos &quot;Largos&quot; (Feito 2x) ---
+
+# Cria o dataframe &quot;largo&quot; (1 linha) para 2011 (assinatura diária)
+env_wide_2011 &lt;- as.data.frame(ECs.2011_scaled) %&gt;%
+  mutate(date = ECs.2011_dates) %&gt;%
+  pivot_wider(names_from = date, values_from = -date)
+
+# Cria o dataframe &quot;largo&quot; (1 linha) para 2012 (assinatura diária)
+env_wide_2012 &lt;- as.data.frame(ECs.2012_scaled) %&gt;%
+  mutate(date = ECs.2012_dates) %&gt;%
+  pivot_wider(names_from = date, values_from = -date)
+
+# --- 4. Construção das Matrizes por Ambiente (em etapas) ---
+
+# (Assumindo que os dataframes &#39;a&#39;, &#39;b&#39;, &#39;c&#39;, e &#39;d&#39; já existem)
+
+# Etapa A: Ambiente CS11_WS
+pedigrees_a &lt;- a$Pedigree
+ECs.a &lt;- env_wide_2011[rep(1, length(pedigrees_a)), ] # Repete a assinatura diária de 2011
+ECs.a &lt;- cbind(ECs.a, matrix(
+  NA,
+  nrow = length(pedigrees_a),
+  ncol = length(env_wide_2012),
+  dimnames = list(pedigrees_a, colnames(env_wide_2012))
+))  # Adiciona colunas NA para 2012
+ECs.a &lt;- cbind(ECs.a, ECs.2011) %&gt;% as.matrix() # Adiciona os dados agregados de 2011
+rownames(ECs.a) &lt;- pedigrees_a
+dim(ECs.a)</code></pre>
+<pre><code>[1]  196 4607</code></pre>
+<pre class="r"><code># Etapa B: Ambiente CS11_WW
+pedigrees_b &lt;- b$Pedigree
+ECs.b &lt;- env_wide_2011[rep(1, length(pedigrees_b)), ]
+ECs.b &lt;- cbind(ECs.b, matrix(
+  NA,
+  nrow = length(pedigrees_b),
+  ncol = length(env_wide_2012),
+  dimnames = list(pedigrees_b, colnames(env_wide_2012))
+))  # Adiciona dados de 2012
+ECs.b &lt;- cbind(ECs.b, ECs.2011) %&gt;% as.matrix()  
+rownames(ECs.b) &lt;- pedigrees_b
+dim(ECs.b)</code></pre>
+<pre><code>[1]  263 4607</code></pre>
+<pre class="r"><code># Etapa C: Ambiente CS12_WS
+pedigrees_c &lt;- c$Pedigree
+ECs.c &lt;- env_wide_2012[rep(1, length(pedigrees_c)), ] # Repete a assinatura diária de 2012
+ECs.c &lt;- cbind(matrix(
+  NA,
+  nrow = length(pedigrees_c),
+  ncol = length(env_wide_2011),
+  dimnames = list(pedigrees_c, colnames(env_wide_2011))
+),  ECs.c) # Adiciona colunas NA para 2011
+ECs.c &lt;- cbind(ECs.c, ECs.2012) %&gt;% as.matrix() # Adiciona os dados agregados de 2012
+rownames(ECs.c) &lt;- pedigrees_c
+dim(ECs.c)</code></pre>
+<pre><code>[1]  310 4607</code></pre>
+<pre class="r"><code># Etapa D: Ambiente CS12_WW
+pedigrees_d &lt;- d$Pedigree
+ECs.d &lt;- env_wide_2012[rep(1, length(pedigrees_d)), ]
+ECs.d &lt;- cbind(matrix(
+  NA,
+  nrow = length(pedigrees_d),
+  ncol = length(env_wide_2011),
+  dimnames = list(pedigrees_d, colnames(env_wide_2011))
+), ECs.d)  # Adiciona dados de 2011
+ECs.d &lt;- cbind(ECs.d, ECs.2012) %&gt;% as.matrix()
+rownames(ECs.d) &lt;- pedigrees_d
+dim(ECs.d)</code></pre>
+<pre><code>[1]  213 4607</code></pre>
+<pre class="r"><code># --- 5. Combinação e Criação da Matriz W ---
+W &lt;- rbind(ECs.a, ECs.b, ECs.c, ECs.d)
+
+# Verificação
+dim(W)</code></pre>
+<pre><code>[1]  982 4607</code></pre>
+<pre class="r"><code>W[1:5, 1:5]</code></pre>
+<pre><code>      PRECTOTCORR_2011-05-01 PRECTOTCORR_2011-05-02 PRECTOTCORR_2011-05-03
+A188              -0.2836821            -0.02845919             -0.2475899
+A214N             -0.2836821            -0.02845919             -0.2475899
+A4415             -0.2836821            -0.02845919             -0.2475899
+A632              -0.2836821            -0.02845919             -0.2475899
+A634              -0.2836821            -0.02845919             -0.2475899
+      PRECTOTCORR_2011-05-04 PRECTOTCORR_2011-05-05
+A188              -0.2836821             -0.2811041
+A214N             -0.2836821             -0.2811041
+A4415             -0.2836821             -0.2811041
+A632              -0.2836821             -0.2811041
+A634              -0.2836821             -0.2811041</code></pre>
+<pre class="r"><code># Substitui NAs por 0 para permitir o cálculo do tcrossprod
+W[is.na(W)] &lt;- 0
+
+# 6. Calcular a matriz de relacionamento
+ZW &lt;- tcrossprod(as.matrix(W)) / ncol(W)
+table(ZW[1,])</code></pre>
+<pre><code>
+-0.00367797795625015    0.498577044593978 
+                 523                  459 </code></pre>
+<pre class="r"><code># Visualização do Kernel Ambiental
+dim(ZW)</code></pre>
+<pre><code>[1] 982 982</code></pre>
+<pre class="r"><code>ZW[1:5, 1:5]</code></pre>
+<pre><code>          A188    A214N    A4415     A632     A634
+A188  0.498577 0.498577 0.498577 0.498577 0.498577
+A214N 0.498577 0.498577 0.498577 0.498577 0.498577
+A4415 0.498577 0.498577 0.498577 0.498577 0.498577
+A632  0.498577 0.498577 0.498577 0.498577 0.498577
+A634  0.498577 0.498577 0.498577 0.498577 0.498577</code></pre>
+</div>
+<div id="verificações-finais-de-alinhamento" class="section level2">
+<h2>7) Verificações Finais de Alinhamento</h2>
+<p>Antes de prosseguir para a modelagem, executamos algumas verificações
+cruciais.</p>
+<p>Primeiro, uma verificação pontual (spot-check) para um genótipo
+específico (‘A188’) para ver se os dados parecem corretos e alinhados
+nas matrizes empilhadas.</p>
+<pre class="r"><code>Geno.all[str_detect(rownames(Geno.all), &quot;A188&quot;), 1:5]</code></pre>
+<pre><code>      S1_517642 S1_1000282 S1_1763292 S1_1763397 S1_2088440
+A188 -0.3244447 -0.4954853  0.4389794 -0.5765720 -0.2468038
+A188 -0.3071575 -0.5046434  0.4309819 -0.5753945 -0.2647288
+A188 -0.3068291 -0.4844154  0.4318786 -0.5471143 -0.2895119
+A188 -0.3277855 -0.4725198  0.4256480 -0.5603790 -0.2964903</code></pre>
+<pre class="r"><code>W[str_detect(rownames(W), &quot;A188&quot;), 1:5]</code></pre>
+<pre><code>     PRECTOTCORR_2011-05-01 PRECTOTCORR_2011-05-02 PRECTOTCORR_2011-05-03
+A188             -0.2836821            -0.02845919             -0.2475899
+A188             -0.2836821            -0.02845919             -0.2475899
+A188              0.0000000             0.00000000              0.0000000
+A188              0.0000000             0.00000000              0.0000000
+     PRECTOTCORR_2011-05-04 PRECTOTCORR_2011-05-05
+A188             -0.2836821             -0.2811041
+A188             -0.2836821             -0.2811041
+A188              0.0000000              0.0000000
+A188              0.0000000              0.0000000</code></pre>
+<pre class="r"><code>NIR.all[str_detect(rownames(W), &quot;A188&quot;), 1:5]</code></pre>
+<pre><code>     X3999.640137 X4001.568604 X4003.497071 X4005.425537 X4007.354004
+A188    -1.701604    -1.696844    -1.696844    -1.696283    -1.696195
+A188    -1.120197    -1.112012    -1.112012    -1.110283    -1.111711
+A188    -1.398754    -1.393058    -1.393058    -1.392220    -1.392757
+A188    -1.523355    -1.518600    -1.518600    -1.517747    -1.517932</code></pre>
+<p>Esta é a <strong>verificação de alinhamento mais importante</strong>
+da análise. Antes de passar os <em>kernels</em> para o BGLR, devemos
+garantir que todos eles (<code>ZW</code>, <code>ZG</code>,
+<code>ZP</code>) são:</p>
+<ol style="list-style-type: decimal">
+<li>Quadrados (mesmo número de linhas e colunas).</li>
+<li>Simétricos (nomes de linhas == nomes de colunas).</li>
+<li>Perfeitamente alinhados entre si (nomes de linhas de ZW == nomes de
+linhas de ZG, etc.).</li>
+</ol>
+<p>Se todos os testes abaixo retornarem <code>TRUE</code>, nossos
+<em>kernels</em> estão perfeitamente alinhados e prontos para a
+modelagem.</p>
+<pre class="r"><code>all(rownames(ZW) == colnames(ZW))</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>all(rownames(ZG) == colnames(ZG))</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>all(rownames(ZP) == colnames(ZP))</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>all(rownames(ZW) == rownames(ZG))</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>all(rownames(ZW) == rownames(ZP))</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>all(colnames(ZW) == colnames(ZG))</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>all(colnames(ZW) == colnames(ZP))</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>all(unique(rownames(ZG)) == unique(colnames(ZG)))</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>all(unique(rownames(ZP)) == unique(colnames(ZP)))</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>all(unique(rownames(ZW)) == unique(colnames(ZW)))</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<p>Por fim, inspecionamos os cantos superiores esquerdos das três
+matrizes de relacionamento. Isso nos dá uma ideia visual dos valores de
+similaridade calculados e confirma que os <code>rownames</code> e
+<code>colnames</code> estão idênticos.</p>
+<pre class="r"><code>ZW[1:5, 1:5]</code></pre>
+<pre><code>          A188    A214N    A4415     A632     A634
+A188  0.498577 0.498577 0.498577 0.498577 0.498577
+A214N 0.498577 0.498577 0.498577 0.498577 0.498577
+A4415 0.498577 0.498577 0.498577 0.498577 0.498577
+A632  0.498577 0.498577 0.498577 0.498577 0.498577
+A634  0.498577 0.498577 0.498577 0.498577 0.498577</code></pre>
+<pre class="r"><code>ZG[1:5, 1:5]</code></pre>
+<pre><code>              A188        A214N       A4415        A632        A634
+A188   1.081262206 -0.007936875  0.02849732 -0.01341945  0.01086622
+A214N -0.007936875  1.106776982 -0.01406327  0.30335381  0.51863619
+A4415  0.028497322 -0.014063270  0.97459897 -0.01030808 -0.01225142
+A632  -0.013419454  0.303353810 -0.01030808  0.81053742  0.46287155
+A634   0.010866216  0.518636190 -0.01225142  0.46287155  1.07224004</code></pre>
+<pre class="r"><code>ZP[1:5, 1:5]</code></pre>
+<pre><code>            A188       A214N       A4415        A632        A634
+A188   2.0689756  0.12794826 -0.96853101  1.20893618  0.65051847
+A214N  0.1279483  0.01220063 -0.05604141  0.06624954  0.03393302
+A4415 -0.9685310 -0.05604141  0.46231635 -0.56784147 -0.29814444
+A632   1.2089362  0.06624954 -0.56784147  0.82350392  0.52022985
+A634   0.6505185  0.03393302 -0.29814444  0.52022985  0.38209739</code></pre>
+</div>
+<div id="interações" class="section level2">
+<h2>8) Interações</h2>
+<p>Nesta seção, começamos a modelar as <strong>interações</strong>, como
+Genótipo-por-Ambiente (GxE) e Fenótipo-por-Ambiente (PxE). Estas
+interações são cruciais para entender como o desempenho de um genótipo
+(ou seu perfil NIR) muda em diferentes condições.</p>
+<p>O método usado aqui é o <strong>produto de Hadamard</strong> (a
+multiplicação simples, elemento a elemento, <code>*</code> no R). A
+lógica é a seguinte:</p>
+<ul>
+<li><code>ZGZE = ZG * ZEZE</code>: Esta matriz representa a interação
+<strong>Genômico × Ambiente (Categórico)</strong>. Um elemento
+<code>[i, j]</code> nesta matriz só será diferente de zero se as
+observações <em>i</em> e <em>j</em> forem do <strong>mesmo
+ambiente</strong> (de <code>ZEZE</code>) <em>E</em> se elas estiverem
+<strong>genomicamente relacionadas</strong> (de <code>ZG</code>). Isso
+isola a variação genômica que é específica de cada ambiente.</li>
+<li><code>ZPZE</code>: Da mesma forma, representa a interação
+<strong>Fenômico/NIR × Ambiente (Categórico)</strong>.</li>
+<li><code>ZGZW</code> e <code>ZPZW</code>: Representam as interações
+<strong>Genômico × Clima</strong> e <strong>Fenômico/NIR ×
+Clima</strong>. Esta é uma abordagem mais avançada, pois a força da
+interação não se baseia apenas em “estar no mesmo ambiente” (como
+<code>ZEZE</code>), mas na “similaridade climática real” (de
+<code>ZW</code>).</li>
+</ul>
+<pre class="r"><code># Interação genômica × ambiente
+ZGZE &lt;- ZG * ZEZE
+ZGZE[1:5, 1:5]</code></pre>
+<pre><code>              A188        A214N       A4415        A632        A634
+A188   1.081262206 -0.007936875  0.02849732 -0.01341945  0.01086622
+A214N -0.007936875  1.106776982 -0.01406327  0.30335381  0.51863619
+A4415  0.028497322 -0.014063270  0.97459897 -0.01030808 -0.01225142
+A632  -0.013419454  0.303353810 -0.01030808  0.81053742  0.46287155
+A634   0.010866216  0.518636190 -0.01225142  0.46287155  1.07224004</code></pre>
+<pre class="r"><code># Interação fenômica × ambiente
+ZPZE &lt;- ZP * ZEZE
+ZPZE[1:5, 1:5]</code></pre>
+<pre><code>            A188       A214N       A4415        A632        A634
+A188   2.0689756  0.12794826 -0.96853101  1.20893618  0.65051847
+A214N  0.1279483  0.01220063 -0.05604141  0.06624954  0.03393302
+A4415 -0.9685310 -0.05604141  0.46231635 -0.56784147 -0.29814444
+A632   1.2089362  0.06624954 -0.56784147  0.82350392  0.52022985
+A634   0.6505185  0.03393302 -0.29814444  0.52022985  0.38209739</code></pre>
+<pre class="r"><code># Interação genômica × clima
+ZGZW &lt;- ZG * ZW
+ZGZW[1:5, 1:5]</code></pre>
+<pre><code>              A188        A214N        A4415         A632         A634
+A188   0.539092515 -0.003957144  0.014208110 -0.006690632  0.005417646
+A214N -0.003957144  0.551813597 -0.007011624  0.151245246  0.258580099
+A4415  0.014208110 -0.007011624  0.485912677 -0.005139370 -0.006108278
+A632  -0.006690632  0.151245246 -0.005139370  0.404115351  0.230777129
+A634   0.005417646  0.258580099 -0.006108278  0.230777129  0.534594272</code></pre>
+<pre class="r"><code># Interação fenômica × clima
+ZPZW &lt;- ZP * ZW
+ZPZW[1:5, 1:5]</code></pre>
+<pre><code>             A188        A214N       A4415       A632        A634
+A188   1.03154375  0.063792065 -0.48288733  0.6027478  0.32433358
+A214N  0.06379207  0.006082952 -0.02794096  0.0330305  0.01691823
+A4415 -0.48288733 -0.027940960  0.23050032 -0.2831127 -0.14864797
+A632   0.60274783  0.033030500 -0.28311272  0.4105802  0.25937466
+A634   0.32433358  0.016918227 -0.14864797  0.2593747  0.19050499</code></pre>
+</div>
+<div id="gk-and-ak-kernels" class="section level2">
+<h2>9) GK and AK kernels</h2>
+<p><strong>Objetivo geral:</strong> Os <em>kernels</em> lineares que
+criamos até agora (<code>ZG</code>, <code>ZP</code>) capturam apenas
+relações <strong>aditivas</strong>. No entanto, as interações biológicas
+são frequentemente <strong>não-lineares</strong>. Para capturar esses
+padrões complexos, construiremos dois tipos de <em>kernels</em>
+não-lineares. Estes <em>kernels</em> serão então usados para construir
+os modelos na seção 10.</p>
+<p><strong>Tipos de kernels:</strong></p>
+<ul>
+<li><strong>GK (Gaussian Kernel):</strong> Mede a similaridade usando
+uma função gaussiana da distância. É poderoso para capturar “relações
+locais”, onde indivíduos muito similares têm uma relação muito mais
+forte do que indivíduos moderadamente similares.</li>
+<li><strong>AK (arc-cosseno Kernel):</strong> Mede a similaridade com
+base no <em>ângulo</em> (correlação) entre os vetores dos indivíduos. É
+derivado da teoria de redes neurais e é eficaz na captura de padrões
+complexos e não-aditivos.</li>
+</ul>
+<div id="gaussian-kernel-gk" class="section level3">
+<h3>9.1) Gaussian kernel (GK)</h3>
+<p>Construir kernels baseados em funções de similaridade gaussiana, que
+capturam relações não lineares entre genótipos e fenótipos.</p>
+<div id="função-de-otimização-do-kernel-gaussiano"
+class="section level4">
+<h4>9.1.1) Função de Otimização do Kernel Gaussiano</h4>
+<p>Antes de construir o <em>kernel</em>, precisamos encontrar o
+<strong>hiperparâmetro de suavidade (<code>h</code>)</strong> ideal. Um
+<code>h</code> errado pode fazer o modelo ter <em>overfitting</em> ou
+<em>underfitting</em>.</p>
+<p>Esta função, <code>margh.fun</code>, é uma “função objetivo” que será
+usada por um otimizador (<code>optim</code>). Seu objetivo é encontrar o
+valor de <code>h</code> (e um parâmetro de escala <code>phi</code>) que
+<strong>maximiza a log-verossimilhança marginal</strong>.</p>
+<p>Em termos simples: dado o nosso <em>kernel</em> candidato
+(<code>Kh</code>) e nossos dados fenotípicos (<code>y</code>), a função
+calcula o quão “prováveis” são os dados. O otimizador encontrará o
+<code>h</code> que torna os dados o mais provável possível.</p>
+<ul>
+<li><code>Kh &lt;- exp(-h * D / q)</code>: Constrói o <em>kernel</em>
+gaussiano candidato.</li>
+<li><code>eigenKh</code>: Realiza a decomposição espectral, um passo
+matemático necessário.</li>
+<li><code>lden &lt;- ...</code>: Calcula a log-verossimilhança
+marginal.</li>
+<li><code>return(-(lden + lprior))</code>: Retorna o <em>negativo</em>
+da log-verossimilhança (pois os otimizadores, por padrão,
+<em>minimizam</em>).</li>
+</ul>
+<pre class="r"><code># Função de otimização do hiperparâmetro h
+margh.fun &lt;- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
+                      nuh = NULL, Sch = NULL, prior = NULL) {
+  h &lt;- theta[1]    # Parâmetro de suavidade do kernel
+  phi &lt;- theta[2]  # Parâmetro de escala
+  
+  Kh &lt;- exp(-h * D / q)  # Matriz kernel gaussiana
+  eigenKh &lt;- eigen(Kh)   # Decomposição espectral
+  
+  nr &lt;- length(which(eigenKh$values &gt; 1e-10))  # Número de componentes relevantes
+  Uh &lt;- eigenKh$vectors[, 1:nr]                # Autovetores
+  Sh &lt;- eigenKh$values[1:nr]                   # Autovalores
+  
+  d &lt;- t(Uh) %*% scale(y, scale = FALSE)    # Projeção dos dados
+  
+  # Log-verossimilhança marginal
+  lden &lt;- -0.5 * sum(log(1 + phi * Sh)) -
+    (nu + nr - 1) / 2 * log(Sc + sum(d^2 / (1 + phi * Sh)))
+  
+  # Prior opcional sobre h
+  if (!is.null(prior)) {
+    lprior &lt;- dgamma(h, nuh, Sch, log = TRUE)
+  } else {
+    lprior &lt;- 0
+  }
+  
+  return(-(lden + lprior))  # Retorna negativo da log-verossimilhança
+}</code></pre>
+</div>
+<div id="construindo-o-kernel-gaussiano-genômico-ggk"
+class="section level4">
+<h4>9.1.2) Construindo o Kernel Gaussiano Genômico (GGK)</h4>
+<p>Aqui, aplicamos a função de otimização aos nossos dados
+genômicos.</p>
+<ol style="list-style-type: decimal">
+<li><code>DG &lt;- (as.matrix(dist(Geno)))^2</code>: Calcula a matriz de
+<strong>distância</strong> Euclidiana ao quadrado entre todos os
+<strong>genótipos únicos</strong> (ex: 300x300).</li>
+<li><code>DG_proj &lt;- ...</code>: Este é um passo crucial.
+<code>DG</code> é uma matriz de genótipos únicos, mas nosso modelo
+precisa de um <em>kernel</em> no espaço das <strong>observações</strong>
+(ex: 1200x1200). Este código “projeta” a matriz de distância
+<code>DG</code> para o espaço de observação <code>Pheno</code> usando a
+matriz de incidência <code>Z</code>. O resultado
+<code>DG_proj[i, j]</code> conterá a distância genômica entre a
+observação <em>i</em> e a observação <em>j</em>.</li>
+<li><code>solG &lt;- optim(...)</code>: Executa o otimizador
+(<code>optim</code>) usando <code>margh.fun</code> para encontrar o
+melhor <code>h</code> (baseado no trait <code>Pheno$GY</code>).</li>
+<li><code>hG &lt;- solG$par[1]</code>: Extrai o valor <code>h</code>
+otimizado.</li>
+<li><code>GGK &lt;- ...</code>: Constrói a matriz <em>kernel</em>
+<code>GGK</code> final usando o <code>hG</code> otimizado.</li>
+</ol>
+<pre class="r"><code># Distâncias genômicas
+DG &lt;- (as.matrix(dist(Geno)))^2
+q05G &lt;- quantile(DG, 0.05)
+
+# Projeta DG para o espaço dos genótipos
+IDs &lt;- as.character(Pheno$Pedigree)
+DG &lt;- DG[rownames(DG) %in% IDs, rownames(DG) %in% IDs]
+
+IDs &lt;- factor(IDs, levels = rownames(DG))
+Z &lt;- as.matrix(model.matrix(~ IDs - 1))
+ZD &lt;- tcrossprod(Z, DG)
+DG_proj &lt;- tcrossprod(ZD, Z)</code></pre>
+<pre class="r"><code># Otimização
+solG &lt;- optim(c(1, 1), margh.fun, y = Pheno$GY, D = DG_proj, q = q05G,
+              method = &quot;L-BFGS-B&quot;, lower = c(0.05, 0.05), upper = c(6, 30))</code></pre>
+<pre class="r"><code>hG &lt;- solG$par[1]
+
+# Kernel genômico
+GGK &lt;- exp(-hG * DG_proj / median(DG_proj))</code></pre>
+<pre class="r"><code># Checagem
+dim(GGK)</code></pre>
+<pre><code>[1] 982 982</code></pre>
+<pre class="r"><code>GGK[1:5,1:5]</code></pre>
+<pre><code>          1         2         3         4         5
+1 1.0000000 0.8497877 0.8631009 0.8646340 0.8533364
+2 0.8497877 1.0000000 0.8538890 0.9055212 0.9197739
+3 0.8631009 0.8538890 1.0000000 0.8717643 0.8563903
+4 0.8646340 0.9055212 0.8717643 1.0000000 0.9283440
+5 0.8533364 0.9197739 0.8563903 0.9283440 1.0000000</code></pre>
+</div>
+<div id="construindo-o-kernel-gaussiano-fenômico-pgk"
+class="section level4">
+<h4>9.1.3) Construindo o Kernel Gaussiano Fenômico (PGK)</h4>
+<p>Repetimos a mesma lógica, mas desta vez usando os dados espectrais
+(NIR).</p>
+<ol style="list-style-type: decimal">
+<li><code>DP &lt;- (as.matrix(dist(NIR.all)))^2</code>: Calcula a matriz
+de distância Euclidiana ao quadrado diretamente dos dados espectrais
+(<code>NIR.all</code>). Como <code>NIR.all</code> já está no nível de
+observação (N total x N total), esta matriz <code>DP</code> já tem a
+dimensão correta.</li>
+<li><code>DP_proj &lt;- ...</code>: Este passo projeta a matriz
+<code>DP</code> (apesar de já ter a dimensão correta), garantindo que
+ela esteja perfeitamente alinhada com os <code>rownames</code> das
+outras matrizes <em>kernel</em>.</li>
+<li><code>solP &lt;- optim(...)</code>: Executa o otimizador para
+encontrar o <code>hP</code> ideal para os dados NIR.</li>
+<li><code>PGK &lt;- ...</code>: Constrói o <em>kernel</em>
+<code>PGK</code> final usando o <code>hP</code> otimizado.</li>
+</ol>
+<pre class="r"><code># Distâncias fenômicas
+DP &lt;- (as.matrix(dist(NIR.all)))^2
+q05P &lt;- quantile(DP, 0.05)
+
+IDs &lt;- rownames(NIR.all)
+DP &lt;- DP[rownames(DP) %in% IDs, rownames(DP) %in% IDs]
+
+IDs &lt;- IDs
+Z &lt;- as.matrix(model.matrix(~ IDs - 1))
+Z0 &lt;- tcrossprod(Z, Z)
+ZD &lt;- tcrossprod(Z0, DP)
+DP_proj &lt;- tcrossprod(ZD, Z0)</code></pre>
+<pre class="r"><code># Otimização
+solP &lt;- optim(c(1, 1), margh.fun, y = Pheno$GY, D = DP_proj, q = q05P,
+              method = &quot;L-BFGS-B&quot;, lower = c(0.05, 0.05), upper = c(6, 30))</code></pre>
+<pre class="r"><code>hP &lt;- solP$par[1]
+
+# Kernel fenômico
+PGK &lt;- exp(-hP * DP_proj / median(DP_proj))</code></pre>
+<pre class="r"><code># Checagem
+dim(PGK)</code></pre>
+<pre><code>[1] 982 982</code></pre>
+<pre class="r"><code>PGK[1:5,1:5]</code></pre>
+<pre><code>           1         2          3          4         5
+1 0.87403262 0.3796616 0.03628784 0.65759840 0.5252460
+2 0.37966157 0.9587605 0.55512924 0.30646878 0.7413911
+3 0.03628784 0.5551292 0.98313980 0.03056525 0.2830190
+4 0.65759840 0.3064688 0.03056525 0.81623029 0.6457647
+5 0.52524603 0.7413911 0.28301896 0.64576475 0.9899681</code></pre>
+</div>
+<div id="interações-com-kernels-gaussianos" class="section level4">
+<h4>9.1.4) Interações com Kernels Gaussianos</h4>
+<p>Agora, podemos criar <em>kernels</em> de interação não-linear usando
+o produto de Hadamard com nossos novos <em>kernels</em> <code>GGK</code>
+e <code>PGK</code>. Isso nos permite modelar interações GxE e PxE
+<strong>não-lineares</strong>.</p>
+<ul>
+<li>GGKE: interação genômico gaussiano × ambiente (categórico).</li>
+<li>PGKE: interação fenômico gaussiano × ambiente (categórico).</li>
+<li>GGKW: interação genômico gaussiano × clima.</li>
+<li>PGKW: interação fenômico gaussiano × clima.</li>
+</ul>
+<pre class="r"><code>GGKE    &lt;- GGK * ZEZE
+PGKE    &lt;- PGK * ZEZE
+GGKW    &lt;- GGK * ZW
+PGKW    &lt;- PGK * ZW</code></pre>
+</div>
+</div>
+<div id="arc-cossin-kernels-ak" class="section level3">
+<h3>9.2) Arc-cossin Kernels (AK)</h3>
+<p>Este é um método alternativo para capturar não-linearidade. O
+<em>kernel</em> Arc-cosseno é baseado no <strong>ângulo</strong> (ou
+correlação) entre os vetores de características dos indivíduos.</p>
+<p>Uma característica chave deste método é o “nível de recursão”
+(<code>nl</code>). Um <code>nl = 1</code> é como um modelo linear, mas
+<code>nl &gt; 1</code> é análogo a adicionar camadas a uma rede neural,
+permitindo que o <em>kernel</em> capture padrões cada vez mais
+complexos.</p>
+<div id="funções-auxiliares-do-kernel-arc-cosseno"
+class="section level4">
+<h4>9.2.1) Funções Auxiliares do Kernel Arc-Cosseno</h4>
+<p>Precisamos de um conjunto de funções para construir e otimizar este
+<em>kernel</em>.</p>
+<ul>
+<li><code>AK1.fun(X)</code>: Constrói o <em>kernel</em> de nível 1
+(base). Ele calcula a correlação, converte em ângulo (<code>acos</code>)
+e então calcula o <em>kernel</em> com base nesse ângulo.</li>
+<li><code>AK.fun(AK1, nl)</code>: A função de recursão. Ela pega um
+<em>kernel</em> (como <code>AK1</code>) e aplica a transformação de
+arc-cosseno <code>nl</code> vezes.</li>
+<li><code>marg.AK(y, AK1, ml)</code>: A função de otimização. Assim como
+<code>margh.fun</code>, ela usa a log-verossimilhança marginal. Ela
+testa iterativamente <code>nl = 1</code>, <code>nl = 2</code>, etc., até
+um máximo <code>ml</code>, e <strong>retorna o nível
+<code>nl</code></strong> que maximizou a verossimilhança.</li>
+</ul>
+<pre class="r"><code>###############################################################
+# Código para AK (arc-cosseno Kernel)
+# Referência: Crossa et al., 2019
+# Objetivo: Ajustar um modelo de predição genômica usando kernel arc-cosseno
+# com seleção automática do nível de recursão e modelagem de interação G×E.
+###############################################################
+
+# Função para calcular o kernel arc-cosseno de nível 1
+AK1.fun &lt;- function(X) {
+  n &lt;- nrow(X)
+  cosalfa &lt;- cor(t(X))  # Correlação entre vetores
+  cosalfa[cosalfa &gt; 1] &lt;- 1
+  cosalfa[cosalfa &lt; -1] &lt;- -1
+  angulo &lt;- acos(cosalfa)  # Ângulo entre vetores
+  mag &lt;- sqrt(apply(X, 1, function(x) crossprod(x)))  # Magnitude dos vetores
+  sxy &lt;- tcrossprod(mag)  # Produto cruzado das magnitudes
+  AK1 &lt;- (1 / pi) * sxy * (sin(angulo) + (pi - angulo) * cosalfa)
+  AK1 &lt;- AK1 / median(AK1, na.rm = TRUE)  # Normalização
+  colnames(AK1) &lt;- rownames(X)
+  rownames(AK1) &lt;- rownames(X)
+  return(AK1)
+}
+
+# Função para selecionar o nível ótimo de recursão
+marg.AK &lt;- function(y, AK1, ml) {
+  lden.fun &lt;- function(phi, nr, Uh, Sh, d) {
+    lden &lt;- -0.5 * sum(log((1 + phi * Sh))) - (nr - 1) / 2 * log(sum(d^2 / ((1 + phi * Sh))))
+    return(-lden)
+  }
+  
+  vero &lt;- function(y, GC) {
+    Kh &lt;- GC
+    eigenKh &lt;- eigen(Kh)
+    nr &lt;- length(which(eigenKh$values &gt; 1e-10))
+    Uh &lt;- eigenKh$vectors[, 1:nr]
+    Sh &lt;- eigenKh$values[1:nr]
+    d &lt;- t(Uh) %*% scale(y, scale = FALSE)
+    sol &lt;- optimize(lden.fun, nr = nr, Uh = Uh, Sh = Sh, d = d,
+                    lower = 0.0005, upper = 200)
+    phi &lt;- sol[[1]]
+    log.vero &lt;- 0.5 * sum(log((1 + phi * Sh))) -
+      (nr - 1) / 2 * log(sum(d^2 / ((1 + phi * Sh))))
+    return(log.vero)
+  }
+  
+  GC &lt;- AK1
+  l &lt;- 1
+  GC2 &lt;- GC
+  vero1 &lt;- vero(y = y, GC = GC2)
+  m &lt;- 0
+  
+  while (m == 0 &amp;&amp; (l &lt; ml)) {
+    l &lt;- l + 1
+    GC &lt;- AK.fun(AK1 = GC2, nl = 1)
+    GC2 &lt;- GC
+    vero2 &lt;- vero(y = y, GC = GC2)
+    if (vero2 &lt; vero1) m = 1
+    vero1 &lt;- vero2
+  }
+  
+  return(l - 1)  # Retorna o nível ótimo de recursão
+}
+
+# Função para aplicar recursão ao kernel arc-cosseno
+AK.fun &lt;- function(AK1, nl) {
+  n &lt;- nrow(AK1)
+  AK &lt;- AK1
+  for (l in 1:nl) {
+    Aux &lt;- tcrossprod(diag(AK))
+    cosalfa &lt;- AK * (Aux^(-1 / 2))
+    cosa &lt;- as.vector(cosalfa)
+    cosa[cosa &gt; 1] &lt;- 1
+    cosa[cosa &lt; -1] &lt;- -1
+    angulo &lt;- acos(cosa)
+    angulo &lt;- matrix(angulo, n, n)
+    AK &lt;- (1 / pi) * (Aux^(1 / 2)) * (sin(angulo) + (pi - angulo) * cos(angulo))
+  }
+  AK &lt;- AK / median(AK, na.rm = TRUE)
+  rownames(AK) &lt;- rownames(AK1)
+  colnames(AK) &lt;- colnames(AK1)
+  return(AK)
+}</code></pre>
+</div>
+<div id="construindo-o-kernel-arc-cosseno-genômico-gak"
+class="section level4">
+<h4>9.2.2) Construindo o Kernel Arc-Cosseno Genômico (GAK)</h4>
+<ol style="list-style-type: decimal">
+<li><code>GAK1 &lt;- AK1.fun(Geno)</code>: Calcula o <em>kernel</em>
+base (<code>nl=1</code>) a partir dos dados dos <strong>genótipos
+únicos</strong>.</li>
+<li><code>G &lt;- tcrossprod(...)</code>: Projeta o <em>kernel</em>
+<code>GAK1</code> (ex: 300x300) para o <strong>espaço de
+observação</strong> (ex: 1200x1200) para a otimização.</li>
+<li><code>Gl &lt;- marg.AK(...)</code>: Executa a otimização para
+encontrar o <strong>nível de recursão ótimo (<code>Gl</code>)</strong>
+que melhor explica <code>Pheno$GY</code>.</li>
+<li><code>G.L &lt;- tcrossprod(...)</code>: Projeta o <em>kernel</em>
+base <code>GAK1</code> para o espaço de observação final (similar ao
+passo 2).</li>
+<li><code>GAK &lt;- AK.fun(...)</code>: Constrói o <em>kernel</em>
+<strong><code>GAK</code> final</strong> aplicando a transformação de
+arc-cosseno <code>Gl</code> vezes.</li>
+</ol>
+<pre class="r"><code># Calcula o kernel arc-cosseno de nível 1 com base na matriz de marcadores
+GAK1 &lt;- AK1.fun(Geno)
+dim(GAK1)</code></pre>
+<pre><code>[1] 329 329</code></pre>
+<pre class="r"><code>GAK1[1:5, 1:5]</code></pre>
+<pre><code>           A188     A214N      A239     A4415      A554
+A188  1.7685173 0.9584083 1.0038980 1.0262802 1.0011397
+A214N 0.9584083 1.7942427 0.9810621 0.9950431 0.9604347
+A239  1.0038980 0.9810621 1.7661590 1.0208122 1.0081672
+A4415 1.0262802 0.9950431 1.0208122 1.7922089 1.0261770
+A554  1.0011397 0.9604347 1.0081672 1.0261770 1.7531340</code></pre>
+<pre class="r"><code># Seleciona os IDs do conjunto de dados
+IDs &lt;- as.character(Pheno[, &quot;Pedigree&quot;])
+GAK1 &lt;- GAK1[rownames(GAK1) %in% IDs, rownames(GAK1) %in% IDs]
+
+# Projeta o kernel para o espaço dos genótipos de treino
+IDs &lt;- factor(IDs, levels = rownames(GAK1))
+Z &lt;- as.matrix(model.matrix(~ IDs - 1))
+G &lt;- tcrossprod(tcrossprod(Z, GAK1), Z)
+
+# Seleciona o nível ótimo de recursão
+Gl &lt;- marg.AK(y = Pheno$GY, AK1 = G, ml = 50)
+
+# Projeta o kernel para todos os indivíduos
+IDs.L &lt;- Pheno[, &quot;Pedigree&quot;]
+IDs.L &lt;- factor(IDs.L, levels = rownames(GAK1))
+Z.L &lt;- as.matrix(model.matrix(~ IDs.L - 1))
+G.L &lt;- tcrossprod(tcrossprod(Z.L, GAK1), Z.L)
+
+# Aplica recursão
+GAK &lt;- AK.fun(AK1 = G.L, nl = Gl)</code></pre>
+<pre class="r"><code># Checagem
+dim(GAK)</code></pre>
+<pre><code>[1] 982 982</code></pre>
+<pre class="r"><code>GAK[1:5, 1:5]</code></pre>
+<pre><code>          1         2         3         4         5
+1 0.9990646 0.9946313 0.9942027 0.9960061 0.9942696
+2 0.9946313 1.0135973 1.0013290 1.0038101 1.0024601
+3 0.9942027 1.0013290 1.0124484 1.0027557 1.0009561
+4 0.9960061 1.0038101 1.0027557 1.0160907 1.0039067
+5 0.9942696 1.0024601 1.0009561 1.0039067 1.0127906</code></pre>
+</div>
+<div id="construindo-o-kernel-arc-cosseno-fenômico-pak"
+class="section level4">
+<h4>9.2.3) Construindo o Kernel Arc-Cosseno Fenômico (PAK)</h4>
+<p>Repetimos a lógica para os dados NIR.</p>
+<ol style="list-style-type: decimal">
+<li><code>PAK1 &lt;- AK1.fun(NIR.all)</code>: Calcula o <em>kernel</em>
+base (<code>nl=1</code>) a partir dos dados espectrais
+(<code>NIR.all</code>).</li>
+<li><code>P &lt;- tcrossprod(...)</code>: Projeta/alinha o
+<em>kernel</em> <code>PAK1</code>.</li>
+<li><code>Pl &lt;- marg.AK(...)</code>: Encontra o <strong>nível de
+recursão ótimo (<code>Pl</code>)</strong> para os dados NIR.</li>
+<li><code>P.L &lt;- tcrossprod(...)</code>: Projeta o <em>kernel</em>
+base <code>PAK1</code> para o espaço de observação final.</li>
+<li><code>PAK &lt;- AK.fun(...)</code>: Constrói o <em>kernel</em>
+<strong><code>PAK</code> final</strong> aplicando a transformação
+<code>Pl</code> vezes.</li>
+</ol>
+<pre class="r"><code># Calcula o kernel arc-cosseno de nível 1 com base na matriz fenômica
+PAK1 &lt;- AK1.fun(NIR.all)
+dim(PAK1)</code></pre>
+<pre><code>[1] 982 982</code></pre>
+<pre class="r"><code>PAK1[1:5, 1:5]</code></pre>
+<pre><code>             A188     A214N     A4415       A632      A634
+A188  20.11384819 1.0354311 1.5396601 0.04303532 0.1343575
+A214N  1.03543108 0.1186102 0.3223817 0.13156365 0.1268015
+A4415  1.53966005 0.3223817 4.4944758 4.08786393 3.2061644
+A632   0.04303532 0.1315636 4.0878639 8.00581345 5.3267106
+A634   0.13435748 0.1268015 3.2061644 5.32671059 3.7146155</code></pre>
+<pre class="r"><code># Seleciona os IDs do conjunto de dados
+IDs &lt;- as.character(rownames(NIR.all))
+PAK1 &lt;- PAK1[rownames(PAK1) %in% IDs, rownames(PAK1) %in% IDs]
+
+# Projeta o kernel para o espaço dos fenótipos
+IDs &lt;- IDs
+Z &lt;- as.matrix(model.matrix(~ IDs - 1))
+Z0 &lt;- tcrossprod(Z, Z)
+ZD &lt;- tcrossprod(Z0, PAK1)
+P &lt;- tcrossprod(ZD, Z0)
+
+# Seleciona o nível ótimo de recursão
+Pl &lt;- marg.AK(y = Pheno$GY, AK1 = P, ml = 50)
+
+# Projeta o kernel para todos os indivíduos
+IDs.L &lt;- rownames(NIR.all)
+Z.L &lt;- as.matrix(model.matrix(~ IDs.L - 1))
+Z0.L &lt;- tcrossprod(Z.L, Z.L)
+P.L &lt;- tcrossprod(tcrossprod(Z0.L, PAK1), Z0.L)
+
+# Aplica recursão
+PAK &lt;- AK.fun(AK1 = P.L, nl = Pl)</code></pre>
+<pre class="r"><code>dim(PAK)</code></pre>
+<pre><code>[1] 982 982</code></pre>
+<pre class="r"><code>PAK[1:5, 1:5]</code></pre>
+<pre><code>          1         2         3         4         5
+1 6.8121174 0.8792315 1.3764872 2.3285678 1.0422713
+2 0.8792315 0.1710425 0.3189383 0.4146304 0.1960632
+3 1.3764872 0.3189383 1.1884678 1.8624650 0.9143113
+4 2.3285678 0.4146304 1.8624650 7.7687820 3.3814512
+5 1.0422713 0.1960632 0.9143113 3.3814512 1.5229572</code></pre>
+</div>
+<div id="interações-com-arc-cosseno-kernels" class="section level4">
+<h4>9.2.4) Interações com Arc-cosseno Kernels</h4>
+<p>Finalmente, criamos os <em>kernels</em> de interação não-linear
+finais usando o produto de Hadamard com <code>GAK</code> e
+<code>PAK</code>.</p>
+<ul>
+<li>GAKE: interação GAK × Ambiente (Categórico).</li>
+<li>PAKE: interação PAK × Ambiente (Categórico).</li>
+<li>GAKW: interação GAK × Clima (Baseado em ECs).</li>
+<li>PAKW: interação PAK × Clima (Baseado em ECs).</li>
+</ul>
+<pre class="r"><code># GAK × Ambiente
+GAKE &lt;- GAK * ZEZE
+GAKE[1:5,1:5]</code></pre>
+<pre><code>          1         2         3         4         5
+1 0.9990646 0.9946313 0.9942027 0.9960061 0.9942696
+2 0.9946313 1.0135973 1.0013290 1.0038101 1.0024601
+3 0.9942027 1.0013290 1.0124484 1.0027557 1.0009561
+4 0.9960061 1.0038101 1.0027557 1.0160907 1.0039067
+5 0.9942696 1.0024601 1.0009561 1.0039067 1.0127906</code></pre>
+<pre class="r"><code># PAK × Ambiente
+PAKE &lt;- PAK * ZEZE
+PAKE[1:5,1:5]</code></pre>
+<pre><code>          1         2         3         4         5
+1 6.8121174 0.8792315 1.3764872 2.3285678 1.0422713
+2 0.8792315 0.1710425 0.3189383 0.4146304 0.1960632
+3 1.3764872 0.3189383 1.1884678 1.8624650 0.9143113
+4 2.3285678 0.4146304 1.8624650 7.7687820 3.3814512
+5 1.0422713 0.1960632 0.9143113 3.3814512 1.5229572</code></pre>
+<pre class="r"><code># GAK × Ambiente
+GAKW &lt;- GAK * ZW
+GAKW[1:5,1:5]</code></pre>
+<pre><code>          1         2         3         4         5
+1 0.4981107 0.4959003 0.4956866 0.4965858 0.4957200
+2 0.4959003 0.5053563 0.4992396 0.5004767 0.4998036
+3 0.4956866 0.4992396 0.5047835 0.4999510 0.4990537
+4 0.4965858 0.5004767 0.4999510 0.5065995 0.5005249
+5 0.4957200 0.4998036 0.4990537 0.5005249 0.5049541</code></pre>
+<pre class="r"><code># PAK × Ambiente
+PAKW &lt;- PAK * ZW
+PAKW[1:5,1:5]</code></pre>
+<pre><code>          1          2         3         4          5
+1 3.3963654 0.43836464 0.6862849 1.1609705 0.51965253
+2 0.4383646 0.08527786 0.1590153 0.2067252 0.09775261
+3 0.6862849 0.15901531 0.5925428 0.9285823 0.45585462
+4 1.1609705 0.20672521 0.9285823 3.8733364 1.68591397
+5 0.5196525 0.09775261 0.4558546 1.6859140 0.75931152</code></pre>
+</div>
+</div>
+</div>
+<div id="limpar-o-ambiente" class="section level2">
+<h2>10) Limpar o ambiente</h2>
+<p>Esta é uma etapa crucial de <strong>gerenciamento de memória</strong>
+e <strong>checkpointing</strong> (salvamento de progresso).</p>
+<p>O processo de criação de <em>kernels</em> (especialmente os
+<em>kernels</em> GK e AK nas seções 8 e 9) é computacionalmente e
+intensivo em termos de memória. Ele cria muitos objetos intermediários
+grandes (ex: <code>DG</code>, <code>DP</code>, <code>solG</code>,
+<code>GAK1</code>, <code>Geno.a</code>, etc.) que não são mais
+necessários para a modelagem.</p>
+<p>Se não limpássemos o ambiente, correríamos um sério risco de ficar
+sem RAM ao tentar ajustar os modelos <code>BGLR</code> na próxima
+seção.</p>
+<p>A estratégia aqui é dupla:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Checkpointing (Cache):</strong> Primeiro, identificamos
+todos os objetos <em>essenciais</em> que precisamos para a próxima etapa
+(nossos <em>kernels</em> finais e <code>Pheno</code>) na lista
+<code>keep_names</code>. Em seguida, salvamos cada um deles como um
+arquivo <code>.rds</code> individual. Isso atua como um ponto de
+salvamento. Se o R travar durante a modelagem, podemos reiniciar e
+carregar esses arquivos diretamente, sem ter que re-executar todo o
+script (o que poderia levar horas).</li>
+<li><strong>Redefinição de Memória (Hard Reset):</strong> Após salvar, o
+script remove <em>todos os outros objetos</em> (<code>to_remove</code>)
+da memória. Em seguida, ele chama o “coletor de lixo”
+(<code>gc()</code>) e <strong>recarrega imediatamente</strong> os
+arquivos <code>.rds</code> que acabamos de salvar. Este processo de
+salvar, limpar tudo e recarregar é a maneira mais robusta de garantir
+que o R libere toda a memória “lixo” e comece a próxima etapa com o
+ambiente mais limpo possível.</li>
+</ol>
+<pre class="r"><code># Liste aqui os objetos que deseja manter no ambiente:
+keep_names &lt;- c(
+  # matrizes / objetos para modelos
+  &quot;ZE&quot;, &quot;ZG&quot;, &quot;ZP&quot;, &quot;ZGZE&quot;, &quot;ZPZE&quot;, &quot;ZW&quot;, &quot;ZGZW&quot;, &quot;ZPZW&quot;,
+  # Kernels
+  &quot;GGK&quot;, &quot;PGK&quot;, &quot;GGKE&quot;, &quot;PGKE&quot;, &quot;GGKW&quot;, &quot;PGKW&quot;, 
+  &quot;GAK&quot;, &quot;PAK&quot;, &quot;GAKE&quot;, &quot;PAKE&quot;, &quot;GAKW&quot;, &quot;PAKW&quot;,
+  # outros objetos importantes
+  &quot;Pheno&quot;, &quot;Pedigree&quot;
+)
+
+# Confirmação (opcional): mostra o que será removido e o que será mantido
+current_objs &lt;- ls(envir = .GlobalEnv)
+to_keep &lt;- intersect(current_objs, keep_names)
+to_remove &lt;- setdiff(current_objs, to_keep)
+
+message(&quot;Objetos que serão mantidos (&quot;, length(to_keep), &quot;): &quot;, paste(to_keep, collapse = &quot;, &quot;))
+message(&quot;Objetos que serão removidos (&quot;, length(to_remove), &quot;): &quot;, paste(head(to_remove, 40), collapse = &quot;, &quot;),
+        if (length(to_remove) &gt; 40) paste0(&quot; ... (+&quot;, length(to_remove) - 40, &quot; mais)&quot;))
+
+# Salva cada objeto como .rds individualmente
+for (obj_name in to_keep) {
+  saveRDS(get(obj_name), file = file.path(&quot;output/Matrizes&quot;, paste0(obj_name, &quot;.rds&quot;)))
+}
+
+# Executa remoção
+rm(list = to_remove, envir = .GlobalEnv)
+gc()</code></pre>
+<pre><code>           used  (Mb) gc trigger   (Mb)  max used   (Mb)
+Ncells  1603056  85.7    2506878  133.9   2506878  133.9
+Vcells 21043461 160.6  169939857 1296.6 212424821 1620.7</code></pre>
+<pre class="r"><code># Lista todos os arquivos .rds na pasta output/Matrizes
+rds_files &lt;- list.files(&quot;output/Matrizes&quot;, pattern = &quot;\\.rds$&quot;, full.names = TRUE)
+
+# Carrega cada objeto e atribui ao ambiente global com seu nome original
+for (file in rds_files) {
+  obj_name &lt;- tools::file_path_sans_ext(basename(file))
+  assign(obj_name, readRDS(file), envir = .GlobalEnv)
+}
+
+# Confirmação opcional
+message(&quot;Objetos carregados: &quot;, paste(tools::file_path_sans_ext(basename(rds_files)), collapse = &quot;, &quot;))</code></pre>
+</div>
+<div id="modelos-preditivos" class="section level2">
+<h2>11) Modelos preditivos</h2>
+<p>Esta seção é o “plano de arquitetura” da nossa análise. Tendo passado
+todo o trabalho de criação de mais de uma dúzia de <em>kernels</em>
+(lineares, não-lineares e de interação), agora definimos formalmente os
+modelos que iremos testar.</p>
+<p>O objetivo é comparar sistematicamente diferentes hipóteses: * O
+kernel NIR (<code>P</code>) é melhor que o genômico (<code>G</code>)? *
+Os <em>kernels</em> não-lineares (<code>GGK</code>, <code>GAK</code>)
+capturam mais variação do que os lineares? * A interação GxE categórica
+(<code>GE</code>) é suficiente, ou a interação baseada no clima
+(<code>GW</code>) é melhor? * O que acontece quando combinamos
+<em>kernels</em> (ex: <code>G+P</code>)?</p>
+<div id="notação-dos-efeitos" class="section level3">
+<h3>11.1) Notação dos Efeitos</h3>
+<p>A notação padronizada abaixo descreve cada componente (ou “bloco de
+construção”) que usaremos nos modelos. Cada um deles é uma matriz
+<em>kernel</em> que passaremos para o <code>BGLR</code>.</p>
+<ul>
+<li><strong>E</strong> → Efeito principal de <strong>Ambiente</strong>
+(<em>Environment</em>), categórico. (Nosso kernel
+<code>ZEZE</code>).</li>
+<li><strong>W</strong> → Efeito principal do <strong>Clima</strong>
+(<em>Climate</em>), baseado no kernel de covariáveis ambientais. (Nosso
+kernel <code>ZW</code>).</li>
+<li><strong>G</strong> → Efeito <strong>Genômico</strong>
+(<em>Genomic</em>), kernel linear. (Nosso kernel <code>ZG</code>).</li>
+<li><strong>P</strong> → Efeito <strong>Fenômico</strong>
+(<em>Phenomic</em>, ex.: bandas NIRS), kernel linear. (Nosso kernel
+<code>ZP</code>).</li>
+<li><strong>GGK</strong> → Efeito <strong>Genômico GK</strong>
+(<em>Genomic Gaussian Kernel</em>). (Nosso kernel
+<code>GGK</code>).</li>
+<li><strong>PGK</strong> → Efeito <strong>Fenômico GK</strong>
+(<em>Phenomic Gaussian Kernel</em>). (Nosso kernel
+<code>PGK</code>).</li>
+<li><strong>GAK</strong> → Efeito <strong>Genômico A-Kernel</strong>
+(<em>Genomic Arc-Kernel</em>). (Nosso kernel <code>GAK</code>).</li>
+<li><strong>PAK</strong> → Efeito <strong>Fenômico A-Kernel</strong>
+(<em>Phenomic Arc-Kernel</em>). (Nosso kernel <code>PAK</code>).</li>
+</ul>
+<div id="interações-com-ambiente-categórico-e" class="section level4">
+<h4>Interações com Ambiente Categórico (E)</h4>
+<p>Estes são os <em>kernels</em> de interação que usam o produto de
+Hadamard com <code>ZEZE</code>. Eles modelam a variação que é específica
+para um bloco ambiental (ex: CS11_WS).</p>
+<ul>
+<li><strong>GE</strong> → Interação <strong>Genômico × Ambiente</strong>
+(G×E). (Kernel <code>ZGZE</code>).</li>
+<li><strong>PE</strong> → Interação <strong>Fenômico × Ambiente</strong>
+(P×E). (Kernel <code>ZPZE</code>).</li>
+<li><strong>GGKE</strong> → Interação <strong>Genômico GK ×
+Ambiente</strong> (GGK×E). (Kernel <code>GGKE</code>).</li>
+<li><strong>PGKE</strong> → Interação <strong>Fenômico GK ×
+Ambiente</strong> (PGK×E). (Kernel <code>PGKE</code>).</li>
+<li><strong>GAKE</strong> → Interação <strong>Genômico A-Kernel ×
+Ambiente</strong> (GAK×E). (Kernel <code>GAKE</code>).</li>
+<li><strong>PAKE</strong> → Interação <strong>Fenômico A-Kernel ×
+Ambiente</strong> (PAK×E). (Kernel <code>PAKE</code>).</li>
+</ul>
+</div>
+<div id="interações-com-ambiente-climático-w" class="section level4">
+<h4>Interações com Ambiente Climático (W)</h4>
+<p>Estes são os <em>kernels</em> de interação que usam o produto de
+Hadamard com <code>ZW</code>. Eles modelam a variação que é específica
+para <em>perfis climáticos</em> similares.</p>
+<ul>
+<li><strong>GW</strong> → Interação <strong>Genômico × Clima</strong>
+(G×W). (Kernel <code>ZGZW</code>).</li>
+<li><strong>PW</strong> → Interação <strong>Fenômico × Clima</strong>
+(P×W). (Kernel <code>ZPZW</code>).</li>
+<li><em>(Outras interações como GGKW, PGKW, etc., seguem a mesma
+lógica.)</em></li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="estrutura-dos-modelos" class="section level3">
+<h3>Estrutura dos Modelos</h3>
+<p>Os modelos são agrupados por complexidade e pela hipótese que estão
+testando. Cada um será definido no <code>BGLR</code> como uma lista de
+<em>kernels</em>.</p>
+<div id="grupo-1-modelos-base-ambiente-categórico-e"
+class="section level4">
+<h4>Grupo 1: Modelos Base (Ambiente Categórico E)</h4>
+<p><strong>Hipótese:</strong> “A variação ambiental é melhor explicada
+por blocos categóricos (E = <code>ZEZE</code>).”</p>
+<p><strong>1.1: Modelos de Efeitos Principais</strong>
+<em>Objetivo:</em> Testar cada <em>kernel</em> (G, P, GGK, PGK, etc.)
+isoladamente para ver qual deles, sozinho, melhor captura a variação não
+explicada pelo ambiente <code>E</code>.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Modelo</th>
+<th align="left">Estrutura de Efeitos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>E+G</strong></td>
+<td align="left">Ambiente + Genômico (Linear)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+P</strong></td>
+<td align="left">Ambiente + Fenômico (Linear)</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+GGK</strong></td>
+<td align="left">Ambiente + Genômico (Gaussiano)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+PGK</strong></td>
+<td align="left">Ambiente + Fenômico (Gaussiano)</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+GAK</strong></td>
+<td align="left">Ambiente + Genômico (Arc-Kernel)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+PAK</strong></td>
+<td align="left">Ambiente + Fenômico (Arc-Kernel)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>1.2: Modelos com Interação G×E</strong> <em>Objetivo:</em>
+Testar se adicionar um termo de interação GxE (baseado em
+<code>ZEZE</code>) ao seu respectivo efeito principal melhora a
+predição.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Modelo</th>
+<th align="left">Estrutura de Efeitos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>E+G+GE</strong></td>
+<td align="left">Ambiente + Genômico + Interação G×E</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+P+PE</strong></td>
+<td align="left">Ambiente + Fenômico + Interação P×E</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+GGK+GGKE</strong></td>
+<td align="left">Ambiente + Genômico (Gaussiano) + Interação GGK×E</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+PGK+PGKE</strong></td>
+<td align="left">Ambiente + Fenômico (Gaussiano) + Interação PGK×E</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+GAK+GAKE</strong></td>
+<td align="left">Ambiente + Genômico (Arc-Kernel) + Interação GAK×E</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+PAK+PAKE</strong></td>
+<td align="left">Ambiente + Fenômico (Arc-Kernel) + Interação PAK×E</td>
+</tr>
+</tbody>
+</table>
+<p><strong>1.3: Modelos Combinados (G + P)</strong> <em>Objetivo:</em>
+Testar se os <em>kernels</em> genômicos e fenômicos (NIR) capturam
+fontes de variação <em>diferentes</em> e, portanto, se sua combinação
+(<code>G+P</code>) é melhor do que qualquer um deles sozinho.</p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Modelo</th>
+<th align="left">Estrutura de Efeitos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>E+G+P</strong></td>
+<td align="left">Ambiente + Genômico + Fenômico</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+GGK+PGK</strong></td>
+<td align="left">Ambiente + Genômico (Gaussiano) + Fenômico
+(Gaussiano)</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+GAK+PAK</strong></td>
+<td align="left">Ambiente + Genômico (Arc-Kernel) + Fenômico
+(Arc-Kernel)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+G+P+GE+PE</strong></td>
+<td align="left">Ambiente + Genômico + Fenômico + Ambas Interações
+G×E</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+GGK+PGK+GGKE+PGKE</strong></td>
+<td align="left">Ambiente + G (Gaussiano) + P (Gaussiano) + Ambas
+Interações G×E</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+GAK+PAK+GAKE+PAKE</strong></td>
+<td align="left">Ambiente + G (Arc-Kernel) + P (Arc-Kernel) + Ambas
+Interações G×E</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</div>
+<div id="grupo-2-modelos-com-covariáveis-climáticas-w"
+class="section level4">
+<h4>Grupo 2: Modelos com Covariáveis Climáticas (W)</h4>
+<p><strong>Hipótese:</strong> “A variação ambiental é melhor explicada
+por dados climáticos reais (W = <code>ZW</code>) do que por blocos
+categóricos.”</p>
+<p><strong>2.1: Modelos com Efeitos Climáticos Aditivos (E + W)</strong>
+<em>Objetivo:</em> Testar se adicionar o <em>kernel</em> climático
+(<code>W</code>) como um efeito principal <em>adicional</em> (junto com
+<code>E</code>) melhora o modelo. Isso permite que o modelo capture
+tanto a variação do bloco <code>E</code> quanto a variação explicada
+pelo clima <code>W</code>.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Modelo</th>
+<th align="left">Estrutura de Efeitos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>E+W</strong></td>
+<td align="left">Ambiente (Categórico) + Clima (Kernel)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+G</strong></td>
+<td align="left">E+W + Genômico (Linear)</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+W+P</strong></td>
+<td align="left">E+W + Fenômico (Linear)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+G+P</strong></td>
+<td align="left">E+W + Genômico + Fenômico</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+W+GGK</strong></td>
+<td align="left">E+W + Genômico (Gaussiano)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+PGK</strong></td>
+<td align="left">E+W + Fenômico (Gaussiano)</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+W+GGK+PGK</strong></td>
+<td align="left">E+W + G (Gaussiano) + P (Gaussiano)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+GAK</strong></td>
+<td align="left">E+W + Genômico (Arc-Kernel)</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+W+PAK</strong></td>
+<td align="left">E+W + Fenômico (Arc-Kernel)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+GAK+PAK</strong></td>
+<td align="left">E+W + G (Arc-Kernel) + P (Arc-Kernel)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>2.2: Modelos Climáticos com Interações</strong>
+<em>Objetivo:</em> Testar diferentes formas de interação na presença do
+<em>kernel</em> climático <code>W</code>.</p>
+<p><em>Subgrupo 2.2.1: Interação Categórica (G×E) mantida</em>
+<em>(Hipótese: “Mesmo com W no modelo, a interação G×E categórica
+(<code>GE</code>) ainda captura variação útil que <code>W</code> não
+captura.”)</em></p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Modelo</th>
+<th align="left">Estrutura de Efeitos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>E+W+G+GE</strong></td>
+<td align="left">E+W + Genômico (Linear) + Interação G×E</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+P+PE</strong></td>
+<td align="left">E+W + Fenômico (Linear) + Interação P×E</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+W+G+P+GE+PE</strong></td>
+<td align="left">E+W + G + P + Ambas Interações G×E</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+GGK+GGKE</strong></td>
+<td align="left">E+W + G (Gaussiano) + Interação GGK×E</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>… (etc.)</strong></td>
+<td align="left"><em>(Modelos equivalentes para PGK, GAK, PAK)</em></td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+GAK+PAK+GAKE+PAKE</strong></td>
+<td align="left">E+W + G/P (Arc-Kernel) + Ambas Interações G×E</td>
+</tr>
+</tbody>
+</table>
+<p><em>Subgrupo 2.2.2: Interação Climática (G×W)</em> <em>(Hipótese:
+“Uma interação baseada no clima real (<code>GW</code>) é uma forma mais
+precisa e parcimoniosa de modelar GxE do que a interação categórica
+<code>GE</code>.”)</em></p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Modelo</th>
+<th align="left">Estrutura de Efeitos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>E+W+G+GW</strong></td>
+<td align="left">E+W + Genômico (Linear) + Interação G×W</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+P+PW</strong></td>
+<td align="left">E+W + Fenômico (Linear) + Interação P×W</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>E+W+G+P+GW+PW</strong></td>
+<td align="left">E+W + G + P + Ambas Interações G×W</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+GGK+GGKW</strong></td>
+<td align="left">E+W + G (Gaussiano) + Interação GGK×W</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>… (etc.)</strong></td>
+<td align="left"><em>(Modelos equivalentes para PGK, GAK, PAK)</em></td>
+</tr>
+<tr class="even">
+<td align="left"><strong>E+W+GAK+PAK+GAKW+PAKW</strong></td>
+<td align="left">E+W + G/P (Arc-Kernel) + Ambas Interações G×W</td>
+</tr>
+</tbody>
+</table>
+<p><strong>2.3: Modelos Climáticos sem Efeito Categórico (W substitui
+E)</strong> <em>Objetivo:</em> Testar a hipótese mais forte: “O
+<em>kernel</em> climático <code>W</code> captura <em>toda</em> a
+variação ambiental relevante, tornando o efeito categórico
+<code>E</code> desnecessário.”</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Modelo</th>
+<th align="left">Estrutura de Efeitos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>W</strong></td>
+<td align="left">Clima (Kernel)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>W+G</strong></td>
+<td align="left">Clima (Kernel) + Genômico (Linear)</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>W+P</strong></td>
+<td align="left">Clima (Kernel) + Fenômico (Linear)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>W+G+P</strong></td>
+<td align="left">Clima (Kernel) + Genômico + Fenômico</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>W+GGK</strong></td>
+<td align="left">Clima (Kernel) + Genômico (Gaussiano)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>W+PGK</strong></td>
+<td align="left">Clima (Kernel) + Fenômico (Gaussiano)</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>W+GGK+PGK</strong></td>
+<td align="left">Clima (Kernel) + G (Gaussiano) + P (Gaussiano)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>W+GAK</strong></td>
+<td align="left">Clima (Kernel) + Genômico (Arc-Kernel)</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>W+PAK</strong></td>
+<td align="left">Clima (Kernel) + Fenômico (Arc-Kernel)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>W+GAK+PAK</strong></td>
+<td align="left">Clima (Kernel) + G (Arc-Kernel) + P (Arc-Kernel)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="tabela-de-classificação-dos-modelos" class="section level3">
+<h3>11.2) Tabela de classificação dos modelos</h3>
+<p><strong>Objetivo:</strong> Criar um “dicionário” ou “tabela de
+consulta” para nossos modelos.</p>
+<p>Nossos dados de resultados agora têm uma coluna <code>Model</code>
+com valores como “M1”, “M2”, … “M62”. Isso não é informativo. Para
+nossos gráficos e tabelas finais, queremos poder dizer que “M1” é “E +
+G” e que “M17” é “E + GGK + PGK + GGKE + PGKE”.</p>
+<p>Este bloco de código cria o <em>dataframe</em>
+<code>model_info</code>, que mapeia:</p>
+<ul>
+<li><code>ModelID</code>: O número (1-62)</li>
+<li><code>Model</code>: O rótulo (“M1” - “M62”)</li>
+<li><code>Type</code>: Uma categoria de alto nível (ex: “Basico”,
+“Clima_IntW”, “Individual”)</li>
+<li><code>Description</code>: O rótulo legível (ex: “E + G + GE”)</li>
+</ul>
+<p>Este <em>dataframe</em> será “juntado” (<code>left_join</code>) aos
+nossos dados de resultados antes da plotagem.</p>
+<pre class="r"><code># --- Cria a tabela de classificação dos modelos (Completa) ---
+model_info &lt;- tibble(
+  ModelID = 1:62,
+  Model   = paste0(&quot;M&quot;, ModelID),
+  Type = case_when(
+# Grupo 1: Modelos Base (Efeito Categórico E)
+    ModelID %in% c(1:6, 13:15) ~ &quot;Basico&quot;,      # E + G/P (efeitos principais)
+    ModelID %in% c(7:12, 16:18) ~ &quot;Interacao_E&quot;, # E + G/P + GxE/PxE
+    
+    # Grupo 2: Modelos Climáticos (E + W)
+    ModelID %in% 19:27 ~ &quot;Clima_Base_E&quot;,   # E + W + G/P (efeitos principais)
+    ModelID %in% 28:36 ~ &quot;Clima_IntE&quot;,     # E + W + G/P + GxE/PxE
+    ModelID %in% 37:45 ~ &quot;Clima_IntW&quot;,     # E + W + G/P + GxW/PxW
+    
+    # Grupo 3: Modelos Climáticos (W substitui E)
+    ModelID %in% 46:54 ~ &quot;Clima_Base_noE&quot;, # W + G/P (sem E fixo),
+    
+    # Grrupo 4: Modelos individuais
+    ModelID %in% c(55:62) ~ &quot;Individual&quot;, 
+    
+    TRUE               ~ &quot;Outros&quot;
+  ),
+  Description = case_when(
+    # Bloco 1: (Item 10) Modelos básicos (E + G/P)
+    ModelID == 1  ~ &quot;E + G&quot;,
+    ModelID == 2  ~ &quot;E + P&quot;,
+    ModelID == 3  ~ &quot;E + GGK&quot;,
+    ModelID == 4  ~ &quot;E + PGK&quot;,     # (Baseado em Eta4)
+    ModelID == 5  ~ &quot;E + GAK&quot;,     # (Baseado em Eta5)
+    ModelID == 6  ~ &quot;E + PAK&quot;,
+
+    # Bloco 2: (Item 10) Modelos com interações categóricas (E + G/P + GxE/PxE)
+    ModelID == 7  ~ &quot;E + G + GE&quot;,
+    ModelID == 8  ~ &quot;E + P + PE&quot;,
+    ModelID == 9  ~ &quot;E + GGK + GGKE&quot;,
+    ModelID == 10 ~ &quot;E + PGK + PGKE&quot;, # (Baseado em Eta10)
+    ModelID == 11 ~ &quot;E + GAK + GAKE&quot;, # (Baseado em Eta11)
+    ModelID == 12 ~ &quot;E + PAK + PAKE&quot;,
+
+    # Bloco 3: (Item 10) Modelos combinados (E + G + P)
+    ModelID == 13 ~ &quot;E + G + P&quot;,
+    ModelID == 14 ~ &quot;E + GGK + PGK&quot;,
+    ModelID == 15 ~ &quot;E + GAK + PAK&quot;,
+
+    # Bloco 4: (Item 10) Modelos combinados com interação categórica
+    ModelID == 16 ~ &quot;E + G + P + GE + PE&quot;,
+    ModelID == 17 ~ &quot;E + GGK + PGK + GGKE + PGKE&quot;,
+    ModelID == 18 ~ &quot;E + GAK + PAK + GAKE + PAKE&quot;,
+
+    # Bloco 5: (Item 10.1) Modelos E + W + G/P (Clima_Base_E)
+    ModelID == 19 ~ &quot;E + G + W&quot;,
+    ModelID == 20 ~ &quot;E + P + W&quot;,
+    ModelID == 21 ~ &quot;E + G + P + W&quot;,
+    ModelID == 22 ~ &quot;E + GGK + W&quot;,
+    ModelID == 23 ~ &quot;E + PGK + W&quot;,
+    ModelID == 24 ~ &quot;E + GGK + PGK + W&quot;,
+    ModelID == 25 ~ &quot;E + GAK + W&quot;,
+    ModelID == 26 ~ &quot;E + PAK + W&quot;,
+    ModelID == 27 ~ &quot;E + GAK + PAK + W&quot;,
+
+    # Bloco 6: (Item 10.1) Modelos E + W + G/P + GxE/PxE (Clima_IntE)
+    ModelID == 28 ~ &quot;E + G + W + GE&quot;,
+    ModelID == 29 ~ &quot;E + P + W + PE&quot;,
+    ModelID == 30 ~ &quot;E + G + P + W + GE + PE&quot;,
+    ModelID == 31 ~ &quot;E + GGK + W + GGKE&quot;,
+    ModelID == 32 ~ &quot;E + PGK + W + PGKE&quot;,
+    ModelID == 33 ~ &quot;E + GGK + PGK + W + GGKE + PGKE&quot;,
+    ModelID == 34 ~ &quot;E + GAK + W + GAKE&quot;,
+    ModelID == 35 ~ &quot;E + PAK + W + PAKE&quot;,
+    ModelID == 36 ~ &quot;E + GAK + PAK + W + GAKE + PAKE&quot;,
+
+    # Bloco 7: (Item 10.1) Modelos E + W + G/P + GxW/PxW (Clima_IntW)
+    ModelID == 37 ~ &quot;E + G + W + GW&quot;,
+    ModelID == 38 ~ &quot;E + P + W + PW&quot;,
+    ModelID == 39 ~ &quot;E + G + P + W + GW + PW&quot;,
+    ModelID == 40 ~ &quot;E + GGK + W + GGKW&quot;,
+    ModelID == 41 ~ &quot;E + PGK + W + PGKW&quot;,
+    ModelID == 42 ~ &quot;E + GGK + PGK + W + GGKW + PGKW&quot;,
+    ModelID == 43 ~ &quot;E + GAK + W + GAKW&quot;,
+    ModelID == 44 ~ &quot;E + PAK + W + PAKW&quot;,
+    ModelID == 45 ~ &quot;E + GAK + PAK + W + GAKW + PAKW&quot;,
+    
+    # Bloco 8: (Item 10.1) Modelos W + G/P (Sem E) (Clima_Base_noE)
+    ModelID == 46 ~ &quot;G + W&quot;,
+    ModelID == 47 ~ &quot;P + W&quot;,
+    ModelID == 48 ~ &quot;G + P + W&quot;,
+    ModelID == 49 ~ &quot;GGK + W&quot;,
+    ModelID == 50 ~ &quot;PGK + W&quot;,
+    ModelID == 51 ~ &quot;GGK + PGK + W&quot;,
+    ModelID == 52 ~ &quot;GAK + W&quot;,
+    ModelID == 53 ~ &quot;PAK + W&quot;,
+    ModelID == 54 ~ &quot;GAK + PAK + W&quot;,
+    
+    # Bloco 9: (Item 11.5) Modelos individuais
+    ModelID == 55 ~ &quot;E&quot;,
+    ModelID == 56 ~ &quot;G&quot;,
+    ModelID == 57 ~ &quot;P&quot;,
+    ModelID == 58 ~ &quot;GGK&quot;,
+    ModelID == 59 ~ &quot;PGK&quot;,
+    ModelID == 60 ~ &quot;GAK&quot;,
+    ModelID == 61 ~ &quot;PAK&quot;,
+    ModelID == 62 ~ &quot;W&quot;,
+    
+    TRUE ~ as.character(ModelID) # Fallback
+  )
+)</code></pre>
+</div>
+</div>
+<div id="definição-dos-modelos-preditivos" class="section level2">
+<h2>12) Definição dos modelos preditivos</h2>
+<p>Nesta seção, traduzimos nosso “plano de arquitetura” da Seção 11 em
+código. Cada modelo (Eta1, Eta2, etc.) é definido como um objeto
+<code>list</code> do R, que é o formato exato que o pacote
+<code>BGLR</code> exige para seu argumento <code>ETA</code> (preditor
+linear).</p>
+<p>A sintaxe do <code>BGLR</code> que estamos usando é:</p>
+<ul>
+<li><code>list(X = ZE, model = "BRR")</code>: Usamos <code>BRR</code>
+(Bayesian Ridge Regression) para o efeito de ambiente <code>E</code>.
+Isso trata <code>E</code> como um efeito fixo (em um contexto Bayesiano)
+e passamos a matriz de incidência <code>ZE</code> como o preditor
+<code>X</code>.</li>
+<li><code>list(K = ZG, model = "RKHS")</code>: Usamos <code>RKHS</code>
+(Reproducing Kernel Hilbert Spaces) para todos os nossos efeitos
+aleatórios (G, P, GxE, etc.). Isso instrui o <code>BGLR</code> a usar a
+nossa matriz <em>kernel</em> pré-calculada (ex: <code>ZG</code>) para o
+argumento <code>K</code>.</li>
+</ul>
+<p>Cada objeto <code>Eta</code> é uma “receita” de modelo que o
+<code>BGLR</code> irá ajustar.</p>
+<pre class="r"><code># -------------------------------------------------------------------
+# GRUPO 1: MODELOS BASE (EFEITO CATEGÓRICO &#39;E&#39;)
+# (Modelos Eta1 a Eta18)
+# -------------------------------------------------------------------
+
+# --- 1.1: Efeitos Principais (E + G/P) ---
+
+# Modelo 1: E + G (Linear)
+Eta1 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;)
+)
+
+# Modelo 2: E + P (Linear)
+Eta2 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;)
+)
+
+# Modelo 3: E + GGK (Gaussiano)
+Eta3 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 4: E + PGK (Gaussiano)
+Eta4 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 5: E + GAK (Arc-cosseno)
+Eta5 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 6: E + PAK (Arc-cosseno)
+Eta6 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 13: E + G + P (Linear)
+Eta13 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;)
+)
+
+# Modelo 14: E + GGK + PGK (Gaussiano)
+Eta14 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 15: E + GAK + PAK (Arc-cosseno)
+Eta15 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;)
+)
+
+# --- 1.2: Efeitos Principais + Interação GxE (E + G/P + GxE/PxE) ---
+
+# Modelo 7: E + G + GE (Linear)
+Eta7 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;),
+  GE = list(K = ZGZE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 8: E + P + PE (Linear)
+Eta8 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;),
+  PE = list(K = ZPZE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 9: E + GGK + GGKE (Gaussiano)
+Eta9 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;),
+  GGKE = list(K = GGKE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 10: E + PGK + PGKE (Gaussiano)
+Eta10 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;),
+  PGKE = list(K = PGKE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 11: E + GAK + GAKE (Arc-cosseno)
+Eta11 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;),
+  GAKE = list(K = GAKE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 12: E + PAK + PAKE (Arc-cosseno)
+Eta12 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;),
+  PAKE = list(K = PAKE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 16: E + G + P + GE + PE (Linear)
+Eta16 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;),
+  GE = list(K = ZGZE, model = &quot;RKHS&quot;),
+  PE = list(K = ZPZE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 17: E + GGK + PGK + GGKE + PGKE (Gaussiano)
+Eta17 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;),
+  GGKE = list(K = GGKE, model = &quot;RKHS&quot;),
+  PGKE = list(K = PGKE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 18: E + GAK + PAK + GAKE + PAKE (Arc-cosseno)
+Eta18 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;),
+  GAKE = list(K = GAKE, model = &quot;RKHS&quot;),
+  PAKE = list(K = PAKE, model = &quot;RKHS&quot;)
+)
+
+
+# -------------------------------------------------------------------
+# GRUPO 2: MODELOS CLIMÁTICOS (EFEITOS &#39;E&#39; + &#39;W&#39;)
+# (Modelos Eta19 a Eta46)
+# -------------------------------------------------------------------
+
+# --- 2.1: Efeitos Principais (E + W + G/P) ---
+
+# Modelo 19: E + W (Linha de base climática)
+Eta19 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, model = &quot;RKHS&quot;)
+)
+
+# Modelo 20: E + W + G (Linear)
+Eta20 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;)
+)
+
+# Modelo 21: E + W + P (Linear)
+Eta21 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;)
+)
+
+# Modelo 22: E + W + G + P (Linear)
+Eta22 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;)
+)
+
+# Modelo 23: E + W + GGK (Gaussiano)
+Eta23 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 24: E + W + PGK (Gaussiano)
+Eta24 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 25: E + W + GGK + PGK (Gaussiano)
+Eta25 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 26: E + W + GAK (Arc-cosseno)
+Eta26 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 27: E + W + PAK (Arc-cosseno)
+Eta27 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 28: E + W + GAK + PAK (Arc-cosseno)
+Eta28 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;)
+)
+
+# --- 2.2: Interação com Ambiente Categórico (E + W + G/P + GxE/PxE) ---
+
+# Modelo 29: E + W + G + GE (Linear)
+Eta29 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;),
+  GE = list(K = ZGZE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 30: E + W + P + PE (Linear)
+Eta30 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;),
+  PE = list(K = ZPZE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 31: E + W + G + P + GE + PE (Linear)
+Eta31 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;),
+  GE = list(K = ZGZE, model = &quot;RKHS&quot;),
+  PE = list(K = ZPZE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 32: E + W + GGK + GGKE (Gaussiano)
+Eta32 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;),
+  GGKE = list(K = GGKE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 33: E + W + PGK + PGKE (Gaussiano)
+Eta33 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;),
+  PGKE = list(K = PGKE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 34: E + W + GGK + PGK + GGKE + PGKE (Gaussiano)
+Eta34 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;),
+  GGKE = list(K = GGKE, model = &quot;RKHS&quot;),
+  PGKE = list(K = PGKE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 35: E + W + GAK + GAKE (Arc-cosseno)
+Eta35 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;),
+  GAKE = list(K = GAKE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 36: E + W + PAK + PAKE (Arc-cosseno)
+Eta36 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;),
+  PAKE = list(K = PAKE, model = &quot;RKHS&quot;)
+)
+
+# Modelo 37: E + W + GAK + PAK + GAKE + PAKE (Arc-cosseno)
+Eta37 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;),
+  GAKE = list(K = GAKE, model = &quot;RKHS&quot;),
+  PAKE = list(K = PAKE, model = &quot;RKHS&quot;)
+)
+
+# --- 2.3: Interação com Ambiente Climático (E + W + G/P + GxW/PxW) ---
+
+# Modelo 38: E + W + G + GW (Linear)
+Eta38 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;),
+  GW = list(K = ZGZW, model = &quot;RKHS&quot;)
+)
+
+# Modelo 39: E + W + P + PW (Linear)
+Eta39 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;),
+  PW = list(K = ZPZW, model = &quot;RKHS&quot;)
+)
+
+# Modelo 40: E + W + G + P + GW + PW (Linear)
+Eta40 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;),
+  GW = list(K = ZGZW, model = &quot;RKHS&quot;),
+  PW = list(K = ZPZW, model = &quot;RKHS&quot;)
+)
+
+# Modelo 41: E + W + GGK + GGKW (Gaussiano)
+Eta41 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;),
+  GGKW = list(K = GGKW, model = &quot;RKHS&quot;)
+)
+
+# Modelo 42: E + W + PGK + PGKW (Gaussiano)
+Eta42 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;),
+  PGKW = list(K = PGKW, model = &quot;RKHS&quot;)
+)
+
+# Modelo 43: E + W + GGK + PGK + GGKW + PGKW (Gaussiano)
+Eta43 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;),
+  GGKW = list(K = GGKW, model = &quot;RKHS&quot;),
+  PGKW = list(K = PGKW, model = &quot;RKHS&quot;)
+)
+
+# Modelo 44: E + W + GAK + GAKW (Arc-cosseno)
+Eta44 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;),
+  GAKW = list(K = GAKW, model = &quot;RKHS&quot;)
+)
+
+# Modelo 45: E + W + PAK + PAKW (Arc-cosseno)
+Eta45 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;),
+  PAKW = list(K = PAKW, model = &quot;RKHS&quot;)
+)
+
+# Modelo 46: E + W + GAK + PAK + GAKW + PAKW (Arc-cosseno)
+Eta46 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;),
+  W = list(K = ZW, &quot;RKHS&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;),
+  GAKW = list(K = GAKW, model = &quot;RKHS&quot;),
+  PAKW = list(K = PAKW, model = &quot;RKHS&quot;)
+)
+
+
+# -------------------------------------------------------------------
+# GRUPO 3: MODELOS CLIMÁTICOS (EFEITO &#39;W&#39; SUBSTITUI &#39;E&#39;)
+# (Modelos Eta47 a Eta56)
+# -------------------------------------------------------------------
+
+# Modelo 47: W (Apenas kernel climático)
+Eta47 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;)
+)
+
+# Modelo 48: W + G (Linear)
+Eta48 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;)
+)
+
+# Modelo 49: W + P (Linear)
+Eta49 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;)
+)
+
+# Modelo 50: W + G + P (Linear)
+Eta50 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  G = list(K = ZG, model = &quot;RKHS&quot;),
+  P = list(K = ZP, model = &quot;RKHS&quot;)
+)
+
+# Modelo 51: W + GGK (Gaussiano)
+Eta51 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 52: W + PGK (Gaussiano)
+Eta52 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 53: W + GGK + PGK (Gaussiano)
+Eta53 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  GGK = list(K = GGK, model = &quot;RKHS&quot;),
+  PGK = list(K = PGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 54: W + GAK (Arc-cosseno)
+Eta54 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 55: W + PAK (Arc-cosseno)
+Eta55 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 56: W + GAK + PAK (Arc-cosseno)
+Eta56 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;),
+  GAK = list(K = GAK, model = &quot;RKHS&quot;),
+  PAK = list(K = PAK, model = &quot;RKHS&quot;)
+)
+
+# -------------------------------------------------------------------
+# GRUPO 4: MODELOS DE EFEITOS INDIVIDUAIS (PARA COMPARAÇÃO)
+# (Modelos Eta57 a Eta64)
+# -------------------------------------------------------------------
+
+# Modelo 57: E (Apenas efeito categórico de ambiente)
+Eta57 &lt;- list(
+  E = list(X = ZE, model = &quot;BRR&quot;)
+)
+
+# Modelo 58: G (Apenas genômico linear)
+Eta58 &lt;- list(
+  G = list(K = ZG, model = &quot;RKHS&quot;)
+)
+
+# Modelo 59: P (Apenas fenômico linear)
+Eta59 &lt;- list(
+  P = list(K = ZP, model = &quot;RKHS&quot;)
+)
+
+# Modelo 60: GGK (Apenas genômico gaussiano)
+Eta60 &lt;- list(
+  GGK = list(K = GGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 61: PGK (Apenas fenômico gaussiano)
+Eta61 &lt;- list(
+  PGK = list(K = PGK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 62: GAK (Apenas genômico arc-cosseno)
+Eta62 &lt;- list(
+  GAK = list(K = GAK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 63: PAK (Apenas fenômico arc-cosseno)
+Eta63 &lt;- list(
+  PAK = list(K = PAK, model = &quot;RKHS&quot;)
+)
+
+# Modelo 64: W (Apenas kernel climático)
+# Nota: Este é idêntico ao Eta47, incluído para consistência.
+Eta64 &lt;- list(
+  W = list(K = ZW, model = &quot;RKHS&quot;)
+)</code></pre>
+<p>Para testar o <strong>Grupo 1</strong> (Modelos Base <code>E</code>),
+agrupamos os primeiros 18 modelos (<code>Eta1</code> a
+<code>Eta18</code>) em uma lista chamada <code>Models</code>. Esta lista
+pode ser usada para uma análise preliminar focada apenas nos modelos GxE
+categóricos.</p>
+<pre class="r"><code># Cada modelo combina diferentes efeitos: genômico, fenômico, ambiente e interações
+Models &lt;- list(Eta1, Eta2, Eta3, Eta4, Eta5, Eta6, Eta7, Eta8, Eta9, Eta10,
+               Eta11, Eta12, Eta13, Eta14, Eta15, Eta16, Eta17, Eta18)
+length(Models)  # Deve retornar 18</code></pre>
+<pre><code>[1] 18</code></pre>
+<p>Para rodar a validação cruzada com os novos modelos, adicione-os à
+lista <code>Models</code>. Agora, vamos consolidar
+<strong>todos</strong> os modelos para a validação cruzada completa.</p>
+<pre class="r"><code># 1. Primeiro, agrupamos todos os modelos do Grupo 2 e Grupo 3
+# (aqueles que usam o kernel climático W) na lista `Climate_Models`.
+Climate_Models &lt;- list(Eta20, Eta21, Eta22, Eta23, Eta24, Eta25, Eta26, Eta27, Eta28,
+                       Eta29, Eta30, Eta31, Eta32, Eta33, Eta34, Eta35, Eta36, Eta37,
+                       Eta38, Eta39, Eta40, Eta41, Eta42, Eta43, Eta44, Eta45, Eta46,
+                       Eta48, Eta49, Eta50, Eta51, Eta52, Eta53, Eta54, Eta55, Eta56)
+
+# 2. Adicionamos os modelos de efeitos individuais (Grupo 4)
+Climate_Models &lt;- c(Climate_Models, list(Eta57, Eta58, Eta59, Eta60, Eta61, Eta62, Eta63, Eta64))
+
+# 3. Finalmente, combinamos a lista original `Models` (Grupo 1) com a `Climate_Models`
+# para criar o &quot;menu&quot; completo de modelos.
+Models_full_set &lt;- c(Models, Climate_Models)
+
+# Esta lista `Models_full_set` está pronta para ser usada no loop
+# de validação cruzada, permitindo uma comparação completa de todos os 62 modelos.
+cat(&quot;Total de modelos a serem avaliados:&quot;, length(Models_full_set))</code></pre>
+<pre><code>Total de modelos a serem avaliados: 62</code></pre>
+</div>
+<div id="cross-validação" class="section level2">
+<h2>13) Cross-validação</h2>
+<p>Esta é a seção de testes do projeto. O objetivo é avaliar
+rigorosamente a <strong>capacidade preditiva</strong> de todos os nossos
+modelos (Eta1 a Eta64) para determinar quais deles são realmente
+úteis.</p>
+<p>Um modelo que apenas se ajusta bem aos dados existentes (bom
+<em>fit</em>) não é útil; ele precisa ser capaz de <strong>prever dados
+que nunca viu</strong>. Para simular isso, usamos a Validação Cruzada
+(CV).</p>
+<p>Vamos implementar múltiplos esquemas de CV para simular diferentes
+desafios do mundo real no melhoramento:</p>
+<ul>
+<li><strong>CV1: validação por genótipo (testa genótipos não
+observados).</strong>
+<ul>
+<li><em>Pergunta:</em> O modelo pode prever o desempenho de um genótipo
+(híbrido) <em>completamente novo</em>, que não estava em <em>nenhum</em>
+ambiente de treinamento?</li>
+</ul></li>
+<li><strong>CV2: validação por célula (testa combinações genótipo ×
+ambiente parcialmente observadas).</strong>
+<ul>
+<li><em>Pergunta:</em> O modelo pode prever o desempenho de um genótipo
+<em>conhecido</em> em um ambiente <em>novo</em> para ele (assumindo que
+o genótipo foi visto em outros ambientes e o ambiente foi visto com
+outros genótipos)?</li>
+</ul></li>
+<li><strong>CV0: leave-one-environment-out (testa ambientes inteiros não
+observados).</strong>
+<ul>
+<li><em>Pergunta:</em> O teste mais difícil. O modelo pode prever o
+desempenho de <em>todos</em> os genótipos em um <em>ambiente
+completamente novo</em> (um ano ou local que o modelo nunca viu)?</li>
+</ul></li>
+<li><strong>CV00: leave-one-environment-out (testa genótipos em
+ambientes não observados).</strong>
+<ul>
+<li><em>Semelhante ao CV0</em>, focado em prever genótipos
+<em>dentro</em> de um ambiente não visto.</li>
+</ul></li>
+</ul>
+<div id="parâmetros-para-execução-dos-modelos" class="section level3">
+<h3>13.1) Parâmetros para execução dos modelos</h3>
+<p>Aqui, definimos os parâmetros tanto para o motor do <code>BGLR</code>
+(o amostrador MCMC) quanto para a estrutura da nossa validação
+cruzada.</p>
+<pre class="r"><code># Parâmetros de execução do BGLR
+nIter  &lt;- 5000   # número total de iterações da cadeia MCMC
+burnIn &lt;- 1000   # número de iterações descartadas como burn-in
+thin   &lt;- 10     # intervalo de amostragem para reduzir autocorrelação
+num_rep  &lt;- 20   # número de repetições da validação cruzada
+num_fold &lt;- 5    # número de folds em cada repetição</code></pre>
+<ul>
+<li><strong><code>nIter = 5000</code></strong>: O número total de
+“passos” que o algoritmo Bayesiano (MCMC) dará para estimar os
+parâmetros.</li>
+<li><strong><code>burnIn = 1000</code></strong>: O número de passos
+iniciais que descartamos. Isso dá tempo ao modelo para “aquecer” e
+convergir para uma solução estável.</li>
+<li><strong><code>thin = 10</code></strong>: Para economizar memória, só
+guardamos 1 em cada 10 passos (após o burn-in). Teremos (5000-1000)/10 =
+400 amostras por parâmetro.</li>
+<li><strong><code>num_rep = 20</code></strong>: Repetimos todo o
+processo de CV 20 vezes (com diferentes embaralhamentos aleatórios) para
+garantir que nossos resultados de acurácia não sejam devidos ao
+acaso.</li>
+<li><strong><code>num_fold = 5</code></strong>: Em cada repetição,
+dividimos os dados em 5 partes (“folds”). O modelo treina em 4 partes
+(80% dos dados) e é testado na 1 parte restante (20%).</li>
+</ul>
+</div>
+<div id="verificações-rápidas" class="section level3">
+<h3>13.2) Verificações rápidas</h3>
+<p>Esta é uma verificação de sanidade (<em>sanity check</em>). A
+execução da validação cruzada pode levar horas ou dias. Este bloco atua
+como uma <strong>trava de segurança</strong>
+(<code>stopifnot</code>).</p>
+<p>Ele verifica se os objetos de dados fundamentais (<code>Pheno</code>,
+<code>Pedigree</code>) e as colunas de <em>traits</em> (<code>GY</code>,
+<code>KW</code>) estão presentes na memória. Se algo estiver faltando, o
+script irá parar agora com um erro claro, em vez de falhar horas depois
+no meio do processamento paralelo.</p>
+<pre class="r"><code># Verificações básicas de consistência dos dados
+if (!exists(&quot;Pheno&quot;)) stop(&quot;Objeto `Pheno` não encontrado no ambiente.&quot;)
+if (!&quot;Pedigree&quot; %in% names(Pheno)) stop(&quot;Coluna &#39;Pedigree&#39; não encontrada em Pheno.&quot;)
+if (!&quot;GY&quot; %in% names(Pheno)) stop(&quot;Coluna &#39;GY&#39; não encontrada em Pheno (resposta).&quot;)
+if (!&quot;KW&quot; %in% names(Pheno)) stop(&quot;Coluna &#39;KW&#39; não encontrada em Pheno (resposta).&quot;)
+
+# Se &#39;Pedigree&#39; não existir como objeto, cria a partir de Pheno
+if (!exists(&quot;Pedigree&quot;)) Pedigree &lt;- unique(Pheno$Pedigree)
+
+# Garante que não haja duplicatas
+Pedigree &lt;- unique(Pedigree)
+
+# Número total de híbridos consistentes
+n_hybrids &lt;- length(Pedigree)
+
+# Verificação extra: não pode ser zero
+stopifnot(n_hybrids &gt; 0)</code></pre>
+</div>
+<div id="pastas-de-saída" class="section level3">
+<h3>13.3) Pastas de saída</h3>
+<p>Vamos gerar milhares de arquivos de resultado (um para cada
+<em>fold</em> de cada <em>rep</em> de cada <em>modelo</em>). Este bloco
+de código simplesmente garante que as pastas de destino
+(<code>output/results</code> e
+<code>output/componentes_variancia</code>) existam.</p>
+<p><code>recursive = TRUE</code> cria a estrutura de pastas necessária
+(ex: <code>output/</code> e <code>output/results/</code> de uma só vez),
+e <code>showWarnings = FALSE</code> evita mensagens desnecessárias caso
+as pastas já tenham sido criadas.</p>
+<pre class="r"><code># Cria diretórios de saída para armazenar resultados
+dir.create(&quot;output/results&quot;, recursive = TRUE, showWarnings = FALSE)</code></pre>
+</div>
+<div id="funções-auxiliares-e-ambientes-de-cv0cv00"
+class="section level3">
+<h3>13.5) Funções auxiliares e ambientes de CV0/CV00</h3>
+<p>Este bloco prepara as “ferramentas” que usaremos dentro do nosso
+<em>loop</em> de processamento paralelo.</p>
+<ul>
+<li><strong><code>envs_leaveout</code></strong>: Define os ambientes
+específicos que serão usados para os cenários de teste CV0 e CV00 (onde
+deixamos um ambiente inteiro de fora).</li>
+<li><strong><code>run_bglr</code></strong>: Esta é uma função ‘wrapper’
+(empacotadora) personalizada e <strong>altamente otimizada</strong>. A
+função <code>BGLR</code> padrão retorna objetos muito pesados. Para
+evitar sobrecarregar a memória em um <em>loop</em> paralelo, nossa
+<code>run_bglr</code> faz o seguinte:
+<ol style="list-style-type: decimal">
+<li>Roda o <code>BGLR</code>.</li>
+<li>Salva os arquivos de log do MCMC (via <code>saveAt</code>).</li>
+<li>Extrai <em>apenas</em> as métricas essenciais (predições
+<code>yHat</code>, variâncias médias) e as salva em um único arquivo
+<code>.rds</code> leve (<code>_metricas.rds</code>).</li>
+<li>Limpa o objeto <code>fit</code> pesado da memória
+(<code>rm(fit); gc()</code>).</li>
+<li>Retorna <em>apenas</em> o <code>yHat</code> (predições) e o tempo de
+execução para o <em>loop</em> principal.</li>
+</ol></li>
+<li><strong><code>calc_cor_by_env</code></strong>: Uma função auxiliar
+simples que usaremos <em>após</em> a execução principal, para agregar os
+resultados e calcular a acurácia (correlação) dentro de cada
+ambiente.</li>
+<li><strong><code>combos</code></strong>: Esta é a <strong>“lista de
+tarefas” mestra</strong> para o processamento paralelo.
+<code>expand.grid</code> cria uma tabela gigante onde cada linha é um
+“trabalho” (uma combinação única de <code>MODELO</code>,
+<code>REPETIÇÃO</code> e <code>TRAIT</code>). O <em>loop</em>
+<code>foreach</code> (na próxima seção) irá distribuir essas linhas
+pelos núcleos da CPU.</li>
+</ul>
+<pre class="r"><code># Ambientes a serem deixados de fora (leave-one-environment-out)
+envs_leaveout &lt;- c(&quot;CS11_WS&quot;, &quot;CS11_WW&quot;, &quot;CS12_WS&quot;, &quot;CS12_WW&quot;)
+
+# --- FUNÇÃO OTIMIZADA ---
+# Função auxiliar: roda BGLR, salva MÉTRICAS RESUMIDAS e retorna predições + tempo
+run_bglr &lt;- function(y2_vector, ETA, nIter, burnIn, thin, save_prefix) {
+  # y2_vector: vetor de resposta com NAs nos pontos a predizer
+  y_t &lt;- as.numeric(y2_vector)
+  dir.create(dirname(save_prefix), recursive = TRUE, showWarnings = FALSE)
+  
+  # mede tempo
+  start_time &lt;- Sys.time()
+  
+  fit &lt;- BGLR(y = y_t, ETA = ETA, nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix)
+  
+  end_time &lt;- Sys.time()
+  elapsed &lt;- as.numeric(difftime(end_time, start_time, units = &quot;secs&quot;))
+  
+  # 1. Extrair componentes de variância (varU) de forma dinâmica
+  #    Isto funciona para QUALQUER modelo (com 1 ou N efeitos)
+  variancias_U &lt;- list()
+  if (!is.null(fit$ETA)) {
+      nomes_efeitos &lt;- names(fit$ETA)
+      if (is.null(nomes_efeitos)) {
+          nomes_efeitos &lt;- paste0(&quot;Efeito_&quot;, seq_along(fit$ETA))
+      }
+      
+      for (i in seq_along(fit$ETA)) {
+          efeito_nome &lt;- nomes_efeitos[i]
+          # Armazena a variância média (pós-burnIn)
+          if (!is.null(fit$ETA[[i]]$varU)) {
+              variancias_U[[efeito_nome]] &lt;- fit$ETA[[i]]$varU
+          }
+      }
+  }
+  
+  # 2. Criar o objeto de saída leve
+  saida_essencial &lt;- list(
+      yHat_mean = fit$yHat,        # Predições (média)
+      varE_mean = fit$varE,        # Variância residual (média)
+      # --- LINHA ADICIONADA ---
+      # Salva a variância dos efeitos fixos (varB), se ela existir
+      varB_mean = ifelse(is.null(fit$varB), NA, fit$varB), 
+      # --- FIM DA LINHA ADICIONADA ---
+      variances_U_mean = variancias_U, # Lista de variâncias dos kernels (média)
+      DIC = ifelse(is.null(fit$fit$DIC), NA, fit$fit$DIC),
+      runtime_sec = elapsed
+  )
+  
+  # 3. Salvar este objeto de métricas leve (arquivo .rds minúsculo)
+  #    Isso substitui o saveRDS(fit, ...)
+  saveRDS(saida_essencial, paste0(save_prefix, &quot;_metricas.rds&quot;))
+  
+  # --- FIM DAS MUDANÇAS ---
+  
+  # 4. Preparar o retorno para o &#39;foreach&#39; (isto permanece igual)
+  #    O loop &#39;foreach&#39; só precisa do yHat e do runtime
+  retorno_foreach &lt;- list(yHat = fit$yHat, runtime_sec = elapsed)
+  
+  # 5. Limpar o objeto &#39;fit&#39; pesado da memória imediatamente
+  rm(fit, saida_essencial, variancias_U)
+  gc() # Força a &quot;coleta de lixo&quot;
+  
+  # retorna lista com predições e tempo
+  return(retorno_foreach)
+}
+# --- FIM DA FUNÇÃO OTIMIZADA ---
+
+
+# Função auxiliar: calcula correlação observada vs predita por ambiente
+# (Esta função não precisa de alteração)
+calc_cor_by_env &lt;- function(df_with_yhat, trait_col) {
+  df_with_yhat %&gt;%
+    dplyr::group_by(Env) %&gt;%
+    dplyr::summarize(
+      cor = cor(.data[[trait_col]], yhat, use = &quot;complete.obs&quot;),
+      .groups = &quot;drop&quot;
+    ) %&gt;%
+    as.data.frame()
+}
+
+# Cria grid de combinações: cada worker processa 1 modelo × 1 repetição
+# (Esta função não precisa de alteração)
+combos &lt;- expand.grid(MODEL = 1:length(Models_full_set), REP = seq_len(num_rep), TRAIT = c(&quot;GY&quot;, &quot;KW&quot;))</code></pre>
+<p>Esta é a <strong>limpeza final</strong> antes do <em>loop</em> de
+processamento principal. Usamos <code>setdiff(ls(), ...)</code> para
+obter uma lista de <em>tudo</em> o que está no ambiente, <em>exceto</em>
+os objetos essenciais que listamos (<code>Pheno</code>,
+<code>Models_full_set</code>, nossas funções, etc.).</p>
+<p>Em seguida, <code>rm()</code> remove todo esse “lixo” intermediário.
+Isso garante que cada “trabalhador” paralelo (núcleo de CPU) seja
+iniciado com o mínimo de memória possível, dedicando todos os recursos
+ao ajuste do <code>BGLR</code>.</p>
+<pre class="r"><code># Excluindo todos os objetos intermediários para liberar memória
+rm(list = setdiff(ls(), c(&quot;Pheno&quot;, &quot;Pedigree&quot;, &quot;Models_full_set&quot;,
+                         &quot;nIter&quot;, &quot;burnIn&quot;, &quot;thin&quot;,
+                         &quot;num_rep&quot;, &quot;num_fold&quot;,
+                         &quot;envs_leaveout&quot;,
+                         &quot;run_bglr&quot;, &quot;calc_cor_by_env&quot;,
+                         &quot;combos&quot;, &quot;n_hybrids&quot;, &quot;model_info&quot;)))</code></pre>
+</div>
+</div>
+<div id="ajuste-de-modelos" class="section level2">
+<h2>14) Ajuste de modelos</h2>
+<p>Esta seção é o “motor” de toda a análise. Aqui, executamos o plano de
+validação cruzada definido na Seção 13.</p>
+<div id="configuração-do-backend-paralelo" class="section level3">
+<h3>14.1) Configuração do backend paralelo</h3>
+<p><strong>Por que isso é necessário?</strong> Temos uma tarefa
+computacional enorme pela frente. O número total de modelos a ajustar
+é:</p>
+<p><code>64 Modelos</code> × <code>2 Traits</code> ×
+<code>20 Repetições</code> × <code>5 Folds</code> = <strong>12.800
+execuções do BGLR</strong> (para CV1/CV2)</p>
+<p>…mais um número ainda maior para CV0/CV00. Fazer isso em um único
+núcleo de CPU levaria semanas.</p>
+<p>Este bloco de código detecta quantos núcleos de processamento
+(<code>cores</code>) seu computador possui e reserva (quase) todos eles
+(<code>useCores</code>) para o trabalho.
+<code>doParallel::registerDoParallel(cl)</code> informa ao R para usar
+este “cluster” de núcleos para executar tarefas simultaneamente,
+acelerando drasticamente o processo.</p>
+<pre class="r"><code># Detecta número de núcleos disponíveis e configura backend paralelo
+numCores &lt;- parallel::detectCores()
+useCores &lt;- max(1, numCores - 1)    # usa todos menos 1 núcleo
+cl &lt;- parallel::makeCluster(useCores)
+doParallel::registerDoParallel(cl)
+
+cat(&quot;Rodando em &quot;, useCores, &quot; núcleos.&quot;)</code></pre>
+<pre><code>Rodando em  21  núcleos.</code></pre>
+<p><code>gc()</code> é chamado para “coletar o lixo” (liberar memória
+RAM não utilizada) antes de iniciar o trabalho pesado.</p>
+<pre class="r"><code>gc()  # Limpa memória antes da execução paralela</code></pre>
+<pre><code>           used  (Mb) gc trigger   (Mb)  max used   (Mb)
+Ncells  1610823  86.1    2506878  133.9   2506878  133.9
+Vcells 21094649 161.0  135951886 1037.3 212424821 1620.7</code></pre>
+</div>
+<div id="execução-dos-modelos-em-paralelo" class="section level3">
+<h3>14.2) Execução dos modelos em paralelo</h3>
+<p>Este é o coração da análise. O <em>loop</em> <code>foreach</code>
+itera sobre cada linha da nossa “lista de tarefas” mestra
+(<code>combos</code>). Graças ao <code>doParallel</code>, cada iteração
+(um “trabalho”) é enviada para um núcleo de CPU diferente para ser
+executada simultaneamente.</p>
+<p><strong>Dentro de cada iteração paralela (para cada
+núcleo):</strong></p>
+<ol style="list-style-type: decimal">
+<li><strong>Identificar o Trabalho</strong>: O <em>worker</em>
+identifica qual <code>MODEL</code>, <code>rep_num</code> e
+<code>TRAIT</code> ele deve processar (ex: Modelo 10, Repetição 5, Trait
+“GY”).</li>
+<li><strong>Criar Folds (CV1/CV2)</strong>: O <em>worker</em> cria os 5
+<em>folds</em> (partições) para os genótipos. <code>train_geno</code> e
+<code>test_geno</code> são definidos.</li>
+<li><strong>Loop Interno (por Fold)</strong>: O <em>worker</em> então
+itera através de cada um dos 5 <em>folds</em>.
+<ul>
+<li><strong>Mascarar Dados (CV1/CV2)</strong>: Ele cria
+<code>yield$Y2</code>. Este vetor é uma cópia dos fenótipos onde todas
+as observações dos genótipos em <code>test_geno</code> são definidas
+como <code>NA</code>.</li>
+<li><strong>Ajustar Modelo (CV1/CV2)</strong>: O <code>BGLR</code> é
+chamado usando <code>yield$Y2</code> como resposta. O <code>BGLR</code>
+irá “preencher” (prever) os valores <code>NA</code>.</li>
+<li><strong>Coletar Resultados (CV1/CV2)</strong>: As predições
+(<code>yhat</code>) são extraídas. <code>df_test</code> contém as
+predições para os genótipos de validação (que eram <code>NA</code>).
+<code>df_train</code> contém as predições para os genótipos de
+treinamento. A acurácia (correlação) é calculada para ambos e armazenada
+em <code>CV1_list</code> e <code>CV2_list</code>.</li>
+<li><strong>Mascarar Dados (CV0/CV00)</strong>: Um segundo conjunto de
+máscaras é criado (<code>yield2$Y2</code>). Ele é semelhante ao
+primeiro, mas <em>também</em> define como <code>NA</code> todas as
+observações de um ambiente específico (ex: “CS11_WS”).</li>
+<li><strong>Ajustar Modelo (CV0/CV00)</strong>: O <code>BGLR</code> é
+executado novamente com esta nova máscara.</li>
+<li><strong>Coletar Resultados (CV0/CV00)</strong>: A acurácia é
+calculada e armazenada em <code>CV0_lists</code> e
+<code>CV00_lists</code>.</li>
+</ul></li>
+<li><strong>Salvar Resultados</strong>: Após o <em>loop</em> de 5
+<em>folds</em> terminar, o <em>worker</em> agrega os resultados de
+acurácia (ex: <code>CV1out</code>) e os salva em um arquivo
+<code>.csv</code> único para aquele <code>MODEL</code>, <code>REP</code>
+e <code>TRAIT</code> (ex: <code>CV1_GY_Eta10_rep5.csv</code>).</li>
+<li>O <em>worker</em> então se torna livre para pegar o próximo
+“trabalho” da fila <code>combos</code>.</li>
+</ol>
+<p><em><strong>Nota:</strong> Este bloco está com
+<code>eval=FALSE</code> para que o tutorial possa ser compilado
+rapidamente. Para executar a análise completa, mude a opção do chunk
+para <code>{r parallel-model, cache=FALSE, eval=TRUE}</code> e
+execute-o. Isso levará um tempo considerável.</em></p>
+<pre class="r"><code># Paraleliza
+foreach(i = seq_len(nrow(combos)),
+        .packages = c(&quot;BGLR&quot;, &quot;dplyr&quot;, &quot;plyr&quot;)) %dopar% {
+          MODEL &lt;- combos$MODEL[i]
+          rep_num &lt;- combos$REP[i]
+          TRAIT &lt;- as.character(combos$TRAIT[i])
+          
+          pheno &lt;- data.frame(Pheno)  # copia de Pheno para manipulação local
+          
+          # Diretórios organizados por repetição e modelo
+          rep_dir &lt;- file.path(&quot;output/ajuste_modelo&quot;, paste0(&quot;rep_&quot;, rep_num))
+          dir.create(rep_dir, recursive = TRUE, showWarnings = FALSE)
+          eta_dir &lt;- file.path(rep_dir, paste0(&quot;Eta&quot;, MODEL))
+          dir.create(eta_dir, recursive = TRUE, showWarnings = FALSE)
+          
+          # Inicializa listas de resultados
+          CV1_list &lt;- list()
+          CV2_list &lt;- list()
+          CV0_lists  &lt;- lapply(envs_leaveout, function(x)
+            list())
+          CV00_lists &lt;- lapply(envs_leaveout, function(x)
+            list())
+          names(CV0_lists) &lt;- envs_leaveout
+          names(CV00_lists) &lt;- envs_leaveout
+          
+          # Cria folds reprodutíveis
+          #set.seed(1000 + MODEL * 100 + rep_num)
+          obs_per_fold &lt;- ceiling(n_hybrids / num_fold)
+          folds &lt;- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = n_hybrids))
+          folds_df &lt;- data.frame(Pedigree = Pedigree,
+                                 fold = folds,
+                                 stringsAsFactors = FALSE)
+          
+          for (fold_num in seq_len(num_fold)) {
+            train_geno &lt;- folds_df$Pedigree[folds_df$fold != fold_num]
+            test_geno  &lt;- folds_df$Pedigree[folds_df$fold == fold_num]
+            
+            # --- CV1 / CV2 ---
+            yield &lt;- pheno
+            yield$Y2 &lt;- NA
+            yield$Y2[yield$Pedigree %in% train_geno] &lt;- yield[[TRAIT]][yield$Pedigree %in% train_geno]
+            
+            save_prefix_full &lt;- file.path(eta_dir,
+                                          paste0(&quot;full_Eta&quot;, MODEL, &quot;_&quot;, TRAIT, &quot;_fold&quot;, fold_num, &quot;_&quot;))
+            #set.seed(2000 + MODEL * 100 + rep_num * 10 + fold_num)
+            res_full &lt;- run_bglr(
+              yield$Y2,
+              ETA = Models_full_set[[MODEL]],
+              nIter = nIter,
+              burnIn = burnIn,
+              thin = thin,
+              save_prefix_full
+            )
+            yield$yhat &lt;- res_full$yHat
+            runtime_full &lt;- res_full$runtime_sec
+            
+            df_test &lt;- yield[!yield$Pedigree %in% train_geno, ]
+            df_train &lt;- yield[yield$Pedigree %in% train_geno, ]
+            
+            tmp1 &lt;- calc_cor_by_env(df_test, TRAIT)
+            tmp2 &lt;- calc_cor_by_env(df_train, TRAIT)
+            tmp1$Runtime_sec &lt;- runtime_full
+            tmp2$Runtime_sec &lt;- runtime_full
+            CV1_list[[length(CV1_list) + 1]] &lt;- tmp1
+            CV2_list[[length(CV2_list) + 1]] &lt;- tmp2
+            
+            # --- CV0 / CV00 ---
+            for (env_idx in seq_along(envs_leaveout)) {
+              env_name &lt;- envs_leaveout[env_idx]
+              
+              yield2 &lt;- pheno
+              yield2$Y2 &lt;- NA
+              yield2$Y2[yield2$Pedigree %in% train_geno] &lt;- yield2[[TRAIT]][yield2$Pedigree %in% train_geno]
+              yield2$Y2[yield2$Env == env_name] &lt;- NA
+              
+              save_prefix_env &lt;- file.path(eta_dir,
+                                           paste0(env_name, &quot;_&quot;, TRAIT, &quot;_Eta&quot;, MODEL, &quot;_fold&quot;, fold_num, &quot;_&quot;))
+              #set.seed(3000 + MODEL * 100 + rep_num * 10 + fold_num + env_idx)
+              res_env &lt;- run_bglr(
+                yield2$Y2,
+                ETA = Models_full_set[[MODEL]],
+                nIter = nIter,
+                burnIn = burnIn,
+                thin = thin,
+                save_prefix_env
+              )
+              yield2$yhat &lt;- res_env$yHat
+              runtime_env &lt;- res_env$runtime_sec
+              
+              df_test2 &lt;- yield2[!yield2$Pedigree %in% train_geno, ]
+              df_train2 &lt;- yield2[yield2$Pedigree %in% train_geno, ]
+              
+              tmp00 &lt;- calc_cor_by_env(df_test2, TRAIT)
+              tmp0  &lt;- calc_cor_by_env(df_train2, TRAIT)
+              tmp00$Runtime_sec &lt;- runtime_env
+              tmp0$Runtime_sec  &lt;- runtime_env
+              CV00_lists[[env_idx]][[length(CV00_lists[[env_idx]]) + 1]] &lt;- tmp00
+              CV0_lists[[env_idx]][[length(CV0_lists[[env_idx]]) + 1]] &lt;- tmp0
+            }
+          }
+          
+          # Salva resultados por esquema
+          CV1out &lt;- plyr::ldply(CV1_list, data.frame)
+          CV2out &lt;- plyr::ldply(CV2_list, data.frame)
+          write.csv(CV1out,
+                    file = file.path(
+                      &quot;output/results&quot;,
+                      paste0(&quot;CV1_&quot;, TRAIT, &quot;_Eta&quot;, MODEL, &quot;_rep&quot;, rep_num, &quot;.csv&quot;)
+                    ),
+                    row.names = FALSE)
+          write.csv(CV2out,
+                    file = file.path(
+                      &quot;output/results&quot;,
+                      paste0(&quot;CV2_&quot;, TRAIT, &quot;_Eta&quot;, MODEL, &quot;_rep&quot;, rep_num, &quot;.csv&quot;)
+                    ),
+                    row.names = FALSE)
+          
+          for (env_idx in seq_along(envs_leaveout)) {
+            env_name &lt;- envs_leaveout[env_idx]
+            CV00out &lt;- plyr::ldply(CV00_lists[[env_idx]], data.frame)
+            CV0out  &lt;- plyr::ldply(CV0_lists[[env_idx]], data.frame)
+            
+            write.csv(CV00out,
+                      file = file.path(
+                        &quot;output/results&quot;,
+                        paste0(
+                          &quot;CV00_&quot;,
+                          TRAIT,
+                          &quot;_&quot;,
+                          env_name,
+                          &quot;_Eta&quot;,
+                          MODEL,
+                          &quot;_rep&quot;,
+                          rep_num,
+                          &quot;.csv&quot;
+                        )
+                      ),
+                      row.names = FALSE)
+            write.csv(CV0out,
+                      file = file.path(
+                        &quot;output/results&quot;,
+                        paste0(
+                          &quot;CV0_&quot;,
+                          TRAIT,
+                          &quot;_&quot;,
+                          env_name,
+                          &quot;_Eta&quot;,
+                          MODEL,
+                          &quot;_rep&quot;,
+                          rep_num,
+                          &quot;.csv&quot;
+                        )
+                      ),
+                      row.names = FALSE)
+          }
+          
+          NULL
+        } # end foreach</code></pre>
+<p>Após o término do <em>loop</em> <code>foreach</code>, este comando
+<strong>desliga</strong> o cluster paralelo e libera os núcleos da CPU
+de volta para o sistema operacional.</p>
+</div>
+</div>
+<div id="resultados" class="section level2">
+<h2>15) Resultados</h2>
+<p>O <em>loop</em> de processamento paralelo na Seção 14 gerou
+<strong>milhares</strong> de arquivos <code>.csv</code> individuais (um
+para cada <code>Modelo</code> x <code>Repetição</code> x
+<code>Trait</code> x <code>Fold</code> x <code>CV</code>). Esta seção é
+o <strong>pós-processamento</strong>, onde iremos:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Consolidar</strong>: Ler todos esses arquivos pequenos e
+agrupá-los em alguns arquivos “mestres”.</li>
+<li><strong>Limpar</strong>: Os arquivos “mestres” ainda estarão
+“sujos”, pois toda a informação importante (Qual modelo? Qual trait?)
+está “presa” no nome do arquivo.</li>
+<li><strong>Analisar</strong>: Vamos “limpar” esses arquivos mestres,
+extraindo (fazendo <em>parsing</em>) os nomes dos arquivos em colunas de
+metadados (ex: <code>Model</code>, <code>Trait</code>,
+<code>Rep</code>).</li>
+</ol>
+<p>O resultado final serão alguns arquivos <code>.csv</code> limpos e
+prontos para a visualização e análise estatística.</p>
+<div id="segregação-dos-resultados-dos-esquemas-cv00-e-cv0-por-ambiente"
+class="section level3">
+<h3>15.1) Segregação dos resultados dos esquemas CV00 e CV0 por
+ambiente</h3>
+<p><strong>Objetivo:</strong> Consolidar os resultados dos cenários
+<em>leave-one-environment-out</em>.</p>
+<p>Como o “ambiente-deixado-de-fora” é o fator chave aqui, primeiro
+agrupamos os resultados por esse fator.</p>
+<ul>
+<li>O código lista todos os arquivos <code>CV0_</code> e
+<code>CV00_</code>.</li>
+<li>Em seguida, ele filtra essa lista para um ambiente-alvo específico
+(ex: <code>grep("CS12_WS", ...)</code>).</li>
+<li>Ele lê todos os arquivos <code>.csv</code> desse subconjunto (ex:
+todos os resultados de CV0 onde “CS12_WS” foi o ambiente de teste) e os
+combina em um único <em>dataframe</em> (ex:
+<code>df_CV0_CS12_WS</code>).</li>
+<li>Esse <em>dataframe</em> consolidado é salvo como um “resumo
+intermediário” (ex: <code>Pred.ability.CV0.CS12_WS.csv</code>).</li>
+<li>Isso é repetido para todos os 4 ambientes e 2 tipos de CV (8 resumos
+intermediários).</li>
+<li>Finalmente, todos esses resumos intermediários são combinados em um
+único arquivo mestre (<code>df_CV0_CV00</code>).</li>
+</ul>
+<pre class="r"><code># Selecionando apenas os que contêm &quot;CV0&quot;
+list_csv_files_CV0 &lt;- list.files(
+  path = &quot;output/results&quot;,
+  pattern = &quot;CV0_&quot;,
+  # pega arquivos que contenham CV0
+  full.names = TRUE
+)
+
+# Selecionando apenas os que contêm &quot;CV00&quot;
+list_csv_files_CV00 &lt;- list.files(
+  path = &quot;output/results&quot;,
+  pattern = &quot;CV00_&quot;,
+  # pega arquivos que contenham CV0
+  full.names = TRUE
+)
+
+# Filtrando apenas os arquivos que contêm &quot;CS12_WS&quot;
+list_csv_files_CV0_CS12_WS &lt;- list_csv_files_CV0[grep(&quot;CS12_WS&quot;, list_csv_files_CV0)]
+df_CV0_CS12_WS &lt;- read_csv(list_csv_files_CV0_CS12_WS, id = &quot;file_name&quot;) %&gt;% as.data.frame()
+head(df_CV0_CS12_WS)
+
+write.csv(df_CV0_CS12_WS, &quot;output/Pred.ability/Pred.ability.CV0.CS12_WS.csv&quot;)  # Salva consolidação
+
+list_csv_files_CV00_CS12_WS &lt;- list_csv_files_CV00[grep(&quot;CS12_WS&quot;, list_csv_files_CV00)]
+df_CV00_CS12_WS &lt;- read_csv(list_csv_files_CV00_CS12_WS, id = &quot;file_name&quot;) %&gt;% as.data.frame()
+head(df_CV00_CS12_WS)
+
+write.csv(df_CV00_CS12_WS, &quot;output/Pred.ability/Pred.ability.CV00.CS12_WS.csv&quot;)  # Salva consolidação
+
+# Filtrando apenas os arquivos que contêm &quot;CS11_WW&quot;
+list_csv_files_CV0_CS11_WW &lt;- list_csv_files_CV0[grep(&quot;CS11_WW&quot;, list_csv_files_CV0)]
+df_CV0_CS11_WW &lt;- read_csv(list_csv_files_CV0_CS11_WW, id = &quot;file_name&quot;) %&gt;% as.data.frame()
+head(df_CV0_CS11_WW)
+
+write.csv(df_CV0_CS11_WW, &quot;output/Pred.ability/Pred.ability.CV0.CS11_WW.csv&quot;)  # Salva consolidação
+
+list_csv_files_CV00_CS11_WW &lt;- list_csv_files_CV00[grep(&quot;CS11_WW&quot;, list_csv_files_CV00)]
+df_CV00_CS11_WW &lt;- read_csv(list_csv_files_CV00_CS11_WW, id = &quot;file_name&quot;) %&gt;% as.data.frame()
+head(df_CV00_CS11_WW)
+
+write.csv(df_CV00_CS11_WW, &quot;output/Pred.ability/Pred.ability.CV00.CS11_WW.csv&quot;)  # Salva consolidação
+
+# Filtrando apenas os arquivos que contêm &quot;CS12_WW&quot;
+
+list_csv_files_CV0_CS12_WW &lt;- list_csv_files_CV0[grep(&quot;CS12_WW&quot;, list_csv_files_CV0)]
+df_CV0_CS12_WW &lt;- read_csv(list_csv_files_CV0_CS12_WW, id = &quot;file_name&quot;) %&gt;% as.data.frame()
+head(df_CV0_CS12_WW)
+
+write.csv(df_CV0_CS12_WW, &quot;output/Pred.ability/Pred.ability.CV0.CS12_WW.csv&quot;)  # Salva consolidação
+
+list_csv_files_CV00_CS12_WW &lt;- list_csv_files_CV00[grep(&quot;CS12_WW&quot;, list_csv_files_CV00)]
+df_CV00_CS12_WW &lt;- read_csv(list_csv_files_CV00_CS12_WW, id = &quot;file_name&quot;) %&gt;% as.data.frame()
+head(df_CV00_CS12_WW)
+
+write.csv(df_CV00_CS12_WW, &quot;output/Pred.ability/Pred.ability.CV00.CS12_WW.csv&quot;)  # Salva consolidação
+
+# Filtrando apenas os arquivos que contêm &quot;CS11_WS&quot;
+list_csv_files_CV0_CS11_WS &lt;- list_csv_files_CV0[grep(&quot;CS11_WS&quot;, list_csv_files_CV0)]
+df_CV0_CS11_WS &lt;- read_csv(list_csv_files_CV0_CS11_WS, id = &quot;file_name&quot;) %&gt;% as.data.frame()
+head(df_CV0_CS11_WS)
+
+write.csv(df_CV0_CS11_WS, &quot;output/Pred.ability/Pred.ability.CV0.CS11_WS.csv&quot;)  # Salva consolidação
+
+list_csv_files_CV00_CS11_WS &lt;- list_csv_files_CV00[grep(&quot;CS11_WS&quot;, list_csv_files_CV00)]
+df_CV00_CS11_WS &lt;- read_csv(list_csv_files_CV00_CS11_WS, id = &quot;file_name&quot;) %&gt;% as.data.frame()
+head(df_CV00_CS11_WS)
+
+write.csv(df_CV00_CS11_WS, &quot;output/Pred.ability/Pred.ability.CV00.CS11_WS.csv&quot;)  # Salva consolidação
+
+df_CV0_CV00 &lt;- bind_rows(
+  df_CV0_CS12_WS,
+  df_CV00_CS12_WS,
+  df_CV0_CS11_WW,
+  df_CV00_CS11_WW,
+  df_CV0_CS12_WW,
+  df_CV00_CS12_WW,
+  df_CV0_CS11_WS,
+  df_CV00_CS11_WS
+)
+write.csv(df_CV0_CV00, &quot;output/Pred.ability/Pred.ability.CV0.CV00.csv&quot;)  # Salva consolidação</code></pre>
+</div>
+<div id="resultados-cv0-e-cv00" class="section level3">
+<h3>15.2) Resultados CV0 e CV00</h3>
+<p><strong>Objetivo:</strong> Limpar e padronizar o arquivo mestre
+<code>CV0.CV00.csv</code>.</p>
+<p>Este bloco lê o arquivo mestre (<code>...CV0.CV00.csv</code>) criado
+na etapa anterior e o <strong>limpa</strong>. O arquivo original é
+“sujo” porque toda a informação útil (qual modelo, qual trait) está
+“presa” dentro da coluna <code>file_name</code>.</p>
+<ul>
+<li>Usa <code>separate</code> para quebrar o nome do arquivo (ex:
+<code>CV0_GY_CS11_WS_Eta1_rep1</code>) em colunas limpas:
+<code>CV</code>, <code>Trait</code>, <code>Env_Val</code> (combinando
+<code>Env1</code> e <code>Env2</code>), <code>Model</code>,
+<code>Rep</code>.</li>
+<li><code>sub("^Eta", "M", ...)</code> padroniza o nome do modelo (ex:
+‘Eta1’ -&gt; ‘M1’) para facilitar a criação de gráficos.</li>
+<li>Seleciona apenas as colunas úteis e salva o <em>dataframe</em>
+limpo, substituindo o arquivo antigo. O arquivo agora está pronto para
+análise.</li>
+</ul>
+<pre class="r"><code># Agrupa por modelo, tipo de validação e traço
+# Calcula média e desvio padrão da correlação preditiva
+
+df &lt;- read.csv(&quot;output/Pred.ability/Pred.ability.CV0.CV00.csv&quot;) %&gt;%
+  mutate(
+    file_name = basename(file_name),
+    # remove caminho
+    file_name = sub(&quot;\\.csv$&quot;, &quot;&quot;, file_name)
+  ) %&gt;%    # remove extensão
+  # Quebra em até 6 partes (CV, Trait, Env1, Env2, ModelRaw, Rep)
+  separate(
+    file_name,
+    into = c(&quot;CV&quot;, &quot;Trait&quot;, &quot;Env1&quot;, &quot;Env2&quot;, &quot;ModelRaw&quot;, &quot;Rep&quot;),
+    sep = &quot;_&quot;,
+    fill = &quot;right&quot;,
+    # preenche com NA se faltar
+    remove = FALSE
+  ) %&gt;%
+  # Cria coluna Env apenas se houver Env1 e Env2
+  mutate(
+    Env_Val = paste0(Env1, &quot;_&quot;, Env2),
+    Model = sub(&quot;^Eta&quot;, &quot;M&quot;, sub(&quot;\\.csv$&quot;, &quot;&quot;, ModelRaw))) %&gt;%
+  dplyr::select(Model, CV, Trait, Env_Val, Env, Rep, cor)  # remove colunas auxiliares
+
+write.csv(df, &quot;output/Pred.ability/Pred.ability.CV0.CV00.classified.csv&quot;)  # Salva consolidação</code></pre>
+</div>
+<div id="consolidação-dos-resultados-dos-esquemas-cv1-e-cv2"
+class="section level3">
+<h3>15.3) Consolidação dos resultados dos esquemas CV1 e CV2</h3>
+<p><strong>Objetivo:</strong> Consolidar os resultados dos cenários CV1
+(predição de genótipos novos) e CV2 (predição de genótipos em ambientes
+novos).</p>
+<p>Este processo é mais simples que o de CV0/CV00 porque não precisamos
+agrupar por ambiente-deixado-de-fora.</p>
+<ul>
+<li><code>list.files</code> encontra todos os arquivos <code>CV1</code>
+ou <code>CV2</code>.</li>
+<li><code>read_csv</code> lê <em>todos</em> os milhares de arquivos de
+uma só vez (usando o argumento <code>id = "file_name"</code> para
+rastrear a origem) e os combina em um único <em>dataframe</em> mestre,
+<code>df_CV1_CV2</code>.</li>
+<li>Salva este <em>dataframe</em> mestre.</li>
+</ul>
+<pre class="r"><code># Lê os arquivos de predição dos esquemas CV1 e CV2
+list_csv_files &lt;- list.files(
+  path = &quot;output/results&quot;,
+  pattern = &quot;CV1|CV2&quot;,
+  # pega arquivos que contenham CV1 ou CV2
+  full.names = TRUE
+)
+
+df_CV1_CV2 &lt;- read_csv(list_csv_files, id = &quot;file_name&quot;) %&gt;% as.data.frame()
+head(df_CV1_CV2)
+
+write.csv(df_CV1_CV2, &quot;output/Pred.ability/Pred.ability.CV1.CV2.csv&quot;)  # Salva consolidação</code></pre>
+</div>
+<div id="resultados-cv1-e-cv2" class="section level3">
+<h3>15.4) Resultados CV1 e CV2</h3>
+<p><strong>Objetivo:</strong> Limpar e padronizar o arquivo mestre
+<code>CV1.CV2.csv</code>.</p>
+<p>Assim como na seção 15.2, este bloco <strong>limpa</strong> o arquivo
+mestre <code>...CV1.CV2.csv</code> que acabamos de criar. O arquivo
+original é “sujo” porque toda a informação útil (qual modelo, qual
+trait) está “presa” dentro da coluna <code>file_name</code>.</p>
+<ul>
+<li>Usa <code>separate</code> para quebrar o nome do arquivo (ex:
+<code>CV1_GY_Eta1_rep1</code>) em colunas limpas: <code>CV</code>,
+<code>Trait</code>, <code>Model</code>, <code>Rep</code>. (Note que não
+há <code>Env</code> no nome do arquivo aqui, pois CV1/CV2 são calculados
+<em>dentro</em> dos ambientes).</li>
+<li>Padroniza os nomes dos modelos (ex: ‘Eta1’ -&gt; ‘M1’) para
+facilitar a criação de gráficos.</li>
+<li>Salva o <em>dataframe</em> limpo e “pronto para análise”,
+substituindo o arquivo antigo.</li>
+</ul>
+<pre class="r"><code># Agrupa por modelo, tipo de validação e traço
+# Calcula média e desvio padrão da correlação preditiva
+
+df &lt;- read.csv(&quot;output/Pred.ability/Pred.ability.CV1.CV2.csv&quot;) %&gt;%
+  mutate(
+    file_name = basename(file_name),
+    # remove caminho
+    file_name = sub(&quot;\\.csv$&quot;, &quot;&quot;, file_name)
+  ) %&gt;%    # remove extensão
+  # Quebra em até 6 partes (CV, Trait, Env1, Env2, ModelRaw, Rep)
+  separate(
+    file_name,
+    into = c(&quot;CV&quot;, &quot;Trait&quot;, &quot;ModelRaw&quot;, &quot;Rep&quot;),
+    sep = &quot;_&quot;,
+    fill = &quot;right&quot;,
+    # preenche com NA se faltar
+    remove = FALSE
+  ) %&gt;%
+  # Cria coluna Env apenas se houver Env1 e Env2
+  mutate(
+    Model = sub(&quot;^Eta&quot;, &quot;M&quot;, sub(&quot;\\.csv$&quot;, &quot;&quot;, ModelRaw))) %&gt;%
+  dplyr::select(Model, CV, Trait, Env, Rep, cor)  # remove colunas auxiliares
+
+write.csv(df, &quot;output/Pred.ability/Pred.ability.CV1.CV2.classified.csv&quot;)  # Salva consolidação</code></pre>
+<p>Este é o <strong>ponto final deste script de análise</strong>. Os
+<em>kernels</em> e outros objetos gigantes são removidos da memória,
+deixando apenas os dados fenotípicos brutos.</p>
+<p>O próximo script (presumivelmente focado em visualização) irá
+carregar os dois arquivos <code>.csv</code> limpos que acabamos de criar
+(<code>Pred.ability.CV0.CV00.csv</code> e
+<code>Pred.ability.CV1.CV2.csv</code>) para gerar os gráficos e tabelas
+finais.</p>
+<pre class="r"><code># Limpa o ambiente
+
+rm(list = setdiff(ls(), c(&quot;Pheno&quot;, &quot;Pedigree&quot;, &quot;model_info&quot;)))
+gc()  # Limpa memória</code></pre>
+<pre><code>          used (Mb) gc trigger  (Mb)  max used   (Mb)
+Ncells 1615072 86.3    5145534 274.9   5145534  274.9
+Vcells 3199575 24.5   69607367 531.1 212424821 1620.7</code></pre>
+</div>
+<div id="gráfico-de-barras-da-acurácia-preditiva-cv0-e-cv00"
+class="section level3">
+<h3>15.5) Gráfico de barras da acurácia preditiva CV0 e CV00</h3>
+<p><strong>Objetivo:</strong> Visualizar a acurácia preditiva média dos
+modelos em cada esquema de validação cruzada, destacando diferenças de
+desempenho.</p>
+<p>O primeiro passo é preparar os dados para plotagem.</p>
+<ul>
+<li>Carregamos o arquivo limpo <code>...CV0.CV00.csv</code> (da Seção
+15.2).</li>
+<li>Agrupamos por <code>Model</code>, <code>Env_Val</code>,
+<code>CV</code> e <code>Trait</code>.</li>
+<li>Calculamos a média (<code>M</code>) e o desvio padrão
+(<code>SD</code>) da acurácia (correlação) entre as 20 repetições.</li>
+<li>Juntamos (<code>left_join</code>) com nossa tabela
+<code>model_info</code> (da Seção 15.5) para adicionar os nomes
+(<code>Description</code>) e tipos (<code>Type</code>) legíveis.</li>
+<li>Salvamos este <em>dataframe</em> final e pronto para plotagem
+(<code>...classified.csv</code>).</li>
+</ul>
+<pre class="r"><code># Agrupa por modelo, tipo de validação e traço
+df &lt;- read.csv(&quot;output/Pred.ability/Pred.ability.CV0.CV00.classified.csv&quot;)
+
+
+df_cor &lt;- as.data.frame(df %&gt;%
+                          group_by(Model, Env_Val, CV, Trait) %&gt;%
+                          dplyr::summarise(M = mean(cor, na.rm = TRUE), SD = sd(cor, na.rm = TRUE)))
+
+head(df_cor)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Model"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Env_Val"],"name":[2],"type":["chr"],"align":["left"]},{"label":["CV"],"name":[3],"type":["chr"],"align":["left"]},{"label":["Trait"],"name":[4],"type":["chr"],"align":["left"]},{"label":["M"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["SD"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"M1","2":"CS11_WS","3":"CV0","4":"GY","5":"0.9447083","6":"0.02255345","_rn_":"1"},{"1":"M1","2":"CS11_WS","3":"CV0","4":"KW","5":"0.9582983","6":"0.01276309","_rn_":"2"},{"1":"M1","2":"CS11_WS","3":"CV00","4":"GY","5":"0.7223760","6":"0.07990876","_rn_":"3"},{"1":"M1","2":"CS11_WS","3":"CV00","4":"KW","5":"0.5603322","6":"0.10134353","_rn_":"4"},{"1":"M1","2":"CS11_WW","3":"CV0","4":"GY","5":"0.9401574","6":"0.03275018","_rn_":"5"},{"1":"M1","2":"CS11_WW","3":"CV0","4":"KW","5":"0.9486080","6":"0.04981806","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code># Adiciona informações de classificação dos modelos
+df_cor &lt;- df_cor %&gt;%
+  left_join(model_info, by = &quot;Model&quot;)
+
+head(df_cor)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Model"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Env_Val"],"name":[2],"type":["chr"],"align":["left"]},{"label":["CV"],"name":[3],"type":["chr"],"align":["left"]},{"label":["Trait"],"name":[4],"type":["chr"],"align":["left"]},{"label":["M"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["SD"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["ModelID"],"name":[7],"type":["int"],"align":["right"]},{"label":["Type"],"name":[8],"type":["chr"],"align":["left"]},{"label":["Description"],"name":[9],"type":["chr"],"align":["left"]}],"data":[{"1":"M1","2":"CS11_WS","3":"CV0","4":"GY","5":"0.9447083","6":"0.02255345","7":"1","8":"Basico","9":"E + G","_rn_":"1"},{"1":"M1","2":"CS11_WS","3":"CV0","4":"KW","5":"0.9582983","6":"0.01276309","7":"1","8":"Basico","9":"E + G","_rn_":"2"},{"1":"M1","2":"CS11_WS","3":"CV00","4":"GY","5":"0.7223760","6":"0.07990876","7":"1","8":"Basico","9":"E + G","_rn_":"3"},{"1":"M1","2":"CS11_WS","3":"CV00","4":"KW","5":"0.5603322","6":"0.10134353","7":"1","8":"Basico","9":"E + G","_rn_":"4"},{"1":"M1","2":"CS11_WW","3":"CV0","4":"GY","5":"0.9401574","6":"0.03275018","7":"1","8":"Basico","9":"E + G","_rn_":"5"},{"1":"M1","2":"CS11_WW","3":"CV0","4":"KW","5":"0.9486080","6":"0.04981806","7":"1","8":"Basico","9":"E + G","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>write.csv(df_cor, &quot;output/Pred.ability/Pred.ability.CV0.CV00.classified.csv&quot;)  # Salva consolidação</code></pre>
+<p>Este bloco cria um gráfico de exemplo para a <code>Trait</code> “GY”
+no cenário <code>CV</code> “CV0”.</p>
+<ul>
+<li><code>ggplot(...)</code>: Inicia o gráfico, mapeando
+<code>Description</code> para o eixo X e <code>M</code> (acurácia média)
+para o eixo Y.</li>
+<li><code>geom_bar()</code>: Cria as barras.</li>
+<li><code>geom_errorbar()</code>: Adiciona as barras de erro (±SD).</li>
+<li><code>facet_wrap(. ~ Env_Val, ...)</code>: Esta é a parte
+importante. Ele cria um painel (um sub-gráfico) separado para cada
+ambiente que foi deixado de fora (ex: um painel para “CS11_WS”, um para
+“CS11_WW”, etc.), permitindo uma comparação fácil.</li>
+</ul>
+<pre class="r"><code>df_cor &lt;- read.csv(&quot;output/Pred.ability/Pred.ability.CV0.CV00.classified.csv&quot;)
+# Cria gráfico de barras com erro padrão e rótulos
+
+p &lt;- df_cor %&gt;% 
+  filter(CV == &quot;CV0&quot; &amp; Trait == &quot;GY&quot;) %&gt;% 
+  mutate(Description = reorder(Description, ModelID)) %&gt;%
+  ggplot(aes(x = Description, y = M, fill = factor(Type))) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), width = 0.8, show.legend = FALSE) +
+  geom_errorbar(aes(ymin = M, ymax = M + SD),
+                width = .2,
+                position = position_dodge(.9)) +
+  theme_bw() +
+  facet_wrap(. ~  Env_Val, nrow = 2) +  # Um painel para cada esquema de validação
+  scale_y_continuous(&quot;Prediction ability&quot;, limits = c(0,1.25)) +
+  #scale_x_continuous(&quot;Models&quot;, expand = c(0, 0), breaks = df_cor$ModelID) +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1,
+    size = 6
+  ))
+
+# Exibe o gráfico
+p</code></pre>
+<p><img src="figure/analysis.Rmd/pred-ability-plot-1.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="geração-automatizada-de-gráficos-cv0-e-cv00"
+class="section level3">
+<h3>15.6) Geração Automatizada de Gráficos (CV0 e CV00)</h3>
+<p><strong>Objetivo:</strong> Automatizar a criação de gráficos para
+<em>todas</em> as combinações de <code>Trait</code>, <code>CV</code> e
+<code>Type</code>.</p>
+<p>Em vez de copiar e colar o código de plotagem dezenas de vezes, este
+bloco usa um <em>loop</em> <code>for</code>.</p>
+<ol style="list-style-type: decimal">
+<li><strong>Identificar Combinações</strong>: Primeiro, ele encontra
+todas as combinações únicas de <code>Trait</code>, <code>CV</code> e
+<code>Type</code> (ex: “GY, CV0, Basico”, “GY, CV0, Clima_IntW”, “KW,
+CV00, Basico”, etc.).</li>
+<li><strong>Iterar</strong>: O <em>loop</em> <code>for</code> passa por
+cada uma dessas combinações.</li>
+<li><strong>Filtrar</strong>: Dentro do <em>loop</em>, ele filtra os
+dados (<code>df_filtrado</code>) apenas para a combinação atual.</li>
+<li><strong>Destaque Condicional</strong>:
+<ul>
+<li>Calcula a acurácia média (<code>media_M_grupo</code>) <em>para
+aquele grupo específico</em>.</li>
+<li>Cria uma nova coluna <code>destaque</code>. Se a acurácia de um
+modelo (<code>M</code>) for maior que a média do grupo, ele é rotulado
+como “Acima da Média”; caso contrário, “Abaixo/Igual à Média”.</li>
+</ul></li>
+<li><strong>Plotar</strong>:
+<ul>
+<li>O <code>ggplot</code> é chamado, mas desta vez
+<code>fill = destaque</code> é usado.</li>
+<li><code>scale_fill_manual</code> define as cores (Azul para “Acima”,
+Cinza para “Abaixo”).</li>
+<li><code>facet_grid(Env_Val ~ .)</code> cria painéis <em>verticais</em>
+(um por ambiente-deixado-de-fora), o que pode ser mais fácil de ler do
+que o <code>facet_wrap</code> horizontal.</li>
+</ul></li>
+<li><strong>Salvar</strong>: O gráfico é salvo com um nome de arquivo
+descritivo (ex: <code>grafico_GY_CV0_Basico.tiff</code>).</li>
+</ol>
+<p>Este <em>loop</em> irá gerar automaticamente todos os gráficos de
+resultados para CV0 e CV00, salvando-os no disco.</p>
+<pre class="r"><code>#-----------------------------------------------------------------------
+# 1. CONFIGURAÇÃO INICIAL
+#-----------------------------------------------------------------------
+
+# Carregar o seu conjunto de dados
+# Certifique-se de que o caminho para o arquivo está correto
+df_cor &lt;- read.csv(&quot;output/Pred.ability/Pred.ability.CV0.CV00.classified.csv&quot;) %&gt;% as.data.frame()
+
+# Criar um diretório para salvar os gráficos (se ele ainda não existir)
+# Isso ajuda a manter os arquivos de saída organizados
+output_dir &lt;- &quot;output/Pred.ability/graficos_gerados&quot;
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
+
+
+#-----------------------------------------------------------------------
+# 2. AUTOMAÇÃO DA GERAÇÃO DE GRÁFICOS
+#-----------------------------------------------------------------------
+
+# Identificar todas as combinações únicas das colunas de interesse
+combinacoes &lt;- df_cor %&gt;%
+  distinct(Trait, CV, Env_Val, Type)
+
+# Exibir as combinações encontradas (opcional, bom para verificação)
+print(&quot;Combinações encontradas para gerar gráficos:&quot;)
+head(combinacoes)
+
+# Iniciar o loop para iterar sobre cada linha do dataframe &#39;combinacoes&#39;
+for (i in 1:nrow(combinacoes)) {
+  
+  # Obter os valores da combinação atual
+  trait_atual &lt;- combinacoes$Trait[i]
+  cv_atual &lt;- combinacoes$CV[i]
+  type_atual &lt;- combinacoes$Type[i]
+  
+  # Mensagem de progresso no console
+  message(paste(&quot;Gerando gráfico para: Trait =&quot;, trait_atual, &quot;| CV =&quot;, cv_atual, &quot;| Type =&quot;, type_atual))
+  
+  # Filtrar o dataframe principal para conter apenas os dados da combinação atual
+  df_filtrado &lt;- df_cor %&gt;%
+    filter(Trait == trait_atual &amp; CV == cv_atual &amp; Type == type_atual)
+  
+  # Se não houver dados após o filtro, pular para a próxima iteração
+  if(nrow(df_filtrado) == 0) {
+    message(&quot; -&gt; Nenhum dado encontrado. Pulando.&quot;)
+    next 
+  }
+  
+  # --- ALTERAÇÃO 1: CALCULAR MÉDIA E CRIAR COLUNA DE DESTAQUE ---
+  
+  # Calcular a média de &#39;M&#39; *apenas* para este grupo filtrado
+  media_M_grupo &lt;- mean(df_filtrado$M, na.rm = TRUE)
+  
+  # Adicionar a coluna de destaque ao dataframe que será plotado
+  # A nova coluna &#39;destaque&#39; terá um de dois valores
+  df_plotagem &lt;- df_filtrado %&gt;%
+    mutate(
+      destaque = ifelse(M &gt; media_M_grupo, 
+                        &quot;Acima da Média&quot;, 
+                        &quot;Abaixo/Igual à Média&quot;)
+    )
+  
+  # --- FIM DA ALTERAÇÃO 1 ---
+  
+  
+  # Gerar o gráfico usando o novo &#39;df_plotagem&#39;
+  p &lt;- df_plotagem %&gt;%
+    # Ordenar Description com base em ModelID
+    mutate(Description = reorder(Description, ModelID)) %&gt;%
+    # --- ALTERAÇÃO 2: MAPEAMENTO DO &#39;fill&#39; ---
+    # O &#39;fill&#39; (preenchimento) agora usa a nova coluna &#39;destaque&#39;
+    ggplot(aes(x = Description, y = M, fill = destaque)) +
+    
+    # &#39;show.legend = TRUE&#39; (ou omitir) para mostrar a nova legenda de cores
+    geom_bar(stat = &quot;identity&quot;, position = position_dodge(), show.legend = TRUE) +
+    
+    geom_errorbar(aes(ymin = M, ymax = M + SD),
+                  width = .2,
+                  position = position_dodge(.9)) +
+    
+    # Camada de texto (valores) - sem alteração
+    geom_text(
+      aes(label = round(M, 2), y = M + SD), 
+      vjust = -0.5,    
+      color = &quot;black&quot;,  
+      position = position_dodge(0.9),
+      angle = 0,        
+      size = 3.5        
+    ) +
+    
+    facet_grid(Env_Val ~ .) + 
+    
+    theme_bw() +
+    
+    # Camada de escala Y (para dar espaço ao texto) - sem alteração
+    scale_y_continuous(
+      &quot;Valor Médio (M)&quot;,
+      expand = expansion(mult = c(0, 0.15)) 
+    ) +
+
+    # --- ALTERAÇÃO 3: DEFINIR AS CORES E LEGENDA ---
+    scale_fill_manual(
+      name = &quot;Desempenho:&quot;, # Título da legenda
+      values = c(&quot;Acima da Média&quot; = &quot;#0072B2&quot;,  # Uma cor para os valores acima (ex: Azul)
+                 &quot;Abaixo/Igual à Média&quot; = &quot;grey80&quot;) # Uma cor para os outros (ex: Cinza)
+    ) +
+    
+    labs(
+      title = paste(&quot;Habilidade Preditiva&quot;),
+      subtitle = paste(&quot;Trait:&quot;, trait_atual, &quot;| CV:&quot;, cv_atual, &quot;| Type:&quot;, type_atual,
+                       # Opcional: Adicionar a média no subtítulo
+                       sprintf(&quot;\n(Média do grupo: %.2f)&quot;, media_M_grupo)), 
+      x = &quot;Descrição do Modelo&quot;
+    ) +
+    theme(
+      axis.text.x = element_text(
+        angle = 90,
+        vjust = 0.5,
+        hjust = 1, 
+        size = 8
+      ),
+      legend.position = &quot;top&quot; # Mover a legenda para o topo do gráfico
+    )
+  
+  # Criar um nome de arquivo descritivo e único para o gráfico
+  nome_arquivo &lt;- sprintf(&quot;%s/grafico_%s_%s_%s.tiff&quot;, 
+                          output_dir, 
+                          trait_atual, 
+                          cv_atual, 
+                          type_atual)
+  
+  # Salvar o gráfico gerado no arquivo PNG
+  ggsave(
+    filename = nome_arquivo, 
+    plot = p, 
+    width = 10,       # Largura em polegadas
+    height = 7,       # Altura em polegadas
+    dpi = 300         # Resolução (qualidade da imagem)
+  )
+}
+
+message(&quot;\nProcesso finalizado! Gráficos salvos em &#39;&quot;, output_dir, &quot;&#39;&quot;)</code></pre>
+</div>
+<div id="gráfico-de-barras-da-acurácia-preditiva-cv1-e-cv2"
+class="section level3">
+<h3>15.7) Gráfico de barras da acurácia preditiva CV1 e CV2</h3>
+<p><strong>Objetivo:</strong> Visualizar a acurácia preditiva média dos
+modelos para os cenários CV1 (predição de genótipos novos) e CV2
+(predição de genótipos em ambientes novos).</p>
+<p>O processo é idêntico ao da Seção 15.6, mas agora usamos os arquivos
+de resultados de CV1 e CV2.</p>
+<p>O primeiro passo é preparar os dados para plotagem.</p>
+<ul>
+<li>Carregamos o arquivo limpo <code>...CV1.CV2.csv</code> (da Seção
+15.4).</li>
+<li>Agrupamos por <code>Model</code>, <code>CV</code> e
+<code>Trait</code>.</li>
+<li>Calculamos a média (<code>M</code>) e o desvio padrão
+(<code>SD</code>) da acurácia (correlação) entre as 20 repetições.
+<code>M</code> será a altura da nossa barra no gráfico, e
+<code>SD</code> será usado para desenhar as barras de erro.</li>
+<li>Juntamos (<code>left_join</code>) com nossa tabela
+<code>model_info</code> (da Seção 15.5) para adicionar os nomes
+(<code>Description</code>) e tipos (<code>Type</code>) legíveis.</li>
+<li>Salvamos este <em>dataframe</em> final e pronto para plotagem
+(<code>...classified.csv</code>).</li>
+</ul>
+<pre class="r"><code># Agrupa por modelo, tipo de validação e traço
+df &lt;- read.csv(&quot;output/Pred.ability/Pred.ability.CV1.CV2.classified.csv&quot;)
+
+df_cor &lt;- as.data.frame(df %&gt;%
+                          group_by(Model, CV, Trait) %&gt;%
+                          dplyr::summarise(M = mean(cor, na.rm = TRUE), SD = sd(cor, na.rm = TRUE)))
+
+head(df_cor)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Model"],"name":[1],"type":["chr"],"align":["left"]},{"label":["CV"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Trait"],"name":[3],"type":["chr"],"align":["left"]},{"label":["M"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["SD"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"M1","2":"CV1","3":"GY","4":"0.7211279","5":"0.07836772","_rn_":"1"},{"1":"M1","2":"CV1","3":"KW","4":"0.5559055","5":"0.10415721","_rn_":"2"},{"1":"M1","2":"CV2","3":"GY","4":"0.9514152","5":"0.01134264","_rn_":"3"},{"1":"M1","2":"CV2","3":"KW","4":"0.9639042","5":"0.01147635","_rn_":"4"},{"1":"M10","2":"CV1","3":"GY","4":"0.3220613","5":"0.13422214","_rn_":"5"},{"1":"M10","2":"CV1","3":"KW","4":"0.3726618","5":"0.13615919","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code># Adiciona informações de classificação dos modelos
+df_cor &lt;- df_cor %&gt;%
+  left_join(model_info, by = &quot;Model&quot;)
+
+head(df_cor)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Model"],"name":[1],"type":["chr"],"align":["left"]},{"label":["CV"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Trait"],"name":[3],"type":["chr"],"align":["left"]},{"label":["M"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["SD"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["ModelID"],"name":[6],"type":["int"],"align":["right"]},{"label":["Type"],"name":[7],"type":["chr"],"align":["left"]},{"label":["Description"],"name":[8],"type":["chr"],"align":["left"]}],"data":[{"1":"M1","2":"CV1","3":"GY","4":"0.7211279","5":"0.07836772","6":"1","7":"Basico","8":"E + G","_rn_":"1"},{"1":"M1","2":"CV1","3":"KW","4":"0.5559055","5":"0.10415721","6":"1","7":"Basico","8":"E + G","_rn_":"2"},{"1":"M1","2":"CV2","3":"GY","4":"0.9514152","5":"0.01134264","6":"1","7":"Basico","8":"E + G","_rn_":"3"},{"1":"M1","2":"CV2","3":"KW","4":"0.9639042","5":"0.01147635","6":"1","7":"Basico","8":"E + G","_rn_":"4"},{"1":"M10","2":"CV1","3":"GY","4":"0.3220613","5":"0.13422214","6":"10","7":"Interacao_E","8":"E + PGK + PGKE","_rn_":"5"},{"1":"M10","2":"CV1","3":"KW","4":"0.3726618","5":"0.13615919","6":"10","7":"Interacao_E","8":"E + PGK + PGKE","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>write.csv(df_cor, &quot;output/Pred.ability/Pred.ability.CV1.CV2.classified.csv&quot;)  # Salva consolidação</code></pre>
+<p>Este bloco cria um gráfico de exemplo para CV1 e CV2.</p>
+<ul>
+<li><code>ggplot(...)</code>: Inicia o gráfico, mapeando
+<code>Description</code> para o eixo X e <code>M</code> (acurácia média)
+para o eixo Y.</li>
+<li><code>geom_bar()</code> e <code>geom_errorbar()</code>: Desenha as
+barras de acurácia e suas respectivas barras de erro (±SD).</li>
+<li><code>facet_grid(Trait ~ CV)</code>: Esta é a parte importante. Ele
+cria uma “grade” de gráficos: <code>Trait</code> (GY, KW) define as
+<strong>linhas</strong> e <code>CV</code> (CV1, CV2) define as
+<strong>colunas</strong>. Isso nos permite comparar todos os 4 cenários
+(GY-CV1, GY-CV2, KW-CV1, KW-CV2) em uma única figura.</li>
+</ul>
+<pre class="r"><code>df_cor &lt;- read.csv(&quot;output/Pred.ability/Pred.ability.CV1.CV2.classified.csv&quot;)
+# Cria gráfico de barras com erro padrão e rótulos
+
+p &lt;- df_cor %&gt;% 
+  #mutate(Description = forcats::fct_reorder(Description, ModelID)) %&gt;%
+  ggplot(aes(x = Description, y = M, fill = factor(Type))) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), width = 0.8, show.legend = FALSE) +
+  geom_errorbar(aes(ymin = M, ymax = M + SD),
+                width = .2,
+                position = position_dodge(.9)) +
+  theme_bw() +
+  facet_grid(Trait ~ CV) +  # Um painel para cada esquema de validação
+  #scale_y_continuous(&quot;Prediction ability&quot;, limits = c(0,1.25)) +
+  #scale_x_continuous(&quot;Models&quot;, expand = c(0, 0), breaks = df_cor$ModelID) +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1,
+    size = 6
+  ))
+
+# Exibe o gráfico
+p</code></pre>
+<p><img src="figure/analysis.Rmd/pred-ability-plot-cv1-cv2-1.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="geração-automatizada-de-gráficos-cv1-e-cv2"
+class="section level3">
+<h3>15.8) Geração Automatizada de Gráficos (CV1 e CV2)</h3>
+<p><strong>Objetivo:</strong> Automatizar a criação de gráficos para
+<em>todas</em> as combinações de <code>Trait</code>, <code>CV</code> e
+<code>Type</code>.</p>
+<p>Este <em>loop</em> <code>for</code> é idêntico ao da Seção 15.7, mas
+opera sobre os dados de CV1/CV2.</p>
+<ol style="list-style-type: decimal">
+<li><strong>Identificar Combinações</strong>: Encontra todas as
+combinações únicas de <code>Trait</code>, <code>CV</code> e
+<code>Type</code> (ex: “GY, CV1, Basico”, “GY, CV1, Interacao_E”,
+etc.).</li>
+<li><strong>Iterar</strong>: O <em>loop</em> <code>for</code> passa por
+cada uma dessas combinações.</li>
+<li><strong>Filtrar</strong>: Filtra os dados (<code>df_filtrado</code>)
+apenas para a combinação atual.</li>
+<li><strong>Destaque Condicional</strong>:
+<ul>
+<li>Calcula a acurácia média (<code>media_M_grupo</code>) <em>para
+aquele grupo específico</em>.</li>
+<li>Cria uma nova coluna <code>destaque</code> (Azul para “Acima da
+Média”, Cinza para “Abaixo/Igual”).</li>
+</ul></li>
+<li><strong>Plotar</strong>: Cria o gráfico usando
+<code>fill = destaque</code>.</li>
+<li><strong>Salvar</strong>: O gráfico é salvo com um nome de arquivo
+descritivo (ex: <code>grafico_GY_CV1_Basico.tiff</code>).</li>
+</ol>
+<p>Este <em>loop</em> irá gerar automaticamente todos os gráficos de
+resultados para CV1 e CV2, salvando-os no disco.</p>
+<pre class="r"><code>#-----------------------------------------------------------------------
+# 1. CONFIGURAÇÃO INICIAL
+#-----------------------------------------------------------------------
+
+# Carregar o seu conjunto de dados
+# Certifique-se de que o caminho para o arquivo está correto
+df_cor &lt;- read.csv(&quot;output/Pred.ability/Pred.ability.CV1.CV2.classified.csv&quot;)
+
+# Criar um diretório para salvar os gráficos (se ele ainda não existir)
+# Isso ajuda a manter os arquivos de saída organizados
+output_dir &lt;- &quot;output/Pred.ability/graficos_gerados&quot;
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
+
+
+#-----------------------------------------------------------------------
+# 2. AUTOMAÇÃO DA GERAÇÃO DE GRÁFICOS
+#-----------------------------------------------------------------------
+
+# Identificar todas as combinações únicas das colunas de interesse
+combinacoes &lt;- df_cor %&gt;%
+  distinct(Trait, CV, Type)
+
+# Exibir as combinações encontradas (opcional, bom para verificação)
+print(&quot;Combinações encontradas para gerar gráficos:&quot;)
+print(combinacoes)
+
+# Iniciar o loop para iterar sobre cada linha do dataframe &#39;combinacoes&#39;
+for (i in 1:nrow(combinacoes)) {
+  
+  # Obter os valores da combinação atual
+  trait_atual &lt;- combinacoes$Trait[i]
+  cv_atual &lt;- combinacoes$CV[i]
+  type_atual &lt;- combinacoes$Type[i]
+  
+  # Mensagem de progresso no console
+  message(paste(&quot;Gerando gráfico para: Trait =&quot;, trait_atual, &quot;| CV =&quot;, cv_atual, &quot;| Type =&quot;, type_atual))
+  
+  # Filtrar o dataframe principal para conter apenas os dados da combinação atual
+  df_filtrado &lt;- df_cor %&gt;%
+    filter(Trait == trait_atual &amp; CV == cv_atual &amp; Type == type_atual)
+  
+  # Se não houver dados após o filtro, pular para a próxima iteração
+  if(nrow(df_filtrado) == 0) {
+    message(&quot; -&gt; Nenhum dado encontrado. Pulando.&quot;)
+    next 
+  }
+  
+  # --- ALTERAÇÃO 1: CALCULAR MÉDIA E CRIAR COLUNA DE DESTAQUE ---
+  
+  # Calcular a média de &#39;M&#39; *apenas* para este grupo filtrado
+  media_M_grupo &lt;- mean(df_filtrado$M, na.rm = TRUE)
+  
+  # Adicionar a coluna de destaque ao dataframe que será plotado
+  # A nova coluna &#39;destaque&#39; terá um de dois valores
+  df_plotagem &lt;- df_filtrado %&gt;%
+    mutate(
+      destaque = ifelse(M &gt; media_M_grupo, 
+                        &quot;Acima da Média&quot;, 
+                        &quot;Abaixo/Igual à Média&quot;)
+    )
+  
+  # --- FIM DA ALTERAÇÃO 1 ---
+  
+  
+  # Gerar o gráfico usando o novo &#39;df_plotagem&#39;
+  p &lt;- df_plotagem %&gt;%
+    # Ordenar Description com base em ModelID
+    mutate(Description = reorder(Description, ModelID)) %&gt;%
+    
+    # --- ALTERAÇÃO 2: MAPEAMENTO DO &#39;fill&#39; ---
+    # O &#39;fill&#39; (preenchimento) agora usa a nova coluna &#39;destaque&#39;
+    ggplot(aes(x = Description, y = M, fill = destaque)) +
+    
+    # &#39;show.legend = TRUE&#39; (ou omitir) para mostrar a nova legenda de cores
+    geom_bar(stat = &quot;identity&quot;, position = position_dodge(), show.legend = TRUE) +
+    
+    geom_errorbar(aes(ymin = M, ymax = M + SD),
+                  width = .2,
+                  position = position_dodge(.9)) +
+    
+    # Camada de texto (valores) - sem alteração
+    geom_text(
+      aes(label = round(M, 2), y = M + SD), 
+      vjust = -0.5,    
+      color = &quot;black&quot;,  
+      position = position_dodge(0.9),
+      angle = 0,        
+      size = 3.5        
+    ) +
+    
+    theme_bw() +
+    
+    # Camada de escala Y (para dar espaço ao texto) - sem alteração
+    scale_y_continuous(
+      &quot;Valor Médio (M)&quot;,
+      expand = expansion(mult = c(0, 0.15)) 
+    ) +
+
+    # --- ALTERAÇÃO 3: DEFINIR AS CORES E LEGENDA ---
+    scale_fill_manual(
+      name = &quot;Desempenho:&quot;, # Título da legenda
+      values = c(&quot;Acima da Média&quot; = &quot;#0072B2&quot;,  # Uma cor para os valores acima (ex: Azul)
+                 &quot;Abaixo/Igual à Média&quot; = &quot;grey80&quot;) # Uma cor para os outros (ex: Cinza)
+    ) +
+    
+    labs(
+      title = paste(&quot;Habilidade Preditiva&quot;),
+      subtitle = paste(&quot;Trait:&quot;, trait_atual, &quot;| CV:&quot;, cv_atual, &quot;| Type:&quot;, type_atual,
+                       # Opcional: Adicionar a média no subtítulo
+                       sprintf(&quot;\n(Média do grupo: %.2f)&quot;, media_M_grupo)), 
+      x = &quot;Descrição do Modelo&quot;
+    ) +
+    theme(
+      axis.text.x = element_text(
+        angle = 90,
+        vjust = 0.5,
+        hjust = 1, 
+        size = 8
+      ),
+      legend.position = &quot;top&quot; # Mover a legenda para o topo do gráfico
+    )
+  
+  # Criar um nome de arquivo descritivo e único para o gráfico
+  nome_arquivo &lt;- sprintf(&quot;%s/grafico_%s_%s_%s.tiff&quot;, 
+                          output_dir, 
+                          trait_atual, 
+                          cv_atual, 
+                          type_atual)
+  
+  # Salvar o gráfico gerado no arquivo PNG
+  ggsave(
+    filename = nome_arquivo, 
+    plot = p, 
+    width = 10,       # Largura em polegadas
+    height = 7,       # Altura em polegadas
+    dpi = 300         # Resolução (qualidade da imagem)
+  )
+}
+
+message(&quot;\nProcesso finalizado! Gráficos salvos em &#39;&quot;, output_dir, &quot;&#39;&quot;)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] parallel  stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] MASS_7.3-65       doParallel_1.0.17 iterators_1.0.14  foreach_1.5.2    
+ [5] BGLR_1.1.4        data.table_1.17.8 lubridate_1.9.4   forcats_1.0.0    
+ [9] stringr_1.5.2     dplyr_1.1.4       purrr_1.1.0       readr_2.1.5      
+[13] tidyr_1.3.1       tibble_3.3.0      ggplot2_4.0.0     tidyverse_2.0.0  
+
+loaded via a namespace (and not attached):
+ [1] sass_0.4.10        generics_0.1.4     stringi_1.8.7      hms_1.1.3         
+ [5] digest_0.6.37      magrittr_2.0.4     evaluate_1.0.5     grid_4.5.1        
+ [9] timechange_0.3.0   RColorBrewer_1.1-3 fastmap_1.2.0      rprojroot_2.1.1   
+[13] workflowr_1.7.2    jsonlite_2.0.0     whisker_0.4.1      promises_1.3.3    
+[17] scales_1.4.0       truncnorm_1.0-9    codetools_0.2-20   jquerylib_0.1.4   
+[21] cli_3.6.5          rlang_1.1.6        withr_3.0.2        cachem_1.1.0      
+[25] yaml_2.3.10        tools_4.5.1        tzdb_0.5.0         httpuv_1.6.16     
+[29] vctrs_0.6.5        R6_2.6.1           lifecycle_1.0.4    git2r_0.36.2      
+[33] fs_1.6.6           pkgconfig_2.0.3    pillar_1.11.1      bslib_0.9.0       
+[37] later_1.4.4        gtable_0.3.6       glue_1.8.0         Rcpp_1.1.0        
+[41] xfun_0.53          tidyselect_1.2.1   rstudioapi_0.17.1  knitr_1.50        
+[45] farver_2.1.2       htmltools_0.5.8.1  labeling_0.4.3     rmarkdown_2.29    
+[49] compiler_4.5.1     S7_0.2.0          </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Weverton Gomes da Costa, Pós-Doutorando, Departamento de
+Estatística - Universidade Federal de Viçosa, <a
+href="mailto:wevertonufv@gmail.com"
+class="email">wevertonufv@gmail.com</a><a href="#fnref1"
+class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
