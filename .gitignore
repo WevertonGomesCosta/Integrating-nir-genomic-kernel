@@ -4,7 +4,5 @@
 .Ruserdata
 *.tiff
 output/results/*.csv
-output/componentes_variancia/*.dat
-output/componentes_variancia/*.rds
-output/ajuste_modelo/*.dat
-output/ajuste_modelo/*.dat
+.dat
+.rds
