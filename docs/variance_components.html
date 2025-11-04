@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Costa, W. G." />
+
+<meta name="date" content="2025-11-04" />
+
+<title>Tutorial: Análise dos Componentes de Variância com BGLR</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">NIR and Genomic Kernel Integration</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="climate_data.html">Climate date</a>
+</li>
+<li>
+  <a href="variance_components.html">Variance components</a>
+</li>
+<li>
+  <a href="analysis.html">Prediction</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/wevertongomescosta/Integrating-nir-genomic-kernel">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Tutorial: Análise dos Componentes de
+Variância com BGLR</h1>
+<h4 class="author">Costa, W. G.<a href="#fn1" class="footnote-ref"
+id="fnref1"><sup>1</sup></a></h4>
+<h4 class="date">2025-11-04</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2025-11-04
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Integrating-nir-genomic-kernel/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20250829code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20250829)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20250829code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20250829)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree65d9bd8dceef7d0822bf0e87235882005a0907dbtargetblank65d9bd8a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/65d9bd8dceef7d0822bf0e87235882005a0907db" target="_blank">65d9bd8</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree65d9bd8dceef7d0822bf0e87235882005a0907dbtargetblank65d9bd8a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/65d9bd8dceef7d0822bf0e87235882005a0907db" target="_blank">65d9bd8</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    data/Article_documents/
+    Ignored:    data/Maize-NIRS-GBS-main/
+    Ignored:    output/Pred.ability/graficos_gerados/
+    Ignored:    output/ajuste_modelo/
+    Ignored:    output/climate_results/combined_climate_plot.tiff
+    Ignored:    output/componentes_variancia/Variance.Components.DAT.Means.Parsed.csv
+    Ignored:    output/componentes_variancia/Variance.Components.DAT.Means.csv
+    Ignored:    output/componentes_variancia/rep_1/
+    Ignored:    output/componentes_variancia/rep_10/
+    Ignored:    output/componentes_variancia/rep_11/
+    Ignored:    output/componentes_variancia/rep_12/
+    Ignored:    output/componentes_variancia/rep_13/
+    Ignored:    output/componentes_variancia/rep_14/
+    Ignored:    output/componentes_variancia/rep_15/
+    Ignored:    output/componentes_variancia/rep_16/
+    Ignored:    output/componentes_variancia/rep_17/
+    Ignored:    output/componentes_variancia/rep_18/
+    Ignored:    output/componentes_variancia/rep_19/
+    Ignored:    output/componentes_variancia/rep_2/
+    Ignored:    output/componentes_variancia/rep_20/
+    Ignored:    output/componentes_variancia/rep_3/
+    Ignored:    output/componentes_variancia/rep_4/
+    Ignored:    output/componentes_variancia/rep_5/
+    Ignored:    output/componentes_variancia/rep_6/
+    Ignored:    output/componentes_variancia/rep_7/
+    Ignored:    output/componentes_variancia/rep_8/
+    Ignored:    output/componentes_variancia/rep_9/
+    Ignored:    output/componentes_variancia/variance_components_percentage_COMBINED.tiff
+    Ignored:    output/cv-schemes.tiff
+    Ignored:    output/results/
+
+Unstaged changes:
+    Modified:   analysis/analysis.Rmd
+    Modified:   analysis/variance_components.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/variance_components.Rmd</code>)
+and HTML (<code>docs/variance_components.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/f18937ae3f52d8ebfbf3412db657983f2584669d/analysis/variance_components.Rmd" target="_blank">f18937a</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-04
+</td>
+<td>
+chance components_variance to variance_components
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introdução" class="section level2">
+<h2>Introdução</h2>
+<p>Este documento é um tutorial que detalha a análise dos
+<strong>componentes de variância</strong> de um conjunto de modelos
+preditivos. Este script faz parte de uma análise maior que integra dados
+de Espectroscopia de Refletância no Infravermelho Próximo (NIR), dados
+genômicos e climáticos usando métodos de kernel para melhorar a
+predição.</p>
+<p>O <strong>objetivo principal</strong> deste tutorial específico não é
+avaliar a <em>capacidade preditiva</em> (como faríamos com validação
+cruzada), mas sim entender a <em>estrutura</em> dos dados. Vamos ajustar
+os modelos ao conjunto de dados completo para particionar a variação
+fenotípica total. Em outras palavras, queremos responder à pergunta:</p>
+<blockquote>
+<p>“Quanta da variação observada em uma característica (como
+produtividade de grãos) é devida à genética (G), ao ambiente (E), à
+interação GxE, ou ao resíduo (erro)?”</p>
+</blockquote>
+<p>Compreender essa partição é fundamental para direcionar estratégias
+de melhoramento genético.</p>
+</div>
+<div id="carregar-bibliotecas-e-dados" class="section level2">
+<h2>1) Carregar Bibliotecas e Dados</h2>
+<p>Antes de começarmos, precisamos carregar nossa “caixa de ferramentas”
+de pacotes R. Cada um desempenha um papel específico:</p>
+<ul>
+<li><code>tidyverse</code>: Essencial para manipulação, limpeza e
+visualização de dados (usando <code>dplyr</code>, <code>tidyr</code>,
+<code>ggplot2</code>).</li>
+<li><code>data.table</code>: Extremamente eficiente para ler e manipular
+arquivos de dados muito grandes.</li>
+<li><code>BGLR</code>: O pacote central para esta análise. Ele nos
+permite ajustar modelos mistos lineares generalizados Bayesianos, que
+são ideais para predição genômica e partição de variância.</li>
+<li><code>parallel</code> &amp; <code>doParallel</code>: Nossas
+ferramentas de aceleração. Como ajustaremos dezenas (ou centenas) de
+modelos, usaremos esses pacotes para executar as tarefas em paralelo,
+usando múltiplos núcleos do processador.</li>
+<li><code>MASS</code> &amp; <code>scales</code>: Pacotes auxiliares para
+funções estatísticas e para formatar eixos em nossos gráficos.</li>
+</ul>
+<pre class="r"><code># Pacotes principais
+library(tidyverse)    # Manipulação de dados
+library(data.table)   # Leitura eficiente de grandes arquivos
+library(BGLR)         # Modelagem Bayesiana para predição genômica
+
+# Paralelismo
+library(parallel)     
+library(doParallel)   
+
+# Funções estatísticas adicionais
+library(MASS)                                     # Funções estatísticas
+library(scales)                                   # Escalonamento de dados</code></pre>
+</div>
+<div id="componentes-de-variância" class="section level2">
+<h2>2) Componentes de Variância</h2>
+<p>Com nossas ferramentas carregadas, mergulhamos na análise principal.
+Como mencionado, nosso foco aqui é a <strong>partição da
+variância</strong>. Ajustaremos cada modelo (definido em uma etapa
+anterior, não mostrada aqui, e armazenado no objeto
+<code>Models_full_set</code>) a <em>todos</em> os dados para obter as
+estimativas mais estáveis de cada componente de variância.</p>
+<div id="parâmetros-para-execução-dos-modelos" class="section level3">
+<h3>2.1) Parâmetros para execução dos modelos</h3>
+<p>Primeiro, definimos os parâmetros que controlarão o processo de
+amostragem MCMC (Monte Carlo via Cadeias de Markov) dentro do
+<code>BGLR</code>. Em uma análise Bayesiana, não obtemos um único valor
+como resposta (ex: <span class="math inline">\(varG = 10\)</span>), mas
+sim uma <em>distribuição</em> de valores prováveis.</p>
+<p>Pense no MCMC como um explorador em uma paisagem de possíveis
+respostas.</p>
+<ul>
+<li><code>nIter</code>: O número total de “passos” que o explorador dará
+(5000).</li>
+<li><code>burnIn</code>: O número de passos iniciais que descartamos
+(1000). Isso dá ao explorador tempo para “encontrar” a região mais
+interessante da paisagem (a distribuição estacionária).</li>
+<li><code>thin</code>: O intervalo de amostragem (10). Para evitar
+anotar informações redundantes, só registramos um passo a cada 10.</li>
+<li><code>num_rep</code>: O número de vezes que repetiremos todo o
+processo (20) para garantir que nossos resultados são estáveis.</li>
+</ul>
+<p>Ao final, teremos <span class="math inline">\((5000 - 1000) / 10 =
+400\)</span> amostras para cada parâmetro, de cada repetição.</p>
+<pre class="r"><code># Parâmetros de execução do BGLR
+nIter  &lt;- 5000   # número total de iterações da cadeia MCMC
+burnIn &lt;- 1000   # número de iterações descartadas como burn-in
+thin   &lt;- 10     # intervalo de amostragem para reduzir autocorrelação
+num_rep  &lt;- 20     # número de repetições (usado em &#39;combos&#39;)</code></pre>
+</div>
+<div id="configuração-do-backend-paralelo" class="section level3">
+<h3>2.2) Configuração do backend paralelo</h3>
+<p><strong>Por que isso é importante?</strong> Temos muitos modelos para
+rodar, multiplicados por 20 repetições e por múltiplas características
+(traits). Fazer isso um de cada vez (serialmente) levaria dias.</p>
+<p>Este bloco de código detecta quantos núcleos de CPU seu computador
+possui e “reserva” a maioria deles (todos menos um, para o sistema
+operacional) para o trabalho.
+<code>doParallel::registerDoParallel(cl)</code> informa ao R que ele
+pode usar esse <em>cluster</em> de núcleos para executar tarefas
+simultaneamente.</p>
+<pre class="r"><code># Detecta número de núcleos disponíveis e configura backend paralelo
+numCores &lt;- parallel::detectCores()
+useCores &lt;- max(1, numCores - 1)  # usa todos menos 1 núcleo
+cl &lt;- parallel::makeCluster(useCores)
+doParallel::registerDoParallel(cl)
+
+cat(&quot;Rodando em &quot;, useCores, &quot; núcleos.&quot;)</code></pre>
+<pre><code>Rodando em  21  núcleos.</code></pre>
+<pre class="r"><code>gc() # Limpa memória (coleta de lixo) antes da execução paralela intensiva</code></pre>
+<pre><code>          used (Mb) gc trigger  (Mb) max used  (Mb)
+Ncells 1405783 75.1    2518301 134.5  2518301 134.5
+Vcells 2436968 18.6    8388608  64.0  3854540  29.5</code></pre>
+</div>
+<div id="função-run_bglr-otimizada-para-métricas"
+class="section level3">
+<h3>2.3) Função <code>run_bglr</code> Otimizada para Métricas</h3>
+<p>Esta é uma função auxiliar (ou <em>wrapper</em>) personalizada que
+criamos para rodar o <code>BGLR</code> de forma eficiente.</p>
+<p><strong>O problema:</strong> O objeto <code>fit</code> padrão do
+<code>BGLR</code> é muito <em>pesado</em>, contendo milhares de amostras
+para cada efeito. Salvá-lo e lê-lo do disco em um loop paralelo é
+extremamente lento e ineficiente.</p>
+<p><strong>A solução:</strong> Nossa função
+<code>run_bglr_metrics</code> faz o seguinte:</p>
+<ol style="list-style-type: decimal">
+<li>Roda o <code>BGLR</code> normalmente.</li>
+<li><strong>Imediatamente</strong> extrai apenas a informação essencial:
+as 400 amostras (pós-<code>burnIn</code> e <code>thin</code>) para cada
+<strong>componente de variância</strong> (ex: <code>fit$varE</code>,
+<code>fit$ETA[[1]]$varU</code>, etc.).</li>
+<li>Armazena essas amostras em uma lista leve chamada
+<code>saida_essencial</code>.</li>
+<li>Descarta o objeto <code>fit</code> pesado da memória (usando
+<code>rm(fit)</code> e <code>gc()</code>).</li>
+<li><strong>Retorna</strong> a lista <code>saida_essencial</code>
+leve.</li>
+</ol>
+<p>Isso evita toda a sobrecarga de leitura/escrita em disco, tornando o
+processo paralelo muito mais rápido.</p>
+<pre class="r"><code># --- FUNÇÃO OTIMIZADA PARA MÉTRICAS ---
+# Retorna os componentes de variância e métricas diretamente.
+run_bglr_metrics &lt;- function(y_vector, ETA, nIter, burnIn, thin, save_prefix) {
+    y_t &lt;- as.numeric(y_vector)
+    dir.create(dirname(save_prefix), recursive = TRUE, showWarnings = FALSE)
+    
+    # mede tempo
+    start_time &lt;- Sys.time()
+    
+    fit &lt;- BGLR(y = y_t, 
+                ETA = ETA, 
+                nIter = nIter, 
+                burnIn = burnIn, 
+                thin = thin,
+                saveAt = save_prefix)
+    
+    end_time &lt;- Sys.time()
+    elapsed &lt;- as.numeric(difftime(end_time, start_time, units = &quot;secs&quot;))
+    
+    # 1. Extrair componentes de variância (varU) de forma dinâmica
+    variancias_U &lt;- list()
+    if (!is.null(fit$ETA)) {
+        nomes_efeitos &lt;- names(fit$ETA)
+        if (is.null(nomes_efeitos)) {
+            nomes_efeitos &lt;- paste0(&quot;Efeito_&quot;, seq_along(fit$ETA))
+        }
+        
+        for (i in seq_along(fit$ETA)) {
+            efeito_nome &lt;- nomes_efeitos[i]
+            # Armazena as *amostras* da variância (pós-burnIn)
+            
+            # Procura por parâmetros de variância comuns (varU, varG, varB, etc.)
+            var_param_name &lt;- names(fit$ETA[[i]])[grepl(&quot;^var&quot;, names(fit$ETA[[i]]))]
+            
+            if (length(var_param_name) &gt; 0) {
+                 # Pega o primeiro encontrado (geralmente &#39;varU&#39; ou &#39;varG&#39;)
+                variancias_U[[efeito_nome]] &lt;- fit$ETA[[i]][[var_param_name[1]]]
+            }
+        }
+    }
+    
+    # 2. Criar o objeto de saída leve
+    saida_essencial &lt;- list(
+        # yHat não é necessário para componentes de variância, 
+        # mas pode ser útil manter.
+        # yHat_mean = fit$yHat, 
+        varE_samples = fit$varE, # Amostras da variância residual
+        
+        # Amostras da variância de efeitos fixos (se houver)
+        varB_samples = ifelse(is.null(fit$varB), NA, fit$varB), 
+        
+        variances_U_samples = variancias_U, # Lista de amostras das variâncias
+        DIC = ifelse(is.null(fit$fit$DIC), NA, fit$fit$DIC),
+        runtime_sec = elapsed
+    )
+    
+    # 3. Salvar este objeto de métricas leve (opcional, mas bom para backup)
+    saveRDS(saida_essencial, paste0(save_prefix, &quot;_metricas.rds&quot;))
+    
+    # 4. Limpar o objeto &#39;fit&#39; pesado da memória
+    rm(fit)
+    gc() # Força a &quot;coleta de lixo&quot;
+    
+    # --- MUDANÇA DE LÓGICA ---
+    # Retorna o objeto de métricas completo, não apenas yHat/runtime
+    return(saida_essencial)
+}
+# --- FIM DA FUNÇÃO OTIMIZADA ---</code></pre>
+</div>
+<div id="execução-dos-modelos-em-paralelo-otimizado"
+class="section level3">
+<h3>2.4) Execução dos modelos em paralelo (Otimizado)</h3>
+<p>Este é o coração do script. Aqui, usamos <code>foreach</code> para
+iterar sobre todas as combinações de <code>MODEL</code>,
+<code>REP</code> e <code>TRAIT</code> (definidas no objeto
+<code>combos</code>). Graças à configuração da Seção 2.2, esses
+trabalhos são distribuídos pelos núcleos da CPU.</p>
+<p><strong>Dentro de cada iteração paralela (para cada
+núcleo):</strong></p>
+<ol style="list-style-type: decimal">
+<li><strong>Configura:</strong> Identifica qual modelo, repetição e
+trait deve rodar.</li>
+<li><strong>Executa:</strong> Chama nossa função
+<code>run_bglr_metrics</code> (da Seção 2.3).</li>
+<li><strong>Recebe:</strong> Obtém a lista leve
+<code>metrics_result</code> contendo as <em>amostras</em> de
+variância.</li>
+<li><strong>Calcula:</strong> Imediatamente calcula a <strong>média
+<em>a posteriori</em></strong> de cada componente (ex:
+<code>mean(metrics_result$varE_samples)</code>). Esta média é a nossa
+melhor estimativa pontual para aquele componente de variância.</li>
+<li><strong>Formata:</strong> Armazena essas estimativas médias em um
+<code>data.frame</code> organizado, identificando qual componente é qual
+(Residual, Fixo, Aleatório, etc.).</li>
+<li><strong>Retorna:</strong> O <code>data.frame</code> de resultados
+para esta iteração.</li>
+</ol>
+<p><strong>Após o término do loop:</strong> O <code>foreach</code>
+coleta todos os <code>data.frame</code>s de resultados (um de cada
+iteração) e <code>do.call(rbind, ...)</code> os empilha em uma única
+tabela mestre: <code>all_variance_components</code>.</p>
+<p>Finalmente, salvamos esta tabela consolidada em um arquivo CSV. Este
+é o nosso resultado bruto, pronto para pós-processamento e
+visualização.</p>
+<p><em><strong>Nota:</strong> Este bloco está com
+<code>eval=FALSE</code> para que o tutorial possa ser compilado
+rapidamente. Para executar a análise, mude a opção do chunk para
+<code>{r parallel-model-optimized}</code> e execute-o.</em></p>
+<pre class="r"><code># Cria diretórios de saída para armazenar resultados
+dir.create(&quot;output/componentes_variancia&quot;, recursive = TRUE, showWarnings = FALSE)</code></pre>
+<pre class="r"><code># Paraleliza e **coleta os resultados** em &#39;results_list&#39;
+results_list &lt;- foreach(i = seq_len(nrow(combos)),
+        .packages = c(&quot;BGLR&quot;, &quot;dplyr&quot;, &quot;plyr&quot;, &quot;readr&quot;)) %dopar% {
+        
+        MODEL &lt;- combos$MODEL[i]
+        rep_num &lt;- combos$REP[i]
+        TRAIT &lt;- as.character(combos$TRAIT[i])
+        
+        # Filtra o Pheno para os pedigrees corretos
+        pheno &lt;- data.frame(Pheno[Pheno$Pedigree %in% Pedigree,])  # copia local
+        
+        # Diretórios (movido para a subpasta correta)
+        rep_dir &lt;- file.path(&quot;output/componentes_variancia&quot;, paste0(&quot;rep_&quot;, rep_num))
+        eta_dir &lt;- file.path(rep_dir, paste0(&quot;Eta&quot;, MODEL))
+        dir.create(eta_dir, recursive = TRUE, showWarnings = FALSE)
+        
+        y_data &lt;- pheno[[TRAIT]]
+        
+        # Prefixo de salvamento (para o _metricas.rds)
+        save_prefix_full &lt;- file.path(eta_dir,
+                                      paste0(&quot;full_Eta&quot;, MODEL, &quot;_&quot;, TRAIT, &quot;_rep&quot;, rep_num, &quot;_&quot;))
+        
+        # --- INÍCIO DA OTIMIZAÇÃO ---
+        
+        # 1. Executa a função que retorna as métricas diretamente
+        metrics_result &lt;- run_bglr_metrics(
+            y_vector = y_data,
+            ETA = Models_full_set[[MODEL]],
+            nIter = nIter,
+            burnIn = burnIn,
+            thin = thin,
+            save_prefix = save_prefix_full 
+        )
+        
+        # 2. Extrair os componentes de variância do objeto retornado
+        
+        # 2.1. Variância Residual (calcula a média das amostras)
+        varE_mean &lt;- mean(metrics_result$varE_samples)
+        
+        df_components &lt;- data.frame(
+            Component = &quot;Residual&quot;,
+            Param = &quot;varE&quot;,
+            MeanVar = varE_mean
+        )
+        
+        # 2.2. Variâncias dos Componentes (U)
+        if (length(metrics_result$variances_U_samples) &gt; 0) {
+            var_components_U_list &lt;- lapply(names(metrics_result$variances_U_samples), function(eta_name) {
+                var_samples &lt;- metrics_result$variances_U_samples[[eta_name]]
+                data.frame(
+                    Component = eta_name,
+                    # Nota: O param &#39;varU&#39; foi generalizado na func 14.3
+                    Param = &quot;varComponent&quot;, 
+                    MeanVar = mean(var_samples)
+                )
+            })
+            df_components &lt;- rbind(df_components, do.call(rbind, var_components_U_list))
+        }
+        
+        # 2.3. Variância dos Efeitos Fixos (varB)
+        if (!is.na(metrics_result$varB_samples[1])) {
+            df_components &lt;- rbind(df_components,
+                                   data.frame(Component = &quot;Fixed&quot;,
+                                              Param = &quot;varB&quot;,
+                                              MeanVar = mean(metrics_result$varB_samples)))
+        }
+
+        # 3. Adicionar identificadores da execução
+        df_components$MODEL &lt;- MODEL
+        df_components$REP &lt;- rep_num
+        df_components$TRAIT &lt;- TRAIT
+        
+        # 4. Retornar o dataframe de variâncias
+        return(df_components)
+        
+        # --- FIM DA OTIMIZAÇÃO ---
+        
+    } # end foreach
+
+# Combinar os dataframes de todas as execuções em paralelo
+all_variance_components &lt;- do.call(rbind, results_list)
+
+# (Opcional) Visualizar os resultados
+print(&quot;Componentes de Variância Estimados:&quot;)
+print(all_variance_components)
+
+# Salvar os resultados consolidados em CSV
+# (Usando readr::write_csv para consistência, mas write.csv também funciona)
+readr::write_csv(all_variance_components, &quot;output/componentes_variancia/Variance.Components.DAT.Means.csv&quot;)</code></pre>
+</div>
+<div id="pós-processamento-extraindo-metadados" class="section level3">
+<h3>2.5) Pós-Processamento: Extraindo Metadados</h3>
+<p>Nosso arquivo CSV (<code>...DAT.Means.csv</code>) salvo na etapa
+anterior é funcional, mas “sujo”. As informações importantes (como
+Modelo, Trait e Componente) estão misturadas em uma única coluna
+<code>file_name</code>.</p>
+<p>Este bloco de código é uma etapa crucial de <strong>limpeza de
+dados</strong>.</p>
+<p>Usando <code>tidyr::extract</code> e expressões regulares (Regex),
+nós “quebramos” o nome do arquivo em colunas limpas e utilizáveis. Por
+exemplo, um nome de arquivo como:
+<code>"output/rep_1/Eta1/CS11_WS_GY_Eta1_fold1_G_varU.dat"</code> será
+transformado em colunas:</p>
+<ul>
+<li><code>Rep</code>: 1</li>
+<li><code>Model</code>: Eta1</li>
+<li><code>Env</code>: CS11_WS</li>
+<li><code>Trait</code>: GY</li>
+<li><code>Component</code>: G</li>
+<li><code>Parameter</code>: Aleatorio</li>
+</ul>
+<p>O resultado é um <em>dataframe</em> limpo
+(<code>Variance.Components</code>) que é salvo em um novo arquivo
+(<code>...Parsed.csv</code>) e usado para as visualizações.</p>
+<pre class="r"><code># 1. Carregar seus dados (assumindo que já estão em Variance.Components.Means)
+Variance.Components.Means &lt;- read.csv(&quot;output/componentes_variancia/Variance.Components.DAT.Means.csv&quot;)
+
+# 2. Processo de Conversão
+Variance.Components &lt;- Variance.Components.Means %&gt;%
+  
+  # Etapa 1: Extrair as partes do caminho (Rep, Model) e o &quot;resto&quot; do arquivo
+  # Usamos regex para capturar os grupos
+  extract(
+    file_name,
+    into = c(&quot;Rep&quot;, &quot;Model&quot;, &quot;rest&quot;),
+    # Regex: output/rep_(\d+) / (Eta\d+) / (.*) \.dat
+    regex = &quot;^output/rep_(\\d+)/(Eta\\d+)/(.*)\\.dat$&quot;,
+    convert = TRUE, # Converte Rep (1) para número
+    remove = FALSE  # Mantém a coluna file_name original
+  ) %&gt;%
+  
+  # Etapa 2: Extrair as partes do &quot;resto&quot; do nome do arquivo
+  # Isso também usa regex para capturar os componentes do nome
+  extract(
+    rest,
+    into = c(&quot;Env&quot;, &quot;Trait&quot;, &quot;Model_File&quot;, &quot;Fold&quot;, &quot;component_chunk&quot;),
+    # Regex: (Ambiente) _ (Trait) _ (Modelo) _ (Fold) _ (Resto)
+    # [^_]+_[^_]+ captura &quot;CS11_WS&quot; como uma única entidade
+    regex = &quot;^([^_]+_[^_]+)_([^_]+)_([^_]+)_([^_]+)_(.*)$&quot;
+  ) %&gt;%
+  
+  # Etapa 3: Mapear o &quot;component_chunk&quot; final usando lógica condicional
+  # Esta é a parte mais importante, pois mapeia os finais de arquivo
+  # para as colunas &#39;Component&#39; e &#39;Parameter&#39;
+  mutate(
+    Component = case_when(
+      # Se termina com _varB, Component = o que vem antes, Parameter = Fixo
+      str_ends(component_chunk, &quot;_varB&quot;) ~ str_remove(component_chunk, &quot;_varB$&quot;),
+      # Se termina com _varU, Component = o que vem antes, Parameter = Aleatorio
+      str_ends(component_chunk, &quot;_varU&quot;) ~ str_remove(component_chunk, &quot;_varU$&quot;),
+      # Se é exatamente &quot;varE&quot;, Component = Residual, Parameter = Residuo
+      component_chunk == &quot;varE&quot; ~ &quot;Residual&quot;,
+      # Outros casos (como &#39;mu&#39;) resultarão em NA
+      TRUE ~ NA_character_
+    ),
+    Parameter = case_when(
+      str_ends(component_chunk, &quot;_varB&quot;) ~ &quot;Fixo&quot;,
+      str_ends(component_chunk, &quot;_varU&quot;) ~ &quot;Aleatorio&quot;,
+      component_chunk == &quot;varE&quot; ~ &quot;Residuo&quot;,
+      TRUE ~ NA_character_
+    )
+  ) %&gt;%
+  
+  # Etapa 4: Filtrar as linhas que não queremos
+  # O seu dataframe de saída (Variance.Components) não inclui &#39;mu&#39;,
+  # então filtramos as linhas onde o Component não pôde ser identificado.
+  filter(!is.na(Component)) %&gt;%
+  filter(!(str_starts(Env, &quot;full&quot;))) %&gt;%
+  # Etapa 5: Selecionar e reordenar as colunas
+  dplyr::select(
+    Rep,
+    Model,
+    Env,
+    Trait,
+    Model_File,
+    Fold,
+    Component,
+    Parameter,
+    mean_value,
+    file_name
+  )
+
+# 3. Ver o resultado
+head(Variance.Components)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Rep"],"name":[1],"type":["int"],"align":["right"]},{"label":["Model"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Env"],"name":[3],"type":["chr"],"align":["left"]},{"label":["Trait"],"name":[4],"type":["chr"],"align":["left"]},{"label":["Model_File"],"name":[5],"type":["chr"],"align":["left"]},{"label":["Fold"],"name":[6],"type":["chr"],"align":["left"]},{"label":["Component"],"name":[7],"type":["chr"],"align":["left"]},{"label":["Parameter"],"name":[8],"type":["chr"],"align":["left"]},{"label":["mean_value"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["file_name"],"name":[10],"type":["chr"],"align":["left"]}],"data":[{"1":"1","2":"Eta1","3":"CS11_WS","4":"GY","5":"Eta1","6":"fold1","7":"ETA_E","8":"Fixo","9":"774.42515","10":"output/rep_1/Eta1/CS11_WS_GY_Eta1_fold1_ETA_E_varB.dat","_rn_":"1"},{"1":"1","2":"Eta1","3":"CS11_WS","4":"GY","5":"Eta1","6":"fold1","7":"ETA_G","8":"Aleatorio","9":"220.74822","10":"output/rep_1/Eta1/CS11_WS_GY_Eta1_fold1_ETA_G_varU.dat","_rn_":"2"},{"1":"1","2":"Eta1","3":"CS11_WS","4":"GY","5":"Eta1","6":"fold1","7":"Residual","8":"Residuo","9":"65.57647","10":"output/rep_1/Eta1/CS11_WS_GY_Eta1_fold1_varE.dat","_rn_":"3"},{"1":"1","2":"Eta1","3":"CS11_WS","4":"GY","5":"Eta1","6":"fold2","7":"ETA_E","8":"Fixo","9":"986.01251","10":"output/rep_1/Eta1/CS11_WS_GY_Eta1_fold2_ETA_E_varB.dat","_rn_":"4"},{"1":"1","2":"Eta1","3":"CS11_WS","4":"GY","5":"Eta1","6":"fold2","7":"ETA_G","8":"Aleatorio","9":"201.18629","10":"output/rep_1/Eta1/CS11_WS_GY_Eta1_fold2_ETA_G_varU.dat","_rn_":"5"},{"1":"1","2":"Eta1","3":"CS11_WS","4":"GY","5":"Eta1","6":"fold2","7":"Residual","8":"Residuo","9":"56.05793","10":"output/rep_1/Eta1/CS11_WS_GY_Eta1_fold2_varE.dat","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code># 4. Salvar o resultado processado
+write_csv(Variance.Components, &quot;output/componentes_variancia/Variance.Components.DAT.Means.Parsed.csv&quot;)</code></pre>
+</div>
+<div id="criando-uma-tabela-de-referência-de-modelos"
+class="section level3">
+<h3>2.6) Criando uma Tabela de Referência de Modelos</h3>
+<p>Nossos modelos são nomeados <code>Eta1</code>, <code>Eta2</code>,
+etc., o que não é muito descritivo. Para tornar nossos gráficos e
+tabelas fáceis de entender, criamos esta “tabela de consulta”
+(<code>model_info</code>).</p>
+<p>Ela simplesmente mapeia um <code>ModelID</code> (ex: 1) e um
+<code>Model</code> (ex: “M1”) para uma <code>Description</code> legível
+(ex: “E + G”). Isso nos permitirá rotular o eixo X dos nossos gráficos
+com “E + G” em vez de “M1”, o que é muito mais informativo.</p>
+<pre class="r"><code># --- Cria a tabela de classificação dos modelos (Completa) ---
+model_info &lt;- tibble(
+  ModelID = 1:62,
+  Model   = paste0(&quot;M&quot;, ModelID),
+  Type = case_when(
+# Grupo 1: Modelos Base (Efeito Categórico E)
+    ModelID %in% c(1:6, 13:15) ~ &quot;Basico&quot;,      # E + G/P (efeitos principais)
+    ModelID %in% c(7:12, 16:18) ~ &quot;Interacao_E&quot;, # E + G/P + GxE/PxE
+    
+    # Grupo 2: Modelos Climáticos (E + W)
+    ModelID %in% 19:27 ~ &quot;Clima_Base_E&quot;,   # E + W + G/P (efeitos principais)
+    ModelID %in% 28:36 ~ &quot;Clima_IntE&quot;,     # E + W + G/P + GxE/PxE
+    ModelID %in% 37:45 ~ &quot;Clima_IntW&quot;,     # E + W + G/P + GxW/PxW
+    
+    # Grupo 3: Modelos Climáticos (W substitui E)
+    ModelID %in% 46:54 ~ &quot;Clima_Base_noE&quot;, # W + G/P (sem E fixo),
+    
+    # Grrupo 4: Modelos individuais
+    ModelID %in% c(55:62) ~ &quot;Individual&quot;, 
+    
+    TRUE               ~ &quot;Outros&quot;
+  ),
+  Description = case_when(
+    # Bloco 1: (Item 10) Modelos básicos (E + G/P)
+    ModelID == 1  ~ &quot;E + G&quot;,
+    ModelID == 2  ~ &quot;E + P&quot;,
+    ModelID == 3  ~ &quot;E + GGK&quot;,
+    ModelID == 4  ~ &quot;E + PGK&quot;,     # (Baseado em Eta4)
+    ModelID == 5  ~ &quot;E + GAK&quot;,     # (Baseado em Eta5)
+    ModelID == 6  ~ &quot;E + PAK&quot;,
+
+    # Bloco 2: (Item 10) Modelos com interações categóricas (E + G/P + GxE/PxE)
+    ModelID == 7  ~ &quot;E + G + GE&quot;,
+    ModelID == 8  ~ &quot;E + P + PE&quot;,
+    ModelID == 9  ~ &quot;E + GGK + GGKE&quot;,
+    ModelID == 10 ~ &quot;E + PGK + PGKE&quot;, # (Baseado em Eta10)
+    ModelID == 11 ~ &quot;E + GAK + GAKE&quot;, # (Baseado em Eta11)
+    ModelID == 12 ~ &quot;E + PAK + PAKE&quot;,
+
+    # Bloco 3: (Item 10) Modelos combinados (E + G + P)
+    ModelID == 13 ~ &quot;E + G + P&quot;,
+    ModelID == 14 ~ &quot;E + GGK + PGK&quot;,
+    ModelID == 15 ~ &quot;E + GAK + PAK&quot;,
+
+    # Bloco 4: (Item 10) Modelos combinados com interação categórica
+    ModelID == 16 ~ &quot;E + G + P + GE + PE&quot;,
+    ModelID == 17 ~ &quot;E + GGK + PGK + GGKE + PGKE&quot;,
+    ModelID == 18 ~ &quot;E + GAK + PAK + GAKE + PAKE&quot;,
+
+    # Bloco 5: (Item 10.1) Modelos E + W + G/P (Clima_Base_E)
+    ModelID == 19 ~ &quot;E + G + W&quot;,
+    ModelID == 20 ~ &quot;E + P + W&quot;,
+    ModelID == 21 ~ &quot;E + G + P + W&quot;,
+    ModelID == 22 ~ &quot;E + GGK + W&quot;,
+    ModelID == 23 ~ &quot;E + PGK + W&quot;,
+    ModelID == 24 ~ &quot;E + GGK + PGK + W&quot;,
+    ModelID == 25 ~ &quot;E + GAK + W&quot;,
+    ModelID == 26 ~ &quot;E + PAK + W&quot;,
+    ModelID == 27 ~ &quot;E + GAK + PAK + W&quot;,
+
+    # Bloco 6: (Item 10.1) Modelos E + W + G/P + GxE/PxE (Clima_IntE)
+    ModelID == 28 ~ &quot;E + G + W + GE&quot;,
+    ModelID == 29 ~ &quot;E + P + W + PE&quot;,
+    ModelID == 30 ~ &quot;E + G + P + W + GE + PE&quot;,
+    ModelID == 31 ~ &quot;E + GGK + W + GGKE&quot;,
+    ModelID == 32 ~ &quot;E + PGK + W + PGKE&quot;,
+    ModelID == 33 ~ &quot;E + GGK + PGK + W + GGKE + PGKE&quot;,
+    ModelID == 34 ~ &quot;E + GAK + W + GAKE&quot;,
+    ModelID == 35 ~ &quot;E + PAK + W + PAKE&quot;,
+    ModelID == 36 ~ &quot;E + GAK + PAK + W + GAKE + PAKE&quot;,
+
+    # Bloco 7: (Item 10.1) Modelos E + W + G/P + GxW/PxW (Clima_IntW)
+    ModelID == 37 ~ &quot;E + G + W + GW&quot;,
+    ModelID == 38 ~ &quot;E + P + W + PW&quot;,
+    ModelID == 39 ~ &quot;E + G + P + W + GW + PW&quot;,
+    ModelID == 40 ~ &quot;E + GGK + W + GGKW&quot;,
+    ModelID == 41 ~ &quot;E + PGK + W + PGKW&quot;,
+    ModelID == 42 ~ &quot;E + GGK + PGK + W + GGKW + PGKW&quot;,
+    ModelID == 43 ~ &quot;E + GAK + W + GAKW&quot;,
+    ModelID == 44 ~ &quot;E + PAK + W + PAKW&quot;,
+    ModelID == 45 ~ &quot;E + GAK + PAK + W + GAKW + PAKW&quot;,
+    
+    # Bloco 8: (Item 10.1) Modelos W + G/P (Sem E) (Clima_Base_noE)
+    ModelID == 46 ~ &quot;G + W&quot;,
+    ModelID == 47 ~ &quot;P + W&quot;,
+    ModelID == 48 ~ &quot;G + P + W&quot;,
+    ModelID == 49 ~ &quot;GGK + W&quot;,
+    ModelID == 50 ~ &quot;PGK + W&quot;,
+    ModelID == 51 ~ &quot;GGK + PGK + W&quot;,
+    ModelID == 52 ~ &quot;GAK + W&quot;,
+    ModelID == 53 ~ &quot;PAK + W&quot;,
+    ModelID == 54 ~ &quot;GAK + PAK + W&quot;,
+    
+    # Bloco 9: (Item 11.5) Modelos individuais
+    ModelID == 55 ~ &quot;E&quot;,
+    ModelID == 56 ~ &quot;G&quot;,
+    ModelID == 57 ~ &quot;P&quot;,
+    ModelID == 58 ~ &quot;GGK&quot;,
+    ModelID == 59 ~ &quot;PGK&quot;,
+    ModelID == 60 ~ &quot;GAK&quot;,
+    ModelID == 61 ~ &quot;PAK&quot;,
+    ModelID == 62 ~ &quot;W&quot;,
+    
+    TRUE ~ as.character(ModelID) # Fallback
+  )
+)</code></pre>
+</div>
+<div id="visualização-gráfico-de-componentes-de-variância"
+class="section level3">
+<h3>2.7) Visualização: Gráfico de Componentes de Variância</h3>
+<p>Finalmente, chegamos à visualização. Nossos dados brutos de variância
+(ex: <span class="math inline">\(Var_G = 15.2\)</span>, <span
+class="math inline">\(Var_E = 30.4\)</span>) são difíceis de comparar
+entre modelos. A melhor maneira de fazer isso é usando
+<strong>porcentagens</strong>.</p>
+<p>Este primeiro bloco de código prepara os dados para o
+<code>ggplot</code>. Ele faz o seguinte:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Carrega</strong> os dados limpos
+(<code>...Parsed.csv</code>) da Seção 2.5.</li>
+<li><strong>Agrega</strong> os resultados das 20 repetições
+(<code>Rep</code>), calculando a média da variância
+(<code>AvgVar</code>) para cada <code>Model</code>, <code>Trait</code> e
+<code>Component</code>.</li>
+<li><strong>Calcula a Variância Total</strong> para cada modelo (ex:
+<span class="math inline">\(TotalVar = Var_G + Var_{GxE} +
+Var_{Residual}\)</span>).</li>
+<li><strong>Calcula a Porcentagem</strong> (<span
+class="math inline">\(Percentage = AvgVar / TotalVar\)</span>). Este é o
+nosso valor de interesse (ex: 0.25).</li>
+<li><strong>Junta</strong> os dados com <code>model_info</code> (da
+Seção 2.6) para adicionar os nomes descritivos.</li>
+</ol>
+<p>O resultado, <code>plot_data</code>, está perfeitamente formatado
+para criar um gráfico de barras empilhadas.</p>
+<pre class="r"><code># 1. Carregar os dados limpos (parseados)
+Variance.Components &lt;- read_csv(&quot;output/componentes_variancia/Variance.Components.DAT.Means.Parsed.csv&quot;)
+
+# 2. Processar os dados para plotagem
+plot_data &lt;- Variance.Components %&gt;%
+  
+  # 1. Agregar as repetições (calcula a média da variância)
+  group_by(Model, Trait, Component) %&gt;%
+  summarise(AvgVar = mean(mean_value, na.rm = TRUE), .groups = &#39;drop&#39;) %&gt;%
+  
+  # Remove componentes que não têm variância (ex: &#39;Fixed&#39; se foi NA ou 0)
+  filter(AvgVar &gt; 0 &amp; !is.na(AvgVar)) %&gt;%
+  
+  # 2. Calcular a variância total (soma de todos os componentes)
+  #    para cada combinação de MODEL e TRAIT.
+  group_by(Model, Trait) %&gt;%
+  mutate(TotalVar = sum(AvgVar)) %&gt;%
+  
+  # 3. Calcular a porcentagem
+  ungroup() %&gt;%
+  mutate(Percentage = (AvgVar / TotalVar)) %&gt;% # Valor de 0 a 1
+  
+  # 4. Garante que MODELO e COMPONENTE sejam fatores para o gráfico
+  mutate(
+    Model = str_replace_all(Model, &quot;Eta&quot;, &quot;M&quot;), # Opcional: melhora rótulos
+    Component = as.factor(Component)
+  ) %&gt;%
+  # 5. Junta com a tabela de referência para nomes descritivos
+  full_join(model_info, by = &quot;Model&quot;) %&gt;% 
+  arrange(Trait, ModelID) # Ordena pela ordem numérica do modelo
+
+# (Opcional) Visualizar os dados processados
+head(plot_data)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["Model"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Trait"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Component"],"name":[3],"type":["fct"],"align":["left"]},{"label":["AvgVar"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["TotalVar"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Percentage"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["ModelID"],"name":[7],"type":["int"],"align":["right"]},{"label":["Type"],"name":[8],"type":["chr"],"align":["left"]},{"label":["Description"],"name":[9],"type":["chr"],"align":["left"]}],"data":[{"1":"M1","2":"GY","3":"ETA_E","4":"1.237442e+03","5":"1489.278","6":"8.309004e-01","7":"1","8":"Basico","9":"E + G"},{"1":"M1","2":"GY","3":"ETA_G","4":"1.890033e+02","5":"1489.278","6":"1.269093e-01","7":"1","8":"Basico","9":"E + G"},{"1":"M1","2":"GY","3":"Residual","4":"6.283297e+01","5":"1489.278","6":"4.219022e-02","7":"1","8":"Basico","9":"E + G"},{"1":"M2","2":"GY","3":"ETA_E","4":"1.354689e+03","5":"63189444.665","6":"2.143854e-05","7":"2","8":"Basico","9":"E + P"},{"1":"M2","2":"GY","3":"ETA_P","4":"6.318793e+07","5":"63189444.665","6":"9.999761e-01","7":"2","8":"Basico","9":"E + P"},{"1":"M2","2":"GY","3":"Residual","4":"1.565178e+02","5":"63189444.665","6":"2.476961e-06","7":"2","8":"Basico","9":"E + P"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>write_csv(plot_data, &quot;output/componentes_variancia/Variance.Components.Percentage.PlotData.csv&quot;)</code></pre>
+<div id="gráfico-para-produtividade-de-grãos-gy" class="section level4">
+<h4>2.7.1) Gráfico para Produtividade de Grãos (GY)</h4>
+<p>Com os dados <code>plot_data</code> prontos, podemos criar o
+gráfico.</p>
+<p>A função-chave aqui é <code>geom_col(position = "fill")</code>.</p>
+<ul>
+<li><code>geom_col</code> cria as barras.</li>
+<li><code>position = "fill"</code> diz ao <code>ggplot</code> para
+automaticamente escalar a altura de cada barra para 100% (ou 1.0).</li>
+<li><code>fill = Component</code> usa a coluna <code>Component</code>
+para “colorir” as seções da barra.</li>
+</ul>
+<p>Isso nos dá uma visão clara da contribuição <em>proporcional</em> de
+cada componente de variância para cada modelo.</p>
+<pre class="r"><code># --- Plot principal ---
+g_var &lt;- plot_data %&gt;%
+  filter(Trait == &quot;GY&quot;) %&gt;%  # Filtra apenas para Grain Yield (GY)
+  mutate(Description = reorder(Description, ModelID)) %&gt;% # Ordena o eixo X pelo ModelID
+  ggplot(aes(x = Description, y = Percentage, fill = Component)) +
+  
+  # Cria as barras empilhadas. 
+  # position=&quot;fill&quot; garante que cada barra vá de 0 a 100%
+  geom_col(position = &quot;fill&quot;, color = &quot;black&quot;, alpha = 0.85, width = 0.8) +
+  
+  # --- Rótulos e Títulos ---
+  labs(
+    title = &quot;Contribuição Percentual dos Componentes de Variância&quot;,
+    subtitle = &quot;Média das repetições, por Modelo e GY (Produtividade de Grãos)&quot;,
+    x = &quot;Modelo Preditivo (Descrição)&quot;,
+    y = &quot;Porcentagem da Variância Total&quot;,
+    fill = &quot;Componente:&quot;
+  ) +
+  
+  # --- Escalas e Temas ---
+  
+  # Formata o eixo Y para mostrar &quot;0%&quot;, &quot;50%&quot;, &quot;100%&quot;
+  scale_y_continuous(labels = scales::percent_format()) +
+  
+  # Paleta de cores (amigável à visualização)
+  ggthemes::scale_fill_gdocs() + 
+  
+  # Tema limpo
+  theme_minimal() + 
+  theme(
+    legend.position = &quot;bottom&quot;, # Posição da legenda
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6), # Texto do eixo X
+    plot.title = element_text(face = &quot;bold&quot;),
+    panel.grid.major.x = element_blank(), # Remove linhas de grade verticais
+    panel.grid.minor = element_blank(),
+    
+    # --- AJUSTES DE TAMANHO DA LEGENDA ---
+    legend.title = element_text(size = 6), # Tamanho do título da legenda
+    legend.text = element_text(size = 5),  # Tamanho do texto dos itens
+    legend.key.size = unit(0.5, &quot;lines&quot;)   # Tamanho dos ícones coloridos
+  ) +
+  guides(fill = guide_legend(nrow = 3, byrow = TRUE))
+
+# Imprime o gráfico
+print(g_var)</code></pre>
+<p><img src="figure/variance_components.Rmd/plot-variance-components-GY-1.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="gráfico-para-peso-de-grãos-kw" class="section level4">
+<h4>2.7.2) Gráfico para Peso de Grãos (KW)</h4>
+<p>Este bloco é idêntico ao anterior, mas filtra os dados para o trait
+<strong>KW</strong> (Kernel Weight, ou Peso de Grãos). Ele gera e salva
+um gráfico separado, permitindo uma análise independente da partição da
+variância para esta característica.</p>
+<pre class="r"><code># --- Plot principal ---
+g_var &lt;- plot_data %&gt;% 
+  filter(Trait == &quot;KW&quot;) %&gt;%  # Filtra apenas para Kernel Weight (KW)
+ggplot(aes(x = reorder(Description, ModelID), y = Percentage, fill = Component)) +
+  
+  # Cria as barras empilhadas. 
+  geom_col(position = &quot;fill&quot;, color = &quot;black&quot;, alpha = 0.85, width = 0.8) +
+  
+  # --- Rótulos e Títulos ---
+  labs(
+    title = &quot;Contribuição Percentual dos Componentes de Variância&quot;,
+    subtitle = &quot;Média das repetições, por Modelo e KW (Peso de Grãos)&quot;,
+    x = &quot;Modelo Preditivo (Descrição)&quot;,
+    y = &quot;Porcentagem da Variância Total&quot;,
+    fill = &quot;Componente:&quot;
+  ) +
+  
+  # --- Escalas e Temas ---
+  scale_y_continuous(labels = scales::percent_format()) +
+  ggthemes::scale_fill_gdocs() + 
+  theme_minimal() + 
+  theme(
+    legend.position = &quot;bottom&quot;, 
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6), 
+    plot.title = element_text(face = &quot;bold&quot;),
+    panel.grid.major.x = element_blank(), 
+    panel.grid.minor = element_blank(),
+    legend.title = element_text(size = 6), 
+    legend.text = element_text(size = 5),  
+    legend.key.size = unit(0.5, &quot;lines&quot;)   
+  ) +
+  guides(fill = guide_legend(nrow = 3, byrow = TRUE))
+
+# Imprime o gráfico
+print(g_var)</code></pre>
+<p><img src="figure/variance_components.Rmd/plot-variance-components-KW-1.png" width="100%" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] parallel  stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] scales_1.4.0      MASS_7.3-65       doParallel_1.0.17 iterators_1.0.14 
+ [5] foreach_1.5.2     BGLR_1.1.4        data.table_1.17.8 lubridate_1.9.4  
+ [9] forcats_1.0.0     stringr_1.5.2     dplyr_1.1.4       purrr_1.1.0      
+[13] readr_2.1.5       tidyr_1.3.1       tibble_3.3.0      ggplot2_4.0.0    
+[17] tidyverse_2.0.0  
+
+loaded via a namespace (and not attached):
+ [1] sass_0.4.10        generics_0.1.4     stringi_1.8.7      hms_1.1.3         
+ [5] digest_0.6.37      magrittr_2.0.4     evaluate_1.0.5     grid_4.5.1        
+ [9] timechange_0.3.0   RColorBrewer_1.1-3 fastmap_1.2.0      rprojroot_2.1.1   
+[13] workflowr_1.7.2    jsonlite_2.0.0     whisker_0.4.1      ggthemes_5.1.0    
+[17] promises_1.3.3     truncnorm_1.0-9    codetools_0.2-20   jquerylib_0.1.4   
+[21] cli_3.6.5          crayon_1.5.3       rlang_1.1.6        bit64_4.6.0-1     
+[25] withr_3.0.2        cachem_1.1.0       yaml_2.3.10        tools_4.5.1       
+[29] tzdb_0.5.0         httpuv_1.6.16      vctrs_0.6.5        R6_2.6.1          
+[33] lifecycle_1.0.4    git2r_0.36.2       bit_4.6.0          fs_1.6.6          
+[37] vroom_1.6.5        pkgconfig_2.0.3    pillar_1.11.1      bslib_0.9.0       
+[41] later_1.4.4        gtable_0.3.6       glue_1.8.0         Rcpp_1.1.0        
+[45] xfun_0.53          tidyselect_1.2.1   rstudioapi_0.17.1  knitr_1.50        
+[49] farver_2.1.2       htmltools_0.5.8.1  labeling_0.4.3     rmarkdown_2.29    
+[53] compiler_4.5.1     S7_0.2.0          </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Weverton Gomes da Costa, Pós-Doutorando, Departamento de
+Estatística - Universidade Federal de Viçosa, <a
+href="mailto:wevertonufv@gmail.com"
+class="email">wevertonufv@gmail.com</a><a href="#fnref1"
+class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

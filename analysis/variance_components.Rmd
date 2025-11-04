@@ -31,7 +31,7 @@ O **objetivo principal** deste tutorial específico não é avaliar a *capacidad
 
 Compreender essa partição é fundamental para direcionar estratégias de melhoramento genético.
 
-## 1\) Carregar Bibliotecas e Dados
+## 1) Carregar Bibliotecas e Dados
 
 Antes de começarmos, precisamos carregar nossa "caixa de ferramentas" de pacotes R. Cada um desempenha um papel específico:
 
@@ -634,11 +634,6 @@ g_var <- plot_data %>%
 
 # Imprime o gráfico
 print(g_var)
-
-# (Opcional) Salvar o gráfico
-ggsave("output/componentes_variancia/variance_components_percentage_GY.tiff", 
-       plot = g_var, 
-       width = 16, height = 12, dpi = 300)
 ```
 
 #### 2.7.2) Gráfico para Peso de Grãos (KW)
@@ -681,9 +676,96 @@ ggplot(aes(x = reorder(Description, ModelID), y = Percentage, fill = Component))
 
 # Imprime o gráfico
 print(g_var)
-
-# (Opcional) Salvar o gráfico
-ggsave("output/componentes_variancia/variance_components_percentage_KW.tiff", 
-       plot = g_var, 
-       width = 16, height = 12, dpi = 300)
 ```
+
+```{r, include=FALSE, eval=FALSE}
+library(patchwork) # Garante que a biblioteca está carregada
+
+# --- Gráfico A: Grain Yield (GY) ---
+# O mais importante: legend.position = "none"
+g_gy <- plot_data %>%
+filter(Trait == "GY") %>%
+mutate(Description = reorder(Description, ModelID)) %>%
+ggplot(aes(x = Description, y = Percentage, fill = Component)) +
+geom_col(position = "fill", color = "black", alpha = 0.85, width = 0.8) +
+labs(
+ title = NULL, # Título principal será adicionado depois
+ subtitle = "GY (Grain Yield)", # Subtítulo específico do painel
+ x = NULL, # Remove o rótulo do eixo X
+ y = "Percentage of Total Variance",
+ fill = "Component:"
+) +
+scale_y_continuous(labels = scales::percent_format()) +
+ggthemes::scale_fill_gdocs() +
+theme_minimal() +
+theme(
+ legend.position = "none", # **CRÍTICO: Remove a legenda deste gráfico**
+ axis.text.x = element_blank(), # Remove o texto do eixo X
+ axis.ticks.x = element_blank(), # Remove os "ticks" do eixo X
+ plot.subtitle = element_text(face = "bold"),
+ panel.grid.major.x = element_blank(),
+ panel.grid.minor = element_blank()
+)
+
+# --- Gráfico B: Kernel Weight (KW) ---
+# O mais importante: A legenda é definida AQUI
+g_kw <- plot_data %>%
+filter(Trait == "KW") %>%
+ggplot(aes(x = reorder(Description, ModelID), y = Percentage, fill = Component)) +
+geom_col(position = "fill", color = "black", alpha = 0.85, width = 0.8) +
+labs(
+ title = NULL,
+ subtitle = "KW (Kernel Weight)",
+ x = "Predictive Model (Description)", # Mantém o rótulo X
+ y = "Percentage of Total Variance",
+ fill = "Component:"
+) +
+scale_y_continuous(labels = scales::percent_format()) +
+ggthemes::scale_fill_gdocs() +
+theme_minimal() +
+theme(
+ # **CRÍTICO: Define a legenda e sua formatação AQUI**
+ legend.position = "bottom",
+ legend.title = element_text(size =10),
+ legend.text = element_text(size = 8),
+ legend.key.size = unit(0.5, "lines"),
+
+ axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
+ plot.subtitle = element_text(face = "bold"),
+ panel.grid.major.x = element_blank(),
+ panel.grid.minor = element_blank()
+) +
+# Define o layout da legenda (ex: 3 linhas)
+guides(fill = guide_legend(
+    ncol = 1, 
+    byrow = FALSE, 
+    title.position = "top" # Coloca o título acima da legenda
+  ))
+
+# --- Combinar os Gráficos ---
+
+# 1. Empilha os gráficos
+combined_plot <- g_gy / g_kw
+
+# 2. Adiciona anotações (Títulos e Tags A/B)
+# 3. Adiciona o layout para 'coletar' a legenda (que está em g_kw)
+final_plot <- combined_plot +
+plot_annotation(
+ title = "Percentage Contribution of Variance Components",
+ tag_levels = 'A', # Adiciona tags 'A' e 'B'
+ theme = theme(
+   plot.title = element_text(face = "bold"),
+   plot.subtitle = element_text(face = "italic")
+  )
+) +
+plot_layout(guides = 'collect') # Coleta a legenda definida em g_kw
+
+# Imprime o gráfico combinado final
+print(final_plot)
+
+# (Opcional) Salvar o gráfico combinado
+ggsave("output/componentes_variancia/variance_components_percentage_COMBINED.tiff",
+ plot = final_plot,
+ width = 16, height = 10, dpi = 300)
+```
+
