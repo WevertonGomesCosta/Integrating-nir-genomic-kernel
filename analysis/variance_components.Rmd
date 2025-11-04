@@ -572,6 +572,8 @@ plot_data <- Variance.Components %>%
 
 # (Opcional) Visualizar os dados processados
 head(plot_data)
+
+write_csv(plot_data, "output/componentes_variancia/Variance.Components.Percentage.PlotData.csv")
 ```
 
 #### 2.7.1) Gráfico para Produtividade de Grãos (GY)
