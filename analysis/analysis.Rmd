@@ -2425,14 +2425,44 @@ p <- df_cor %>%
                 position = position_dodge(.9)) +
   theme_bw() +
   facet_wrap(. ~  Env_Val, nrow = 2) +  # Um painel para cada esquema de validação
-  scale_y_continuous("Prediction ability", limits = c(0,1.25)) +
-  #scale_x_continuous("Models", expand = c(0, 0), breaks = df_cor$ModelID) +
+  scale_y_continuous("Prediction ability", limits = c(-0.1,1.25)) +
+  scale_x_discrete("Models") +
   theme(axis.text.x = element_text(
     angle = 90,
     vjust = 0.5,
     hjust = 1,
     size = 6
   ))
+
+# Exibe o gráfico
+p
+```
+
+```{r}
+df_cor <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")
+# Cria gráfico de barras com erro padrão e rótulos
+
+p <- df_cor %>% 
+  group_by(Model, CV, Trait) %>% 
+  summarise(M = mean(M, na.rm = TRUE), SD = sd(M, na.rm = TRUE)) %>% 
+  full_join(model_info) %>% 
+  ggplot(aes(x = reorder(Description, ModelID), y = M, fill = factor(Type))) +
+  geom_bar(stat = "identity", position = position_dodge(), width = 0.8, show.legend = FALSE) +
+  geom_errorbar(aes(ymin = M, ymax = M + SD),
+                width = .2,
+                position = position_dodge(.9)) +
+  theme_bw() +
+  facet_grid( CV ~  Trait) +  # Um painel para cada esquema de validação
+  scale_y_continuous(limits = c(-0.1,1.25)) +
+  #scale_x_discrete("Models") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1,
+    size = 6
+  )) +
+  labs(x = "Models",
+       y = "Prediction ability")
 
 # Exibe o gráfico
 p
@@ -2649,15 +2679,15 @@ df_cor <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")
 
 p <- df_cor %>% 
   #mutate(Description = forcats::fct_reorder(Description, ModelID)) %>%
-  ggplot(aes(x = Description, y = M, fill = factor(Type))) +
+  ggplot(aes(x = reorder(Description, ModelID), y = M, fill = factor(Type))) +
   geom_bar(stat = "identity", position = position_dodge(), width = 0.8, show.legend = FALSE) +
   geom_errorbar(aes(ymin = M, ymax = M + SD),
                 width = .2,
                 position = position_dodge(.9)) +
   theme_bw() +
   facet_grid(Trait ~ CV) +  # Um painel para cada esquema de validação
-  #scale_y_continuous("Prediction ability", limits = c(0,1.25)) +
-  #scale_x_continuous("Models", expand = c(0, 0), breaks = df_cor$ModelID) +
+  scale_y_continuous("Prediction ability", limits = c(-0.1,1.25)) +
+  scale_x_discrete("Models") +
   theme(axis.text.x = element_text(
     angle = 90,
     vjust = 0.5,
