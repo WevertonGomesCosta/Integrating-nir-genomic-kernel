@@ -137,87 +137,87 @@ Este gráfico nos permite "ver" o estresse hídrico. A diferença entre os dois 
 
 ```{r plot_precipitation, fig.width=10, fig.height=6}
 ggplot(texas_climate_data, aes(x = date, y = PRECTOTCORR)) +
-  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
-  facet_wrap(~ year, scales = "free_x") +
-  labs(
-    title = "Precipitação Diária em College Station, TX (2011-2012)",
-    subtitle = "Dados obtidos da API NASA POWER",
-    x = "Data",
-    y = "Precipitação (mm/dia)"
-  ) +
-  theme_minimal() +
-  scale_x_date(date_labels = "%b", date_breaks = "1 month") # Mostra o mês
-
-ggsave("output/climate_results/precipitation_plot.tiff")
+geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
+facet_wrap(~ year, scales = "free_x") +
+labs(
+ title = "Daily Precipitation in College Station, TX (2011-2012)",
+ subtitle = "Data obtained from the NASA POWER API",
+ x = "Date",
+ y = "Precipitation (mm/day)"
+) +
+theme_minimal() +
+scale_x_date(date_labels = "%b", date_breaks = "1 month") # Show the month
 ```
 
 No entanto, o gráfico acima não facilita a comparação direta entre os dois anos para cada dia do mês. Para melhorar isso, podemos criar um gráfico de barras agrupadas (lado a lado) para cada dia do mês, separado por mês.
 
 ```{r}
-# 1. Criar as colunas categóricas necessárias
+# 1. Create necessary categorical columns
 daily_data_with_parts <- texas_climate_data %>%
-  mutate(
-    # Fator para o 'fill' (agrupamento)
-    ano = factor(year(date)), 
-    # Fator para os painéis (facets)
-    mes = month(date), 
-    # Fator para o eixo X (categórico)
-    dia_mes = factor(mday(date)) 
-  )
+mutate(
+ # Factor for 'fill' (grouping)
+ ano = factor(year(date)),
+ # Factor for panels (facets) - Use label = TRUE for month names (e.g., "Jan")
+ mes = lubridate::month(date, label = TRUE),
+ # Factor for X-axis (categorical)
+ dia_mes = factor(mday(date))
+)
 
-# 2. Plotar com dia_mes (x), ano (fill/dodge) e mes (facet)
-ggplot(daily_data_with_parts, aes(x = dia_mes, y = PRECTOTCORR, fill = ano)) +
-  # Agora o position = "dodge" funciona, pois 'dia_mes' é um fator
-  geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
-  
-  # Usamos o facet_wrap para separar os meses
-  facet_wrap(~ mes, scales = "free_x", ncol = 5) + # ncol=4 para 3 linhas de 4 gráficos
-  
-  labs(
-    title = "Precipitação Diária em College Station, TX (2011 vs 2012)",
-    subtitle = "Comparação diária, agrupada por mês",
-    x = "Dia do Mês",
-    y = "Precipitação (mm/dia)",
-    fill = "Ano" # Título da legenda
-  ) +
-  theme_minimal() +
-  
-  # Opcional: Limpar o eixo X, pois 31 rótulos podem ficar poluídos
-  # Mostra apenas os dias 1, 5, 10, 15, 20, 25, 30
-  scale_x_discrete(breaks = c(1, 5, 10, 15, 20, 25, 30)) 
+# 2. Plot with dia_mes (x), ano (fill/dodge) and mes (facet)
+# We store this plot in the variable 'p1'
+p1 <- ggplot(daily_data_with_parts, aes(x = dia_mes, y = PRECTOTCORR, fill = ano)) +
+# position = "dodge" now works, as 'dia_mes' is a factor
+geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
 
-ggsave("output/climate_results/precipitation_daily_dodged_plot.tiff")
+# Use facet_wrap to separate months (facets will now have names)
+# (Changed to ncol = 6 for a cleaner 2-row layout)
+facet_wrap(~ mes, scales = "free_x", ncol = 6) +
+
+labs(
+ title = "Daily Precipitation in College Station, TX (2011 vs 2012)",
+ subtitle = "Daily comparison, grouped by month",
+ x = "Day of Month",
+ y = "Precipitation (mm/day)",
+ fill = "Year" # Legend title
+) +
+theme_minimal() +
+
+# Optional: Clean up the X-axis, as 31 labels can be cluttered
+# Show only days 1, 5, 10, 15, 20, 25, 30
+scale_x_discrete(breaks = c(1, 5, 10, 15, 20, 25, 30))
+
+p1
 ```
 
 Para melhorar a visualização da precipitação mensal total, podemos agregar os dados diários em totais mensais e plotar as barras lado a lado para cada ano.
 
 ```{r}
-# 1. Resumir os dados diários para totais mensais
+# 1. Summarize daily data to monthly totals
 monthly_precip <- texas_climate_data %>%
-  mutate(
-    year = factor(year(date)), # Converte ano para fator (para agrupamento)
-    month = month(date) # Extrai o nome do mês
-  ) %>%
-  group_by(year, month) %>%
-  summarise(Total_Precip = sum(PRECTOTCORR, na.rm = TRUE), .groups = 'drop')
+mutate(
+ year = factor(year(date)), # Convert year to factor (for grouping)
+ # Use label = TRUE for month names (e.g., "Jan")
+ month = lubridate::month(date, label = TRUE) 
+) %>%
+group_by(year, month) %>%
+summarise(Total_Precip = sum(PRECTOTCORR, na.rm = TRUE), .groups = 'drop')
 
-# 2. Plotar os dados mensais com barras lado a lado (position = "dodge")
-ggplot(monthly_precip, aes(x = month, y = Total_Precip, fill = year)) +
-  # Usar position = "dodge" para colocar as barras lado a lado
-  geom_bar(stat = "identity", position = "dodge") + 
-  # Remover o facet_wrap, pois o 'fill' agora separa os anos
-  labs(
-    title = "Precipitação Mensal em College Station, TX (2011-2012)",
-    subtitle = "Barras agrupadas por ano",
-    x = "Mês",
-    y = "Precipitação Total (mm/mês)",
-    fill = "Ano" # Título da legenda
-  ) +
-  theme_minimal()
-  # scale_x_date não é mais necessário, pois o eixo X agora é discreto (mês)
+# 2. Plot monthly data with side-by-side bars (position = "dodge")
+# We store this plot in the variable 'p2'
+p2 <- ggplot(monthly_precip, aes(x = month, y = Total_Precip, fill = year)) +
+# Use position = "dodge" to place bars side-by-side
+geom_bar(stat = "identity", position = "dodge") +
+# No facet_wrap needed, as 'fill' now separates the years
+labs(
+ title = "Monthly Precipitation in College Station, TX (2011-2012)",
+ subtitle = "Bars grouped by year",
+ x = "Month",
+ y = "Total Precipitation (mm/month)",
+ fill = "Year" # Legend title
+) +
+theme_minimal()
 
-# Salvar o novo gráfico
-ggsave("output/climate_results/precipitation_monthly_plot.tiff")
+p2
 ```
 
 ### 5.2 Temperatura Máxima Diária (°C)
@@ -225,37 +225,64 @@ ggsave("output/climate_results/precipitation_monthly_plot.tiff")
 Este gráfico nos ajuda a identificar o estresse térmico. Ambos os anos mostram longos períodos de calor extremo (acima de 35°C), mas 2011 parece ter um período de calor intenso mais sustentado. Na próxima seção, quantificaremos isso contando os "dias de estresse térmico".
 
 ```{r plot_temperature, fig.width=10, fig.height=6}
-texas_climate_data %>%
-  mutate(T2M_MEAN = (T2M_MAX + T2M_MIN) / 2) %>%
-  pivot_longer(
-    cols = c(T2M_MEAN, T2M_MAX, T2M_MIN),
-    names_to = "Temperature_Type",
-    values_to = "Temperature"
-  ) %>%
-  # Removido 'fill = Temperature_Type' daqui
-  ggplot(aes(x = date, y = Temperature)) + 
-  # Adicionado o mapeamento 'color' DENTRO de aes()
-  geom_line(aes(color = Temperature_Type), alpha = 0.8) + 
-  geom_smooth(
-    method = "loess",
-    se = FALSE,
-    linetype = "dashed",
-    color = "black"
-  ) +
-  facet_wrap( ~ year, scales = "free_x") +
-  labs(
-    title = "Temperatura Máxima Diária em College Station, TX (2011-2012)",
-    subtitle = "Linha pontilhada representa a tendência suavizada",
-    x = "Data",
-    y = "Temperatura Máxima (°C)"
-  ) +
-  theme_minimal() +
-  scale_x_date(date_labels = "%b", date_breaks = "1 month")
+# We store this plot in the variable 'p3'
+p3 <- texas_climate_data %>%
+mutate(T2M_MEAN = (T2M_MAX + T2M_MIN) / 2) %>%
+pivot_longer(
+ cols = c(T2M_MEAN, T2M_MAX, T2M_MIN),
+ names_to = "Temperature_Type",
+ values_to = "Temperature"
+) %>%
+# Removed 'fill = Temperature_Type' from here
+ggplot(aes(x = date, y = Temperature)) +
+# Added 'color' mapping INSIDE aes()
+geom_line(aes(color = Temperature_Type), alpha = 0.8) +
+geom_smooth(
+ method = "loess",
+ se = FALSE,
+ linetype = "dashed",
+ color = "black"
+) +
+facet_wrap( ~ year, scales = "free_x") +
+labs(
+ title = "Daily Temperature in College Station, TX (2011-2012)",
+ subtitle = "Dashed line represents the smoothed trend",
+ x = "Date",
+ y = "Temperature (°C)",
+  color = "Temp. Type" # Legend title for color
+) +
+theme_minimal() +
+scale_x_date(date_labels = "%b", date_breaks = "1 month")
 
-ggsave("output/climate_results/temperature_plot.tiff")
+p3
 ```
 
-## 6. Engenharia de Atributos: Criação das Covariáveis Ambientais (ECs)
+```{r, include=FALSE, eval=FALSE}
+# Load necessary libraries
+# install.packages("patchwork") # Uncomment this line if you haven't installed it
+library(patchwork)
+
+# Use patchwork to combine the plots
+# Layout: p1 on the top row
+#    p2 and p3 on the bottom row
+combined_plot <- (p1) / (p2 + p3)
+
+# Add automatic tagging (A, B, C) for publication
+combined_plot <- combined_plot + plot_annotation(tag_levels = 'A')
+
+# Print the combined plot to the screen
+print(combined_plot)
+
+# Save the combined plot to a single file
+ggsave("output/climate_results/combined_climate_plot.tiff",
+   plot = combined_plot,
+   width = 14,
+   height = 10,
+   dpi = 300)
+```
+
+
+## 6. Criação das Covariáveis Ambientais (ECs)
 
 Esta é a etapa mais crítica do script. Transformamos os dados de séries temporais diárias (\~150 linhas por ano) em apenas **uma linha por ano**, onde cada coluna representa uma característica resumida daquele ambiente.
 
