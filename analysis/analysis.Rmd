@@ -2536,7 +2536,7 @@ p <- df_cor %>%
                 width = .2,
                 position = position_dodge(.9)) +
   theme_bw() +
-  facet_wrap(. ~  Env_Val, nrow = 2) +  # Um painel para cada esquema de validação
+  facet_wrap(. ~  Env_Val, nrow = 4) +  # Um painel para cada esquema de validação
   scale_y_continuous("Prediction ability", limits = c(-0.1,1.25)) +
   scale_x_discrete("Models") +
   theme(axis.text.x = element_text(
@@ -2548,6 +2548,11 @@ p <- df_cor %>%
 
 # Exibe o gráfico
 p
+
+ggsave("output/Pred.ability/grafico_exemplo_GY_CV0.tiff",
+       plot = p,
+       width = 8,
+       height = 8, dpi = 300)
 ```
 
 ```{r}
@@ -2578,6 +2583,11 @@ p <- df_cor %>%
 
 # Exibe o gráfico
 p
+
+ggsave("output/Pred.ability/grafico_exemplo_CV0_CV00.tiff",
+       plot = p,
+       width = 16,
+       height = 10, dpi = 300)
 ```
 
 ### 15.6) Geração Automatizada de Gráficos (CV0 e CV00)
@@ -2790,6 +2800,7 @@ df_cor <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")
 # Cria gráfico de barras com erro padrão e rótulos
 
 p <- df_cor %>% 
+  filter(Trait == "GY") %>%
   #mutate(Description = forcats::fct_reorder(Description, ModelID)) %>%
   ggplot(aes(x = reorder(Description, ModelID), y = M, fill = factor(Type))) +
   geom_bar(stat = "identity", position = position_dodge(), width = 0.8, show.legend = FALSE) +
@@ -2797,7 +2808,7 @@ p <- df_cor %>%
                 width = .2,
                 position = position_dodge(.9)) +
   theme_bw() +
-  facet_grid(Trait ~ CV) +  # Um painel para cada esquema de validação
+  facet_grid(CV ~ .) +  # Um painel para cada esquema de validação
   scale_y_continuous("Prediction ability", limits = c(-0.1,1.25)) +
   scale_x_discrete("Models") +
   theme(axis.text.x = element_text(
@@ -2809,6 +2820,8 @@ p <- df_cor %>%
 
 # Exibe o gráfico
 p
+
+ggsave("output/Pred.ability/grafico_CV1_CV2.tiff", plot = p, width = 8, height = 8, dpi = 300)
 ```
 
 ### 15.8) Geração Automatizada de Gráficos (CV1 e CV2)
