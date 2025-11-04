@@ -49,6 +49,8 @@ library(doParallel)
 
 # Funções estatísticas adicionais
 library(MASS)                                     # Funções estatísticas
+library(gridExtra) 
+library(grid) 
 ```
 
 ## 2) Data Loading and Preprocessing
@@ -1764,6 +1766,116 @@ Vamos implementar múltiplos esquemas de CV para simular diferentes desafios do 
       * *Pergunta:* O teste mais difícil. O modelo pode prever o desempenho de *todos* os genótipos em um *ambiente completamente novo* (um ano ou local que o modelo nunca viu)?
   * **CV00: leave-one-environment-out (testa genótipos em ambientes não observados).**
       * *Semelhante ao CV0*, focado em prever genótipos *dentro* de um ambiente não visto.
+
+### 13.0) Visualização dos esquemas de validação cruzada
+
+
+```{r example-cv}
+# ------------------------------------------------------------
+# Parâmetros gerais
+# ------------------------------------------------------------
+n_geno <- 50  # número de genótipos
+n_env  <- 4
+envs <- paste0("Env ", 1:n_env)
+
+# ------------------------------------------------------------
+# Função para gerar estrutura de cada esquema CV
+# ------------------------------------------------------------
+generate_cv_data <- function(type) {
+  df <- expand.grid(Genotype = 1:n_geno, Env = envs)
+  df$Test <- FALSE
+  
+  if (type == "CV2") {
+    # 20% dos genótipos testados (genótipo parcialmente testado)
+    test_genos <- sample(1:nrow(df), nrow(df) * 0.2)
+    df$Test[test_genos] <- TRUE
+    
+    
+  } else if (type == "CV1") {
+    # 20% dos genótipos totalmente não vistos
+    test_genos <- sample(1:n_geno, n_geno * 0.2)
+    df$Test[df$Genotype %in% test_genos] <- TRUE
+    
+  } else if (type == "CV0") {
+    # Um ambiente completamente novo (Env 2)
+    df$Test[df$Env == "Env 2"] <- TRUE
+
+    
+  } else if (type == "CV00") {
+    # Genótipos e ambiente totalmente novos (sem esses genótipos em outros ambientes)
+    test_genos <- sample(1:n_geno, n_geno * 0.2)
+    df$Test <- FALSE
+    df <- df %>% 
+      mutate(Test = ifelse(Env == "Env 2" & Genotype %in% test_genos, TRUE, FALSE)) %>%
+      filter(!(Genotype %in% test_genos & Env != "Env 2")) %>% # remove genótipos de teste dos outros ambientes
+      filter(!(Env == "Env 2" & !(Genotype %in% test_genos))) # mantém apenas genótipos de teste em Env 2
+  }
+  
+  # garantir ordem correta dos ambientes
+  df$CV <- type
+  df
+}
+
+# ------------------------------------------------------------
+# Gerar dados
+# ------------------------------------------------------------
+cv_types <- c("CV2", "CV0", "CV1", "CV00")  # ordem original
+data <- do.call(rbind, lapply(cv_types, generate_cv_data))
+
+# ------------------------------------------------------------
+# Função para criar gráfico individual
+# ------------------------------------------------------------
+plot_cv <- function(df, title) {
+  ggplot(df, aes(x = as.character(Env), y = Genotype)) +
+    # Linhas azuis finas de fundo apenas para pontos de treino
+    geom_tile(data = subset(df, !Test), fill = "#5dade2", height = 0.4, width = 0.9) +
+    # Pontos pretos para observações de teste
+    geom_point(data = subset(df, Test), color = "black", size = 2) +
+    theme_minimal(base_size = 12) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_blank(),
+      panel.grid = element_blank(),
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+      legend.position = "none"
+    ) +
+    labs(title = title)
+}
+
+# ------------------------------------------------------------
+# Criar gráficos
+# ------------------------------------------------------------
+p1 <- plot_cv(filter(data, CV == "CV2"), "CV2")
+p2 <- plot_cv(filter(data, CV == "CV0"), "CV0")
+p3 <- plot_cv(filter(data, CV == "CV1"), "CV1")
+p4 <- plot_cv(filter(data, CV == "CV00"), "CV00")
+
+# ------------------------------------------------------------
+# Combinar gráficos com eixos globais
+# ------------------------------------------------------------
+grid_arrange_shared_legend <- function(..., ncol = 2, nrow = 2, 
+                                       x_label = "Environments", 
+                                       y_label = "Genotypes") {
+  plots <- list(...)
+  grid <- arrangeGrob(grobs = plots, ncol = ncol, nrow = nrow)
+  grid <- arrangeGrob(
+    grid,
+    bottom = textGrob(x_label, gp = gpar(fontsize = 14)),
+    left   = textGrob(y_label, rot = 90, gp = gpar(fontsize = 14))
+  )
+  grid
+}
+
+final_plot <- grid_arrange_shared_legend(p1, p2, p3, p4)
+
+grid.newpage()
+grid.draw(final_plot)
+
+ggsave("output/cv-schemes.tiff", final_plot, width = 10, height = 8)
+```
+
 
 ### 13.1) Parâmetros para execução dos modelos
 
