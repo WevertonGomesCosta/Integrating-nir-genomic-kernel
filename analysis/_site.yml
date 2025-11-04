@@ -7,9 +7,9 @@ navbar:
     href: index.html
   - text: Climate date
     href: climate_data.html
-  - text: Componentes de Variância
-    href: components_variance.html
-  - text: Análise
+  - text: Variance components
+    href: variance_components.html
+  - text: Prediction
     href: analysis.html
   - text: About
     href: about.html
