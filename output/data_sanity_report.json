@@ -1,0 +1,23 @@
+{
+  "files": {
+    "NIR": "data/NIR.csv",
+    "Genotype": "data/GAPIT.Genotype.Numerical.txt"
+  },
+  "counts": {
+    "nir_rows": 1022,
+    "geno_rows": 346,
+    "nir_columns": 3117,
+    "geno_columns": 41457,
+    "nir_unique_pedigree": 343,
+    "geno_unique_taxa": 346,
+    "shared_ids": 329
+  },
+  "checks": {
+    "nir_required_columns": true,
+    "geno_required_columns": true,
+    "nir_missing_pedigree": false,
+    "geno_missing_taxa": false,
+    "nir_has_known_environments": true,
+    "has_shared_ids": true
+  }
+}

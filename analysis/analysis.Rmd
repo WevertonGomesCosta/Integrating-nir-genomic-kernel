@@ -23,9 +23,9 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, out.width =
 
 # Analysis of NIR and Genomic Kernel Integration
 
-Este documento detalha o *pipeline* de análise para integrar dados de Espectroscopia de Refletância no Infravermelho Próximo (NIR), dados genômicos e climáticos usando métodos de *kernel* para aumentar a precisão da predição. A análise inclui o pré-processamento de dados, ajuste de modelos e avaliação do desempenho preditivo.
+This tutorial documents the analytical pipeline used to integrate near-infrared reflectance spectroscopy (NIR), genomic, and climate data using kernel-based methods to improve predictive performance. The workflow includes preprocessing, model fitting, and predictive evaluation.
 
-Este script foca especificamente nas etapas iniciais e cruciais de **carregamento, limpeza e alinhamento** dos diferentes tipos de dados.
+This script focuses on the foundational stages of **data loading, quality control, and alignment** across data modalities.
 
 ## 1) Load Required Libraries and Data
 
@@ -38,19 +38,22 @@ Nesta etapa, carregamos nosso "kit de ferramentas" de pacotes R. Cada um deles �
   * `MASS`: Contém funções estatísticas adicionais que podem ser úteis.
 
 ```{r load-libraries, message=FALSE}
-# Pacotes principais
-library(tidyverse)    # Manipulação de dados
-library(data.table)   # Leitura eficiente de grandes arquivos
-library(BGLR)         # Modelagem Bayesiana para predição genômica
+# Core packages
+library(tidyverse)
+library(data.table)
+library(BGLR)
 
-# Paralelismo
-library(parallel)     
-library(doParallel)   
+# Parallel processing
+library(parallel)
+library(doParallel)
 
-# Funções estatísticas adicionais
-library(MASS)                                     # Funções estatísticas
-library(gridExtra) 
-library(grid) 
+# Statistical and plotting utilities
+library(MASS)
+library(gridExtra)
+library(grid)
+
+# Modular tutorial functions
+source("code/tutorial_functions.R")
 ```
 
 ## 2) Data Loading and Preprocessing
@@ -72,36 +75,19 @@ Primeiro, carregamos os arquivos brutos do disco.
 
 Dados fenotípicos com leituras espectrais e os blups
 
-```{r load-nir-data}
-# Carrega dados fenômicos (NIR)
-NIR <- fread("data/NIR.csv") %>% as.data.frame()
+```{r load-core-data}
+core_data <- load_core_data()
+NIR <- core_data$NIR
+Geno <- core_data$Geno
+Pheno <- core_data$Pheno
 
-# Visualização inicial
-head(NIR[, 1:7])    # primeiras colunas
-unique(NIR$Env)     # ambientes disponíveis
-```
-
-Dados genotípicos com marcadores SNP
-
-```{r load-genotipic-data}
-# Carrega dados genotípicos (SNPs processados pelo GAPIT)
-Geno <- fread("data/GAPIT.Genotype.Numerical.txt") %>% as.data.frame()
-
-# Visualização inicial
+# Quick inspection
+head(NIR[, 1:7])
 head(Geno[, 1:5])
-```
-
-Dados fenotipicos com BLUPs
-
-```{r load-blups}
-# Extrai as colunas de ID (Pedigree, Env) e as traits (GY, KW) do 
-# dataframe NIR para criar nosso dataframe 'Pheno' (fenótipos).
-Pheno <- NIR[, c("Pedigree", "Env", "GY", "KW")]  %>% 
-  arrange(Env, Pedigree) # Ordena os dados para consistência
-
-# Visualização inicial
 head(Pheno)
+unique(NIR$Env)
 ```
+
 
 ### 2.2) Alinhamento de Genótipos
 
@@ -112,21 +98,15 @@ Aqui, garantimos que todos os *dataframes* (`NIR`, `Geno`, `Pheno`) contenham **
 Filtra os dados para manter apenas os genótipos compartilhados em ambos os conjuntos
 
 ```{r filter-shared-genotypes}
-# Identifica genótipos compartilhados
-# A função 'intersect' encontra os IDs de genótipos (Pedigree/taxa) 
-# que estão presentes EM AMBOS os arquivos, Geno e NIR.
-Pedigree <- intersect(Geno$taxa, NIR$Pedigree)
+filtered <- filter_shared_genotypes(NIR, Geno, Pheno)
+NIR <- filtered$NIR
+Geno <- filtered$Geno
+Pheno <- filtered$Pheno
+Pedigree <- filtered$Pedigree
 
-# Filtra os dataframes para manter APENAS os genótipos compartilhados
-NIR   <- NIR[NIR$Pedigree %in% Pedigree, ]
-Geno  <- Geno[Geno$taxa %in% Pedigree, ]
-Pheno <- Pheno[Pheno$Pedigree %in% Pedigree, ]
-
-# Checagem de sanidade: verifica se o número de genótipos únicos
-# é o mesmo em todos os objetos de dados.
-cat("Genótipos em NIR:", length(unique(NIR$Pedigree)), "\n")
-cat("Genótipos em Geno:", length(Geno$taxa), "\n")
-cat("Genótipos em Pheno:", length(unique(Pheno$Pedigree)), "\n")
+cat("Genotypes in NIR:", length(unique(NIR$Pedigree)), "\n")
+cat("Genotypes in Geno:", length(Geno$taxa), "\n")
+cat("Genotypes in Pheno:", length(unique(Pheno$Pedigree)), "\n")
 ```
 
 ## 3) Dividindo os dados NIR por ambiente
@@ -138,27 +118,11 @@ Esta seção prepara os dados para essa análise, separando o *dataframe* `NIR` 
 Separa NIR em quatro subconjuntos (a, b, c, d), correspondentes aos ambientes CS11\_WS, CS11\_WW, CS12\_WS e CS12\_WW.
 
 ```{r preprocess-data}
-# Cria um dataframe separado para cada um dos quatro ambientes
-a <- NIR[NIR$Env == "CS11_WS", ]
-b <- NIR[NIR$Env == "CS11_WW", ]
-c <- NIR[NIR$Env == "CS12_WS", ]
-d <- NIR[NIR$Env == "CS12_WW", ]
-
-# Define nomes de linhas
-# Define o 'Pedigree' como o nome da linha (rownames).
-# Isso é essencial para alinhar matrizes e kernels posteriormente.
-rownames(a) <- a$Pedigree
-rownames(b) <- b$Pedigree
-rownames(c) <- c$Pedigree
-rownames(d) <- d$Pedigree
-
-# Ordena por Pedigree
-# Garante que as linhas em cada dataframe ambiental estejam
-# na mesma ordem alfabética de 'Pedigree'.
-a <- a[order(rownames(a)), ]
-b <- b[order(rownames(b)), ]
-c <- c[order(rownames(c)), ]
-d <- d[order(rownames(d)), ]
+env_split <- split_nir_by_environment(NIR)
+a <- env_split$a
+b <- env_split$b
+c <- env_split$c
+d <- env_split$d
 ```
 
 ### 3.1) Identificação de Genótipos Comuns a Todos os Ambientes
@@ -192,19 +156,9 @@ O passo crucial aqui é que, em vez de criar um kernel único para os 300+ genó
 O resultado, `ZG`, é uma grande matriz de parentesco (N total de observações x N total de observações) que representa a similaridade genômica entre todas as observações.
 
 ```{r zg}
-# Ordena os dados genotípicos por taxa
-Geno <- Geno[order(Geno$taxa), ]
-rownames(Geno) <- Geno$taxa
-Geno <- Geno[, -1]  # remove coluna taxa
-
-# Escalonamento por ambiente
-Geno.a <- scale(subset(Geno, rownames(Geno) %in% a$Pedigree), center = TRUE, scale = TRUE)
-Geno.b <- scale(subset(Geno, rownames(Geno) %in% b$Pedigree), center = TRUE, scale = TRUE)
-Geno.c <- scale(subset(Geno, rownames(Geno) %in% c$Pedigree), center = TRUE, scale = TRUE)
-Geno.d <- scale(subset(Geno, rownames(Geno) %in% d$Pedigree), center = TRUE, scale = TRUE)
-
-# Combina todos os ambientes
-Geno.all <- rbind(Geno.a, Geno.b, Geno.c, Geno.d)
+Geno.matrix <- prepare_geno_matrix(Geno)
+kernel_geno <- build_genomic_kernel(Geno.matrix, env_split)
+Geno.all <- kernel_geno$Geno.all
 dim(Geno.all)
 ```
 
@@ -236,14 +190,8 @@ Seguimos uma lógica **idêntica** à da seção anterior, mas desta vez usamos 
 O resultado, `ZP`, é uma matriz (N total x N total) que mede a **similaridade espectral** entre cada par de observações. A hipótese é que indivíduos com espectros NIR similares podem compartilhar características fisiológicas ou de composição, independentemente de seu parentesco genômico.
 
 ```{r zp}
-# Remove colunas de identificação
-NIR.a <- scale(a[,-c(1:5)],center=TRUE,scale=TRUE)
-NIR.b <- scale(b[,-c(1:5)],center=TRUE,scale=TRUE)
-NIR.c <- scale(c[,-c(1:5)],center=TRUE,scale=TRUE)
-NIR.d <- scale(d[,-c(1:5)],center=TRUE,scale=TRUE)
-
-# Combina todos os ambientes
-NIR.all <- rbind(NIR.a, NIR.b, NIR.c, NIR.d)
+kernel_pheno <- build_phenomic_kernel(env_split, first_predictor_col = 6)
+NIR.all <- kernel_pheno$NIR.all
 dim(NIR.all)
 ```
 
@@ -1903,23 +1851,20 @@ Esta é uma verificação de sanidade (*sanity check*). A execução da validaç
 Ele verifica se os objetos de dados fundamentais (`Pheno`, `Pedigree`) e as colunas de *traits* (`GY`, `KW`) estão presentes na memória. Se algo estiver faltando, o script irá parar agora com um erro claro, em vez de falhar horas depois no meio do processamento paralelo.
 
 ```{r data-checks}
-# Verificações básicas de consistência dos dados
-if (!exists("Pheno")) stop("Objeto `Pheno` não encontrado no ambiente.")
-if (!"Pedigree" %in% names(Pheno)) stop("Coluna 'Pedigree' não encontrada em Pheno.")
-if (!"GY" %in% names(Pheno)) stop("Coluna 'GY' não encontrada em Pheno (resposta).")
-if (!"KW" %in% names(Pheno)) stop("Coluna 'KW' não encontrada em Pheno (resposta).")
+# Basic consistency checks before long CV runs
+if (!exists("Pheno")) stop("`Pheno` object not found in the current environment.")
+if (!"Pedigree" %in% names(Pheno)) stop("Column `Pedigree` not found in Pheno.")
+if (!"GY" %in% names(Pheno)) stop("Column `GY` (response trait) not found in Pheno.")
+if (!"KW" %in% names(Pheno)) stop("Column `KW` (response trait) not found in Pheno.")
 
-# Se 'Pedigree' não existir como objeto, cria a partir de Pheno
 if (!exists("Pedigree")) Pedigree <- unique(Pheno$Pedigree)
-
-# Garante que não haja duplicatas
 Pedigree <- unique(Pedigree)
-
-# Número total de híbridos consistentes
 n_hybrids <- length(Pedigree)
-
-# Verificação extra: não pode ser zero
 stopifnot(n_hybrids > 0)
+
+sanity_table <- run_data_sanity_checks(NIR, Geno, Pheno)
+print(sanity_table)
+stopifnot(all(sanity_table$passed))
 ```
 
 ### 13.3) Pastas de saída
