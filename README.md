@@ -17,8 +17,6 @@ This tutorial repository contains code, data, and reports for integrating:
 
 into kernel-based predictive models for quantitative traits in plant breeding.
 
-The analytical strategy combines linear and nonlinear kernels (e.g., Gaussian and arc-cosine kernels) to represent additive and non-additive similarity structures across genotype, phenotype, and environment.
-
 ## Methodological components
 
 - Data loading and harmonization across sources (`NIR`, `Geno`, `Pheno`).
@@ -34,41 +32,38 @@ The analytical strategy combines linear and nonlinear kernels (e.g., Gaussian an
 ## Repository layout
 
 - `analysis/`: main R Markdown workflows and website source files.
-- `code/`: modular helper functions and automation scripts.
+- `code/`: modular R helper functions and automation scripts.
 - `data/`: raw tutorial datasets.
 - `output/`: generated matrices, intermediate artifacts, and predictive summaries.
 - `docs/`: rendered static site (GitHub Pages target).
 
-## Reproducibility setup
+## Reproducibility setup (R-only)
 
 ### R environment (`renv`)
 
-This repository now includes a starter `renv.lock` file as a dependency manifest template for tutorial use. To finalize and reproduce the R environment locally:
+This repository includes a starter `renv.lock` file as a dependency manifest template for tutorial use. To reproduce the R environment locally:
 
 ```r
 install.packages("renv")
 renv::restore()  # or renv::init(); renv::snapshot()
 ```
 
-### Python helper environment (`requirements.txt`)
+### Package manifest (`requirements.txt`)
 
-Install optional Python dependencies (used by automation helpers such as data sanity checks):
+`requirements.txt` is used here as a plain list of **R packages** used by the analyses and helper scripts.
 
-```bash
-python -m pip install -r requirements.txt
-```
-
-## Automated data sanity checks
+## Automated data sanity checks (R)
 
 Run the automated data checks script:
 
 ```bash
-python code/run_data_sanity_checks.py
+Rscript code/run_data_sanity_checks.R
 ```
 
-This script validates required columns, row/column counts, identifier overlap between NIR and genotype files, and known environment labels. A JSON report is saved to:
+This script validates required columns, sample IDs, duplicates, environment labels, and overlap between NIR and genotype IDs. Reports are saved to:
 
-- `output/data_sanity_report.json`
+- `output/data_sanity_report.csv`
+- `output/data_sanity_summary.csv`
 
 ## Data and DOI note
 

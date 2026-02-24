@@ -1,0 +1,10 @@
+check,passed
+nir_required_columns,TRUE
+geno_required_columns,TRUE
+pheno_required_columns,TRUE
+nir_missing_ids,TRUE
+geno_missing_ids,TRUE
+no_duplicate_nir_ids,FALSE
+no_duplicate_geno_ids,TRUE
+shared_ids_gt_zero,TRUE
+nir_has_known_environments,TRUE

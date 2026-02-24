@@ -39,8 +39,8 @@ This work was developed within the [Computational Intelligence and Statistical L
 ## Reproducibility notes
 
 - R dependencies can be managed with `renv` (`renv.lock`).
-- Python helper dependencies are listed in `requirements.txt`.
-- Automated data sanity checks are available in `code/run_data_sanity_checks.py`.
+- Dependencies are listed in `renv.lock` and `requirements.txt` (R package list).
+- Automated data sanity checks are available in `code/run_data_sanity_checks.R`.
 
 ## Contribution
 
