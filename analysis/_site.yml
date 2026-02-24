@@ -5,7 +5,7 @@ navbar:
   left:
   - text: Home
     href: index.html
-  - text: Climate date
+  - text: Climate data
     href: climate_data.html
   - text: Variance components
     href: variance_components.html

@@ -281,6 +281,63 @@ ggsave("output/climate_results/combined_climate_plot.tiff",
    dpi = 300)
 ```
 
+## Gráfico de todas variaveis
+
+```{r additional_plots, fig.width=10, fig.height=6}
+# Plot para Radiação Solar Diária
+p4 <- ggplot(texas_climate_data, aes(x = date, y = ALLSKY_SFC_SW_DWN)) +
+  geom_line(color = "orange", alpha = 0.8) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black") +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Daily Solar Radiation in College Station, TX (2011-2012)",
+    subtitle = "Dashed line represents the smoothed trend",
+    x = "Date",
+    y = "Solar Radiation (W/m²)"
+  ) +
+  theme_minimal() +
+  scale_x_date(date_labels = "%b", date_breaks = "1 month")
+
+# Plot para Velocidade do Vento Diária
+p5 <- ggplot(texas_climate_data, aes(x = date, y = WS2M)) +
+  geom_line(color = "purple", alpha = 0.8) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black") +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Daily Wind Speed in College Station, TX (2011-2012)",
+    subtitle = "Dashed line represents the smoothed trend",
+    x = "Date",
+    y = "Wind Speed (m/s)"
+  ) +
+  theme_minimal() +
+  scale_x_date(date_labels = "%b", date_breaks = "1 month")
+
+# Plot para RH2M
+p6 <- ggplot(texas_climate_data, aes(x = date, y = RH2M)) +
+  geom_line(color = "green", alpha = 0.8) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black") +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Daily Relative Humidity in College Station, TX (2011-2012)",
+    subtitle = "Dashed line represents the smoothed trend",
+    x = "Date",
+    y = "Relative Humidity (%)"
+  ) +
+  theme_minimal() +
+  scale_x_date(date_labels = "%b", date_breaks = "1 month")
+
+# Combine the additional plots using patchwork
+combined_additional_plots <- (p4 | p5) / p6 + plot_annotation(tag_levels = 'A')
+# Print the combined additional plots to the screen
+print(combined_additional_plots)
+# Save the combined additional plots to a single file
+ggsave("output/climate_results/combined_additional_climate_plots.tiff",
+   plot = combined_additional_plots,
+   width = 14,
+   height = 10,
+   dpi = 300)
+```
+
 
 ## 6. Criação das Covariáveis Ambientais (ECs)
 

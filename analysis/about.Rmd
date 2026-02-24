@@ -4,42 +4,78 @@ author:
   - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
-url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+url: https://wevertongomescosta.github.io/asq-rf-paper/
 output:
   workflowr::wflow_html:
     toc: FALSE
   highlight: github
 editor_options:
   chunk_output_type: console
-github-repo: wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+github-repo: wevertongomescosta/asq-rf-paper
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
 
 ## 📌 Sobre o Projeto | About the Project  
 
-Este repositório reúne e documenta os dados, códigos e análises utilizados no estudo **"Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Phenomic Prediction Using Kernel Methods"**, que investiga o potencial da integração de espectroscopia no infravermelho próximo (NIR) e dados genômicos para aprimorar a predição fenômica em programas de melhoramento genético.  
+Este repositório reúne e documenta os dados simulados, códigos e análises utilizados no estudo **"ASQ-RF: Adaptive Stacked Quantile Random Forest for Genomic Prediction"**, que propõe um método híbrido inovador para predição genômica capaz de se adaptar automaticamente a diferentes arquiteturas genéticas, incluindo epistasia.
 
-O conjunto de dados inclui:  
-- **Espectroscopia NIR**: leituras espectrais de amostras biológicas, abrangendo milhares de bandas no intervalo de 4.000 a 10.000 cm⁻¹, pré-processadas para remoção de ruído e correção de espalhamento.  
-- **Genótipo**: dados de marcadores SNP obtidos por tecnologias de sequenciamento de alta densidade e devidamente filtrados e imputados.  
-- **Fenótipo**: características agronômicas em múltiplos ambientes experimentais.  
-- **Ambiente**: informações sobre locais, anos, delineamentos experimentais e repetições.  
-- **Metadados**: estrutura experimental detalhada para permitir análises de variância multiambiente e modelagem de efeitos aleatórios.  
+O conjunto de dados foi gerado por simulação computacional e inclui:
 
-**Objetivo**: avaliar se a fusão de dados espectrais e genômicos, aliada a métodos de kernel, pode aumentar a acurácia da predição fenotípica, capturando relações não lineares e interações complexas entre genótipo, ambiente e espectro.  
+- **Genótipos**: população F2 simulada com 80 marcadores moleculares (40 por cromossomo) para 300 indivíduos, utilizando o pacote `qtl` do R.
+- **Fenótipos**: valores fenotípicos gerados sob três arquiteturas genéticas distintas:
+  - **Cenário aditivo**: 30 QTLs com efeitos pequenos e puramente aditivos.
+  - **Cenário epistático**: 10 pares de marcadores com interação do tipo "AND" (efeito apenas quando ambos são homozigotos).
+  - **Cenário misto**: 25 efeitos aditivos pequenos + 6 pares epistáticos.
+- **Herdabilidade**: fixada em 0,5 para todos os cenários, com adição de erro ambiental normalmente distribuído.
+- **Metadados**: estrutura de repetições (10 por cenário) para permitir avaliação robusta da acurácia preditiva.
+
+**Objetivo**: avaliar se o método ASQ-RF, que combina regressão quantílica adaptativa (seleção do melhor τ na grade 0,1 a 0,9 (passo 0,1) por AIC) com Florestas Aleatórias, pode superar o GBLUP tradicional na predição de fenótipos, especialmente em cenários com interações genéticas complexas.
+
+**Principais contribuições**:
+- Proposta de um pipeline adaptativo que transforma marcadores em "scores" otimizados por quantil.
+- Evidência de que a escolha dos quantis reflete a arquitetura genética subjacente.
+- Comparação sistemática com GBLUP em cenários controlados, demonstrando vantagens do ASQ-RF na presença de epistasia.
 
 Este projeto integra as atividades do [LICAE (Laboratório de Inteligência Computacional e Aprendizado Estatístico) da UFV](https://www.licae.ufv.br/).
 
 ---
 
-This repository compiles and documents the datasets, code, and analyses used in the study **"Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data for Improved Phenomic Prediction Using Kernel Methods"**, which investigates the potential of combining near-infrared reflectance spectroscopy (NIR) and genomic data to enhance phenomic prediction in plant breeding programs.  
+This repository compiles and documents the simulated data, code, and analyses used in the study **"ASQ-RF: Adaptive Stacked Quantile Random Forest for Genomic Prediction"**, which proposes an innovative hybrid method for genomic prediction capable of automatically adapting to different genetic architectures, including epistasis.
 
-The dataset includes:  
-- **NIR Spectroscopy**: spectral readings from biological samples, covering thousands of bands in the 4,000–10,000 cm⁻¹ range, preprocessed for noise removal and scatter correction.  
-- **Genotype**: SNP marker data obtained through high-density sequencing technologies, filtered and imputed.  
-- **Phenotype**: agronomic and yield traits measured across multiple experimental environments.  
-- **Environment**: information on locations, years, experimental designs, and replications.  
-- **Metadata**: detailed experimental structure enabling multi-environment variance component analysis and random effects modeling.  
+The dataset was generated through computer simulation and includes:
 
-**Goal**: assess whether merging spectral and genomic data, combined with kernel methods, can improve phenotypic prediction accuracy by capturing non-linear relationships and complex genotype × environment × spectrum interactions.  
+- **Genotypes**: simulated F2 population with 80 molecular markers (40 per chromosome) for 300 individuals, using the R package `qtl`.
+- **Phenotypes**: phenotypic values generated under three distinct genetic architectures:
+  - **Additive scenario**: 30 QTLs with small, purely additive effects.
+  - **Epistatic scenario**: 10 pairs of markers with "AND" type interaction (effect only when both are homozygous).
+  - **Mixed scenario**: 25 small additive effects + 6 epistatic pairs.
+- **Heritability**: fixed at 0.5 for all scenarios, with normally distributed environmental error added.
+- **Metadata**: replication structure (10 per scenario) to allow robust evaluation of predictive accuracy.
+
+**Objective**: to evaluate whether the ASQ-RF method, which combines adaptive quantile regression (selecting the best τ on the grid 0.1 to 0.9 (step 0.1) by AIC) with Random Forests, can outperform traditional GBLUP in phenotype prediction, especially in scenarios with complex genetic interactions.
+
+**Main contributions**:
+- Proposal of an adaptive pipeline that transforms markers into quantile-optimized "scores".
+- Evidence that quantile choice reflects the underlying genetic architecture.
+- Systematic comparison with GBLUP under controlled scenarios, demonstrating ASQ-RF advantages in the presence of epistasis.
 
 This project is part of the activities at the [LICAE Laboratory, UFV](https://www.licae.ufv.br/).
+
+
+## 🔬 Workflows disponíveis no projeto
+
+- **`analysis.Rmd`**: simulação controlada (cenários aditivo, epistático e misto) com comparação ASQ-RF vs GBLUP e diagnóstico da seleção de quantis.
+- **`analysis_data_genes.Rmd`**: aplicação usando dados simulados no software Genes, com validação repetida por variável fenotípica e os mesmos diagnósticos numéricos de estabilidade (falhas de QR e fallback para LM).
+
+Os dois fluxos foram preparados para execução em **R/RStudio**, priorizando reprodutibilidade via `renv` + `workflowr`.
+
+---
+
+**Repositório oficial | Official repository**:  
+[https://github.com/wevertongomescosta/asq-rf-paper](https://github.com/wevertongomescosta/asq-rf-paper)
+
+**Contato | Contact**:  
+Weverton Gomes da Costa – wevertonufv@gmail.com

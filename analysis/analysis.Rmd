@@ -1076,6 +1076,18 @@ Os modelos são agrupados por complexidade e pela hipótese que estão testando.
 | **... (etc.)** | *(Modelos equivalentes para PGK, GAK, PAK)* |
 | **E+W+GAK+PAK+GAKW+PAKW**| E+W + G/P (Arc-Kernel) + Ambas Interações G×W |
 
+*Subgrupo 2.2.3: Ambas Interações (G×E + G×W)*
+*(Hipótese: "Tanto a interação categórica (`GE`) quanto a baseada no clima (`GW`) capturam variações distintas e úteis.")*
+
+| Modelo | Estrutura de Efeitos |
+| :--- | :--- |
+| **E+W+G+GE+GW** | E+W + Genômico (Linear) + Ambas Interações |
+| **E+W+P+PE+PW** | E+W + Fenômico (Linear) + Ambas Interações |
+| **E+W+G+P+GE+PE+GW+PW** | E+W + G + P + Todas Interações |
+| **E+W+GGK+GGKE+GGKW** | E+W + G (Gaussiano) + Ambas Interações |
+| **... (etc.)** | *(Modelos equivalentes para PGK, GAK, PAK)* |
+| **E+W+GAK+PAK+GAKE+PAKE+GAKW+PAKW** | E+W + G/P (Arc-Kernel) + Todas Interações |
+
 **2.3: Modelos Climáticos sem Efeito Categórico (W substitui E)**
 *Objetivo:* Testar a hipótese mais forte: "O *kernel* climático `W` captura *toda* a variação ambiental relevante, tornando o efeito categórico `E` desnecessário."
 
@@ -1091,6 +1103,7 @@ Os modelos são agrupados por complexidade e pela hipótese que estão testando.
 | **W+GAK** | Clima (Kernel) + Genômico (Arc-Kernel) |
 | **W+PAK** | Clima (Kernel) + Fenômico (Arc-Kernel) |
 | **W+GAK+PAK** | Clima (Kernel) + G (Arc-Kernel) + P (Arc-Kernel) |
+
 
 ### 11.2) Tabela de classificação dos modelos
 
@@ -1110,7 +1123,7 @@ Este *dataframe* será "juntado" (`left_join`) aos nossos dados de resultados an
 ```{r model_info}
 # --- Cria a tabela de classificação dos modelos (Completa) ---
 model_info <- tibble(
-  ModelID = 1:62,
+  ModelID = 1:71,
   Model   = paste0("M", ModelID),
   Type = case_when(
 # Grupo 1: Modelos Base (Efeito Categórico E)
@@ -1125,8 +1138,11 @@ model_info <- tibble(
     # Grupo 3: Modelos Climáticos (W substitui E)
     ModelID %in% 46:54 ~ "Clima_Base_noE", # W + G/P (sem E fixo),
     
-    # Grrupo 4: Modelos individuais
+    # Grupo 4: Modelos individuais
     ModelID %in% c(55:62) ~ "Individual", 
+    
+    # Grupo 5: Todas as outras interações complexas
+    ModelID %in% c(63:71) ~ "Todas_interacoes",
     
     TRUE               ~ "Outros"
   ),
@@ -1210,6 +1226,17 @@ model_info <- tibble(
     ModelID == 60 ~ "GAK",
     ModelID == 61 ~ "PAK",
     ModelID == 62 ~ "W",
+    
+    # Bloco 10: (Item 11.5) Modelos com todas as interações
+    ModelID == 63 ~ "E + W + G + GE + GW",
+    ModelID == 64 ~ "E + W + P + PE + PW",
+    ModelID == 65 ~ "E + W + G + P + GE + PE + GW + PW",
+    ModelID == 66 ~ "E + W + GGK + GGKE + GGKW",
+    ModelID == 67 ~ "E + W + PGK + PGKE + PGKW",
+    ModelID == 68 ~ "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    ModelID == 69 ~ "E + W + GAK + GAKE + GAKW",
+    ModelID == 70 ~ "E + W + PAK + PAKE + PAKW",
+    ModelID == 71 ~ "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW",
     
     TRUE ~ as.character(ModelID) # Fallback
   )
@@ -1716,6 +1743,101 @@ Eta63 <- list(
 Eta64 <- list(
   W = list(K = ZW, model = "RKHS")
 )
+
+# -------------------------------------------------------------------
+# GRUPO 5: MODELOS COMPLETOS COM TODAS AS INTERAÇÕES
+# (Modelos Eta65 a Eta72)
+# -------------------------------------------------------------------
+
+# Modelo 65: E + W + G + GE + GW (Linear)
+Eta65 <- list(
+  E = list(X = ZE, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  G = list(K = ZG, model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  GW = list(K = ZGZW, model = "RKHS")
+)
+
+# Modelo 66: E + W + P + PE + PW (Linear)
+Eta66 <- list(
+  E = list(X = ZE, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  P = list(K = ZP, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS"),
+  PW = list(K = ZPZW, model = "RKHS")
+)
+
+# Modelo 67: E + W + G + P + GE + PE + GW + PW (Linear)
+Eta67 <- list(
+  E = list(X = ZE, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  G = list(K = ZG, model = "RKHS"),
+  P = list(K = ZP, model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS"),
+  GW = list(K = ZGZW, model = "RKHS"),
+  PW = list(K = ZPZW, model = "RKHS")
+)
+
+# Modelo 68: E + W + GGK + GGKE + GGKW (Gaussiano)
+Eta68 <- list(
+  E = list(X = ZE, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  GGK = list(K = GGK, model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  GGKW = list(K = GGKW, model = "RKHS")
+)
+
+# Modelo 69: E + W + PGK + PGKE + PGKW (Gaussiano)
+Eta69 <- list(
+  E = list(X = ZE, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  PGK = list(K = PGK, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS"),
+  PGKW = list(K = PGKW, model = "RKHS")
+)
+
+# Modelo 70: E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW (Gaussiano)
+Eta70 <- list(
+  E = list(X = ZE, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  GGK = list(K = GGK, model = "RKHS"),
+  PGK = list(K = PGK, model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS"),
+  GGKW = list(K = GGKW, model = "RKHS"),
+  PGKW = list(K = PGKW, model = "RKHS")
+)
+
+# Modelo 71: E + W + GAK + GAKE + GAKW (Arc-cosseno)
+Eta71 <- list(
+  E = list(X = ZE, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  GAK = list(K = GAK, model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  GAKW = list(K = GAKW, model = "RKHS")
+)
+
+# Modelo 72: E + W + PAK + PAKE + PAKW (Arc-cosseno)
+Eta72 <- list(
+  E = list(X = ZE, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  PAK = list(K = PAK, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS"),
+  PAKW = list(K = PAKW, model = "RKHS")
+)
+
+# Modelo 73: E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW (Arc-cosseno)
+Eta73 <- list(
+  E = list(X = ZE, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  GAK = list(K = GAK, model = "RKHS"),
+  PAK = list(K = PAK, model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS"),
+  GAKW = list(K = GAKW, model = "RKHS"),
+  PAKW = list(K = PAKW, model = "RKHS")
+)
 ```
 
 Para testar o **Grupo 1** (Modelos Base `E`), agrupamos os primeiros 18 modelos (`Eta1` a `Eta18`) em uma lista chamada `Models`. Esta lista pode ser usada para uma análise preliminar focada apenas nos modelos GxE categóricos.
@@ -1738,15 +1860,22 @@ Climate_Models <- list(Eta20, Eta21, Eta22, Eta23, Eta24, Eta25, Eta26, Eta27, E
                        Eta38, Eta39, Eta40, Eta41, Eta42, Eta43, Eta44, Eta45, Eta46,
                        Eta48, Eta49, Eta50, Eta51, Eta52, Eta53, Eta54, Eta55, Eta56)
 
+length(Climate_Models)  # Deve retornar 36
+
 # 2. Adicionamos os modelos de efeitos individuais (Grupo 4)
-Climate_Models <- c(Climate_Models, list(Eta57, Eta58, Eta59, Eta60, Eta61, Eta62, Eta63, Eta64))
+Climate_Models <- c(Climate_Models,
+                    list(Eta57, Eta58, Eta59, Eta60, Eta61, Eta62, Eta63,
+                         Eta64, Eta65, Eta66, Eta67, Eta68, Eta69, Eta70, 
+                         Eta71, Eta72, Eta73))
+
+length(Climate_Models)  # Deve retornar 53
 
 # 3. Finalmente, combinamos a lista original `Models` (Grupo 1) com a `Climate_Models`
 # para criar o "menu" completo de modelos.
 Models_full_set <- c(Models, Climate_Models)
 
 # Esta lista `Models_full_set` está pronta para ser usada no loop
-# de validação cruzada, permitindo uma comparação completa de todos os 62 modelos.
+# de validação cruzada, permitindo uma comparação completa de todos os 71 modelos.
 cat("Total de modelos a serem avaliados:", length(Models_full_set))
 ```
 
@@ -2031,7 +2160,7 @@ calc_cor_by_env <- function(df_with_yhat, trait_col) {
 
 # Cria grid de combinações: cada worker processa 1 modelo × 1 repetição
 # (Esta função não precisa de alteração)
-combos <- expand.grid(MODEL = 1:length(Models_full_set), REP = seq_len(num_rep), TRAIT = c("GY", "KW"))
+combos <- expand.grid(MODEL = 66:length(Models_full_set), REP = seq_len(num_rep), TRAIT = c("GY", "KW"))
 ```
 
 Esta é a **limpeza final** antes do *loop* de processamento principal. Usamos `setdiff(ls(), ...)` para obter uma lista de *tudo* o que está no ambiente, *exceto* os objetos essenciais que listamos (`Pheno`, `Models_full_set`, nossas funções, etc.).
@@ -2225,33 +2354,13 @@ foreach(i = seq_len(nrow(combos)),
             write.csv(CV00out,
                       file = file.path(
                         "output/results",
-                        paste0(
-                          "CV00_",
-                          TRAIT,
-                          "_",
-                          env_name,
-                          "_Eta",
-                          MODEL,
-                          "_rep",
-                          rep_num,
-                          ".csv"
-                        )
+                        paste0("CV00_", TRAIT, "_", env_name, "_Eta", MODEL, "_rep", rep_num, ".csv")
                       ),
                       row.names = FALSE)
             write.csv(CV0out,
                       file = file.path(
                         "output/results",
-                        paste0(
-                          "CV0_",
-                          TRAIT,
-                          "_",
-                          env_name,
-                          "_Eta",
-                          MODEL,
-                          "_rep",
-                          rep_num,
-                          ".csv"
-                        )
+                        paste0("CV0_", TRAIT, "_", env_name, "_Eta", MODEL, "_rep", rep_num, ".csv")
                       ),
                       row.names = FALSE)
           }
@@ -2528,15 +2637,17 @@ df_cor <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")
 # Cria gráfico de barras com erro padrão e rótulos
 
 p <- df_cor %>% 
-  filter(CV == "CV0" & Trait == "GY") %>% 
+  filter(CV == "CV0") %>% 
   mutate(Description = reorder(Description, ModelID)) %>%
+  filter(ModelID %in% c(7:12, 16:18, 63:71)) %>% 
+  droplevels() %>% 
   ggplot(aes(x = Description, y = M, fill = factor(Type))) +
   geom_bar(stat = "identity", position = position_dodge(), width = 0.8, show.legend = FALSE) +
   geom_errorbar(aes(ymin = M, ymax = M + SD),
                 width = .2,
                 position = position_dodge(.9)) +
   theme_bw() +
-  facet_wrap(. ~  Env_Val, nrow = 4) +  # Um painel para cada esquema de validação
+  facet_grid(Env_Val ~  Trait) +  # Um painel para cada esquema de validação
   scale_y_continuous("Prediction ability", limits = c(-0.1,1.25)) +
   scale_x_discrete("Models") +
   theme(axis.text.x = element_text(
@@ -2549,7 +2660,41 @@ p <- df_cor %>%
 # Exibe o gráfico
 p
 
-ggsave("output/Pred.ability/grafico_exemplo_GY_CV0.tiff",
+ggsave("output/Pred.ability/grafico_exemplo_CV0.tiff",
+       plot = p,
+       width = 8,
+       height = 8, dpi = 300)
+```
+
+```{r pred-ability-plot}
+df_cor <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")
+# Cria gráfico de barras com erro padrão e rótulos
+
+p <- df_cor %>% 
+  filter(CV == "CV00") %>% 
+  mutate(Description = reorder(Description, ModelID)) %>%
+  filter(ModelID %in% c(7:12, 16:18, 63:71)) %>% 
+  droplevels() %>% 
+  ggplot(aes(x = Description, y = M, fill = factor(Type))) +
+  geom_bar(stat = "identity", position = position_dodge(), width = 0.8, show.legend = FALSE) +
+  geom_errorbar(aes(ymin = M, ymax = M + SD),
+                width = .2,
+                position = position_dodge(.9)) +
+  theme_bw() +
+  facet_grid(Env_Val ~  Trait) +  # Um painel para cada esquema de validação
+  scale_y_continuous("Prediction ability", limits = c(-0.1,1.25)) +
+  scale_x_discrete("Models") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1,
+    size = 6
+  ))
+
+# Exibe o gráfico
+p
+
+ggsave("output/Pred.ability/grafico_exemplo_CV00.tiff",
        plot = p,
        width = 8,
        height = 8, dpi = 300)
@@ -2562,8 +2707,10 @@ df_cor <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")
 p <- df_cor %>% 
   group_by(Model, CV, Trait) %>% 
   summarise(M = mean(M, na.rm = TRUE), SD = sd(M, na.rm = TRUE)) %>% 
-  full_join(model_info) %>% 
-  ggplot(aes(x = reorder(Description, ModelID), y = M, fill = factor(Type))) +
+  full_join(model_info)  %>% 
+  filter(ModelID %in% c(7:12, 16:18, 63:71)) %>% 
+  droplevels() %>% 
+  ggplot(aes(x = reorder(Description, M), y = M, fill = factor(Type))) +
   geom_bar(stat = "identity", position = position_dodge(), width = 0.8, show.legend = FALSE) +
   geom_errorbar(aes(ymin = M, ymax = M + SD),
                 width = .2,
@@ -2573,8 +2720,8 @@ p <- df_cor %>%
   scale_y_continuous(limits = c(-0.1,1.25)) +
   #scale_x_discrete("Models") +
   theme(axis.text.x = element_text(
-    angle = 90,
-    vjust = 0.5,
+    angle = 60,
+    vjust = 1,
     hjust = 1,
     size = 6
   )) +
@@ -2633,6 +2780,8 @@ if (!dir.exists(output_dir)) {
 
 # Identificar todas as combinações únicas das colunas de interesse
 combinacoes <- df_cor %>%
+  filter(ModelID %in% c(7:12, 16:18, 63:71)) %>% 
+  droplevels() %>% 
   distinct(Trait, CV, Env_Val, Type)
 
 # Exibir as combinações encontradas (opcional, bom para verificação)
@@ -2800,7 +2949,8 @@ df_cor <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")
 # Cria gráfico de barras com erro padrão e rótulos
 
 p <- df_cor %>% 
-  filter(Trait == "GY") %>%
+  filter(ModelID %in% c(7:12, 16:18, 63:71)) %>% 
+  droplevels() %>% 
   #mutate(Description = forcats::fct_reorder(Description, ModelID)) %>%
   ggplot(aes(x = reorder(Description, ModelID), y = M, fill = factor(Type))) +
   geom_bar(stat = "identity", position = position_dodge(), width = 0.8, show.legend = FALSE) +
@@ -2808,7 +2958,7 @@ p <- df_cor %>%
                 width = .2,
                 position = position_dodge(.9)) +
   theme_bw() +
-  facet_grid(CV ~ .) +  # Um painel para cada esquema de validação
+  facet_grid(CV ~ Trait) +  # Um painel para cada esquema de validação
   scale_y_continuous("Prediction ability", limits = c(-0.1,1.25)) +
   scale_x_discrete("Models") +
   theme(axis.text.x = element_text(
@@ -2864,6 +3014,8 @@ if (!dir.exists(output_dir)) {
 
 # Identificar todas as combinações únicas das colunas de interesse
 combinacoes <- df_cor %>%
+  filter(ModelID %in% c(7:12, 16:18, 63:71)) %>% 
+  droplevels() %>% 
   distinct(Trait, CV, Type)
 
 # Exibir as combinações encontradas (opcional, bom para verificação)

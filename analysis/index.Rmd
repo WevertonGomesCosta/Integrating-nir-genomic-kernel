@@ -1,126 +1,81 @@
 ---
-title: "Integrating NIR Spectroscopy & Genomic Data"
+title: "ASQ-RF: Adaptive Stacked Quantile Random Forest for Genomic Prediction"
 author: 
   - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
-url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+url: https://wevertongomescosta.github.io/asq-rf-paper/
 output:
   workflowr::wflow_html:
     toc: FALSE
 editor_options:
   chunk_output_type: console
-github-repo: wevertongomescosta/Integrating-nir-genomic-kernel
+github-repo: wevertongomescosta/asq-rf-paper
 ---
 
-# Integrating NIR Spectroscopy & Genomic Data
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
 
-Bem-vindo! Este repositório reúne código, dados e relatórios associados ao estudo da **integração de espectroscopia no infravermelho próximo (NIR) e dados genômicos para aprimorar a predição fenômica**, utilizando métodos de kernel para capturar relações não lineares e interações complexas entre genótipo, ambiente e espectro.  
-O objetivo é avaliar se a fusão dessas fontes de dados pode aumentar a acurácia preditiva e apoiar programas de melhoramento genético mais eficientes.
+# ASQ-RF: Adaptive Stacked Quantile Random Forest
 
-## Publicação Associada
+Welcome! This repository contains code, simulated data, and reports on **ASQ-RF (Adaptive Stacked Quantile Random Forest)** , a novel hybrid method for genomic prediction that automatically adapts to different genetic architectures, including epistasis.
 
-Este trabalho faz parte do Projeto de Pesquisa:
+## Scientific objective
 
-- **Processo**:  
-- **Chamada**:  
-- **Período**:  
+The main objective is to evaluate whether combining adaptive quantile regression (selecting the best τ per marker via AIC over τ = 0.1, 0.2, ..., 0.9) with Random Forests can improve predictive accuracy for complex traits compared with the traditional GBLUP approach, especially in scenarios with non-additive genetic effects.
 
-## Sobre o LICAE
+## About the project context
 
-Este projeto foi desenvolvido no âmbito das pesquisas do [Laboratório de Inteligência Computacional e Aprendizado Estatístico (LICAE)](https://www.licae.ufv.br/) da Universidade Federal de Viçosa (UFV), especializado em aplicações avançadas de inteligência computacional e modelagem estatística em problemas genômicos complexos.
+This work was developed within the [Computational Intelligence and Statistical Learning Laboratory (LICAE)](https://www.licae.ufv.br/) at the Federal University of Viçosa (UFV), focusing on advanced statistical learning for genomic prediction.
 
-## Recursos Disponíveis
+## Available resources
 
-1. **Código de Análise**: Scripts R para pré-processamento, modelagem e avaliação.  
-2. **Dados**:  
-   - **NIR**: espectros pré-processados de amostras biológicas.  
-   - **Genotípicos**: SNPs de genótipos avaliados.  
-   - **Fenotípicos**: produtividade e características agronômicas.  
-   - **Ambientais**: informações de locais, anos e delineamentos experimentais.  
-3. **Notebooks**: Exemplos interativos de análise exploratória, modelagem preditiva e integração de dados.  
-4. **Visualizações**: Gráficos de acurácia (R²) dos modelos.
+1. **Simulation workflow (`analysis.Rmd`)**: [`analysis.html`](analysis.html) contains:
+   - environment setup and global parameters;
+   - core simulation function (`run_simulation`);
+   - parallel execution for additive, epistatic and mixed scenarios;
+   - accuracy and quantile-selection diagnostics, including QR failure and fallback rates.
+2. **Genes-based workflow (`analysis_data_genes.Rmd`)**: [`analysis_data_genes.html`](analysis_data_genes.html) contains:
+   - direct application to simulated files from Genes (`DG#gen_F2_Vfen.txt` and `genoma_mapa.txt`);
+   - repeated train/test validation by trait;
+   - the same quantile diagnostics used in the simulation workflow.
+3. **Data**:
+   - **Genotypes**: simulated F2 populations with 80 markers
+   - **Phenotypes**: traits generated under additive, epistatic, and mixed architectures
+   - **Metadata**: 10 replications per scenario for robust evaluation
+4. **Outputs**: prediction accuracy summaries and quantile selection diagnostics are saved in `output/` and embedded in the reports.
+5. **Website**: rendered reports in `docs/`.
 
-## Contribuição
+## Reproducibility notes
 
-Contribuições são bem-vindas mediante:  
-- Abertura de *issues* para discussão de melhorias  
-- Submissão de *pull requests* para correções críticas  
-- Sugestões de extensões metodológicas
-
-## Licença
-
-Este trabalho está licenciado sob [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).  
-Para uso comercial ou modificações significativas, contate os autores.
-
-## Contato
-
-**Coordenador**  
-Moyses Nascimento  
-Professor Adjunto - Departamento de Estatística - UFV  
-moysesnascim@ufv.br  
-
-**Bolsista**  
-Weverton Gomes da Costa  
-Pós-Doutorando - Departamento de Estatística - UFV  
-weverton.costa@ufv.br  
-
-**Laboratório LICAE**:  
-licae@ufv.br | [https://www.licae.ufv.br/](https://www.licae.ufv.br/)
-
----
-
-# Integrating NIR Spectroscopy & Genomic Data
-
-Welcome! This repository contains code, data, and reports related to the study of **integrating near-infrared reflectance spectroscopy (NIR) and genomic data to improve phenomic prediction**, using kernel methods to capture non-linear relationships and complex genotype × environment × spectrum interactions.  
-The goal is to assess whether merging these data sources can increase predictive accuracy and support more efficient breeding programs.
-
-## Associated Publication
-
-This work is part of the Research Project:
-
-- **Process**:  
-- **Call**:  
-- **Period**:  
-
-## About LICAE
-
-This project was developed within the research activities of the [Computational Intelligence and Statistical Learning Laboratory (LICAE)](https://www.licae.ufv.br/) at the Federal University of Viçosa (UFV), specialized in advanced computational intelligence and statistical modeling for complex genomic problems.
-
-## Available Resources
-
-1. **Analysis Code**: R scripts for preprocessing, modeling, and evaluation.  
-2. **Data**:  
-   - **NIR**: preprocessed spectra from biological samples.  
-   - **Genotypic**: SNP data from evaluated genotypes.  
-   - **Phenotypic**: yield and agronomic traits.  
-   - **Environmental**: location, year, and experimental design information.  
-3. **Notebooks**: Interactive examples of exploratory data analysis, predictive modeling, and data integration.  
-4. **Visualizations**: accuracy (R²) plots.
+- R dependencies can be managed with `renv` (see `renv.lock`).
+- Dependencies are also listed in `requirements.txt` (R package list, for use inside R/RStudio).
+- All simulations are cached to avoid recomputation when rebuilding the site.
 
 ## Contribution
 
-Contributions are welcome via:  
-- Opening issues for improvement discussions  
-- Submitting pull requests for critical fixes  
-- Suggesting methodological extensions
+Contributions are welcome through issues and pull requests, especially for:
+- methodological extensions,
+- reproducibility improvements,
+- documentation refinements.
 
 ## License
 
-This work is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).  
-For commercial use or significant modifications, please contact the authors.
+This project is licensed under [CC BY-NC-SA 4.0](license.html).
 
 ## Contact
 
-**Project Coordinator**  
+**Principal investigator**  
 Moyses Nascimento  
-Associate Professor – Department of Statistics – UFV  
-moysesnascim@ufv.br  
+Associate Professor - Department of Statistics - UFV  
+moysesnascim@ufv.br
 
-**Research Fellow**  
+**Research fellow**  
 Weverton Gomes da Costa  
-Post-Doctoral Researcher – Department of Statistics – UFV  
-weverton.costa@ufv.br  
+Postdoctoral Researcher - Department of Statistics - UFV  
+weverton.costa@ufv.br
 
-**LICAE Laboratory**:  
-licae@ufv.br | [https://www.licae.ufv.br/](https://www.licae.ufv.br/)
+**Laboratory**  
+LICAE - Computational Intelligence and Statistical Learning Laboratory  
+[www.licae.ufv.br](https://www.licae.ufv.br/) | licae@ufv.br

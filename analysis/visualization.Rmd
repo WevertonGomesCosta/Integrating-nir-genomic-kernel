@@ -1,0 +1,309 @@
+---
+title: "Visualização dos Resultados dos 18 Modelos Preditivos"
+author: "Weverton Gomes da Costa"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.width=10, fig.height=8)
+```
+
+## 1. Carregar Pacotes
+
+```{r pacotes}
+library(tidyverse)
+library(gridExtra)
+```
+
+## 2. Definir a Tabela de Descrição dos 18 Modelos
+
+Criamos um data frame com a identificação de cada modelo (M1 a M18), seu tipo e uma descrição legível.
+
+```{r model_info}
+model_info <- tibble(
+  ModelID = 1:18,
+  Model = paste0("M", ModelID),
+  Type = c(
+    rep("Base", 6),                # M1 a M6
+    rep("Interação E", 3),          # M7 a M9
+    rep("Clima + Interações", 9)    # M10 a M18
+  ),
+  Description = c(
+    "E + G + GE",
+    "E + P + PE",
+    "E + GGK + GGKE",
+    "E + PGK + PGKE",
+    "E + GAK + GAKE",
+    "E + PAK + PAKE",
+    "E + G + P + GE + PE",
+    "E + GGK + PGK + GGKE + PGKE",
+    "E + GAK + PAK + GAKE + PAKE",
+    "E + W + G + GE + GW",
+    "E + W + P + PE + PW",
+    "E + W + G + P + GE + PE + GW + PW",
+    "E + W + GGK + GGKE + GGKW",
+    "E + W + PGK + PGKE + PGKW",
+    "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    "E + W + GAK + GAKE + GAKW",
+    "E + W + PAK + PAKE + PAKW",
+    "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+  )
+)
+
+# Visualizar
+model_info
+```
+
+## 3. Consolidar Resultados dos Esquemas CV1 e CV2
+
+Os arquivos de CV1 e CV2 estão em `output/results/` com nomes como `CV1_GY_Eta1_rep1.csv`. Vamos listá-los, lê-los e extrair as informações.
+
+```{r consolidate_cv1_cv2}
+path_results <- "output/results"
+
+# Listar arquivos CV1 e CV2
+arquivos_cv <- list.files(path_results, pattern = "CV1_|CV2_", full.names = TRUE)
+
+# Função para ler e extrair metadados do nome do arquivo
+ler_arquivo_cv <- function(arq) {
+  nome <- basename(arq)
+  # Exemplo: "CV1_GY_Eta1_rep1.csv"
+  partes <- str_split(nome, "_")[[1]]
+  cv   <- partes[1]
+  trait <- partes[2]
+  model_raw <- partes[3]
+  rep_raw <- partes[4]
+  rep <- as.numeric(str_extract(rep_raw, "\\d+"))
+  model <- str_replace(model_raw, "Eta", "M")
+  
+  df <- read_csv(arq, show_col_types = FALSE) %>%
+    mutate(
+      CV = cv,
+      Trait = trait,
+      Model = model,
+      Rep = rep,
+      .before = 1
+    )
+  return(df)
+}
+
+# Aplicar a leitura a todos os arquivos e combinar
+df_cv1_cv2 <- map_dfr(arquivos_cv, ler_arquivo_cv)
+
+# Verificar
+glimpse(df_cv1_cv2)
+```
+
+## 4. Consolidar Resultados dos Esquemas CV0 e CV00
+
+Os arquivos de CV0 e CV00 incluem o ambiente no nome, ex: `CV0_GY_CS11_WS_Eta1_rep1.csv`.
+
+```{r consolidate_cv0_cv00}
+arquivos_cv0 <- list.files(path_results, pattern = "CV0_", full.names = TRUE)
+arquivos_cv00 <- list.files(path_results, pattern = "CV00_", full.names = TRUE)
+arquivos_loo <- c(arquivos_cv0, arquivos_cv00)
+
+ler_arquivo_loo <- function(arq) {
+  nome <- basename(arq)
+  # Ex: "CV0_GY_CS11_WS_Eta1_rep1.csv"
+  partes <- str_split(nome, "_")[[1]]
+  cv   <- partes[1]
+  trait <- partes[2]
+  env1 <- partes[3]
+  env2 <- partes[4]
+  env <- paste(env1, env2, sep = "_")
+  model_raw <- partes[5]
+  rep_raw <- partes[6]
+  rep <- as.numeric(str_extract(rep_raw, "\\d+"))
+  model <- str_replace(model_raw, "Eta", "M")
+  
+  df <- read_csv(arq, show_col_types = FALSE) %>%
+    mutate(
+      CV = cv,
+      Trait = trait,
+      Env_leave = env,
+      Model = model,
+      Rep = rep,
+      .before = 1
+    )
+  return(df)
+}
+
+df_cv0_cv00 <- map_dfr(arquivos_loo, ler_arquivo_loo)
+
+glimpse(df_cv0_cv00)
+```
+
+## 5. Calcular Médias e Desvios Padrão por Modelo e Cenário
+
+### 5.1 Para CV1 e CV2
+
+```{r summary_cv1_cv2}
+df_cv1_cv2_sum <- df_cv1_cv2 %>%
+  group_by(Model, CV, Trait, Env) %>%
+  summarise(
+    M = mean(cor, na.rm = TRUE),
+    SD = sd(cor, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  left_join(model_info, by = "Model")
+
+head(df_cv1_cv2_sum)
+```
+
+### 5.2 Para CV0 e CV00
+
+```{r summary_cv0_cv00}
+df_cv0_cv00_sum <- df_cv0_cv00 %>%
+  group_by(Model, CV, Trait, Env_leave, Env) %>%
+  summarise(
+    M = mean(cor, na.rm = TRUE),
+    SD = sd(cor, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  left_join(model_info, by = "Model")
+
+head(df_cv0_cv00_sum)
+```
+
+## 6. Gráficos de Barras
+
+### 6.1 Gráfico para CV1 e CV2 (agrupado por trait)
+
+```{r plot_cv1_cv2}
+p_cv1_cv2 <- df_cv1_cv2_sum %>%
+  mutate(Description = fct_reorder(Description, ModelID)) %>%
+  ggplot(aes(x = Description, y = M, fill = Type)) +
+  geom_col(position = position_dodge(), width = 0.8, show.legend = TRUE) +
+  geom_errorbar(aes(ymin = M, ymax = M + SD), width = 0.2, position = position_dodge(0.9)) +
+  facet_grid(Trait ~ CV) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8),
+    strip.text = element_text(size = 10, face = "bold"),
+    legend.position = "top"
+  ) +
+  labs(
+    x = "Modelo",
+    y = "Correlação preditiva (média ± dp)",
+    fill = "Tipo de modelo",
+    title = "Desempenho preditivo nos esquemas CV1 e CV2"
+  ) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2))
+
+print(p_cv1_cv2)
+ggsave("output/figuras/cv1_cv2_performance.tiff", p_cv1_cv2, width = 12, height = 8, dpi = 300)
+```
+
+### 6.2 Gráfico para CV0 e CV00 (facetado por ambiente deixado de fora)
+
+Como são muitos painéis, podemos fazer um gráfico para cada trait, ou facetar por ambiente.
+
+```{r plot_cv0_cv00}
+# Para CV0
+p_cv0 <- df_cv0_cv00_sum %>%
+  filter(CV == "CV0") %>%
+  mutate(Description = fct_reorder(Description, ModelID)) %>%
+  ggplot(aes(x = Description, y = M, fill = Type)) +
+  geom_col(position = position_dodge(), width = 0.8, show.legend = TRUE) +
+  geom_errorbar(aes(ymin = M, ymax = M + SD), width = 0.2, position = position_dodge(0.9)) +
+  facet_grid(Env_leave ~ Trait) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
+    strip.text = element_text(size = 8),
+    legend.position = "top"
+  ) +
+  labs(
+    x = "Modelo",
+    y = "Correlação preditiva (média ± dp)",
+    fill = "Tipo de modelo",
+    title = "CV0 - Ambiente completamente não observado"
+  ) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2))
+
+print(p_cv0)
+ggsave("output/figuras/cv0_performance.tiff", p_cv0, width = 14, height = 10, dpi = 300)
+
+# Para CV00
+p_cv00 <- df_cv0_cv00_sum %>%
+  filter(CV == "CV00") %>%
+  mutate(Description = fct_reorder(Description, ModelID)) %>%
+  ggplot(aes(x = Description, y = M, fill = Type)) +
+  geom_col(position = position_dodge(), width = 0.8, show.legend = TRUE) +
+  geom_errorbar(aes(ymin = M, ymax = M + SD), width = 0.2, position = position_dodge(0.9)) +
+  facet_grid(Env_leave ~ Trait) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
+    strip.text = element_text(size = 8),
+    legend.position = "top"
+  ) +
+  labs(
+    x = "Modelo",
+    y = "Correlação preditiva (média ± dp)",
+    fill = "Tipo de modelo",
+    title = "CV00 - Genótipos não observados no ambiente deixado de fora"
+  ) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2))
+
+print(p_cv00)
+ggsave("output/figuras/cv00_performance.tiff", p_cv00, width = 14, height = 10, dpi = 300)
+```
+
+### 6.3 (Opcional) Gráfico combinado CV0 + CV00 para cada trait
+
+Podemos unir os dois esquemas em um só gráfico com facetas.
+
+```{r plot_cv0_cv00_combined}
+p_loo <- df_cv0_cv00_sum %>%
+  mutate(Description = fct_reorder(Description, ModelID)) %>%
+  ggplot(aes(x = Description, y = M, fill = Type)) +
+  geom_col(position = position_dodge(), width = 0.8, show.legend = TRUE) +
+  geom_errorbar(aes(ymin = M, ymax = M + SD), width = 0.2, position = position_dodge(0.9)) +
+  facet_grid(Env_leave ~ Trait + CV) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
+    strip.text = element_text(size = 7),
+    legend.position = "top"
+  ) +
+  labs(
+    x = "Modelo",
+    y = "Correlação preditiva (média ± dp)",
+    fill = "Tipo de modelo",
+    title = "Desempenho nos esquemas leave-one-environment-out"
+  ) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2))
+
+print(p_loo)
+ggsave("output/figuras/loo_combined.tiff", p_loo, width = 16, height = 12, dpi = 300)
+```
+
+## 7. Tabelas Resumo (opcional)
+
+Podemos exportar as tabelas de médias para CSV.
+
+```{r export_tables}
+write_csv(df_cv1_cv2_sum, "output/tabelas/cv1_cv2_summary.csv")
+write_csv(df_cv0_cv00_sum, "output/tabelas/cv0_cv00_summary.csv")
+```
+
+## 8. Considerações Finais
+
+Os gráficos e tabelas gerados permitem comparar o desempenho dos 18 modelos nos diferentes cenários de validação cruzada. A ordenação dos modelos pela descrição facilita a identificação das combinações de kernels mais promissoras.
+```
+
+**Instruções para uso:**
+
+1. Certifique-se de que a pasta `output/results/` contenha todos os arquivos CSV gerados pelo script de predição.
+2. Execute o script em um ambiente R com os pacotes `tidyverse` e `gridExtra` instalados.
+3. Os gráficos serão salvos em `output/figuras/` (crie a pasta se necessário) e as tabelas resumo em `output/tabelas/`.
+4. Ajuste os limites do eixo Y (`scale_y_continuous`) se desejar visualizar valores negativos (caso ocorram correlações negativas). No script atual, o limite inferior é 0, mas pode ser alterado para, por exemplo, `limits = c(-0.2, 1)`.
+
+Este script fornece uma visualização clara e direta dos resultados, focada nos 18 modelos definidos anteriormente.
