@@ -1,7 +1,7 @@
 ---
 title: "Analysis of NIR and Genomic Kernel Integration"
 author: 
-  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Federal University of Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
@@ -29,13 +29,13 @@ This script focuses on the foundational stages of **data loading, quality contro
 
 ## 1) Load Required Libraries and Data
 
-Nesta etapa, carregamos nosso "kit de ferramentas" de pacotes R. Cada um deles é essencial para diferentes partes da análise:
+This section describes the corresponding methodological step in the workflow.
 
-  * `tidyverse`: Uma coleção de pacotes (como `dplyr` e `tidyr`) para a manipulação, limpeza e organização geral dos dados.
-  * `data.table`: Extremamente eficiente para ler e manipular arquivos de dados muito grandes, como nossas matrizes genômicas (SNPs) e espectrais (NIR).
-  * `BGLR`: O pacote central para a modelagem Bayesiana. Ele será usado posteriormente para ajustar os modelos de predição genômica usando os *kernels* que prepararemos.
-  * `parallel` & `doParallel`: Ferramentas para paralelizar nossos cálculos. Essenciais para rodar as análises de validação cruzada (CV) em tempo hábil.
-  * `MASS`: Contém funções estatísticas adicionais que podem ser úteis.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r load-libraries, message=FALSE}
 # Core packages
@@ -58,22 +58,22 @@ source("code/tutorial_functions.R")
 
 ## 2) Data Loading and Preprocessing
 
-Os dados utilizados nesta análise vêm de três fontes principais. O objetivo desta seção é carregá-los e garantir que estejam consistentes entre si.
+This section describes the corresponding methodological step in the workflow.
 
-### 2.1) Carregamento dos Dados
+### 2.1) Data Loading
 
-Primeiro, carregamos os arquivos brutos do disco.
+This section describes the corresponding methodological step in the workflow.
 
-  * **NIR.csv**: Este é um arquivo rico que contém múltiplos tipos de informação:
+This section describes the corresponding methodological step in the workflow.
     1.  IDs (`Pedigree`, `Env`).
-    2.  As variáveis de resposta (traits) que queremos prever, como `GY` (Produtividade) e `KW` (Peso de Grão), que provavelmente são BLUPs calculados anteriormente.
-    3.  As próprias leituras espectrais (bandas do NIR), que usaremos como preditores.
-  * **GAPIT.Genotype.Numerical.txt**: Contém os dados genotípicos.
-    1.  `taxa`: O ID do genótipo.
-    2.  Colunas de marcadores (SNPs) em formato numérico (ex: -1, 0, 1), que é o formato ideal para construir uma matriz de parentesco genômico (Kernel G).
-  * **Pheno**: Este objeto não é carregado de um arquivo. Em vez disso, ele é **extraído** do arquivo `NIR` para isolar as variáveis de resposta (fenótipos) que nossos modelos tentarão prever.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-Dados fenotípicos com leituras espectrais e os blups
+This section describes the corresponding methodological step in the workflow.
 
 ```{r load-core-data}
 core_data <- load_core_data()
@@ -89,13 +89,13 @@ unique(NIR$Env)
 ```
 
 
-### 2.2) Alinhamento de Genótipos
+### 2.2) Genotype Alignment
 
-Esta é uma etapa **crítica**. Nossos modelos assumem que a linha *i* da matriz genômica (`Geno`) corresponde ao indivíduo da linha *i* da matriz fenotípica (`Pheno`). Se os dados não estiverem perfeitamente alinhados, os resultados serão inválidos.
+This section describes the corresponding methodological step in the workflow.
 
-Aqui, garantimos que todos os *dataframes* (`NIR`, `Geno`, `Pheno`) contenham **exatamente o mesmo conjunto de genótipos**.
+This section describes the corresponding methodological step in the workflow.
 
-Filtra os dados para manter apenas os genótipos compartilhados em ambos os conjuntos
+This section describes the corresponding methodological step in the workflow.
 
 ```{r filter-shared-genotypes}
 filtered <- filter_shared_genotypes(NIR, Geno, Pheno)
@@ -109,13 +109,13 @@ cat("Genotypes in Geno:", length(Geno$taxa), "\n")
 cat("Genotypes in Pheno:", length(unique(Pheno$Pedigree)), "\n")
 ```
 
-## 3) Dividindo os dados NIR por ambiente
+## 3) Splitting NIR data by environment
 
-Para modelar as interações Genótipo-por-Ambiente (GxE), muitas vezes precisamos analisar os dados por ambiente ou construir *kernels* específicos para cada ambiente.
+This section describes the corresponding methodological step in the workflow.
 
-Esta seção prepara os dados para essa análise, separando o *dataframe* `NIR` (que contém os dados espectrais) em quatro subconjuntos, um para cada ambiente experimental.
+This section describes the corresponding methodological step in the workflow.
 
-Separa NIR em quatro subconjuntos (a, b, c, d), correspondentes aos ambientes CS11\_WS, CS11\_WW, CS12\_WS e CS12\_WW.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r preprocess-data}
 env_split <- split_nir_by_environment(NIR)
@@ -125,35 +125,35 @@ c <- env_split$c
 d <- env_split$d
 ```
 
-### 3.1) Identificação de Genótipos Comuns a Todos os Ambientes
+### 3.1) Identification of genotypes common to all environments
 
-Embora já tenhamos filtrado os genótipos comuns entre `Geno` e `NIR`, alguns genótipos podem não ter sido cultivados em *todos* os quatro ambientes.
+This section describes the corresponding methodological step in the workflow.
 
-Para análises de interação GxE que exigem dados balanceados (ou para criar a matriz de parentesco principal), geralmente usamos apenas o conjunto de genótipos que têm dados em *todos* os ambientes.
+This section describes the corresponding methodological step in the workflow.
 
-Identifica os genótipos presentes em todos os ambientes
+This section describes the corresponding methodological step in the workflow.
 
 ```{r shared-genotypes}
-# Identifica os genótipos presentes em todos os ambientes
-# 'Reduce(intersect, ...)' aplica a função 'intersect' cumulativamente
-# à lista de IDs de pedigree dos 4 ambientes (a, b, c, d) e do 'Geno'.
-# O resultado é a lista de genótipos que estão presentes em TODO LUGAR.
+# Tutorial step
+# Tutorial step
+# Tutorial step
+# Tutorial step
 Pedigree_communs <- Reduce(intersect, list(Geno$taxa, a$Pedigree, b$Pedigree, c$Pedigree, d$Pedigree))
-length(Pedigree_communs)  # Número de genótipos consistentes
+length(Pedigree_communs)  # Number of consistent genotypes
 ```
 
-## 4) Criando a matriz de relacionamento genômico (ZG)
+## 4) Building the genomic relationship matrix (ZG)
 
-Nesta seção, criamos o *kernel* genômico, `ZG`. Um "kernel" é fundamentalmente uma matriz de parentesco ou similaridade.
+This section describes the corresponding methodological step in the workflow.
 
-O passo crucial aqui é que, em vez de criar um kernel único para os 300+ genótipos únicos, estamos criando um kernel para as **observações** (genótipo *dentro* de um ambiente). A lógica é:
+This section describes the corresponding methodological step in the workflow.
 
-1.  **Ordenar e Preparar `Geno`**: Asseguramos que a matriz genômica (`Geno`) esteja ordenada alfabeticamente por genótipo (`taxa`), definimos os `rownames` e removemos a coluna de ID, deixando apenas os marcadores numéricos.
-2.  **Escalonar *Por* Ambiente**: Este é o passo mais importante. Usamos `scale(subset(Geno, ...))` para padronizar (centralizar e escalonar) os marcadores SNP. Note que isso é feito *separadamente* para o conjunto de genótipos em cada ambiente (a, b, c, d). Isso padroniza os alelos com base na média e variância daquele subconjunto específico de indivíduos.
-3.  **Empilhar (`rbind`)**: Combinamos as quatro matrizes genômicas escalonadas (Geno.a, Geno.b, Geno.c, Geno.d) em uma única matriz grande, `Geno.all`. A ordem das linhas em `Geno.all` agora corresponde à ordem das observações no *dataframe* `Pheno`.
-4.  **Calcular o Kernel (`tcrossprod`)**: Usamos o produto cruzado (`tcrossprod`) dividido pelo número de marcadores (`ncol`) para calcular a matriz de parentesco genômico (similar ao método 1 de VanRaden).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-O resultado, `ZG`, é uma grande matriz de parentesco (N total de observações x N total de observações) que representa a similaridade genômica entre todas as observações.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r zg}
 Geno.matrix <- prepare_geno_matrix(Geno)
@@ -163,7 +163,7 @@ dim(Geno.all)
 ```
 
 ```{r zg2, eval = FALSE}
-# Calcula matriz de relacionamento genômico
+# Tutorial step
 ZG <- tcrossprod(as.matrix(Geno.all)) / ncol(Geno.all)
 ```
 
@@ -171,23 +171,23 @@ ZG <- tcrossprod(as.matrix(Geno.all)) / ncol(Geno.all)
 ZG <- readRDS("output/Matrizes/ZG.rds")
 ```
 
-Uma rápida verificação das dimensões e dos primeiros elementos da matriz `ZG` para garantir que o cálculo foi bem-sucedido.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r zg-checagem}
-# Checagem
+# Tutorial step
 dim(ZG)
 ZG[1:5, 1:5]
 ```
 
-## 5) Criando a matriz de relacionamento fenômica (ZP)
+## 5) Building the phenomic relationship matrix (ZP)
 
-Seguimos uma lógica **idêntica** à da seção anterior, mas desta vez usamos os dados espectrais do NIR (que chamamos de 'P' de *phenomic* ou *proximal sensing*).
+This section describes the corresponding methodological step in the workflow.
 
-1.  **Preparar `NIR`**: Para cada ambiente (a, b, c, d), removemos as 5 primeiras colunas de metadados (IDs, traits) e usamos `scale()` para padronizar os valores de cada banda espectral.
-2.  **Empilhar (`rbind`)**: Combinamos as quatro matrizes NIR escalonadas em `NIR.all`.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 3.  **Calcular o Kernel (`tcrossprod`)**: Calculamos `ZP`.
 
-O resultado, `ZP`, é uma matriz (N total x N total) que mede a **similaridade espectral** entre cada par de observações. A hipótese é que indivíduos com espectros NIR similares podem compartilhar características fisiológicas ou de composição, independentemente de seu parentesco genômico.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r zp}
 kernel_pheno <- build_phenomic_kernel(env_split, first_predictor_col = 6)
@@ -196,7 +196,7 @@ dim(NIR.all)
 ```
 
 ```{r zp-2, eval = FALSE}
-# Calcula matriz de relacionamento fenômico
+# Tutorial step
 ZP <- tcrossprod(as.matrix(NIR.all)) / ncol(NIR.all)
 ```
 
@@ -204,123 +204,123 @@ ZP <- tcrossprod(as.matrix(NIR.all)) / ncol(NIR.all)
 ZP <- readRDS("output/Matrizes/ZP.rds")
 ```
 
-Novamente, verificamos as dimensões e o conteúdo da matriz `ZP`.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r zp-checagem}
-# Checagem
+# Tutorial step
 dim(ZP)
 ZP[1:5, 1:5]
 ```
 
-## 6) Criando a matriz de relacionamento ambiental (ZE)
+## 6) Building the environmental relationship matrix (ZE)
 
-Esta é a forma mais **simples** de criar um kernel ambiental.
+This section describes the corresponding methodological step in the workflow.
 
-1.  **Matriz de Incidência (`ZE`)**: `model.matrix` cria uma matriz "dummy" (ou *one-hot encoding*). Ela tem uma linha para cada observação e uma coluna para cada ambiente (4 colunas no total). Um valor '1' é colocado na coluna correspondente ao ambiente daquela observação.
-2.  **Kernel (`ZEZE`)**: Ao calcular `tcrossprod(ZE)`, criamos uma matriz (N total x N total) onde o elemento `[i, j]` é '1' se as observações *i* e *j* são do **mesmo ambiente**, e '0' caso contrário.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-Este kernel modela um efeito ambiental "clássico" (ou de bloco), onde todas as observações dentro de um mesmo ambiente são tratadas como 100% relacionadas entre si (em termos de ambiente) e 0% relacionadas a observações de outros ambientes.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r ze-zeze}
-# Cria matriz de incidência de ambientes (0/1)
+# Tutorial step
 ZE <- model.matrix(~ as.factor(Pheno$Env) - 1)
 
-# Calcula matriz de relacionamento ambiental (produto cruzado)
+# Tutorial step
 ZEZE <- tcrossprod(ZE)
 
 # Checagens
-cat("Dimensões da matriz ZE:", dim(ZE), "\n")
-cat("Dimensões da matriz ZEZE:", dim(ZEZE), "\n")
+cat("Dimensions of matrix ZE:", dim(ZE), "\n")
+cat("Dimensions of matrix ZEZE:", dim(ZEZE), "\n")
 
 # Visualiza primeiras linhas
 dim(ZE)
 ZEZE[1:5, 1:5]
 ```
 
-## 6.1) Criando a Matriz de Relacionamento Ambiental com Dados Climáticos (W)
+## 6.1) Building the environmental relationship matrix with climate covariates (W)
 
-Esta é uma abordagem muito mais **sofisticada** para modelar o ambiente, em vez de apenas usar os blocos da Seção 6. O objetivo é criar um kernel `ZW` (W de *Weather*, Clima) onde a similaridade entre duas observações é baseada na **similaridade climática real** dos seus ambientes.
+This section describes the corresponding methodological step in the workflow.
 
-A construção desta matriz `W` é complexa:
+This section describes the corresponding methodological step in the workflow.
 
-1.  **Carregar ECs**: Carregamos as Covariáveis Ambientais (ECs) do script anterior.
-2.  **Separar Dados**: O código inteligentemente separa os dados climáticos em dois tipos:
-      * **Agregados**: Dados que são um *único valor* para o ano (ex: `TMAX_AVG`, `GDD_CUM`). `ECs.2011` e `ECs.2012` armazenam esses vetores.
-      * **Diários**: Dados que têm um valor por dia (ex: `PRECTOTCORR`).
-3.  **Criar "Assinatura Climática"**: O `pivot_wider` é usado para transformar os dados *diários* de um formato "longo" (muitas linhas) para "largo". O resultado (`env_wide_2011`) é uma **única linha** (um vetor) que contém a "assinatura climática" completa daquele ano (ex: T2M\_dia1, T2M\_dia2, ..., T2M\_dia150).
-4.  **Construir Matriz por Observação**: Para cada observação (linha) em um ambiente (ex: ambiente 'a', que é 2011):
-      * Anexamos a "assinatura diária" de 2011 (replicada para aquela linha).
-      * Anexamos as colunas para os dados diários de 2012, preenchidas com `NA`.
-      * Anexamos o vetor de dados "agregados" de 2011.
-      * Isso é repetido para todos os ambientes (a, b, c, d), preenchendo com `NA` os anos que não se aplicam.
-5.  **Empilhar e Limpar**: `rbind` combina tudo na matriz `W`. `W[is.na(W)] <- 0` substitui os `NA`s por 0. Isso assume que a "não aplicabilidade" (ex: dados de 2012 para uma observação de 2011) contribui com 0 para a similaridade.
-6.  **Calcular Kernel `ZW`**: Finalmente, `tcrossprod(W)` cria o kernel. `ZW` é uma matriz (N total x N total) que mede a similaridade climática detalhada entre cada par de observações, usando tanto dados diários quanto agregados.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r load-ecs}
-# --- 1. Preparação Inicial dos Dados Climáticos (Feita uma vez) ---
+# Tutorial step
 
-# Carrega os dados climáticos
+# Tutorial step
 ECs_data <- read.csv("output/climate_results/environmental_covariates.csv") %>%
   dplyr::select(PRECTOTCORR:date, T_eff_min:VPD_STRESS_DAYS)
 
-# --- 2. Escalonamento dos Dados Climáticos (Feito 1x) ---
-# Seleciona apenas as covariáveis AGREGADAS (médias, somas)
+# Tutorial step
+# Tutorial step
 ECs_data_scaled <- ECs_data %>%
   dplyr::select(TMAX_AVG:VPD_STRESS_DAYS) %>%
   scale(., center = TRUE, scale = TRUE) %>% unique()
 
-# Cria ECs.2011 (1 linha com dados agregados e escalonados de 2011)
+# Tutorial step
 ECs.2011 <- matrix(ECs_data_scaled[1, ], nrow = 1)
 colnames(ECs.2011) <- colnames(ECs_data_scaled)
 
-# Cria ECs.2012 (1 linha com dados agregados e escalonados de 2012)
+# Tutorial step
 ECs.2012 <- matrix(ECs_data_scaled[2, ], nrow = 1)
 colnames(ECs.2012) <- colnames(ECs_data_scaled)
 
-# Prepara 2011: Filtra dados DIÁRIOS, extrai datas e escala
+# Tutorial step
 ECs.2011_filtered <- ECs_data %>% filter(year == 2011)
 ECs.2011_scaled <- ECs.2011_filtered %>%
   dplyr::select(-year, -date, -(TMAX_AVG:VPD_STRESS_DAYS)) %>%
   scale(. , center = TRUE, scale = TRUE)
 ECs.2011_dates <- ECs.2011_filtered$date
 
-# Prepara 2012: Filtra dados DIÁRIOS, extrai datas e escala
+# Tutorial step
 ECs.2012_filtered <- ECs_data %>% filter(year == 2012)
 ECs.2012_scaled <-    ECs.2012_filtered %>%
   dplyr::select(-year, -date, -(TMAX_AVG:VPD_STRESS_DAYS)) %>%
   scale(., center = TRUE, scale = TRUE)
 ECs.2012_dates <- ECs.2012_filtered$date
 
-# --- 3. Criar a Linha Única de Dados Climáticos "Largos" (Feito 2x) ---
+# Tutorial step
 
-# Cria o dataframe "largo" (1 linha) para 2011 (assinatura diária)
+# Tutorial step
 env_wide_2011 <- as.data.frame(ECs.2011_scaled) %>%
   mutate(date = ECs.2011_dates) %>%
   pivot_wider(names_from = date, values_from = -date)
 
-# Cria o dataframe "largo" (1 linha) para 2012 (assinatura diária)
+# Tutorial step
 env_wide_2012 <- as.data.frame(ECs.2012_scaled) %>%
   mutate(date = ECs.2012_dates) %>%
   pivot_wider(names_from = date, values_from = -date)
 
-# --- 4. Construção das Matrizes por Ambiente (em etapas) ---
+# Tutorial step
 
-# (Assumindo que os dataframes 'a', 'b', 'c', e 'd' já existem)
+# Tutorial step
 
-# Etapa A: Ambiente CS11_WS
+# Tutorial step
 pedigrees_a <- a$Pedigree
-ECs.a <- env_wide_2011[rep(1, length(pedigrees_a)), ] # Repete a assinatura diária de 2011
+ECs.a <- env_wide_2011[rep(1, length(pedigrees_a)), ] # Replicate the daily signature from 2011
 ECs.a <- cbind(ECs.a, matrix(
   NA,
   nrow = length(pedigrees_a),
   ncol = length(env_wide_2012),
   dimnames = list(pedigrees_a, colnames(env_wide_2012))
 ))  # Adiciona colunas NA para 2012
-ECs.a <- cbind(ECs.a, ECs.2011) %>% as.matrix() # Adiciona os dados agregados de 2011
+ECs.a <- cbind(ECs.a, ECs.2011) %>% as.matrix() # Add aggregated data from 2011
 rownames(ECs.a) <- pedigrees_a
 dim(ECs.a)
 
-# Etapa B: Ambiente CS11_WW
+# Tutorial step
 pedigrees_b <- b$Pedigree
 ECs.b <- env_wide_2011[rep(1, length(pedigrees_b)), ]
 ECs.b <- cbind(ECs.b, matrix(
@@ -328,25 +328,25 @@ ECs.b <- cbind(ECs.b, matrix(
   nrow = length(pedigrees_b),
   ncol = length(env_wide_2012),
   dimnames = list(pedigrees_b, colnames(env_wide_2012))
-))  # Adiciona dados de 2012
+))  # Add 2012 data
 ECs.b <- cbind(ECs.b, ECs.2011) %>% as.matrix()  
 rownames(ECs.b) <- pedigrees_b
 dim(ECs.b)
 
-# Etapa C: Ambiente CS12_WS
+# Tutorial step
 pedigrees_c <- c$Pedigree
-ECs.c <- env_wide_2012[rep(1, length(pedigrees_c)), ] # Repete a assinatura diária de 2012
+ECs.c <- env_wide_2012[rep(1, length(pedigrees_c)), ] # Replicate the daily signature from 2012
 ECs.c <- cbind(matrix(
   NA,
   nrow = length(pedigrees_c),
   ncol = length(env_wide_2011),
   dimnames = list(pedigrees_c, colnames(env_wide_2011))
 ),  ECs.c) # Adiciona colunas NA para 2011
-ECs.c <- cbind(ECs.c, ECs.2012) %>% as.matrix() # Adiciona os dados agregados de 2012
+ECs.c <- cbind(ECs.c, ECs.2012) %>% as.matrix() # Add aggregated data from 2012
 rownames(ECs.c) <- pedigrees_c
 dim(ECs.c)
 
-# Etapa D: Ambiente CS12_WW
+# Tutorial step
 pedigrees_d <- d$Pedigree
 ECs.d <- env_wide_2012[rep(1, length(pedigrees_d)), ]
 ECs.d <- cbind(matrix(
@@ -354,35 +354,35 @@ ECs.d <- cbind(matrix(
   nrow = length(pedigrees_d),
   ncol = length(env_wide_2011),
   dimnames = list(pedigrees_d, colnames(env_wide_2011))
-), ECs.d)  # Adiciona dados de 2011
+), ECs.d)  # Add 2011 data
 ECs.d <- cbind(ECs.d, ECs.2012) %>% as.matrix()
 rownames(ECs.d) <- pedigrees_d
 dim(ECs.d)
 
-# --- 5. Combinação e Criação da Matriz W ---
+# Tutorial step
 W <- rbind(ECs.a, ECs.b, ECs.c, ECs.d)
 
-# Verificação
+# Tutorial step
 dim(W)
 W[1:5, 1:5]
 
-# Substitui NAs por 0 para permitir o cálculo do tcrossprod
+# Tutorial step
 W[is.na(W)] <- 0
 
-# 6. Calcular a matriz de relacionamento
+# Tutorial step
 ZW <- tcrossprod(as.matrix(W)) / ncol(W)
 table(ZW[1,])
 
-# Visualização do Kernel Ambiental
+# Tutorial step
 dim(ZW)
 ZW[1:5, 1:5]
 ```
 
-## 7) Verificações Finais de Alinhamento
+## 7) Final alignment checks
 
-Antes de prosseguir para a modelagem, executamos algumas verificações cruciais.
+This section describes the corresponding methodological step in the workflow.
 
-Primeiro, uma verificação pontual (spot-check) para um genótipo específico ('A188') para ver se os dados parecem corretos e alinhados nas matrizes empilhadas.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r}
 Geno.all[str_detect(rownames(Geno.all), "A188"), 1:5]
@@ -390,13 +390,13 @@ W[str_detect(rownames(W), "A188"), 1:5]
 NIR.all[str_detect(rownames(W), "A188"), 1:5]
 ```
 
-Esta é a **verificação de alinhamento mais importante** da análise. Antes de passar os *kernels* para o BGLR, devemos garantir que todos eles (`ZW`, `ZG`, `ZP`) são:
+This section describes the corresponding methodological step in the workflow.
 
-1.  Quadrados (mesmo número de linhas e colunas).
-2.  Simétricos (nomes de linhas == nomes de colunas).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 3.  Perfeitamente alinhados entre si (nomes de linhas de ZW == nomes de linhas de ZG, etc.).
 
-Se todos os testes abaixo retornarem `TRUE`, nossos *kernels* estão perfeitamente alinhados e prontos para a modelagem.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r}
 all(rownames(ZW) == colnames(ZW))
@@ -414,7 +414,7 @@ all(unique(rownames(ZP)) == unique(colnames(ZP)))
 all(unique(rownames(ZW)) == unique(colnames(ZW)))
 ```
 
-Por fim, inspecionamos os cantos superiores esquerdos das três matrizes de relacionamento. Isso nos dá uma ideia visual dos valores de similaridade calculados e confirma que os `rownames` e `colnames` estão idênticos.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r}
 ZW[1:5, 1:5]
@@ -422,77 +422,77 @@ ZG[1:5, 1:5]
 ZP[1:5, 1:5]
 ```
 
-## 8) Interações
+## 8) Interactions
 
-Nesta seção, começamos a modelar as **interações**, como Genótipo-por-Ambiente (GxE) e Fenótipo-por-Ambiente (PxE). Estas interações são cruciais para entender como o desempenho de um genótipo (ou seu perfil NIR) muda em diferentes condições.
+This section describes the corresponding methodological step in the workflow.
 
-O método usado aqui é o **produto de Hadamard** (a multiplicação simples, elemento a elemento, `*` no R). A lógica é a seguinte:
+This section describes the corresponding methodological step in the workflow.
 
-  * `ZGZE = ZG * ZEZE`: Esta matriz representa a interação **Genômico × Ambiente (Categórico)**. Um elemento `[i, j]` nesta matriz só será diferente de zero se as observações *i* e *j* forem do **mesmo ambiente** (de `ZEZE`) *E* se elas estiverem **genomicamente relacionadas** (de `ZG`). Isso isola a variação genômica que é específica de cada ambiente.
-  * `ZPZE`: Da mesma forma, representa a interação **Fenômico/NIR × Ambiente (Categórico)**.
-  * `ZGZW` e `ZPZW`: Representam as interações **Genômico × Clima** e **Fenômico/NIR × Clima**. Esta é uma abordagem mais avançada, pois a força da interação não se baseia apenas em "estar no mesmo ambiente" (como `ZEZE`), mas na "similaridade climática real" (de `ZW`).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r interactions}
-# Interação genômica × ambiente
+# Tutorial step
 ZGZE <- ZG * ZEZE
 ZGZE[1:5, 1:5]
 
-# Interação fenômica × ambiente
+# Tutorial step
 ZPZE <- ZP * ZEZE
 ZPZE[1:5, 1:5]
 
-# Interação genômica × clima
+# Tutorial step
 ZGZW <- ZG * ZW
 ZGZW[1:5, 1:5]
 
-# Interação fenômica × clima
+# Tutorial step
 ZPZW <- ZP * ZW
 ZPZW[1:5, 1:5]
 ```
 
 ## 9) GK and AK kernels
 
-**Objetivo geral:** Os *kernels* lineares que criamos até agora (`ZG`, `ZP`) capturam apenas relações **aditivas**. No entanto, as interações biológicas são frequentemente **não-lineares**. Para capturar esses padrões complexos, construiremos dois tipos de *kernels* não-lineares. Estes *kernels* serão então usados para construir os modelos na seção 10.
+This section describes the corresponding methodological step in the workflow.
 
 **Tipos de kernels:**
 
-  * **GK (Gaussian Kernel):** Mede a similaridade usando uma função gaussiana da distância. É poderoso para capturar "relações locais", onde indivíduos muito similares têm uma relação muito mais forte do que indivíduos moderadamente similares.
-  * **AK (arc-cosseno Kernel):** Mede a similaridade com base no *ângulo* (correlação) entre os vetores dos indivíduos. É derivado da teoria de redes neurais e é eficaz na captura de padrões complexos e não-aditivos.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ### 9.1) Gaussian kernel (GK)
 
-Construir kernels baseados em funções de similaridade gaussiana, que capturam relações não lineares entre genótipos e fenótipos.
+This section describes the corresponding methodological step in the workflow.
 
-#### 9.1.1) Função de Otimização do Kernel Gaussiano
+#### 9.1.1) Gaussian kernel optimization function
 
-Antes de construir o *kernel*, precisamos encontrar o **hiperparâmetro de suavidade (`h`)** ideal. Um `h` errado pode fazer o modelo ter *overfitting* ou *underfitting*.
+This section describes the corresponding methodological step in the workflow.
 
-Esta função, `margh.fun`, é uma "função objetivo" que será usada por um otimizador (`optim`). Seu objetivo é encontrar o valor de `h` (e um parâmetro de escala `phi`) que **maximiza a log-verossimilhança marginal**.
+This section describes the corresponding methodological step in the workflow.
 
-Em termos simples: dado o nosso *kernel* candidato (`Kh`) e nossos dados fenotípicos (`y`), a função calcula o quão "prováveis" são os dados. O otimizador encontrará o `h` que torna os dados o mais provável possível.
+This section describes the corresponding methodological step in the workflow.
 
-  * `Kh <- exp(-h * D / q)`: Constrói o *kernel* gaussiano candidato.
-  * `eigenKh`: Realiza a decomposição espectral, um passo matemático necessário.
-  * `lden <- ...`: Calcula a log-verossimilhança marginal.
-  * `return(-(lden + lprior))`: Retorna o *negativo* da log-verossimilhança (pois os otimizadores, por padrão, *minimizam*).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r gk-functions}
-# Função de otimização do hiperparâmetro h
+# Tutorial step
 margh.fun <- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
                       nuh = NULL, Sch = NULL, prior = NULL) {
-  h <- theta[1]    # Parâmetro de suavidade do kernel
-  phi <- theta[2]  # Parâmetro de escala
+  h <- theta[1]    # Kernel smoothing parameter
+  phi <- theta[2]  # Scale parameter
   
   Kh <- exp(-h * D / q)  # Matriz kernel gaussiana
-  eigenKh <- eigen(Kh)   # Decomposição espectral
+  eigenKh <- eigen(Kh)   # Spectral decomposition
   
-  nr <- length(which(eigenKh$values > 1e-10))  # Número de componentes relevantes
+  nr <- length(which(eigenKh$values > 1e-10))  # Number of relevant components
   Uh <- eigenKh$vectors[, 1:nr]                # Autovetores
   Sh <- eigenKh$values[1:nr]                   # Autovalores
   
-  d <- t(Uh) %*% scale(y, scale = FALSE)    # Projeção dos dados
+  d <- t(Uh) %*% scale(y, scale = FALSE)    # Data projection
   
-  # Log-verossimilhança marginal
+  # Tutorial step
   lden <- -0.5 * sum(log(1 + phi * Sh)) -
     (nu + nr - 1) / 2 * log(Sc + sum(d^2 / (1 + phi * Sh)))
   
@@ -503,26 +503,26 @@ margh.fun <- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
     lprior <- 0
   }
   
-  return(-(lden + lprior))  # Retorna negativo da log-verossimilhança
+  return(-(lden + lprior))  # Return the negative log-likelihood
 }
 ```
 
-#### 9.1.2) Construindo o Kernel Gaussiano Genômico (GGK)
+#### 9.1.2) Building the genomic Gaussian kernel (GGK)
 
-Aqui, aplicamos a função de otimização aos nossos dados genômicos.
+This section describes the corresponding methodological step in the workflow.
 
-1.  `DG <- (as.matrix(dist(Geno)))^2`: Calcula a matriz de **distância** Euclidiana ao quadrado entre todos os **genótipos únicos** (ex: 300x300).
-2.  `DG_proj <- ...`: Este é um passo crucial. `DG` é uma matriz de genótipos únicos, mas nosso modelo precisa de um *kernel* no espaço das **observações** (ex: 1200x1200). Este código "projeta" a matriz de distância `DG` para o espaço de observação `Pheno` usando a matriz de incidência `Z`. O resultado `DG_proj[i, j]` conterá a distância genômica entre a observação *i* e a observação *j*.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 3.  `solG <- optim(...)`: Executa o otimizador (`optim`) usando `margh.fun` para encontrar o melhor `h` (baseado no trait `Pheno$GY`).
 4.  `hG <- solG$par[1]`: Extrai o valor `h` otimizado.
-5.  `GGK <- ...`: Constrói a matriz *kernel* `GGK` final usando o `hG` otimizado.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r ggk}
-# Distâncias genômicas
+# Tutorial step
 DG <- (as.matrix(dist(Geno)))^2
 q05G <- quantile(DG, 0.05)
 
-# Projeta DG para o espaço dos genótipos
+# Tutorial step
 IDs <- as.character(Pheno$Pedigree)
 DG <- DG[rownames(DG) %in% IDs, rownames(DG) %in% IDs]
 
@@ -533,7 +533,7 @@ DG_proj <- tcrossprod(ZD, Z)
 ```
 
 ```{r ggk-1, eval = FALSE}
-# Otimização
+# Tutorial step
 solG <- optim(c(1, 1), margh.fun, y = Pheno$GY, D = DG_proj, q = q05G,
               method = "L-BFGS-B", lower = c(0.05, 0.05), upper = c(6, 30))
 ```
@@ -545,27 +545,27 @@ solG <- readRDS("output/Matrizes/solG.RDS")
 ```{r ggk-2}
 hG <- solG$par[1]
 
-# Kernel genômico
+# Tutorial step
 GGK <- exp(-hG * DG_proj / median(DG_proj))
 ```
 
 ```{r ggk-checagem}
-# Checagem
+# Tutorial step
 dim(GGK)
 GGK[1:5,1:5]
 ```
 
-#### 9.1.3) Construindo o Kernel Gaussiano Fenômico (PGK)
+#### 9.1.3) Building the phenomic Gaussian kernel (PGK)
 
-Repetimos a mesma lógica, mas desta vez usando os dados espectrais (NIR).
+This section describes the corresponding methodological step in the workflow.
 
-1.  `DP <- (as.matrix(dist(NIR.all)))^2`: Calcula a matriz de distância Euclidiana ao quadrado diretamente dos dados espectrais (`NIR.all`). Como `NIR.all` já está no nível de observação (N total x N total), esta matriz `DP` já tem a dimensão correta.
-2.  `DP_proj <- ...`: Este passo projeta a matriz `DP` (apesar de já ter a dimensão correta), garantindo que ela esteja perfeitamente alinhada com os `rownames` das outras matrizes *kernel*.
-3.  `solP <- optim(...)`: Executa o otimizador para encontrar o `hP` ideal para os dados NIR.
-4.  `PGK <- ...`: Constrói o *kernel* `PGK` final usando o `hP` otimizado.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r pgk}
-# Distâncias fenômicas
+# Tutorial step
 DP <- (as.matrix(dist(NIR.all)))^2
 q05P <- quantile(DP, 0.05)
 
@@ -580,7 +580,7 @@ DP_proj <- tcrossprod(ZD, Z0)
 ```
 
 ```{r pgk-1, eval = FALSE}
-# Otimização
+# Tutorial step
 solP <- optim(c(1, 1), margh.fun, y = Pheno$GY, D = DP_proj, q = q05P,
               method = "L-BFGS-B", lower = c(0.05, 0.05), upper = c(6, 30))
 ```
@@ -592,24 +592,24 @@ solP <- readRDS("output/Matrizes/solP.RDS")
 ```{r pgk-2}
 hP <- solP$par[1]
 
-# Kernel fenômico
+# Tutorial step
 PGK <- exp(-hP * DP_proj / median(DP_proj))
 ```
 
 ```{r pgk-checagem}
-# Checagem
+# Tutorial step
 dim(PGK)
 PGK[1:5,1:5]
 ```
 
-#### 9.1.4) Interações com Kernels Gaussianos
+#### 9.1.4) Interactions with Gaussian Kernels
 
-Agora, podemos criar *kernels* de interação não-linear usando o produto de Hadamard com nossos novos *kernels* `GGK` e `PGK`. Isso nos permite modelar interações GxE e PxE **não-lineares**.
+This section describes the corresponding methodological step in the workflow.
 
-  * GGKE: interação genômico gaussiano × ambiente (categórico).
-  * PGKE: interação fenômico gaussiano × ambiente (categórico).
-  * GGKW: interação genômico gaussiano × clima.
-  * PGKW: interação fenômico gaussiano × clima.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r interactions-gk}
 GGKE    <- GGK * ZEZE
@@ -620,43 +620,43 @@ PGKW    <- PGK * ZW
 
 ### 9.2) Arc-cossin Kernels (AK)
 
-Este é um método alternativo para capturar não-linearidade. O *kernel* Arc-cosseno é baseado no **ângulo** (ou correlação) entre os vetores de características dos indivíduos.
+This section describes the corresponding methodological step in the workflow.
 
-Uma característica chave deste método é o "nível de recursão" (`nl`). Um `nl = 1` é como um modelo linear, mas `nl > 1` é análogo a adicionar camadas a uma rede neural, permitindo que o *kernel* capture padrões cada vez mais complexos.
+This section describes the corresponding methodological step in the workflow.
 
-#### 9.2.1) Funções Auxiliares do Kernel Arc-Cosseno
+#### 9.2.1) Arc-cosine kernel helper functions
 
-Precisamos de um conjunto de funções para construir e otimizar este *kernel*.
+This section describes the corresponding methodological step in the workflow.
 
-  * `AK1.fun(X)`: Constrói o *kernel* de nível 1 (base). Ele calcula a correlação, converte em ângulo (`acos`) e então calcula o *kernel* com base nesse ângulo.
-  * `AK.fun(AK1, nl)`: A função de recursão. Ela pega um *kernel* (como `AK1`) e aplica a transformação de arc-cosseno `nl` vezes.
-  * `marg.AK(y, AK1, ml)`: A função de otimização. Assim como `margh.fun`, ela usa a log-verossimilhança marginal. Ela testa iterativamente `nl = 1`, `nl = 2`, etc., até um máximo `ml`, e **retorna o nível `nl`** que maximizou a verossimilhança.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r ak-functions}
 ###############################################################
-# Código para AK (arc-cosseno Kernel)
-# Referência: Crossa et al., 2019
-# Objetivo: Ajustar um modelo de predição genômica usando kernel arc-cosseno
-# com seleção automática do nível de recursão e modelagem de interação G×E.
+# Tutorial step
+# Tutorial step
+# Tutorial step
+# Tutorial step
 ###############################################################
 
-# Função para calcular o kernel arc-cosseno de nível 1
+# Tutorial step
 AK1.fun <- function(X) {
   n <- nrow(X)
-  cosalfa <- cor(t(X))  # Correlação entre vetores
+  cosalfa <- cor(t(X))  # Correlation between vectors
   cosalfa[cosalfa > 1] <- 1
   cosalfa[cosalfa < -1] <- -1
-  angulo <- acos(cosalfa)  # Ângulo entre vetores
+  angulo <- acos(cosalfa)  # Angle between vectors
   mag <- sqrt(apply(X, 1, function(x) crossprod(x)))  # Magnitude dos vetores
   sxy <- tcrossprod(mag)  # Produto cruzado das magnitudes
   AK1 <- (1 / pi) * sxy * (sin(angulo) + (pi - angulo) * cosalfa)
-  AK1 <- AK1 / median(AK1, na.rm = TRUE)  # Normalização
+  AK1 <- AK1 / median(AK1, na.rm = TRUE)  # Normalization
   colnames(AK1) <- rownames(X)
   rownames(AK1) <- rownames(X)
   return(AK1)
 }
 
-# Função para selecionar o nível ótimo de recursão
+# Tutorial step
 marg.AK <- function(y, AK1, ml) {
   lden.fun <- function(phi, nr, Uh, Sh, d) {
     lden <- -0.5 * sum(log((1 + phi * Sh))) - (nr - 1) / 2 * log(sum(d^2 / ((1 + phi * Sh))))
@@ -693,10 +693,10 @@ marg.AK <- function(y, AK1, ml) {
     vero1 <- vero2
   }
   
-  return(l - 1)  # Retorna o nível ótimo de recursão
+  return(l - 1)  # Return the optimal recursion level
 }
 
-# Função para aplicar recursão ao kernel arc-cosseno
+# Tutorial step
 AK.fun <- function(AK1, nl) {
   n <- nrow(AK1)
   AK <- AK1
@@ -717,85 +717,85 @@ AK.fun <- function(AK1, nl) {
 }
 ```
 
-#### 9.2.2) Construindo o Kernel Arc-Cosseno Genômico (GAK)
+#### 9.2.2) Building the genomic arc-cosine kernel (GAK)
 
-1.  `GAK1 <- AK1.fun(Geno)`: Calcula o *kernel* base (`nl=1`) a partir dos dados dos **genótipos únicos**.
-2.  `G <- tcrossprod(...)`: Projeta o *kernel* `GAK1` (ex: 300x300) para o **espaço de observação** (ex: 1200x1200) para a otimização.
-3.  `Gl <- marg.AK(...)`: Executa a otimização para encontrar o **nível de recursão ótimo (`Gl`)** que melhor explica `Pheno$GY`.
-4.  `G.L <- tcrossprod(...)`: Projeta o *kernel* base `GAK1` para o espaço de observação final (similar ao passo 2).
-5.  `GAK <- AK.fun(...)`: Constrói o *kernel* **`GAK` final** aplicando a transformação de arc-cosseno `Gl` vezes.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r gak}
-# Calcula o kernel arc-cosseno de nível 1 com base na matriz de marcadores
+# Tutorial step
 GAK1 <- AK1.fun(Geno)
 dim(GAK1)
 GAK1[1:5, 1:5]
 
-# Seleciona os IDs do conjunto de dados
+# Tutorial step
 IDs <- as.character(Pheno[, "Pedigree"])
 GAK1 <- GAK1[rownames(GAK1) %in% IDs, rownames(GAK1) %in% IDs]
 
-# Projeta o kernel para o espaço dos genótipos de treino
+# Tutorial step
 IDs <- factor(IDs, levels = rownames(GAK1))
 Z <- as.matrix(model.matrix(~ IDs - 1))
 G <- tcrossprod(tcrossprod(Z, GAK1), Z)
 
-# Seleciona o nível ótimo de recursão
+# Tutorial step
 Gl <- marg.AK(y = Pheno$GY, AK1 = G, ml = 50)
 
-# Projeta o kernel para todos os indivíduos
+# Tutorial step
 IDs.L <- Pheno[, "Pedigree"]
 IDs.L <- factor(IDs.L, levels = rownames(GAK1))
 Z.L <- as.matrix(model.matrix(~ IDs.L - 1))
 G.L <- tcrossprod(tcrossprod(Z.L, GAK1), Z.L)
 
-# Aplica recursão
+# Tutorial step
 GAK <- AK.fun(AK1 = G.L, nl = Gl)
 ```
 
 ```{r gak-checagem}
-# Checagem
+# Tutorial step
 dim(GAK)
 GAK[1:5, 1:5]
 ```
 
-#### 9.2.3) Construindo o Kernel Arc-Cosseno Fenômico (PAK)
+#### 9.2.3) Building the phenomic arc-cosine kernel (PAK)
 
-Repetimos a lógica para os dados NIR.
+This section describes the corresponding methodological step in the workflow.
 
-1.  `PAK1 <- AK1.fun(NIR.all)`: Calcula o *kernel* base (`nl=1`) a partir dos dados espectrais (`NIR.all`).
+This section describes the corresponding methodological step in the workflow.
 2.  `P <- tcrossprod(...)`: Projeta/alinha o *kernel* `PAK1`.
-3.  `Pl <- marg.AK(...)`: Encontra o **nível de recursão ótimo (`Pl`)** para os dados NIR.
-4.  `P.L <- tcrossprod(...)`: Projeta o *kernel* base `PAK1` para o espaço de observação final.
-5.  `PAK <- AK.fun(...)`: Constrói o *kernel* **`PAK` final** aplicando a transformação `Pl` vezes.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r pak}
-# Calcula o kernel arc-cosseno de nível 1 com base na matriz fenômica
+# Tutorial step
 PAK1 <- AK1.fun(NIR.all)
 dim(PAK1)
 PAK1[1:5, 1:5]
 
-# Seleciona os IDs do conjunto de dados
+# Tutorial step
 IDs <- as.character(rownames(NIR.all))
 PAK1 <- PAK1[rownames(PAK1) %in% IDs, rownames(PAK1) %in% IDs]
 
-# Projeta o kernel para o espaço dos fenótipos
+# Tutorial step
 IDs <- IDs
 Z <- as.matrix(model.matrix(~ IDs - 1))
 Z0 <- tcrossprod(Z, Z)
 ZD <- tcrossprod(Z0, PAK1)
 P <- tcrossprod(ZD, Z0)
 
-# Seleciona o nível ótimo de recursão
+# Tutorial step
 Pl <- marg.AK(y = Pheno$GY, AK1 = P, ml = 50)
 
-# Projeta o kernel para todos os indivíduos
+# Tutorial step
 IDs.L <- rownames(NIR.all)
 Z.L <- as.matrix(model.matrix(~ IDs.L - 1))
 Z0.L <- tcrossprod(Z.L, Z.L)
 P.L <- tcrossprod(tcrossprod(Z0.L, PAK1), Z0.L)
 
-# Aplica recursão
+# Tutorial step
 PAK <- AK.fun(AK1 = P.L, nl = Pl)
 ```
 
@@ -804,273 +804,273 @@ dim(PAK)
 PAK[1:5, 1:5]
 ```
 
-#### 9.2.4) Interações com Arc-cosseno Kernels
+#### 9.2.4) Interactions with Arc-cosine Kernels
 
-Finalmente, criamos os *kernels* de interação não-linear finais usando o produto de Hadamard com `GAK` e `PAK`.
+This section describes the corresponding methodological step in the workflow.
 
-  * GAKE: interação GAK × Ambiente (Categórico).
-  * PAKE: interação PAK × Ambiente (Categórico).
-  * GAKW: interação GAK × Clima (Baseado em ECs).
-  * PAKW: interação PAK × Clima (Baseado em ECs).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r interaction-AK}
-# GAK × Ambiente
+# Tutorial step
 GAKE <- GAK * ZEZE
 GAKE[1:5,1:5]
 
-# PAK × Ambiente
+# Tutorial step
 PAKE <- PAK * ZEZE
 PAKE[1:5,1:5]
 
-# GAK × Ambiente
+# Tutorial step
 GAKW <- GAK * ZW
 GAKW[1:5,1:5]
 
-# PAK × Ambiente
+# Tutorial step
 PAKW <- PAK * ZW
 PAKW[1:5,1:5]
 ```
 
-## 10) Limpar o ambiente
+## 10) Clean environment
 
-Esta é uma etapa crucial de **gerenciamento de memória** e **checkpointing** (salvamento de progresso).
+This section describes the corresponding methodological step in the workflow.
 
-O processo de criação de *kernels* (especialmente os *kernels* GK e AK nas seções 8 e 9) é computacionalmente e intensivo em termos de memória. Ele cria muitos objetos intermediários grandes (ex: `DG`, `DP`, `solG`, `GAK1`, `Geno.a`, etc.) que não são mais necessários para a modelagem.
+This section describes the corresponding methodological step in the workflow.
 
-Se não limpássemos o ambiente, correríamos um sério risco de ficar sem RAM ao tentar ajustar os modelos `BGLR` na próxima seção.
+This section describes the corresponding methodological step in the workflow.
 
-A estratégia aqui é dupla:
+This section describes the corresponding methodological step in the workflow.
 
-1.  **Checkpointing (Cache):** Primeiro, identificamos todos os objetos *essenciais* que precisamos para a próxima etapa (nossos *kernels* finais e `Pheno`) na lista `keep_names`. Em seguida, salvamos cada um deles como um arquivo `.rds` individual. Isso atua como um ponto de salvamento. Se o R travar durante a modelagem, podemos reiniciar e carregar esses arquivos diretamente, sem ter que re-executar todo o script (o que poderia levar horas).
-2.  **Redefinição de Memória (Hard Reset):** Após salvar, o script remove *todos os outros objetos* (`to_remove`) da memória. Em seguida, ele chama o "coletor de lixo" (`gc()`) e **recarrega imediatamente** os arquivos `.rds` que acabamos de salvar. Este processo de salvar, limpar tudo e recarregar é a maneira mais robusta de garantir que o R libere toda a memória "lixo" e comece a próxima etapa com o ambiente mais limpo possível.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r keep_names, message = FALSE}
-# Liste aqui os objetos que deseja manter no ambiente:
+# Tutorial step
 keep_names <- c(
-  # matrizes / objetos para modelos
+  # Tutorial step
   "ZE", "ZG", "ZP", "ZGZE", "ZPZE", "ZW", "ZGZW", "ZPZW",
   # Kernels
   "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW", 
   "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW",
-  # outros objetos importantes
+  # other important objects
   "Pheno", "Pedigree"
 )
 
-# Confirmação (opcional): mostra o que será removido e o que será mantido
+# Tutorial step
 current_objs <- ls(envir = .GlobalEnv)
 to_keep <- intersect(current_objs, keep_names)
 to_remove <- setdiff(current_objs, to_keep)
 
-message("Objetos que serão mantidos (", length(to_keep), "): ", paste(to_keep, collapse = ", "))
-message("Objetos que serão removidos (", length(to_remove), "): ", paste(head(to_remove, 40), collapse = ", "),
+message("Objects to keep (", length(to_keep), "): ", paste(to_keep, collapse = ", "))
+message("Objects to remove (", length(to_remove), "): ", paste(head(to_remove, 40), collapse = ", "),
         if (length(to_remove) > 40) paste0(" ... (+", length(to_remove) - 40, " mais)"))
 
-# Salva cada objeto como .rds individualmente
+# Tutorial step
 for (obj_name in to_keep) {
   saveRDS(get(obj_name), file = file.path("output/Matrizes", paste0(obj_name, ".rds")))
 }
 
-# Executa remoção
+# Tutorial step
 rm(list = to_remove, envir = .GlobalEnv)
 gc()
 
-# Lista todos os arquivos .rds na pasta output/Matrizes
+# Tutorial step
 rds_files <- list.files("output/Matrizes", pattern = "\\.rds$", full.names = TRUE)
 
-# Carrega cada objeto e atribui ao ambiente global com seu nome original
+# Tutorial step
 for (file in rds_files) {
   obj_name <- tools::file_path_sans_ext(basename(file))
   assign(obj_name, readRDS(file), envir = .GlobalEnv)
 }
 
-# Confirmação opcional
+# Tutorial step
 message("Objetos carregados: ", paste(tools::file_path_sans_ext(basename(rds_files)), collapse = ", "))
 ```
 
 ## 11) Modelos preditivos
 
-Esta seção é o "plano de arquitetura" da nossa análise. Tendo passado todo o trabalho de criação de mais de uma dúzia de *kernels* (lineares, não-lineares e de interação), agora definimos formalmente os modelos que iremos testar.
+This section describes the corresponding methodological step in the workflow.
 
-O objetivo é comparar sistematicamente diferentes hipóteses:
-* O kernel NIR (`P`) é melhor que o genômico (`G`)?
-* Os *kernels* não-lineares (`GGK`, `GAK`) capturam mais variação do que os lineares?
-* A interação GxE categórica (`GE`) é suficiente, ou a interação baseada no clima (`GW`) é melhor?
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 * O que acontece quando combinamos *kernels* (ex: `G+P`)?
 
-### 11.1) Notação dos Efeitos
+### 11.1) Effect notation
 
-A notação padronizada abaixo descreve cada componente (ou "bloco de construção") que usaremos nos modelos. Cada um deles é uma matriz *kernel* que passaremos para o `BGLR`.
+This section describes the corresponding methodological step in the workflow.
 
-* **E** → Efeito principal de **Ambiente** (*Environment*), categórico. (Nosso kernel `ZEZE`).
-* **W** → Efeito principal do **Clima** (*Climate*), baseado no kernel de covariáveis ambientais. (Nosso kernel `ZW`).
-* **G** → Efeito **Genômico** (*Genomic*), kernel linear. (Nosso kernel `ZG`).
-* **P** → Efeito **Fenômico** (*Phenomic*, ex.: bandas NIRS), kernel linear. (Nosso kernel `ZP`).
-* **GGK** → Efeito **Genômico GK** (*Genomic Gaussian Kernel*). (Nosso kernel `GGK`).
-* **PGK** → Efeito **Fenômico GK** (*Phenomic Gaussian Kernel*). (Nosso kernel `PGK`).
-* **GAK** → Efeito **Genômico A-Kernel** (*Genomic Arc-Kernel*). (Nosso kernel `GAK`).
-* **PAK** → Efeito **Fenômico A-Kernel** (*Phenomic Arc-Kernel*). (Nosso kernel `PAK`).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-#### Interações com Ambiente Categórico (E)
+#### Interactions with Categorical Environment (E)
 
-Estes são os *kernels* de interação que usam o produto de Hadamard com `ZEZE`. Eles modelam a variação que é específica para um bloco ambiental (ex: CS11_WS).
+This section describes the corresponding methodological step in the workflow.
 
-* **GE** → Interação **Genômico × Ambiente** (G×E). (Kernel `ZGZE`).
-* **PE** → Interação **Fenômico × Ambiente** (P×E). (Kernel `ZPZE`).
-* **GGKE** → Interação **Genômico GK × Ambiente** (GGK×E). (Kernel `GGKE`).
-* **PGKE** → Interação **Fenômico GK × Ambiente** (PGK×E). (Kernel `PGKE`).
-* **GAKE** → Interação **Genômico A-Kernel × Ambiente** (GAK×E). (Kernel `GAKE`).
-* **PAKE** → Interação **Fenômico A-Kernel × Ambiente** (PAK×E). (Kernel `PAKE`).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-#### Interações com Ambiente Climático (W)
+#### Interactions with Climate Environment (W)
 
-Estes são os *kernels* de interação que usam o produto de Hadamard com `ZW`. Eles modelam a variação que é específica para *perfis climáticos* similares.
+This section describes the corresponding methodological step in the workflow.
 
-* **GW** → Interação **Genômico × Clima** (G×W). (Kernel `ZGZW`).
-* **PW** → Interação **Fenômico × Clima** (P×W). (Kernel `ZPZW`).
-* *(Outras interações como GGKW, PGKW, etc., seguem a mesma lógica.)*
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ---
 
 ### Estrutura dos Modelos
 
-Os modelos são agrupados por complexidade e pela hipótese que estão testando. Cada um será definido no `BGLR` como uma lista de *kernels*.
+This section describes the corresponding methodological step in the workflow.
 
-#### Grupo 1: Modelos Base (Ambiente Categórico E)
+#### Group 1: Baseline models (categorical environment E)
 
-**Hipótese:** "A variação ambiental é melhor explicada por blocos categóricos (E = `ZEZE`)."
+This section describes the corresponding methodological step in the workflow.
 
-**1.1: Modelos de Efeitos Principais**
-*Objetivo:* Testar cada *kernel* (G, P, GGK, PGK, etc.) isoladamente para ver qual deles, sozinho, melhor captura a variação não explicada pelo ambiente `E`.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-| Modelo | Estrutura de Efeitos |
+This section describes the corresponding methodological step in the workflow.
 | :--- | :--- |
-| **E+G** | Ambiente + Genômico (Linear) |
-| **E+P** | Ambiente + Fenômico (Linear) |
-| **E+GGK** | Ambiente + Genômico (Gaussiano) |
-| **E+PGK** | Ambiente + Fenômico (Gaussiano) |
-| **E+GAK** | Ambiente + Genômico (Arc-Kernel) |
-| **E+PAK** | Ambiente + Fenômico (Arc-Kernel) |
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-**1.2: Modelos com Interação G×E**
-*Objetivo:* Testar se adicionar um termo de interação GxE (baseado em `ZEZE`) ao seu respectivo efeito principal melhora a predição.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-| Modelo | Estrutura de Efeitos |
+This section describes the corresponding methodological step in the workflow.
 | :--- | :--- |
-| **E+G+GE** | Ambiente + Genômico + Interação G×E |
-| **E+P+PE** | Ambiente + Fenômico + Interação P×E |
-| **E+GGK+GGKE** | Ambiente + Genômico (Gaussiano) + Interação GGK×E |
-| **E+PGK+PGKE** | Ambiente + Fenômico (Gaussiano) + Interação PGK×E |
-| **E+GAK+GAKE** | Ambiente + Genômico (Arc-Kernel) + Interação GAK×E |
-| **E+PAK+PAKE** | Ambiente + Fenômico (Arc-Kernel) + Interação PAK×E |
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-**1.3: Modelos Combinados (G + P)**
-*Objetivo:* Testar se os *kernels* genômicos e fenômicos (NIR) capturam fontes de variação *diferentes* e, portanto, se sua combinação (`G+P`) é melhor do que qualquer um deles sozinho.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-| Modelo | Estrutura de Efeitos |
+This section describes the corresponding methodological step in the workflow.
 | :--- | :--- |
-| **E+G+P** | Ambiente + Genômico + Fenômico |
-| **E+GGK+PGK** | Ambiente + Genômico (Gaussiano) + Fenômico (Gaussiano) |
-| **E+GAK+PAK** | Ambiente + Genômico (Arc-Kernel) + Fenômico (Arc-Kernel) |
-| **E+G+P+GE+PE** | Ambiente + Genômico + Fenômico + Ambas Interações G×E |
-| **E+GGK+PGK+GGKE+PGKE** | Ambiente + G (Gaussiano) + P (Gaussiano) + Ambas Interações G×E |
-| **E+GAK+PAK+GAKE+PAKE** | Ambiente + G (Arc-Kernel) + P (Arc-Kernel) + Ambas Interações G×E |
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ---
 
-#### Grupo 2: Modelos com Covariáveis Climáticas (W)
+#### Group 2: Models with climate covariates (W)
 
-**Hipótese:** "A variação ambiental é melhor explicada por dados climáticos reais (W = `ZW`) do que por blocos categóricos."
+This section describes the corresponding methodological step in the workflow.
 
-**2.1: Modelos com Efeitos Climáticos Aditivos (E + W)**
-*Objetivo:* Testar se adicionar o *kernel* climático (`W`) como um efeito principal *adicional* (junto com `E`) melhora o modelo. Isso permite que o modelo capture tanto a variação do bloco `E` quanto a variação explicada pelo clima `W`.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-| Modelo | Estrutura de Efeitos |
+This section describes the corresponding methodological step in the workflow.
 | :--- | :--- |
-| **E+W** | Ambiente (Categórico) + Clima (Kernel) |
-| **E+W+G** | E+W + Genômico (Linear) |
-| **E+W+P** | E+W + Fenômico (Linear) |
-| **E+W+G+P** | E+W + Genômico + Fenômico |
-| **E+W+GGK** | E+W + Genômico (Gaussiano) |
-| **E+W+PGK** | E+W + Fenômico (Gaussiano) |
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 | **E+W+GGK+PGK** | E+W + G (Gaussiano) + P (Gaussiano) |
-| **E+W+GAK** | E+W + Genômico (Arc-Kernel) |
-| **E+W+PAK** | E+W + Fenômico (Arc-Kernel) |
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 | **E+W+GAK+PAK** | E+W + G (Arc-Kernel) + P (Arc-Kernel) |
 
-**2.2: Modelos Climáticos com Interações**
-*Objetivo:* Testar diferentes formas de interação na presença do *kernel* climático `W`.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-*Subgrupo 2.2.1: Interação Categórica (G×E) mantida*
-*(Hipótese: "Mesmo com W no modelo, a interação G×E categórica (`GE`) ainda captura variação útil que `W` não captura.")*
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-| Modelo | Estrutura de Efeitos |
+This section describes the corresponding methodological step in the workflow.
 | :--- | :--- |
-| **E+W+G+GE** | E+W + Genômico (Linear) + Interação G×E |
-| **E+W+P+PE** | E+W + Fenômico (Linear) + Interação P×E |
-| **E+W+G+P+GE+PE** | E+W + G + P + Ambas Interações G×E |
-| **E+W+GGK+GGKE** | E+W + G (Gaussiano) + Interação GGK×E |
-| **... (etc.)** | *(Modelos equivalentes para PGK, GAK, PAK)* |
-| **E+W+GAK+PAK+GAKE+PAKE** | E+W + G/P (Arc-Kernel) + Ambas Interações G×E |
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-*Subgrupo 2.2.2: Interação Climática (G×W)*
-*(Hipótese: "Uma interação baseada no clima real (`GW`) é uma forma mais precisa e parcimoniosa de modelar GxE do que a interação categórica `GE`.")*
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-| Modelo | Estrutura de Efeitos |
+This section describes the corresponding methodological step in the workflow.
 | :--- | :--- |
-| **E+W+G+GW** | E+W + Genômico (Linear) + Interação G×W |
-| **E+W+P+PW** | E+W + Fenômico (Linear) + Interação P×W |
-| **E+W+G+P+GW+PW** | E+W + G + P + Ambas Interações G×W |
-| **E+W+GGK+GGKW** | E+W + G (Gaussiano) + Interação GGK×W |
-| **... (etc.)** | *(Modelos equivalentes para PGK, GAK, PAK)* |
-| **E+W+GAK+PAK+GAKW+PAKW**| E+W + G/P (Arc-Kernel) + Ambas Interações G×W |
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-**2.3: Modelos Climáticos sem Efeito Categórico (W substitui E)**
-*Objetivo:* Testar a hipótese mais forte: "O *kernel* climático `W` captura *toda* a variação ambiental relevante, tornando o efeito categórico `E` desnecessário."
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-| Modelo | Estrutura de Efeitos |
+This section describes the corresponding methodological step in the workflow.
 | :--- | :--- |
 | **W** | Clima (Kernel) |
-| **W+G** | Clima (Kernel) + Genômico (Linear) |
-| **W+P** | Clima (Kernel) + Fenômico (Linear) |
-| **W+G+P** | Clima (Kernel) + Genômico + Fenômico |
-| **W+GGK** | Clima (Kernel) + Genômico (Gaussiano) |
-| **W+PGK** | Clima (Kernel) + Fenômico (Gaussiano) |
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 | **W+GGK+PGK** | Clima (Kernel) + G (Gaussiano) + P (Gaussiano) |
-| **W+GAK** | Clima (Kernel) + Genômico (Arc-Kernel) |
-| **W+PAK** | Clima (Kernel) + Fenômico (Arc-Kernel) |
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 | **W+GAK+PAK** | Clima (Kernel) + G (Arc-Kernel) + P (Arc-Kernel) |
 
-### 11.2) Tabela de classificação dos modelos
+### 11.2) Model classification table
 
-**Objetivo:** Criar um "dicionário" ou "tabela de consulta" para nossos modelos.
+This section describes the corresponding methodological step in the workflow.
 
-Nossos dados de resultados agora têm uma coluna `Model` com valores como "M1", "M2", ... "M62". Isso não é informativo. Para nossos gráficos e tabelas finais, queremos poder dizer que "M1" é "E + G" e que "M17" é "E + GGK + PGK + GGKE + PGKE".
+This section describes the corresponding methodological step in the workflow.
 
-Este bloco de código cria o *dataframe* `model_info`, que mapeia:
+This section describes the corresponding methodological step in the workflow.
 
-  * `ModelID`: O número (1-62)
-  * `Model`: O rótulo ("M1" - "M62")
-  * `Type`: Uma categoria de alto nível (ex: "Basico", "Clima\_IntW", "Individual")
-  * `Description`: O rótulo legível (ex: "E + G + GE")
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-Este *dataframe* será "juntado" (`left_join`) aos nossos dados de resultados antes da plotagem.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r model_info}
-# --- Cria a tabela de classificação dos modelos (Completa) ---
+# Tutorial step
 model_info <- tibble(
   ModelID = 1:62,
   Model   = paste0("M", ModelID),
   Type = case_when(
-# Grupo 1: Modelos Base (Efeito Categórico E)
+# Tutorial step
     ModelID %in% c(1:6, 13:15) ~ "Basico",      # E + G/P (efeitos principais)
     ModelID %in% c(7:12, 16:18) ~ "Interacao_E", # E + G/P + GxE/PxE
     
-    # Grupo 2: Modelos Climáticos (E + W)
+    # Tutorial step
     ModelID %in% 19:27 ~ "Clima_Base_E",   # E + W + G/P (efeitos principais)
     ModelID %in% 28:36 ~ "Clima_IntE",     # E + W + G/P + GxE/PxE
     ModelID %in% 37:45 ~ "Clima_IntW",     # E + W + G/P + GxW/PxW
     
-    # Grupo 3: Modelos Climáticos (W substitui E)
+    # Tutorial step
     ModelID %in% 46:54 ~ "Clima_Base_noE", # W + G/P (sem E fixo),
     
     # Grrupo 4: Modelos individuais
@@ -1079,7 +1079,7 @@ model_info <- tibble(
     TRUE               ~ "Outros"
   ),
   Description = case_when(
-    # Bloco 1: (Item 10) Modelos básicos (E + G/P)
+    # Tutorial step
     ModelID == 1  ~ "E + G",
     ModelID == 2  ~ "E + P",
     ModelID == 3  ~ "E + GGK",
@@ -1087,7 +1087,7 @@ model_info <- tibble(
     ModelID == 5  ~ "E + GAK",     # (Baseado em Eta5)
     ModelID == 6  ~ "E + PAK",
 
-    # Bloco 2: (Item 10) Modelos com interações categóricas (E + G/P + GxE/PxE)
+    # Tutorial step
     ModelID == 7  ~ "E + G + GE",
     ModelID == 8  ~ "E + P + PE",
     ModelID == 9  ~ "E + GGK + GGKE",
@@ -1095,12 +1095,12 @@ model_info <- tibble(
     ModelID == 11 ~ "E + GAK + GAKE", # (Baseado em Eta11)
     ModelID == 12 ~ "E + PAK + PAKE",
 
-    # Bloco 3: (Item 10) Modelos combinados (E + G + P)
+    # Tutorial step
     ModelID == 13 ~ "E + G + P",
     ModelID == 14 ~ "E + GGK + PGK",
     ModelID == 15 ~ "E + GAK + PAK",
 
-    # Bloco 4: (Item 10) Modelos combinados com interação categórica
+    # Tutorial step
     ModelID == 16 ~ "E + G + P + GE + PE",
     ModelID == 17 ~ "E + GGK + PGK + GGKE + PGKE",
     ModelID == 18 ~ "E + GAK + PAK + GAKE + PAKE",
@@ -1164,20 +1164,20 @@ model_info <- tibble(
 )
 ```
 
-## 12) Definição dos modelos preditivos
+## 12) Definition of predictive models
 
-Nesta seção, traduzimos nosso "plano de arquitetura" da Seção 11 em código. Cada modelo (Eta1, Eta2, etc.) é definido como um objeto `list` do R, que é o formato exato que o pacote `BGLR` exige para seu argumento `ETA` (preditor linear).
+This section describes the corresponding methodological step in the workflow.
 
-A sintaxe do `BGLR` que estamos usando é:
+This section describes the corresponding methodological step in the workflow.
 
-  * `list(X = ZE, model = "BRR")`: Usamos `BRR` (Bayesian Ridge Regression) para o efeito de ambiente `E`. Isso trata `E` como um efeito fixo (em um contexto Bayesiano) e passamos a matriz de incidência `ZE` como o preditor `X`.
-  * `list(K = ZG, model = "RKHS")`: Usamos `RKHS` (Reproducing Kernel Hilbert Spaces) para todos os nossos efeitos aleatórios (G, P, GxE, etc.). Isso instrui o `BGLR` a usar a nossa matriz *kernel* pré-calculada (ex: `ZG`) para o argumento `K`.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-Cada objeto `Eta` é uma "receita" de modelo que o `BGLR` irá ajustar.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r define-models}
 # -------------------------------------------------------------------
-# GRUPO 1: MODELOS BASE (EFEITO CATEGÓRICO 'E')
+# Tutorial step
 # (Modelos Eta1 a Eta18)
 # -------------------------------------------------------------------
 
@@ -1240,7 +1240,7 @@ Eta15 <- list(
   PAK = list(K = PAK, model = "RKHS")
 )
 
-# --- 1.2: Efeitos Principais + Interação GxE (E + G/P + GxE/PxE) ---
+# Tutorial step
 
 # Modelo 7: E + G + GE (Linear)
 Eta7 <- list(
@@ -1313,13 +1313,13 @@ Eta18 <- list(
 
 
 # -------------------------------------------------------------------
-# GRUPO 2: MODELOS CLIMÁTICOS (EFEITOS 'E' + 'W')
+# Tutorial step
 # (Modelos Eta19 a Eta46)
 # -------------------------------------------------------------------
 
 # --- 2.1: Efeitos Principais (E + W + G/P) ---
 
-# Modelo 19: E + W (Linha de base climática)
+# Tutorial step
 Eta19 <- list(
   E = list(X = ZE, model = "BRR"),
   W = list(K = ZW, model = "RKHS")
@@ -1391,7 +1391,7 @@ Eta28 <- list(
   PAK = list(K = PAK, model = "RKHS")
 )
 
-# --- 2.2: Interação com Ambiente Categórico (E + W + G/P + GxE/PxE) ---
+# Tutorial step
 
 # Modelo 29: E + W + G + GE (Linear)
 Eta29 <- list(
@@ -1471,7 +1471,7 @@ Eta37 <- list(
   PAKE = list(K = PAKE, model = "RKHS")
 )
 
-# --- 2.3: Interação com Ambiente Climático (E + W + G/P + GxW/PxW) ---
+# Tutorial step
 
 # Modelo 38: E + W + G + GW (Linear)
 Eta38 <- list(
@@ -1553,11 +1553,11 @@ Eta46 <- list(
 
 
 # -------------------------------------------------------------------
-# GRUPO 3: MODELOS CLIMÁTICOS (EFEITO 'W' SUBSTITUI 'E')
+# Tutorial step
 # (Modelos Eta47 a Eta56)
 # -------------------------------------------------------------------
 
-# Modelo 47: W (Apenas kernel climático)
+# Tutorial step
 Eta47 <- list(
   W = list(K = ZW, model = "RKHS")
 )
@@ -1620,67 +1620,67 @@ Eta56 <- list(
 )
 
 # -------------------------------------------------------------------
-# GRUPO 4: MODELOS DE EFEITOS INDIVIDUAIS (PARA COMPARAÇÃO)
+# Tutorial step
 # (Modelos Eta57 a Eta64)
 # -------------------------------------------------------------------
 
-# Modelo 57: E (Apenas efeito categórico de ambiente)
+# Tutorial step
 Eta57 <- list(
   E = list(X = ZE, model = "BRR")
 )
 
-# Modelo 58: G (Apenas genômico linear)
+# Tutorial step
 Eta58 <- list(
   G = list(K = ZG, model = "RKHS")
 )
 
-# Modelo 59: P (Apenas fenômico linear)
+# Tutorial step
 Eta59 <- list(
   P = list(K = ZP, model = "RKHS")
 )
 
-# Modelo 60: GGK (Apenas genômico gaussiano)
+# Tutorial step
 Eta60 <- list(
   GGK = list(K = GGK, model = "RKHS")
 )
 
-# Modelo 61: PGK (Apenas fenômico gaussiano)
+# Tutorial step
 Eta61 <- list(
   PGK = list(K = PGK, model = "RKHS")
 )
 
-# Modelo 62: GAK (Apenas genômico arc-cosseno)
+# Tutorial step
 Eta62 <- list(
   GAK = list(K = GAK, model = "RKHS")
 )
 
-# Modelo 63: PAK (Apenas fenômico arc-cosseno)
+# Tutorial step
 Eta63 <- list(
   PAK = list(K = PAK, model = "RKHS")
 )
 
-# Modelo 64: W (Apenas kernel climático)
-# Nota: Este é idêntico ao Eta47, incluído para consistência.
+# Tutorial step
+# Tutorial step
 Eta64 <- list(
   W = list(K = ZW, model = "RKHS")
 )
 ```
 
-Para testar o **Grupo 1** (Modelos Base `E`), agrupamos os primeiros 18 modelos (`Eta1` a `Eta18`) em uma lista chamada `Models`. Esta lista pode ser usada para uma análise preliminar focada apenas nos modelos GxE categóricos.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r consolidate-models}
-# Cada modelo combina diferentes efeitos: genômico, fenômico, ambiente e interações
+# Tutorial step
 Models <- list(Eta1, Eta2, Eta3, Eta4, Eta5, Eta6, Eta7, Eta8, Eta9, Eta10,
                Eta11, Eta12, Eta13, Eta14, Eta15, Eta16, Eta17, Eta18)
 length(Models)  # Deve retornar 18
 ```
 
-Para rodar a validação cruzada com os novos modelos, adicione-os à lista `Models`.
-Agora, vamos consolidar **todos** os modelos para a validação cruzada completa.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r consolidate-climate-models-comprehensive}
 # 1. Primeiro, agrupamos todos os modelos do Grupo 2 e Grupo 3
-# (aqueles que usam o kernel climático W) na lista `Climate_Models`.
+# Tutorial step
 Climate_Models <- list(Eta20, Eta21, Eta22, Eta23, Eta24, Eta25, Eta26, Eta27, Eta28,
                        Eta29, Eta30, Eta31, Eta32, Eta33, Eta34, Eta35, Eta36, Eta37,
                        Eta38, Eta39, Eta40, Eta41, Eta42, Eta43, Eta44, Eta45, Eta46,
@@ -1689,95 +1689,95 @@ Climate_Models <- list(Eta20, Eta21, Eta22, Eta23, Eta24, Eta25, Eta26, Eta27, E
 # 2. Adicionamos os modelos de efeitos individuais (Grupo 4)
 Climate_Models <- c(Climate_Models, list(Eta57, Eta58, Eta59, Eta60, Eta61, Eta62, Eta63, Eta64))
 
-# 3. Finalmente, combinamos a lista original `Models` (Grupo 1) com a `Climate_Models`
+# Tutorial step
 # para criar o "menu" completo de modelos.
 Models_full_set <- c(Models, Climate_Models)
 
-# Esta lista `Models_full_set` está pronta para ser usada no loop
-# de validação cruzada, permitindo uma comparação completa de todos os 62 modelos.
+# Tutorial step
+# Tutorial step
 cat("Total de modelos a serem avaliados:", length(Models_full_set))
 ```
 
-## 13) Cross-validação
+## 13) Cross-validation
 
-Esta é a seção de testes do projeto. O objetivo é avaliar rigorosamente a **capacidade preditiva** de todos os nossos modelos (Eta1 a Eta64) para determinar quais deles são realmente úteis.
+This section describes the corresponding methodological step in the workflow.
 
-Um modelo que apenas se ajusta bem aos dados existentes (bom *fit*) não é útil; ele precisa ser capaz de **prever dados que nunca viu**. Para simular isso, usamos a Validação Cruzada (CV).
+This section describes the corresponding methodological step in the workflow.
 
-Vamos implementar múltiplos esquemas de CV para simular diferentes desafios do mundo real no melhoramento:
+This section describes the corresponding methodological step in the workflow.
 
-  * **CV1: validação por genótipo (testa genótipos não observados).**
-      * *Pergunta:* O modelo pode prever o desempenho de um genótipo (híbrido) *completamente novo*, que não estava em *nenhum* ambiente de treinamento?
-  * **CV2: validação por célula (testa combinações genótipo × ambiente parcialmente observadas).**
-      * *Pergunta:* O modelo pode prever o desempenho de um genótipo *conhecido* em um ambiente *novo* para ele (assumindo que o genótipo foi visto em outros ambientes e o ambiente foi visto com outros genótipos)?
-  * **CV0: leave-one-environment-out (testa ambientes inteiros não observados).**
-      * *Pergunta:* O teste mais difícil. O modelo pode prever o desempenho de *todos* os genótipos em um *ambiente completamente novo* (um ano ou local que o modelo nunca viu)?
-  * **CV00: leave-one-environment-out (testa genótipos em ambientes não observados).**
-      * *Semelhante ao CV0*, focado em prever genótipos *dentro* de um ambiente não visto.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-### 13.0) Visualização dos esquemas de validação cruzada
+### 13.0) Visualization of cross-validation schemes
 
 
 ```{r example-cv}
 # ------------------------------------------------------------
-# Parâmetros gerais
+# Tutorial step
 # ------------------------------------------------------------
-n_geno <- 50  # número de genótipos
+n_geno <- 50  # number of genotypes
 n_env  <- 4
 envs <- paste0("Env ", 1:n_env)
 
 # ------------------------------------------------------------
-# Função para gerar estrutura de cada esquema CV
+# Tutorial step
 # ------------------------------------------------------------
 generate_cv_data <- function(type) {
   df <- expand.grid(Genotype = 1:n_geno, Env = envs)
   df$Test <- FALSE
   
   if (type == "CV2") {
-    # 20% dos genótipos testados (genótipo parcialmente testado)
+    # Tutorial step
     test_genos <- sample(1:nrow(df), nrow(df) * 0.2)
     df$Test[test_genos] <- TRUE
     
     
   } else if (type == "CV1") {
-    # 20% dos genótipos totalmente não vistos
+    # Tutorial step
     test_genos <- sample(1:n_geno, n_geno * 0.2)
     df$Test[df$Genotype %in% test_genos] <- TRUE
     
   } else if (type == "CV0") {
-    # Um ambiente completamente novo (Env 2)
+    # Tutorial step
     df$Test[df$Env == "Env 2"] <- TRUE
 
     
   } else if (type == "CV00") {
-    # Genótipos e ambiente totalmente novos (sem esses genótipos em outros ambientes)
+    # Tutorial step
     test_genos <- sample(1:n_geno, n_geno * 0.2)
     df$Test <- FALSE
     df <- df %>% 
       mutate(Test = ifelse(Env == "Env 2" & Genotype %in% test_genos, TRUE, FALSE)) %>%
-      filter(!(Genotype %in% test_genos & Env != "Env 2")) %>% # remove genótipos de teste dos outros ambientes
-      filter(!(Env == "Env 2" & !(Genotype %in% test_genos))) # mantém apenas genótipos de teste em Env 2
+      filter(!(Genotype %in% test_genos & Env != "Env 2")) %>% # remove test genotypes from other environments
+      filter(!(Env == "Env 2" & !(Genotype %in% test_genos))) # keep only test genotypes in Env 2
   }
   
-  # garantir ordem correta dos ambientes
+  # Tutorial step
   df$CV <- type
   df
 }
 
 # ------------------------------------------------------------
-# Gerar dados
+# Tutorial step
 # ------------------------------------------------------------
 cv_types <- c("CV2", "CV0", "CV1", "CV00")  # ordem original
 data <- do.call(rbind, lapply(cv_types, generate_cv_data))
 
 # ------------------------------------------------------------
-# Função para criar gráfico individual
+# Tutorial step
 # ------------------------------------------------------------
 plot_cv <- function(df, title) {
   ggplot(df, aes(x = as.character(Env), y = Genotype)) +
     # Linhas azuis finas de fundo apenas para pontos de treino
     geom_tile(data = subset(df, !Test), fill = "#5dade2", height = 0.4, width = 0.9) +
-    # Pontos pretos para observações de teste
+    # Tutorial step
     geom_point(data = subset(df, Test), color = "black", size = 2) +
     theme_minimal(base_size = 12) +
     theme(
@@ -1793,7 +1793,7 @@ plot_cv <- function(df, title) {
 }
 
 # ------------------------------------------------------------
-# Criar gráficos
+# Tutorial step
 # ------------------------------------------------------------
 p1 <- plot_cv(filter(data, CV == "CV2"), "CV2")
 p2 <- plot_cv(filter(data, CV == "CV0"), "CV0")
@@ -1801,7 +1801,7 @@ p3 <- plot_cv(filter(data, CV == "CV1"), "CV1")
 p4 <- plot_cv(filter(data, CV == "CV00"), "CV00")
 
 # ------------------------------------------------------------
-# Combinar gráficos com eixos globais
+# Tutorial step
 # ------------------------------------------------------------
 grid_arrange_shared_legend <- function(..., ncol = 2, nrow = 2, 
                                        x_label = "Environments", 
@@ -1825,30 +1825,30 @@ ggsave("output/cv-schemes.tiff", final_plot, width = 10, height = 8)
 ```
 
 
-### 13.1) Parâmetros para execução dos modelos
+### 13.1) Parameters for model execution
 
-Aqui, definimos os parâmetros tanto para o motor do `BGLR` (o amostrador MCMC) quanto para a estrutura da nossa validação cruzada.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r cv-params}
-# Parâmetros de execução do BGLR
-nIter  <- 5000   # número total de iterações da cadeia MCMC
-burnIn <- 1000   # número de iterações descartadas como burn-in
-thin   <- 10     # intervalo de amostragem para reduzir autocorrelação
-num_rep  <- 20   # número de repetições da validação cruzada
-num_fold <- 5    # número de folds em cada repetição
+# Tutorial step
+nIter  <- 5000   # total number of MCMC chain iterations
+burnIn <- 1000   # number of burn-in iterations discarded
+thin   <- 10     # sampling interval to reduce autocorrelation
+num_rep  <- 20   # number of cross-validation repetitions
+num_fold <- 5    # number of folds in each repetition
 ```
 
-  * **`nIter = 5000`**: O número total de "passos" que o algoritmo Bayesiano (MCMC) dará para estimar os parâmetros.
-  * **`burnIn = 1000`**: O número de passos iniciais que descartamos. Isso dá tempo ao modelo para "aquecer" e convergir para uma solução estável.
-  * **`thin = 10`**: Para economizar memória, só guardamos 1 em cada 10 passos (após o burn-in). Teremos (5000-1000)/10 = 400 amostras por parâmetro.
-  * **`num_rep = 20`**: Repetimos todo o processo de CV 20 vezes (com diferentes embaralhamentos aleatórios) para garantir que nossos resultados de acurácia não sejam devidos ao acaso.
-  * **`num_fold = 5`**: Em cada repetição, dividimos os dados em 5 partes ("folds"). O modelo treina em 4 partes (80% dos dados) e é testado na 1 parte restante (20%).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-### 13.2) Verificações rápidas
+### 13.2) Quick checks
 
-Esta é uma verificação de sanidade (*sanity check*). A execução da validação cruzada pode levar horas ou dias. Este bloco atua como uma **trava de segurança** (`stopifnot`).
+This section describes the corresponding methodological step in the workflow.
 
-Ele verifica se os objetos de dados fundamentais (`Pheno`, `Pedigree`) e as colunas de *traits* (`GY`, `KW`) estão presentes na memória. Se algo estiver faltando, o script irá parar agora com um erro claro, em vez de falhar horas depois no meio do processamento paralelo.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r data-checks}
 # Basic consistency checks before long CV runs
@@ -1867,39 +1867,39 @@ print(sanity_table)
 stopifnot(all(sanity_table$passed))
 ```
 
-### 13.3) Pastas de saída
+### 13.3) Output folders
 
-Vamos gerar milhares de arquivos de resultado (um para cada *fold* de cada *rep* de cada *modelo*). Este bloco de código simplesmente garante que as pastas de destino (`output/results` e `output/componentes_variancia`) existam.
+This section describes the corresponding methodological step in the workflow.
 
-`recursive = TRUE` cria a estrutura de pastas necessária (ex: `output/` e `output/results/` de uma só vez), e `showWarnings = FALSE` evita mensagens desnecessárias caso as pastas já tenham sido criadas.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r create-dirs}
-# Cria diretórios de saída para armazenar resultados
+# Tutorial step
 dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
 ```
 
-### 13.5) Funções auxiliares e ambientes de CV0/CV00
+### 13.5) Helper functions and CV0/CV00 environments
 
-Este bloco prepara as "ferramentas" que usaremos dentro do nosso *loop* de processamento paralelo.
+This section describes the corresponding methodological step in the workflow.
 
-  * **`envs_leaveout`**: Define os ambientes específicos que serão usados para os cenários de teste CV0 e CV00 (onde deixamos um ambiente inteiro de fora).
-  * **`run_bglr`**: Esta é uma função 'wrapper' (empacotadora) personalizada e **altamente otimizada**. A função `BGLR` padrão retorna objetos muito pesados. Para evitar sobrecarregar a memória em um *loop* paralelo, nossa `run_bglr` faz o seguinte:
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
     1.  Roda o `BGLR`.
     2.  Salva os arquivos de log do MCMC (via `saveAt`).
-    3.  Extrai *apenas* as métricas essenciais (predições `yHat`, variâncias médias) e as salva em um único arquivo `.rds` leve (`_metricas.rds`).
-    4.  Limpa o objeto `fit` pesado da memória (`rm(fit); gc()`).
-    5.  Retorna *apenas* o `yHat` (predições) e o tempo de execução para o *loop* principal.
-  * **`calc_cor_by_env`**: Uma função auxiliar simples que usaremos *após* a execução principal, para agregar os resultados e calcular a acurácia (correlação) dentro de cada ambiente.
-  * **`combos`**: Esta é a **"lista de tarefas" mestra** para o processamento paralelo. `expand.grid` cria uma tabela gigante onde cada linha é um "trabalho" (uma combinação única de `MODELO`, `REPETIÇÃO` e `TRAIT`). O *loop* `foreach` (na próxima seção) irá distribuir essas linhas pelos núcleos da CPU.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r functions-setup}
-# Ambientes a serem deixados de fora (leave-one-environment-out)
+# Tutorial step
 envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
 
-# --- FUNÇÃO OTIMIZADA ---
-# Função auxiliar: roda BGLR, salva MÉTRICAS RESUMIDAS e retorna predições + tempo
+# Tutorial step
+# Tutorial step
 run_bglr <- function(y2_vector, ETA, nIter, burnIn, thin, save_prefix) {
-  # y2_vector: vetor de resposta com NAs nos pontos a predizer
+  # Tutorial step
   y_t <- as.numeric(y2_vector)
   dir.create(dirname(save_prefix), recursive = TRUE, showWarnings = FALSE)
   
@@ -1911,8 +1911,8 @@ run_bglr <- function(y2_vector, ETA, nIter, burnIn, thin, save_prefix) {
   end_time <- Sys.time()
   elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
   
-  # 1. Extrair componentes de variância (varU) de forma dinâmica
-  #    Isto funciona para QUALQUER modelo (com 1 ou N efeitos)
+  # Tutorial step
+  #    This works for ANY model (with 1 or N effects)
   variancias_U <- list()
   if (!is.null(fit$ETA)) {
       nomes_efeitos <- names(fit$ETA)
@@ -1922,48 +1922,48 @@ run_bglr <- function(y2_vector, ETA, nIter, burnIn, thin, save_prefix) {
       
       for (i in seq_along(fit$ETA)) {
           efeito_nome <- nomes_efeitos[i]
-          # Armazena a variância média (pós-burnIn)
+          # Tutorial step
           if (!is.null(fit$ETA[[i]]$varU)) {
               variancias_U[[efeito_nome]] <- fit$ETA[[i]]$varU
           }
       }
   }
   
-  # 2. Criar o objeto de saída leve
+  # Tutorial step
   saida_essencial <- list(
-      yHat_mean = fit$yHat,        # Predições (média)
-      varE_mean = fit$varE,        # Variância residual (média)
+      yHat_mean = fit$yHat,        # Predictions (mean)
+      varE_mean = fit$varE,        # Residual variance (mean)
       # --- LINHA ADICIONADA ---
-      # Salva a variância dos efeitos fixos (varB), se ela existir
+      # Tutorial step
       varB_mean = ifelse(is.null(fit$varB), NA, fit$varB), 
       # --- FIM DA LINHA ADICIONADA ---
-      variances_U_mean = variancias_U, # Lista de variâncias dos kernels (média)
+      variances_U_mean = variancias_U, # List of kernel variances (mean)
       DIC = ifelse(is.null(fit$fit$DIC), NA, fit$fit$DIC),
       runtime_sec = elapsed
   )
   
-  # 3. Salvar este objeto de métricas leve (arquivo .rds minúsculo)
+  # Tutorial step
   #    Isso substitui o saveRDS(fit, ...)
   saveRDS(saida_essencial, paste0(save_prefix, "_metricas.rds"))
   
-  # --- FIM DAS MUDANÇAS ---
+  # Tutorial step
   
   # 4. Preparar o retorno para o 'foreach' (isto permanece igual)
-  #    O loop 'foreach' só precisa do yHat e do runtime
+  # Tutorial step
   retorno_foreach <- list(yHat = fit$yHat, runtime_sec = elapsed)
   
-  # 5. Limpar o objeto 'fit' pesado da memória imediatamente
+  # Tutorial step
   rm(fit, saida_essencial, variancias_U)
-  gc() # Força a "coleta de lixo"
+  gc() # Force garbage collection
   
-  # retorna lista com predições e tempo
+  # Tutorial step
   return(retorno_foreach)
 }
-# --- FIM DA FUNÇÃO OTIMIZADA ---
+# Tutorial step
 
 
-# Função auxiliar: calcula correlação observada vs predita por ambiente
-# (Esta função não precisa de alteração)
+# Tutorial step
+# Tutorial step
 calc_cor_by_env <- function(df_with_yhat, trait_col) {
   df_with_yhat %>%
     dplyr::group_by(Env) %>%
@@ -1974,17 +1974,17 @@ calc_cor_by_env <- function(df_with_yhat, trait_col) {
     as.data.frame()
 }
 
-# Cria grid de combinações: cada worker processa 1 modelo × 1 repetição
-# (Esta função não precisa de alteração)
+# Tutorial step
+# Tutorial step
 combos <- expand.grid(MODEL = 1:length(Models_full_set), REP = seq_len(num_rep), TRAIT = c("GY", "KW"))
 ```
 
-Esta é a **limpeza final** antes do *loop* de processamento principal. Usamos `setdiff(ls(), ...)` para obter uma lista de *tudo* o que está no ambiente, *exceto* os objetos essenciais que listamos (`Pheno`, `Models_full_set`, nossas funções, etc.).
+This section describes the corresponding methodological step in the workflow.
 
-Em seguida, `rm()` remove todo esse "lixo" intermediário. Isso garante que cada "trabalhador" paralelo (núcleo de CPU) seja iniciado com o mínimo de memória possível, dedicando todos os recursos ao ajuste do `BGLR`.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r}
-# Excluindo todos os objetos intermediários para liberar memória
+# Tutorial step
 rm(list = setdiff(ls(), c("Pheno", "Pedigree", "Models_full_set",
                          "nIter", "burnIn", "thin",
                          "num_rep", "num_fold",
@@ -1995,72 +1995,72 @@ rm(list = setdiff(ls(), c("Pheno", "Pedigree", "Models_full_set",
 
 ## 14) Ajuste de modelos
 
-Esta seção é o "motor" de toda a análise. Aqui, executamos o plano de validação cruzada definido na Seção 13.
+This section describes the corresponding methodological step in the workflow.
 
-### 14.1) Configuração do backend paralelo
+### 14.1) Parallel backend configuration
 
-**Por que isso é necessário?**
-Temos uma tarefa computacional enorme pela frente. O número total de modelos a ajustar é:
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-`64 Modelos` × `2 Traits` × `20 Repetições` × `5 Folds` = **12.800 execuções do BGLR** (para CV1/CV2)
+This section describes the corresponding methodological step in the workflow.
 
-...mais um número ainda maior para CV0/CV00. Fazer isso em um único núcleo de CPU levaria semanas.
+This section describes the corresponding methodological step in the workflow.
 
-Este bloco de código detecta quantos núcleos de processamento (`cores`) seu computador possui e reserva (quase) todos eles (`useCores`) para o trabalho. `doParallel::registerDoParallel(cl)` informa ao R para usar este "cluster" de núcleos para executar tarefas simultaneamente, acelerando drasticamente o processo.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r parallel-setup, warning=FALSE, message=FALSE}
-# Detecta número de núcleos disponíveis e configura backend paralelo
+# Tutorial step
 numCores <- parallel::detectCores()
-useCores <- max(1, numCores - 1)    # usa todos menos 1 núcleo
+useCores <- max(1, numCores - 1)    # use all cores except one
 cl <- parallel::makeCluster(useCores)
 doParallel::registerDoParallel(cl)
 
-cat("Rodando em ", useCores, " núcleos.")
+cat("Running on ", useCores, " cores.")
 ```
 
-`gc()` é chamado para "coletar o lixo" (liberar memória RAM não utilizada) antes de iniciar o trabalho pesado.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r}
-gc()  # Limpa memória antes da execução paralela
+gc()  # Clear memory before parallel execution
 ```
 
-### 14.2) Execução dos modelos em paralelo
+### 14.2) Parallel model execution
 
-Este é o coração da análise. O *loop* `foreach` itera sobre cada linha da nossa "lista de tarefas" mestra (`combos`). Graças ao `doParallel`, cada iteração (um "trabalho") é enviada para um núcleo de CPU diferente para ser executada simultaneamente.
+This section describes the corresponding methodological step in the workflow.
 
-**Dentro de cada iteração paralela (para cada núcleo):**
+This section describes the corresponding methodological step in the workflow.
 
-1.  **Identificar o Trabalho**: O *worker* identifica qual `MODEL`, `rep_num` e `TRAIT` ele deve processar (ex: Modelo 10, Repetição 5, Trait "GY").
-2.  **Criar Folds (CV1/CV2)**: O *worker* cria os 5 *folds* (partições) para os genótipos. `train_geno` e `test_geno` são definidos.
-3.  **Loop Interno (por Fold)**: O *worker* então itera através de cada um dos 5 *folds*.
-      * **Mascarar Dados (CV1/CV2)**: Ele cria `yield$Y2`. Este vetor é uma cópia dos fenótipos onde todas as observações dos genótipos em `test_geno` são definidas como `NA`.
-      * **Ajustar Modelo (CV1/CV2)**: O `BGLR` é chamado usando `yield$Y2` como resposta. O `BGLR` irá "preencher" (prever) os valores `NA`.
-      * **Coletar Resultados (CV1/CV2)**: As predições (`yhat`) são extraídas. `df_test` contém as predições para os genótipos de validação (que eram `NA`). `df_train` contém as predições para os genótipos de treinamento. A acurácia (correlação) é calculada para ambos e armazenada em `CV1_list` e `CV2_list`.
-      * **Mascarar Dados (CV0/CV00)**: Um segundo conjunto de máscaras é criado (`yield2$Y2`). Ele é semelhante ao primeiro, mas *também* define como `NA` todas as observações de um ambiente específico (ex: "CS11\_WS").
-      * **Ajustar Modelo (CV0/CV00)**: O `BGLR` é executado novamente com esta nova máscara.
-      * **Coletar Resultados (CV0/CV00)**: A acurácia é calculada e armazenada em `CV0_lists` e `CV00_lists`.
-4.  **Salvar Resultados**: Após o *loop* de 5 *folds* terminar, o *worker* agrega os resultados de acurácia (ex: `CV1out`) e os salva em um arquivo `.csv` único para aquele `MODEL`, `REP` e `TRAIT` (ex: `CV1_GY_Eta10_rep5.csv`).
-5.  O *worker* então se torna livre para pegar o próximo "trabalho" da fila `combos`.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-***Nota:** Este bloco está com `eval=FALSE` para que o tutorial possa ser compilado rapidamente. Para executar a análise completa, mude a opção do chunk para `{r parallel-model, cache=FALSE, eval=TRUE}` e execute-o. Isso levará um tempo considerável.*
+This section describes the corresponding methodological step in the workflow.
 
 ```{r parallel-model, cache=FALSE, eval=FALSE}
-# Paraleliza
+# Tutorial step
 foreach(i = seq_len(nrow(combos)),
         .packages = c("BGLR", "dplyr", "plyr")) %dopar% {
           MODEL <- combos$MODEL[i]
           rep_num <- combos$REP[i]
           TRAIT <- as.character(combos$TRAIT[i])
           
-          pheno <- data.frame(Pheno)  # copia de Pheno para manipulação local
+          pheno <- data.frame(Pheno)  # copy of Pheno for local manipulation
           
-          # Diretórios organizados por repetição e modelo
+          # Tutorial step
           rep_dir <- file.path("output/ajuste_modelo", paste0("rep_", rep_num))
           dir.create(rep_dir, recursive = TRUE, showWarnings = FALSE)
           eta_dir <- file.path(rep_dir, paste0("Eta", MODEL))
           dir.create(eta_dir, recursive = TRUE, showWarnings = FALSE)
           
-          # Inicializa listas de resultados
+          # Tutorial step
           CV1_list <- list()
           CV2_list <- list()
           CV0_lists  <- lapply(envs_leaveout, function(x)
@@ -2070,7 +2070,7 @@ foreach(i = seq_len(nrow(combos)),
           names(CV0_lists) <- envs_leaveout
           names(CV00_lists) <- envs_leaveout
           
-          # Cria folds reprodutíveis
+          # Tutorial step
           #set.seed(1000 + MODEL * 100 + rep_num)
           obs_per_fold <- ceiling(n_hybrids / num_fold)
           folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = n_hybrids))
@@ -2146,7 +2146,7 @@ foreach(i = seq_len(nrow(combos)),
             }
           }
           
-          # Salva resultados por esquema
+          # Tutorial step
           CV1out <- plyr::ldply(CV1_list, data.frame)
           CV2out <- plyr::ldply(CV2_list, data.frame)
           write.csv(CV1out,
@@ -2205,7 +2205,7 @@ foreach(i = seq_len(nrow(combos)),
         } # end foreach
 ```
 
-Após o término do *loop* `foreach`, este comando **desliga** o cluster paralelo e libera os núcleos da CPU de volta para o sistema operacional.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r stop_cluster, include=FALSE}
 # finalize cluster
@@ -2214,96 +2214,96 @@ stopCluster(cl)
 
 ## 15) Resultados
 
-O *loop* de processamento paralelo na Seção 14 gerou **milhares** de arquivos `.csv` individuais (um para cada `Modelo` x `Repetição` x `Trait` x `Fold` x `CV`). Esta seção é o **pós-processamento**, onde iremos:
+This section describes the corresponding methodological step in the workflow.
 
-1.  **Consolidar**: Ler todos esses arquivos pequenos e agrupá-los em alguns arquivos "mestres".
-2.  **Limpar**: Os arquivos "mestres" ainda estarão "sujos", pois toda a informação importante (Qual modelo? Qual trait?) está "presa" no nome do arquivo.
-3.  **Analisar**: Vamos "limpar" esses arquivos mestres, extraindo (fazendo *parsing*) os nomes dos arquivos em colunas de metadados (ex: `Model`, `Trait`, `Rep`).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-O resultado final serão alguns arquivos `.csv` limpos e prontos para a visualização e análise estatística.
+This section describes the corresponding methodological step in the workflow.
 
-### 15.1) Segregação dos resultados dos esquemas CV00 e CV0 por ambiente
+### 15.1) Segregation of CV00 and CV0 results by environment
 
-**Objetivo:** Consolidar os resultados dos cenários *leave-one-environment-out*.
+This section describes the corresponding methodological step in the workflow.
 
-Como o "ambiente-deixado-de-fora" é o fator chave aqui, primeiro agrupamos os resultados por esse fator.
+This section describes the corresponding methodological step in the workflow.
 
-  * O código lista todos os arquivos `CV0_` e `CV00_`.
-  * Em seguida, ele filtra essa lista para um ambiente-alvo específico (ex: `grep("CS12_WS", ...)`).
-  * Ele lê todos os arquivos `.csv` desse subconjunto (ex: todos os resultados de CV0 onde "CS12\_WS" foi o ambiente de teste) e os combina em um único *dataframe* (ex: `df_CV0_CS12_WS`).
-  * Esse *dataframe* consolidado é salvo como um "resumo intermediário" (ex: `Pred.ability.CV0.CS12_WS.csv`).
-  * Isso é repetido para todos os 4 ambientes e 2 tipos de CV (8 resumos intermediários).
-  * Finalmente, todos esses resumos intermediários são combinados em um único arquivo mestre (`df_CV0_CV00`).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r df_consolidation_CV00_CV0, eval = FALSE}
-# Selecionando apenas os que contêm "CV0"
+# Tutorial step
 list_csv_files_CV0 <- list.files(
   path = "output/results",
   pattern = "CV0_",
-  # pega arquivos que contenham CV0
+  # Tutorial step
   full.names = TRUE
 )
 
-# Selecionando apenas os que contêm "CV00"
+# Tutorial step
 list_csv_files_CV00 <- list.files(
   path = "output/results",
   pattern = "CV00_",
-  # pega arquivos que contenham CV0
+  # Tutorial step
   full.names = TRUE
 )
 
-# Filtrando apenas os arquivos que contêm "CS12_WS"
+# Tutorial step
 list_csv_files_CV0_CS12_WS <- list_csv_files_CV0[grep("CS12_WS", list_csv_files_CV0)]
 df_CV0_CS12_WS <- read_csv(list_csv_files_CV0_CS12_WS, id = "file_name") %>% as.data.frame()
 head(df_CV0_CS12_WS)
 
-write.csv(df_CV0_CS12_WS, "output/Pred.ability/Pred.ability.CV0.CS12_WS.csv")  # Salva consolidação
+write.csv(df_CV0_CS12_WS, "output/Pred.ability/Pred.ability.CV0.CS12_WS.csv")  # Save consolidated output
 
 list_csv_files_CV00_CS12_WS <- list_csv_files_CV00[grep("CS12_WS", list_csv_files_CV00)]
 df_CV00_CS12_WS <- read_csv(list_csv_files_CV00_CS12_WS, id = "file_name") %>% as.data.frame()
 head(df_CV00_CS12_WS)
 
-write.csv(df_CV00_CS12_WS, "output/Pred.ability/Pred.ability.CV00.CS12_WS.csv")  # Salva consolidação
+write.csv(df_CV00_CS12_WS, "output/Pred.ability/Pred.ability.CV00.CS12_WS.csv")  # Save consolidated output
 
-# Filtrando apenas os arquivos que contêm "CS11_WW"
+# Tutorial step
 list_csv_files_CV0_CS11_WW <- list_csv_files_CV0[grep("CS11_WW", list_csv_files_CV0)]
 df_CV0_CS11_WW <- read_csv(list_csv_files_CV0_CS11_WW, id = "file_name") %>% as.data.frame()
 head(df_CV0_CS11_WW)
 
-write.csv(df_CV0_CS11_WW, "output/Pred.ability/Pred.ability.CV0.CS11_WW.csv")  # Salva consolidação
+write.csv(df_CV0_CS11_WW, "output/Pred.ability/Pred.ability.CV0.CS11_WW.csv")  # Save consolidated output
 
 list_csv_files_CV00_CS11_WW <- list_csv_files_CV00[grep("CS11_WW", list_csv_files_CV00)]
 df_CV00_CS11_WW <- read_csv(list_csv_files_CV00_CS11_WW, id = "file_name") %>% as.data.frame()
 head(df_CV00_CS11_WW)
 
-write.csv(df_CV00_CS11_WW, "output/Pred.ability/Pred.ability.CV00.CS11_WW.csv")  # Salva consolidação
+write.csv(df_CV00_CS11_WW, "output/Pred.ability/Pred.ability.CV00.CS11_WW.csv")  # Save consolidated output
 
-# Filtrando apenas os arquivos que contêm "CS12_WW"
+# Tutorial step
 
 list_csv_files_CV0_CS12_WW <- list_csv_files_CV0[grep("CS12_WW", list_csv_files_CV0)]
 df_CV0_CS12_WW <- read_csv(list_csv_files_CV0_CS12_WW, id = "file_name") %>% as.data.frame()
 head(df_CV0_CS12_WW)
 
-write.csv(df_CV0_CS12_WW, "output/Pred.ability/Pred.ability.CV0.CS12_WW.csv")  # Salva consolidação
+write.csv(df_CV0_CS12_WW, "output/Pred.ability/Pred.ability.CV0.CS12_WW.csv")  # Save consolidated output
 
 list_csv_files_CV00_CS12_WW <- list_csv_files_CV00[grep("CS12_WW", list_csv_files_CV00)]
 df_CV00_CS12_WW <- read_csv(list_csv_files_CV00_CS12_WW, id = "file_name") %>% as.data.frame()
 head(df_CV00_CS12_WW)
 
-write.csv(df_CV00_CS12_WW, "output/Pred.ability/Pred.ability.CV00.CS12_WW.csv")  # Salva consolidação
+write.csv(df_CV00_CS12_WW, "output/Pred.ability/Pred.ability.CV00.CS12_WW.csv")  # Save consolidated output
 
-# Filtrando apenas os arquivos que contêm "CS11_WS"
+# Tutorial step
 list_csv_files_CV0_CS11_WS <- list_csv_files_CV0[grep("CS11_WS", list_csv_files_CV0)]
 df_CV0_CS11_WS <- read_csv(list_csv_files_CV0_CS11_WS, id = "file_name") %>% as.data.frame()
 head(df_CV0_CS11_WS)
 
-write.csv(df_CV0_CS11_WS, "output/Pred.ability/Pred.ability.CV0.CS11_WS.csv")  # Salva consolidação
+write.csv(df_CV0_CS11_WS, "output/Pred.ability/Pred.ability.CV0.CS11_WS.csv")  # Save consolidated output
 
 list_csv_files_CV00_CS11_WS <- list_csv_files_CV00[grep("CS11_WS", list_csv_files_CV00)]
 df_CV00_CS11_WS <- read_csv(list_csv_files_CV00_CS11_WS, id = "file_name") %>% as.data.frame()
 head(df_CV00_CS11_WS)
 
-write.csv(df_CV00_CS11_WS, "output/Pred.ability/Pred.ability.CV00.CS11_WS.csv")  # Salva consolidação
+write.csv(df_CV00_CS11_WS, "output/Pred.ability/Pred.ability.CV00.CS11_WS.csv")  # Save consolidated output
 
 df_CV0_CV00 <- bind_rows(
   df_CV0_CS12_WS,
@@ -2315,36 +2315,36 @@ df_CV0_CV00 <- bind_rows(
   df_CV0_CS11_WS,
   df_CV00_CS11_WS
 )
-write.csv(df_CV0_CV00, "output/Pred.ability/Pred.ability.CV0.CV00.csv")  # Salva consolidação
+write.csv(df_CV0_CV00, "output/Pred.ability/Pred.ability.CV0.CV00.csv")  # Save consolidated output
 ```
 
 ### 15.2) Resultados CV0 e CV00
 
-**Objetivo:** Limpar e padronizar o arquivo mestre `CV0.CV00.csv`.
+This section describes the corresponding methodological step in the workflow.
 
-Este bloco lê o arquivo mestre (`...CV0.CV00.csv`) criado na etapa anterior e o **limpa**. O arquivo original é "sujo" porque toda a informação útil (qual modelo, qual trait) está "presa" dentro da coluna `file_name`.
+This section describes the corresponding methodological step in the workflow.
 
   * Usa `separate` para quebrar o nome do arquivo (ex: `CV0_GY_CS11_WS_Eta1_rep1`) em colunas limpas: `CV`, `Trait`, `Env_Val` (combinando `Env1` e `Env2`), `Model`, `Rep`.
-  * `sub("^Eta", "M", ...)` padroniza o nome do modelo (ex: 'Eta1' -\> 'M1') para facilitar a criação de gráficos.
-  * Seleciona apenas as colunas úteis e salva o *dataframe* limpo, substituindo o arquivo antigo. O arquivo agora está pronto para análise.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r consolidation}
-# Agrupa por modelo, tipo de validação e traço
-# Calcula média e desvio padrão da correlação preditiva
+# Tutorial step
+# Tutorial step
 
 df <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.csv") %>%
   mutate(
     file_name = basename(file_name),
-    # remove caminho
+    # Tutorial step
     file_name = sub("\\.csv$", "", file_name)
-  ) %>%    # remove extensão
-  # Quebra em até 6 partes (CV, Trait, Env1, Env2, ModelRaw, Rep)
+  ) %>%    # remove extension
+  # Tutorial step
   separate(
     file_name,
     into = c("CV", "Trait", "Env1", "Env2", "ModelRaw", "Rep"),
     sep = "_",
     fill = "right",
-    # preenche com NA se faltar
+    # fill with NA if missing
     remove = FALSE
   ) %>%
   # Cria coluna Env apenas se houver Env1 e Env2
@@ -2353,61 +2353,61 @@ df <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.csv") %>%
     Model = sub("^Eta", "M", sub("\\.csv$", "", ModelRaw))) %>%
   dplyr::select(Model, CV, Trait, Env_Val, Env, Rep, cor)  # remove colunas auxiliares
 
-write.csv(df, "output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")  # Salva consolidação
+write.csv(df, "output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")  # Save consolidated output
 ```
 
-### 15.3) Consolidação dos resultados dos esquemas CV1 e CV2
+### 15.3) Consolidation of CV1 and CV2 results
 
-**Objetivo:** Consolidar os resultados dos cenários CV1 (predição de genótipos novos) e CV2 (predição de genótipos em ambientes novos).
+This section describes the corresponding methodological step in the workflow.
 
-Este processo é mais simples que o de CV0/CV00 porque não precisamos agrupar por ambiente-deixado-de-fora.
+This section describes the corresponding methodological step in the workflow.
 
   * `list.files` encontra todos os arquivos `CV1` ou `CV2`.
-  * `read_csv` lê *todos* os milhares de arquivos de uma só vez (usando o argumento `id = "file_name"` para rastrear a origem) e os combina em um único *dataframe* mestre, `df_CV1_CV2`.
-  * Salva este *dataframe* mestre.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r df_consolidation_CV1_CV2, eval = FALSE}
-# Lê os arquivos de predição dos esquemas CV1 e CV2
+# Tutorial step
 list_csv_files <- list.files(
   path = "output/results",
   pattern = "CV1|CV2",
-  # pega arquivos que contenham CV1 ou CV2
+  # Tutorial step
   full.names = TRUE
 )
 
 df_CV1_CV2 <- read_csv(list_csv_files, id = "file_name") %>% as.data.frame()
 head(df_CV1_CV2)
 
-write.csv(df_CV1_CV2, "output/Pred.ability/Pred.ability.CV1.CV2.csv")  # Salva consolidação
+write.csv(df_CV1_CV2, "output/Pred.ability/Pred.ability.CV1.CV2.csv")  # Save consolidated output
 ```
 
 ### 15.4) Resultados CV1 e CV2
 
-**Objetivo:** Limpar e padronizar o arquivo mestre `CV1.CV2.csv`.
+This section describes the corresponding methodological step in the workflow.
 
-Assim como na seção 15.2, este bloco **limpa** o arquivo mestre `...CV1.CV2.csv` que acabamos de criar. O arquivo original é "sujo" porque toda a informação útil (qual modelo, qual trait) está "presa" dentro da coluna `file_name`.
+This section describes the corresponding methodological step in the workflow.
 
-  * Usa `separate` para quebrar o nome do arquivo (ex: `CV1_GY_Eta1_rep1`) em colunas limpas: `CV`, `Trait`, `Model`, `Rep`. (Note que não há `Env` no nome do arquivo aqui, pois CV1/CV2 são calculados *dentro* dos ambientes).
-  * Padroniza os nomes dos modelos (ex: 'Eta1' -\> 'M1') para facilitar a criação de gráficos.
-  * Salva o *dataframe* limpo e "pronto para análise", substituindo o arquivo antigo.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r consolidation-cv1-cv2-parsing}
-# Agrupa por modelo, tipo de validação e traço
-# Calcula média e desvio padrão da correlação preditiva
+# Tutorial step
+# Tutorial step
 
 df <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.csv") %>%
   mutate(
     file_name = basename(file_name),
-    # remove caminho
+    # Tutorial step
     file_name = sub("\\.csv$", "", file_name)
-  ) %>%    # remove extensão
-  # Quebra em até 6 partes (CV, Trait, Env1, Env2, ModelRaw, Rep)
+  ) %>%    # remove extension
+  # Tutorial step
   separate(
     file_name,
     into = c("CV", "Trait", "ModelRaw", "Rep"),
     sep = "_",
     fill = "right",
-    # preenche com NA se faltar
+    # fill with NA if missing
     remove = FALSE
   ) %>%
   # Cria coluna Env apenas se houver Env1 e Env2
@@ -2415,34 +2415,34 @@ df <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.csv") %>%
     Model = sub("^Eta", "M", sub("\\.csv$", "", ModelRaw))) %>%
   dplyr::select(Model, CV, Trait, Env, Rep, cor)  # remove colunas auxiliares
 
-write.csv(df, "output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")  # Salva consolidação
+write.csv(df, "output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")  # Save consolidated output
 ```
 
-Este é o **ponto final deste script de análise**. Os *kernels* e outros objetos gigantes são removidos da memória, deixando apenas os dados fenotípicos brutos.
+This section describes the corresponding methodological step in the workflow.
 
-O próximo script (presumivelmente focado em visualização) irá carregar os dois arquivos `.csv` limpos que acabamos de criar (`Pred.ability.CV0.CV00.csv` e `Pred.ability.CV1.CV2.csv`) para gerar os gráficos e tabelas finais.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r}
-# Limpa o ambiente
+# Tutorial step
 
 rm(list = setdiff(ls(), c("Pheno", "Pedigree", "model_info")))
-gc()  # Limpa memória
+gc()  # Clear memory
 ```
 
-### 15.5) Gráfico de barras da acurácia preditiva CV0 e CV00
+### 15.5) Bar plot of predictive ability for CV0 and CV00
 
-**Objetivo:** Visualizar a acurácia preditiva média dos modelos em cada esquema de validação cruzada, destacando diferenças de desempenho.
+This section describes the corresponding methodological step in the workflow.
 
-O primeiro passo é preparar os dados para plotagem.
+This section describes the corresponding methodological step in the workflow.
 
-  * Carregamos o arquivo limpo `...CV0.CV00.csv` (da Seção 15.2).
+This section describes the corresponding methodological step in the workflow.
   * Agrupamos por `Model`, `Env_Val`, `CV` e `Trait`.
-  * Calculamos a média (`M`) e o desvio padrão (`SD`) da acurácia (correlação) entre as 20 repetições.
-  * Juntamos (`left_join`) com nossa tabela `model_info` (da Seção 15.5) para adicionar os nomes (`Description`) e tipos (`Type`) legíveis.
-  * Salvamos este *dataframe* final e pronto para plotagem (`...classified.csv`).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r pred-ability}
-# Agrupa por modelo, tipo de validação e traço
+# Tutorial step
 df <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")
 
 
@@ -2452,25 +2452,25 @@ df_cor <- as.data.frame(df %>%
 
 head(df_cor)
 
-# Adiciona informações de classificação dos modelos
+# Tutorial step
 df_cor <- df_cor %>%
   left_join(model_info, by = "Model")
 
 head(df_cor)
 
-write.csv(df_cor, "output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")  # Salva consolidação
+write.csv(df_cor, "output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")  # Save consolidated output
 ```
 
-Este bloco cria um gráfico de exemplo para a `Trait` "GY" no cenário `CV` "CV0".
+This section describes the corresponding methodological step in the workflow.
 
-  * `ggplot(...)`: Inicia o gráfico, mapeando `Description` para o eixo X e `M` (acurácia média) para o eixo Y.
+This section describes the corresponding methodological step in the workflow.
   * `geom_bar()`: Cria as barras.
   * `geom_errorbar()`: Adiciona as barras de erro (±SD).
-  * `facet_wrap(. ~ Env_Val, ...)`: Esta é a parte importante. Ele cria um painel (um sub-gráfico) separado para cada ambiente que foi deixado de fora (ex: um painel para "CS11\_WS", um para "CS11\_WW", etc.), permitindo uma comparação fácil.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r pred-ability-plot}
 df_cor <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")
-# Cria gráfico de barras com erro padrão e rótulos
+# Tutorial step
 
 p <- df_cor %>% 
   filter(CV == "CV0" & Trait == "GY") %>% 
@@ -2481,7 +2481,7 @@ p <- df_cor %>%
                 width = .2,
                 position = position_dodge(.9)) +
   theme_bw() +
-  facet_wrap(. ~  Env_Val, nrow = 4) +  # Um painel para cada esquema de validação
+  facet_wrap(. ~  Env_Val, nrow = 4) +  # One panel for each validation scheme
   scale_y_continuous("Prediction ability", limits = c(-0.1,1.25)) +
   scale_x_discrete("Models") +
   theme(axis.text.x = element_text(
@@ -2491,7 +2491,7 @@ p <- df_cor %>%
     size = 6
   ))
 
-# Exibe o gráfico
+# Tutorial step
 p
 
 ggsave("output/Pred.ability/grafico_exemplo_GY_CV0.tiff",
@@ -2502,7 +2502,7 @@ ggsave("output/Pred.ability/grafico_exemplo_GY_CV0.tiff",
 
 ```{r}
 df_cor <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.classified.csv")
-# Cria gráfico de barras com erro padrão e rótulos
+# Tutorial step
 
 p <- df_cor %>% 
   group_by(Model, CV, Trait) %>% 
@@ -2514,7 +2514,7 @@ p <- df_cor %>%
                 width = .2,
                 position = position_dodge(.9)) +
   theme_bw() +
-  facet_grid( CV ~  Trait) +  # Um painel para cada esquema de validação
+  facet_grid( CV ~  Trait) +  # One panel for each validation scheme
   scale_y_continuous(limits = c(-0.1,1.25)) +
   #scale_x_discrete("Models") +
   theme(axis.text.x = element_text(
@@ -2526,7 +2526,7 @@ p <- df_cor %>%
   labs(x = "Models",
        y = "Prediction ability")
 
-# Exibe o gráfico
+# Tutorial step
 p
 
 ggsave("output/Pred.ability/grafico_exemplo_CV0_CV00.tiff",
@@ -2535,37 +2535,37 @@ ggsave("output/Pred.ability/grafico_exemplo_CV0_CV00.tiff",
        height = 10, dpi = 300)
 ```
 
-### 15.6) Geração Automatizada de Gráficos (CV0 e CV00)
+### 15.6) Automated plot generation (CV0 and CV00)
 
-**Objetivo:** Automatizar a criação de gráficos para *todas* as combinações de `Trait`, `CV` e `Type`.
+This section describes the corresponding methodological step in the workflow.
 
-Em vez de copiar e colar o código de plotagem dezenas de vezes, este bloco usa um *loop* `for`.
+This section describes the corresponding methodological step in the workflow.
 
-1.  **Identificar Combinações**: Primeiro, ele encontra todas as combinações únicas de `Trait`, `CV` e `Type` (ex: "GY, CV0, Basico", "GY, CV0, Clima\_IntW", "KW, CV00, Basico", etc.).
-2.  **Iterar**: O *loop* `for` passa por cada uma dessas combinações.
-3.  **Filtrar**: Dentro do *loop*, ele filtra os dados (`df_filtrado`) apenas para a combinação atual.
-4.  **Destaque Condicional**:
-      * Calcula a acurácia média (`media_M_grupo`) *para aquele grupo específico*.
-      * Cria uma nova coluna `destaque`. Se a acurácia de um modelo (`M`) for maior que a média do grupo, ele é rotulado como "Acima da Média"; caso contrário, "Abaixo/Igual à Média".
-5.  **Plotar**:
-      * O `ggplot` é chamado, mas desta vez `fill = destaque` é usado.
-      * `scale_fill_manual` define as cores (Azul para "Acima", Cinza para "Abaixo").
-      * `facet_grid(Env_Val ~ .)` cria painéis *verticais* (um por ambiente-deixado-de-fora), o que pode ser mais fácil de ler do que o `facet_wrap` horizontal.
-6.  **Salvar**: O gráfico é salvo com um nome de arquivo descritivo (ex: `grafico_GY_CV0_Basico.tiff`).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+4.  **Conditional Highlighting**:
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+5.  **Plot**:
+This section describes the corresponding methodological step in the workflow.
+      * `scale_fill_manual` defines colors (blue for "Above", gray for "Below").
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-Este *loop* irá gerar automaticamente todos os gráficos de resultados para CV0 e CV00, salvando-os no disco.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r, eval=FALSE}
 #-----------------------------------------------------------------------
-# 1. CONFIGURAÇÃO INICIAL
+# Tutorial step
 #-----------------------------------------------------------------------
 
-# Carregar o seu conjunto de dados
-# Certifique-se de que o caminho para o arquivo está correto
+# Tutorial step
+# Tutorial step
 df_cor <- read.csv("output/Pred.ability/Pred.ability.CV0.CV00.classified.csv") %>% as.data.frame()
 
-# Criar um diretório para salvar os gráficos (se ele ainda não existir)
-# Isso ajuda a manter os arquivos de saída organizados
+# Tutorial step
+# Tutorial step
 output_dir <- "output/Pred.ability/graficos_gerados"
 if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)
@@ -2573,71 +2573,71 @@ if (!dir.exists(output_dir)) {
 
 
 #-----------------------------------------------------------------------
-# 2. AUTOMAÇÃO DA GERAÇÃO DE GRÁFICOS
+# Tutorial step
 #-----------------------------------------------------------------------
 
-# Identificar todas as combinações únicas das colunas de interesse
+# Tutorial step
 combinacoes <- df_cor %>%
   distinct(Trait, CV, Env_Val, Type)
 
-# Exibir as combinações encontradas (opcional, bom para verificação)
-print("Combinações encontradas para gerar gráficos:")
+# Tutorial step
+print("Combinations found for plot generation:")
 head(combinacoes)
 
-# Iniciar o loop para iterar sobre cada linha do dataframe 'combinacoes'
+# Tutorial step
 for (i in 1:nrow(combinacoes)) {
   
-  # Obter os valores da combinação atual
+  # Tutorial step
   trait_atual <- combinacoes$Trait[i]
   cv_atual <- combinacoes$CV[i]
   type_atual <- combinacoes$Type[i]
   
-  # Mensagem de progresso no console
-  message(paste("Gerando gráfico para: Trait =", trait_atual, "| CV =", cv_atual, "| Type =", type_atual))
+  # Progress message in console
+  message(paste("Generating plot for: Trait =", trait_atual, "| CV =", cv_atual, "| Type =", type_atual))
   
-  # Filtrar o dataframe principal para conter apenas os dados da combinação atual
+  # Tutorial step
   df_filtrado <- df_cor %>%
     filter(Trait == trait_atual & CV == cv_atual & Type == type_atual)
   
-  # Se não houver dados após o filtro, pular para a próxima iteração
+  # Tutorial step
   if(nrow(df_filtrado) == 0) {
-    message(" -> Nenhum dado encontrado. Pulando.")
+    message(" -> No data found. Skipping.")
     next 
   }
   
-  # --- ALTERAÇÃO 1: CALCULAR MÉDIA E CRIAR COLUNA DE DESTAQUE ---
+  # Tutorial step
   
-  # Calcular a média de 'M' *apenas* para este grupo filtrado
+  # Tutorial step
   media_M_grupo <- mean(df_filtrado$M, na.rm = TRUE)
   
-  # Adicionar a coluna de destaque ao dataframe que será plotado
-  # A nova coluna 'destaque' terá um de dois valores
+  # Tutorial step
+  # Tutorial step
   df_plotagem <- df_filtrado %>%
     mutate(
       destaque = ifelse(M > media_M_grupo, 
-                        "Acima da Média", 
-                        "Abaixo/Igual à Média")
+                        "Above Mean", 
+                        "Below/Equal to Mean")
     )
   
-  # --- FIM DA ALTERAÇÃO 1 ---
+  # Tutorial step
   
   
-  # Gerar o gráfico usando o novo 'df_plotagem'
+  # Tutorial step
   p <- df_plotagem %>%
-    # Ordenar Description com base em ModelID
+    # Tutorial step
     mutate(Description = reorder(Description, ModelID)) %>%
-    # --- ALTERAÇÃO 2: MAPEAMENTO DO 'fill' ---
-    # O 'fill' (preenchimento) agora usa a nova coluna 'destaque'
+    # Tutorial step
+    # 'fill' now uses the new 'highlight' column
     ggplot(aes(x = Description, y = M, fill = destaque)) +
     
-    # 'show.legend = TRUE' (ou omitir) para mostrar a nova legenda de cores
+    # 'show.legend = TRUE' (or omit) to show the new color legend
     geom_bar(stat = "identity", position = position_dodge(), show.legend = TRUE) +
     
     geom_errorbar(aes(ymin = M, ymax = M + SD),
                   width = .2,
                   position = position_dodge(.9)) +
     
-    # Camada de texto (valores) - sem alteração
+    # Tutorial step
     geom_text(
       aes(label = round(M, 2), y = M + SD), 
       vjust = -0.5,    
@@ -2651,25 +2651,25 @@ for (i in 1:nrow(combinacoes)) {
     
     theme_bw() +
     
-    # Camada de escala Y (para dar espaço ao texto) - sem alteração
+    # Tutorial step
     scale_y_continuous(
-      "Valor Médio (M)",
+      "Mean Value (M)",
       expand = expansion(mult = c(0, 0.15)) 
     ) +
 
-    # --- ALTERAÇÃO 3: DEFINIR AS CORES E LEGENDA ---
+    # Tutorial step
     scale_fill_manual(
-      name = "Desempenho:", # Título da legenda
-      values = c("Acima da Média" = "#0072B2",  # Uma cor para os valores acima (ex: Azul)
-                 "Abaixo/Igual à Média" = "grey80") # Uma cor para os outros (ex: Cinza)
+      name = "Performance:", # Legend title
+      values = c("Above Mean" = "#0072B2",  # Color for values above mean (e.g., blue)
+                 "Below/Equal to Mean" = "grey80") # Color for other values (e.g., gray)
     ) +
     
     labs(
-      title = paste("Habilidade Preditiva"),
+      title = paste("Predictive Ability"),
       subtitle = paste("Trait:", trait_atual, "| CV:", cv_atual, "| Type:", type_atual,
-                       # Opcional: Adicionar a média no subtítulo
-                       sprintf("\n(Média do grupo: %.2f)", media_M_grupo)), 
-      x = "Descrição do Modelo"
+                       # Tutorial step
+                       sprintf("\n(Group mean: %.2f)", media_M_grupo)), 
+      x = "Model description"
     ) +
     theme(
       axis.text.x = element_text(
@@ -2678,45 +2678,45 @@ for (i in 1:nrow(combinacoes)) {
         hjust = 1, 
         size = 8
       ),
-      legend.position = "top" # Mover a legenda para o topo do gráfico
+      legend.position = "top" # Move legend to top of plot
     )
   
-  # Criar um nome de arquivo descritivo e único para o gráfico
+  # Tutorial step
   nome_arquivo <- sprintf("%s/grafico_%s_%s_%s.tiff", 
                           output_dir, 
                           trait_atual, 
                           cv_atual, 
                           type_atual)
   
-  # Salvar o gráfico gerado no arquivo PNG
+  # Tutorial step
   ggsave(
     filename = nome_arquivo, 
     plot = p, 
-    width = 10,       # Largura em polegadas
-    height = 7,       # Altura em polegadas
-    dpi = 300         # Resolução (qualidade da imagem)
+    width = 10,       # Width in inches
+    height = 7,       # Height in inches
+    dpi = 300         # Resolution (image quality)
   )
 }
 
-message("\nProcesso finalizado! Gráficos salvos em '", output_dir, "'")
+message("\nProcess finished! Plots saved in '", output_dir, "'")
 ```
 
-### 15.7) Gráfico de barras da acurácia preditiva CV1 e CV2
+### 15.7) Bar plot of predictive ability for CV1 and CV2
 
-**Objetivo:** Visualizar a acurácia preditiva média dos modelos para os cenários CV1 (predição de genótipos novos) e CV2 (predição de genótipos em ambientes novos).
+This section describes the corresponding methodological step in the workflow.
 
-O processo é idêntico ao da Seção 15.6, mas agora usamos os arquivos de resultados de CV1 e CV2.
+This section describes the corresponding methodological step in the workflow.
 
-O primeiro passo é preparar os dados para plotagem.
+This section describes the corresponding methodological step in the workflow.
 
-  * Carregamos o arquivo limpo `...CV1.CV2.csv` (da Seção 15.4).
+This section describes the corresponding methodological step in the workflow.
   * Agrupamos por `Model`, `CV` e `Trait`.
-  * Calculamos a média (`M`) e o desvio padrão (`SD`) da acurácia (correlação) entre as 20 repetições. `M` será a altura da nossa barra no gráfico, e `SD` será usado para desenhar as barras de erro.
-  * Juntamos (`left_join`) com nossa tabela `model_info` (da Seção 15.5) para adicionar os nomes (`Description`) e tipos (`Type`) legíveis.
-  * Salvamos este *dataframe* final e pronto para plotagem (`...classified.csv`).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r pred-ability-cv1-cv2-summary}
-# Agrupa por modelo, tipo de validação e traço
+# Tutorial step
 df <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")
 
 df_cor <- as.data.frame(df %>%
@@ -2725,24 +2725,24 @@ df_cor <- as.data.frame(df %>%
 
 head(df_cor)
 
-# Adiciona informações de classificação dos modelos
+# Tutorial step
 df_cor <- df_cor %>%
   left_join(model_info, by = "Model")
 
 head(df_cor)
 
-write.csv(df_cor, "output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")  # Salva consolidação
+write.csv(df_cor, "output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")  # Save consolidated output
 ```
 
-Este bloco cria um gráfico de exemplo para CV1 e CV2.
+This section describes the corresponding methodological step in the workflow.
 
-  * `ggplot(...)`: Inicia o gráfico, mapeando `Description` para o eixo X e `M` (acurácia média) para o eixo Y.
-  * `geom_bar()` e `geom_errorbar()`: Desenha as barras de acurácia e suas respectivas barras de erro (±SD).
-  * `facet_grid(Trait ~ CV)`: Esta é a parte importante. Ele cria uma "grade" de gráficos: `Trait` (GY, KW) define as **linhas** e `CV` (CV1, CV2) define as **colunas**. Isso nos permite comparar todos os 4 cenários (GY-CV1, GY-CV2, KW-CV1, KW-CV2) em uma única figura.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r pred-ability-plot-cv1-cv2}
 df_cor <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")
-# Cria gráfico de barras com erro padrão e rótulos
+# Tutorial step
 
 p <- df_cor %>% 
   filter(Trait == "GY") %>%
@@ -2753,7 +2753,7 @@ p <- df_cor %>%
                 width = .2,
                 position = position_dodge(.9)) +
   theme_bw() +
-  facet_grid(CV ~ .) +  # Um painel para cada esquema de validação
+  facet_grid(CV ~ .) +  # One panel for each validation scheme
   scale_y_continuous("Prediction ability", limits = c(-0.1,1.25)) +
   scale_x_discrete("Models") +
   theme(axis.text.x = element_text(
@@ -2763,40 +2763,40 @@ p <- df_cor %>%
     size = 6
   ))
 
-# Exibe o gráfico
+# Tutorial step
 p
 
 ggsave("output/Pred.ability/grafico_CV1_CV2.tiff", plot = p, width = 8, height = 8, dpi = 300)
 ```
 
-### 15.8) Geração Automatizada de Gráficos (CV1 e CV2)
+### 15.8) Automated plot generation (CV1 and CV2)
 
-**Objetivo:** Automatizar a criação de gráficos para *todas* as combinações de `Trait`, `CV` e `Type`.
+This section describes the corresponding methodological step in the workflow.
 
-Este *loop* `for` é idêntico ao da Seção 15.7, mas opera sobre os dados de CV1/CV2.
+This section describes the corresponding methodological step in the workflow.
 
-1.  **Identificar Combinações**: Encontra todas as combinações únicas de `Trait`, `CV` e `Type` (ex: "GY, CV1, Basico", "GY, CV1, Interacao\_E", etc.).
-2.  **Iterar**: O *loop* `for` passa por cada uma dessas combinações.
-3.  **Filtrar**: Filtra os dados (`df_filtrado`) apenas para a combinação atual.
-4.  **Destaque Condicional**:
-      * Calcula a acurácia média (`media_M_grupo`) *para aquele grupo específico*.
-      * Cria uma nova coluna `destaque` (Azul para "Acima da Média", Cinza para "Abaixo/Igual").
-5.  **Plotar**: Cria o gráfico usando `fill = destaque`.
-6.  **Salvar**: O gráfico é salvo com um nome de arquivo descritivo (ex: `grafico_GY_CV1_Basico.tiff`).
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+4.  **Conditional Highlighting**:
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
+This section describes the corresponding methodological step in the workflow.
 
-Este *loop* irá gerar automaticamente todos os gráficos de resultados para CV1 e CV2, salvando-os no disco.
+This section describes the corresponding methodological step in the workflow.
 
 ```{r loop-plot-cv1-cv2, eval=FALSE}
 #-----------------------------------------------------------------------
-# 1. CONFIGURAÇÃO INICIAL
+# Tutorial step
 #-----------------------------------------------------------------------
 
-# Carregar o seu conjunto de dados
-# Certifique-se de que o caminho para o arquivo está correto
+# Tutorial step
+# Tutorial step
 df_cor <- read.csv("output/Pred.ability/Pred.ability.CV1.CV2.classified.csv")
 
-# Criar um diretório para salvar os gráficos (se ele ainda não existir)
-# Isso ajuda a manter os arquivos de saída organizados
+# Tutorial step
+# Tutorial step
 output_dir <- "output/Pred.ability/graficos_gerados"
 if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)
@@ -2804,72 +2804,72 @@ if (!dir.exists(output_dir)) {
 
 
 #-----------------------------------------------------------------------
-# 2. AUTOMAÇÃO DA GERAÇÃO DE GRÁFICOS
+# Tutorial step
 #-----------------------------------------------------------------------
 
-# Identificar todas as combinações únicas das colunas de interesse
+# Tutorial step
 combinacoes <- df_cor %>%
   distinct(Trait, CV, Type)
 
-# Exibir as combinações encontradas (opcional, bom para verificação)
-print("Combinações encontradas para gerar gráficos:")
+# Tutorial step
+print("Combinations found for plot generation:")
 print(combinacoes)
 
-# Iniciar o loop para iterar sobre cada linha do dataframe 'combinacoes'
+# Tutorial step
 for (i in 1:nrow(combinacoes)) {
   
-  # Obter os valores da combinação atual
+  # Tutorial step
   trait_atual <- combinacoes$Trait[i]
   cv_atual <- combinacoes$CV[i]
   type_atual <- combinacoes$Type[i]
   
-  # Mensagem de progresso no console
-  message(paste("Gerando gráfico para: Trait =", trait_atual, "| CV =", cv_atual, "| Type =", type_atual))
+  # Progress message in console
+  message(paste("Generating plot for: Trait =", trait_atual, "| CV =", cv_atual, "| Type =", type_atual))
   
-  # Filtrar o dataframe principal para conter apenas os dados da combinação atual
+  # Tutorial step
   df_filtrado <- df_cor %>%
     filter(Trait == trait_atual & CV == cv_atual & Type == type_atual)
   
-  # Se não houver dados após o filtro, pular para a próxima iteração
+  # Tutorial step
   if(nrow(df_filtrado) == 0) {
-    message(" -> Nenhum dado encontrado. Pulando.")
+    message(" -> No data found. Skipping.")
     next 
   }
   
-  # --- ALTERAÇÃO 1: CALCULAR MÉDIA E CRIAR COLUNA DE DESTAQUE ---
+  # Tutorial step
   
-  # Calcular a média de 'M' *apenas* para este grupo filtrado
+  # Tutorial step
   media_M_grupo <- mean(df_filtrado$M, na.rm = TRUE)
   
-  # Adicionar a coluna de destaque ao dataframe que será plotado
-  # A nova coluna 'destaque' terá um de dois valores
+  # Tutorial step
+  # Tutorial step
   df_plotagem <- df_filtrado %>%
     mutate(
       destaque = ifelse(M > media_M_grupo, 
-                        "Acima da Média", 
-                        "Abaixo/Igual à Média")
+                        "Above Mean", 
+                        "Below/Equal to Mean")
     )
   
-  # --- FIM DA ALTERAÇÃO 1 ---
+  # Tutorial step
   
   
-  # Gerar o gráfico usando o novo 'df_plotagem'
+  # Tutorial step
   p <- df_plotagem %>%
-    # Ordenar Description com base em ModelID
+    # Tutorial step
     mutate(Description = reorder(Description, ModelID)) %>%
     
-    # --- ALTERAÇÃO 2: MAPEAMENTO DO 'fill' ---
-    # O 'fill' (preenchimento) agora usa a nova coluna 'destaque'
+    # Tutorial step
+    # 'fill' now uses the new 'highlight' column
     ggplot(aes(x = Description, y = M, fill = destaque)) +
     
-    # 'show.legend = TRUE' (ou omitir) para mostrar a nova legenda de cores
+    # 'show.legend = TRUE' (or omit) to show the new color legend
     geom_bar(stat = "identity", position = position_dodge(), show.legend = TRUE) +
     
     geom_errorbar(aes(ymin = M, ymax = M + SD),
                   width = .2,
                   position = position_dodge(.9)) +
     
-    # Camada de texto (valores) - sem alteração
+    # Tutorial step
     geom_text(
       aes(label = round(M, 2), y = M + SD), 
       vjust = -0.5,    
@@ -2881,25 +2881,25 @@ for (i in 1:nrow(combinacoes)) {
     
     theme_bw() +
     
-    # Camada de escala Y (para dar espaço ao texto) - sem alteração
+    # Tutorial step
     scale_y_continuous(
-      "Valor Médio (M)",
+      "Mean Value (M)",
       expand = expansion(mult = c(0, 0.15)) 
     ) +
 
-    # --- ALTERAÇÃO 3: DEFINIR AS CORES E LEGENDA ---
+    # Tutorial step
     scale_fill_manual(
-      name = "Desempenho:", # Título da legenda
-      values = c("Acima da Média" = "#0072B2",  # Uma cor para os valores acima (ex: Azul)
-                 "Abaixo/Igual à Média" = "grey80") # Uma cor para os outros (ex: Cinza)
+      name = "Performance:", # Legend title
+      values = c("Above Mean" = "#0072B2",  # Color for values above mean (e.g., blue)
+                 "Below/Equal to Mean" = "grey80") # Color for other values (e.g., gray)
     ) +
     
     labs(
-      title = paste("Habilidade Preditiva"),
+      title = paste("Predictive Ability"),
       subtitle = paste("Trait:", trait_atual, "| CV:", cv_atual, "| Type:", type_atual,
-                       # Opcional: Adicionar a média no subtítulo
-                       sprintf("\n(Média do grupo: %.2f)", media_M_grupo)), 
-      x = "Descrição do Modelo"
+                       # Tutorial step
+                       sprintf("\n(Group mean: %.2f)", media_M_grupo)), 
+      x = "Model description"
     ) +
     theme(
       axis.text.x = element_text(
@@ -2908,25 +2908,25 @@ for (i in 1:nrow(combinacoes)) {
         hjust = 1, 
         size = 8
       ),
-      legend.position = "top" # Mover a legenda para o topo do gráfico
+      legend.position = "top" # Move legend to top of plot
     )
   
-  # Criar um nome de arquivo descritivo e único para o gráfico
+  # Tutorial step
   nome_arquivo <- sprintf("%s/grafico_%s_%s_%s.tiff", 
                           output_dir, 
                           trait_atual, 
                           cv_atual, 
                           type_atual)
   
-  # Salvar o gráfico gerado no arquivo PNG
+  # Tutorial step
   ggsave(
     filename = nome_arquivo, 
     plot = p, 
-    width = 10,       # Largura em polegadas
-    height = 7,       # Altura em polegadas
-    dpi = 300         # Resolução (qualidade da imagem)
+    width = 10,       # Width in inches
+    height = 7,       # Height in inches
+    dpi = 300         # Resolution (image quality)
   )
 }
 
-message("\nProcesso finalizado! Gráficos salvos em '", output_dir, "'")
+message("\nProcess finished! Plots saved in '", output_dir, "'")
 ```
