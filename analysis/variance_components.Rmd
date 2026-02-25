@@ -352,7 +352,7 @@ results_list <- foreach(i = 1:nrow(combos),
   pheno <- data.frame(Pheno)
   y_data <- pheno[[Trait]]
 
-  out_dir <- file.path("output/componentes_variancia", paste0("rep_", rep_num), paste0("Eta", Model))
+  out_dir <- file.path("output/variance_components", paste0("rep_", rep_num), paste0("Eta", Model))
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   save_prefix <- file.path(out_dir, paste0(Trait, "_"))
 
@@ -378,21 +378,150 @@ results_list <- foreach(i = 1:nrow(combos),
 stopCluster(cl)
 
 all_variance <- bind_rows(results_list)
-write_csv(all_variance, "output/componentes_variancia/variance_components_raw.csv")
+write_csv(all_variance, "output/variance_components/variance_components_raw.csv")
 ```
+
+```{r}
+# ----------------------------------------------------------------------
+# Script para consolidar todos os arquivos _metricas.rds gerados na etapa 6
+# ----------------------------------------------------------------------
+
+library(dplyr)
+library(stringr)
+library(fs)
+library(purrr)
+
+# Definir diretório base (ajuste conforme necessário)
+base_dir <- "output/variance_components"
+
+if (!dir.exists(base_dir)) {
+  stop("Diretório ", base_dir, " não encontrado. Execute a etapa 6 primeiro.")
+}
+
+# Listar todos os arquivos _metricas.rds recursivamente
+rds_files <- list.files(
+  path = base_dir,
+  pattern = "_metricas\\.rds$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+
+if (length(rds_files) == 0) {
+  stop("Nenhum arquivo '_metricas.rds' encontrado em ", base_dir)
+}
+
+message("Encontrados ", length(rds_files), " arquivos RDS.")
+
+# Função para extrair informações do caminho
+# Exemplo: output/variance_components/rep_1/Eta1/Altura_metricas.rds
+extrair_info <- function(caminho) {
+  partes <- str_split(caminho, "/")[[1]]
+  rep_part <- partes[str_detect(partes, "^rep_")]
+  eta_part <- partes[str_detect(partes, "^Eta")]
+  arquivo <- partes[length(partes)]
+  
+  if (length(rep_part) == 0 || length(eta_part) == 0) {
+    warning("Caminho não contém 'rep_' ou 'Eta': ", caminho)
+    return(NULL)
+  }
+  
+  rep_num <- as.integer(str_remove(rep_part[1], "^rep_"))
+  model_num <- as.integer(str_remove(eta_part[1], "^Eta"))
+  trait <- str_remove(arquivo, "_metricas\\.rds$")
+  
+  tibble(
+    caminho = caminho,
+    Rep = rep_num,
+    Model = model_num,
+    Trait = trait
+  )
+}
+
+# Aplicar extração e filtrar possíveis NAs
+info_arquivos <- map_dfr(rds_files, extrair_info) %>% 
+  filter(!is.na(Rep), !is.na(Model))
+
+message("Processando ", nrow(info_arquivos), " arquivos válidos.")
+
+# Função para ler um arquivo RDS e extrair as médias das variâncias
+processar_rds <- function(caminho, rep, model, trait) {
+  obj <- readRDS(caminho)
+  
+  # Média da variância residual
+  varE_mean <- mean(obj$varE_samples, na.rm = TRUE)
+  df <- tibble(
+    Rep = rep,
+    Model = model,
+    Trait = trait,
+    Component = "Residual",
+    MeanVar = varE_mean
+  )
+  
+  # Médias das variâncias dos efeitos
+  if (length(obj$variances_samples) > 0) {
+    for (nm in names(obj$variances_samples)) {
+      media_efeito <- mean(obj$variances_samples[[nm]], na.rm = TRUE)
+      df <- bind_rows(df, tibble(
+        Rep = rep,
+        Model = model,
+        Trait = trait,
+        Component = nm,
+        MeanVar = media_efeito
+      ))
+    }
+  }
+  
+  # Opcional: incluir DIC e runtime se desejar
+  # df$DIC <- obj$DIC
+  # df$runtime <- obj$runtime_sec
+  
+  df
+}
+
+# Aplicar a todas as combinações
+all_variance <- pmap_dfr(
+  list(info_arquivos$caminho, info_arquivos$Rep, info_arquivos$Model, info_arquivos$Trait),
+  processar_rds
+)
+
+# Ordenar (opcional)
+all_variance <- all_variance %>% arrange(Model, Rep, Trait, Component)
+
+# Salvar no formato .dat (tab-separado)
+arquivo_saida_dat <- file.path(base_dir, "variance_components_all.dat")
+write.table(
+  all_variance,
+  file = arquivo_saida_dat,
+  sep = "\t",
+  row.names = FALSE,
+  quote = FALSE
+)
+
+message("Arquivo consolidado salvo em: ", arquivo_saida_dat)
+
+# Salvar também como RDS para preservar estrutura
+arquivo_saida_rds <- file.path(base_dir, "variance_components_all.rds")
+saveRDS(all_variance, arquivo_saida_rds)
+
+message("Objeto 'all_variance' criado com ", nrow(all_variance), " linhas.")
+```
+
 
 ## 7. Processamento e Visualização
 
 A partir daqui, carregamos o arquivo bruto (se existir) e geramos os gráficos.
 
 ```{r load-raw, error=TRUE}
-raw_file <- "output/componentes_variancia/variance_components_raw.csv"
+raw_file <- "output/variance_components/variance_components_all.rds"
 
 if (!file.exists(raw_file)) {
   stop("Arquivo ", raw_file, " não encontrado. Execute a seção 6 (parallel-run) para gerá-lo.")
 }
 
-all_variance <- read_csv(raw_file)
+all_variance <- readRDS(raw_file)
+all_variance <- all_variance %>% 
+  mutate(Trait = str_split_i(Trait, "_", 3))
+
 ```
 
 ### 7.1. Agregação e Cálculo de Porcentagens
@@ -409,7 +538,7 @@ variance_summary <- all_variance %>%
   left_join(model_info, by = c("Model" = "ModelID")) %>%
   mutate(Description = fct_reorder(Description, Model))
 
-write_csv(variance_summary, "output/componentes_variancia/variance_components_processed.csv")
+write_csv(variance_summary, "output/variance_components/variance_components_processed.csv")
 ```
 
 ### 7.2. Gráfico para GY (Produtividade)
@@ -429,15 +558,15 @@ p_gy <- variance_summary %>%
   ) +
   theme_minimal() +
   theme(
-    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8),
-    legend.position = "bottom",
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+    legend.position = "right",
     legend.text = element_text(size = 7),
     legend.key.size = unit(0.5, "lines")
   ) +
-  guides(fill = guide_legend(nrow = 3))
+  guides(fill = guide_legend(ncol = 1))
 
 print(p_gy)
-ggsave("output/componentes_variancia/var_components_GY.tiff", p_gy, width = 12, height = 6, dpi = 300)
+ggsave("output/variance_components/var_components_GY.tiff", p_gy, width = 12, height = 6, dpi = 300)
 ```
 
 ### 7.3. Gráfico para KW (Peso de Grãos)
@@ -457,25 +586,40 @@ p_kw <- variance_summary %>%
   ) +
   theme_minimal() +
   theme(
-    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8),
-    legend.position = "bottom",
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+    legend.position = "right",
     legend.text = element_text(size = 7),
     legend.key.size = unit(0.5, "lines")
   ) +
-  guides(fill = guide_legend(nrow = 3))
+  guides(fill = guide_legend(ncol = 1))
 
 print(p_kw)
-ggsave("output/componentes_variancia/var_components_KW.tiff", p_kw, width = 12, height = 6, dpi = 300)
+ggsave("output/variance_components/var_components_KW.tiff", p_kw, width = 12, height = 6, dpi = 300)
 ```
 
 ### 7.4. (Opcional) Gráfico combinado com patchwork
 
-```{r plot-combined, eval=FALSE}
-library(patchwork)
-p_gy2 <- p_gy + labs(subtitle = "GY") + theme(axis.text.x = element_blank())
-p_kw2 <- p_kw + labs(subtitle = "KW")
-combined <- p_gy2 / p_kw2 + plot_annotation(tag_levels = "A")
-ggsave("output/componentes_variancia/var_components_combined.tiff", combined, width = 12, height = 10, dpi = 300)
+```{r plot-combined}
+combined <- variance_summary %>%
+  ggplot(aes(x = Description, y = Percentage, fill = Component)) +
+  geom_col(position = "fill", color = "black", alpha = 0.85, width = 0.8) +
+  scale_y_continuous(labels = percent_format()) +
+  scale_fill_gdocs() +
+  facet_wrap(~ Trait, nrow = 2) +
+  labs(
+    y = "Porcentagem da variância total",
+    fill = "Component"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+    legend.position = "right",
+    legend.text = element_text(size = 7),
+    legend.key.size = unit(0.5, "lines")
+  ) +
+  guides(fill = guide_legend(ncol = 1))
+print(combined)
+ggsave("output/variance_components/var_components_combined.tiff", combined, width = 12, height = 10, dpi = 300)
 ```
 
 ## 8. Considerações Finais
