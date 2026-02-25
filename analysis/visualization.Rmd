@@ -27,7 +27,7 @@ Criamos um data frame com a identificação de cada modelo (M1 a M18), seu tipo 
 ```{r model_info}
 model_info <- tibble(
   ModelID = 1:18,
-  Model = paste0("M", ModelID),
+  Model = paste0("Eta", ModelID),
   Type = c(
     rep("Base", 6),                # M1 a M6
     rep("Interação E", 3),          # M7 a M9
@@ -79,7 +79,7 @@ ler_arquivo_cv <- function(arq) {
   model_raw <- partes[3]
   rep_raw <- partes[4]
   rep <- as.numeric(str_extract(rep_raw, "\\d+"))
-  model <- str_replace(model_raw, "Eta", "M")
+  model <- str_replace(model_raw, "Eta", "Eta")
   
   df <- read_csv(arq, show_col_types = FALSE) %>%
     mutate(
@@ -120,7 +120,7 @@ ler_arquivo_loo <- function(arq) {
   model_raw <- partes[5]
   rep_raw <- partes[6]
   rep <- as.numeric(str_extract(rep_raw, "\\d+"))
-  model <- str_replace(model_raw, "Eta", "M")
+  model <- str_replace(model_raw, "Eta", "Eta")
   
   df <- read_csv(arq, show_col_types = FALSE) %>%
     mutate(

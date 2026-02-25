@@ -243,7 +243,7 @@ modelos[[18]] <- list(
   PAKW = list(K = PAKW, model = "RKHS")
 )
 
-names(modelos) <- paste0("M", 1:18)
+names(modelos) <- paste0("Eta", 1:18)
 ```
 
 ## 3. Tabela de Classificação dos Modelos
@@ -251,7 +251,7 @@ names(modelos) <- paste0("M", 1:18)
 ```{r model_info}
 model_info <- tibble(
   ModelID = 1:18,
-  Model   = paste0("M", ModelID),
+  Model   = paste0("Eta", ModelID),
   Type = c(
     rep("Base", 6),           # M1 a M6
     rep("Interação E", 3),     # M7 a M9
@@ -339,7 +339,7 @@ useCores <- max(1, numCores - 1)
 cl <- parallel::makeCluster(useCores)
 doParallel::registerDoParallel(cl)
 
-dir.create("output/componentes_variancia", recursive = TRUE, showWarnings = FALSE)
+dir.create("output/variance_components", recursive = TRUE, showWarnings = FALSE)
 
 combos <- expand.grid(Model = 1:18, REP = 1:num_rep, Trait = traits, stringsAsFactors = FALSE)
 
@@ -352,7 +352,7 @@ results_list <- foreach(i = 1:nrow(combos),
   pheno <- data.frame(Pheno)
   y_data <- pheno[[Trait]]
 
-  out_dir <- file.path("output/componentes_variancia", paste0("rep_", rep_num), paste0("M", Model))
+  out_dir <- file.path("output/componentes_variancia", paste0("rep_", rep_num), paste0("Eta", Model))
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   save_prefix <- file.path(out_dir, paste0(Trait, "_"))
 

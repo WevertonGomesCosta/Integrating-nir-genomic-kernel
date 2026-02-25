@@ -240,7 +240,7 @@ modelos[[18]] <- list(
 )
 
 # Nomear os modelos (opcional)
-names(modelos) <- paste0("M", 1:18)
+names(modelos) <- paste0("Eta", 1:18)
 ```
 
 ## 3) Parâmetros da Validação Cruzada
@@ -341,7 +341,7 @@ foreach(i = seq_len(nrow(combos)),
   pheno <- data.frame(Pheno)
 
   # Diretórios por repetição e modelo
-  rep_dir <- file.path("output/ajuste_modelo", paste0("rep_", rep_num))
+  rep_dir <- file.path("output/adjust_models", paste0("rep_", rep_num))
   dir.create(rep_dir, recursive = TRUE, showWarnings = FALSE)
   eta_dir <- file.path(rep_dir, paste0("Eta", MODEL))
   dir.create(eta_dir, recursive = TRUE, showWarnings = FALSE)
