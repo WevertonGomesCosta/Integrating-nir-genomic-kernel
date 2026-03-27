@@ -8,3 +8,4 @@
 /output/results/*.csv
 data/Article_documents
 data/Maize-NIRS-GBS-main
+*.all.rds
