@@ -1,5 +1,5 @@
 ---
-title: "Construction of Genomic, Phenomic, Environmental, and Interaction Kernels"
+title: "Construction of Genomic, Phenomic, Environment, Weather, and Interaction Kernels"
 author:
   - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
@@ -35,7 +35,7 @@ The script integrates four data layers:
 1. **Phenotypic records** (`Pheno`): grain yield (`GY`) and kernel weight (`KW`) by genotype and environment.
 2. **Genomic markers** (`Geno`): SNP markers processed in numerical format.
 3. **NIR spectra** (`NIR`): phenomic measurements used to build a spectral similarity kernel.
-4. **Environmental covariates** (`W`): weather-derived descriptors generated in the climate tutorial.
+4. **Weather-derived covariates** (`W`): meteorological descriptors generated in the climate tutorial.
 
 The final outputs of this script are the matrices used later in the prediction models:
 
@@ -43,6 +43,8 @@ The final outputs of this script are the matrices used later in the prediction m
 - **Interaction kernels**: `ZGZE`, `ZPZE`, `ZGZW`, `ZPZW`
 - **Nonlinear Gaussian kernels**: `GGK`, `PGK`, `GGKE`, `PGKE`, `GGKW`, `PGKW`
 - **Nonlinear arc-cosine kernels**: `GAK`, `PAK`, `GAKE`, `PAKE`, `GAKW`, `PAKW`
+
+In the reduced set of 18 final models, the weather kernel (`ZW`) and its interaction terms are used mainly in models `M10`-`M18`. The earlier models (`M01`-`M09`) rely on the categorical environment effect (`E`) together with genomic and/or phenomic kernels, but do not include the weather kernel.
 
 A key practical objective of this tutorial is to guarantee that all matrices are constructed in the **same observation order**. If the kernels are not perfectly aligned, the downstream prediction analyses become invalid.
 
@@ -74,71 +76,11 @@ dir.create("output/Matrizes", recursive = TRUE, showWarnings = FALSE)
 dir.create("output/Matrizes/figures", recursive = TRUE, showWarnings = FALSE)
 ```
 
-## 2.1 Graphical helper functions
+## 2.1 A note on the coding style used in this tutorial
 
-This script is primarily matrix-oriented, but a small set of diagnostic figures is useful to verify whether the main kernels have the expected block structure and alignment. The helpers below standardize the visual style for article-oriented diagnostics.
+In this tutorial, we avoid small convenience helpers for plotting and checking matrices. Instead, the code is written in a more explicit and linear way. This makes the script longer, but it also makes each operation easier to follow for readers who are still learning R and matrix-based modeling workflows.
 
-```{r helper-functions}
-theme_article_matrix <- function() {
-  theme_minimal(base_size = 11) +
-    theme(
-      plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-      plot.subtitle = element_text(size = 10, hjust = 0.5),
-      axis.title = element_text(face = "bold"),
-      axis.text = element_text(size = 8),
-      legend.title = element_text(face = "bold"),
-      legend.text = element_text(size = 8),
-      panel.grid = element_blank(),
-      strip.text = element_text(face = "bold")
-    )
-}
-
-matrix_to_long <- function(K, n_show = 60) {
-  n_show <- min(n_show, nrow(K))
-  K_sub <- K[seq_len(n_show), seq_len(n_show), drop = FALSE]
-  df <- as.data.frame(as.table(K_sub))
-  colnames(df) <- c("Row", "Column", "Value")
-  df$Row <- factor(df$Row, levels = rev(rownames(K_sub)))
-  df$Column <- factor(df$Column, levels = colnames(K_sub))
-  df
-}
-
-plot_kernel_excerpt <- function(K, title, subtitle = NULL, n_show = 60) {
-  df <- matrix_to_long(K, n_show = n_show)
-
-  ggplot(df, aes(x = Column, y = Row, fill = Value)) +
-    geom_raster() +
-    scale_fill_gradient2(
-      low = "#2166AC",
-      mid = "white",
-      high = "#B2182B",
-      midpoint = median(df$Value, na.rm = TRUE),
-      name = "Kernel value"
-    ) +
-    labs(
-      title = title,
-      subtitle = subtitle,
-      x = "Observation index",
-      y = "Observation index"
-    ) +
-    theme_article_matrix() +
-    theme(
-      axis.text.x = element_blank(),
-      axis.text.y = element_blank(),
-      axis.ticks = element_blank()
-    )
-}
-
-check_kernel_alignment <- function(K, reference_ids) {
-  tibble(
-    n_rows = nrow(K),
-    n_cols = ncol(K),
-    is_square = nrow(K) == ncol(K),
-    symmetric_names = identical(rownames(K), colnames(K)),
-    aligned_with_reference = identical(rownames(K), reference_ids)
-  )
-}
-```
+The only functions kept later in the script are the mathematical functions strictly required to estimate the Gaussian and arc-cosine kernels. Those functions are part of the modeling procedure itself, not just programming shortcuts.
 
 ## 3. Load the raw data
 
@@ -280,7 +222,9 @@ ZG[1:5, 1:5]
 
 ## 7. Build the linear phenomic kernel (K_P stored as `ZP`)
 
-The phenomic kernel uses the NIR spectral bands. The same blockwise logic is used here to keep the observation order synchronized with the genomic and environmental kernels.
+The phenomic kernel uses the NIR spectral bands. The same blockwise logic is used here to keep the observation order synchronized with the genomic, categorical environment, and weather kernels.
+
+This kernel is useful because it summarizes spectral similarity among observations. At the same time, it should be interpreted with caution. NIR spectra can reflect strong physiological responses to the field conditions, so the phenomic kernel may capture part of the environmental signal in addition to genotype-related information.
 
 ```{r build-zp}
 # Identify spectral variables defensively: keep only numeric columns and remove
@@ -327,7 +271,7 @@ ZP[1:5, 1:5]
 
 The simplest environmental representation treats each environment as a categorical factor. We first build the incidence matrix `ZE`, then convert it into a kernel (`ZEZE`) through the cross-product.
 
-This kernel assigns full environmental similarity to observations from the same environment and zero similarity to observations from different environments.
+This kernel assigns full environmental similarity to observations from the same environment and zero similarity to observations from different environments. In the final models, `ZEZE` represents the **categorical environment effect**. It is not the same as the weather kernel. In practical terms, `ZEZE` keeps the distinction among the four macro-environments, whereas `ZW` later describes similarity among observations based on meteorological covariates.
 
 ```{r build-ze}
 Pheno <- Pheno %>% arrange(match(ObsID, rownames(ZG)))
@@ -346,17 +290,19 @@ cat("Dimensions of ZEZE :", dim(ZEZE), "\n")
 ZEZE[1:5, 1:5]
 ```
 
-## 9. Build the weather-derived environmental kernel (K_W stored as `ZW`)
+## 9. Build the weather kernel (K_W stored as `ZW`)
 
 The weather kernel uses the climate outputs created in the `climate_data` tutorial. The updated climate workflow now exports two files:
 
-1. `environmental_covariates.csv`: one row per year with aggregated environmental summaries.
+1. `environmental_covariates.csv`: one row per year with aggregated weather summaries.
 2. `environmental_covariates_expanded.csv`: daily records linked to those annual summaries.
 
 This script uses **both** files:
 
-- The annual file provides the summary covariates.
-- The expanded file provides the daily weather trajectories used to describe the within-season climatic signature of each year.
+- The annual file provides the weather-derived summary covariates.
+- The expanded file provides the daily weather trajectories used to describe the within-season weather signature of each year.
+
+In the final reduced pipeline, `ZW` is used mainly in models `M10`-`M18`, together with interactions such as `GW`, `PW`, `GGKW`, `PGKW`, `GAKW`, and `PAKW`. The weather kernel should therefore be interpreted as an additional source of meteorological similarity. It does **not** replace the categorical environment effect represented by `ZEZE`.
 
 ### 9.1 Load climate files
 
@@ -448,7 +394,7 @@ daily_scaled <- ECs_expanded %>%
 
 ### 9.3 Create year-specific climatic signatures
 
-For each year, we transform the daily climatic trajectories into a single wide-row signature. This gives each year a reproducible vector representing its within-season weather profile.
+For each year, we transform the daily weather trajectories into a single wide-row signature. This gives each year a reproducible vector representing its within-season weather profile.
 
 ```{r create-year-signatures}
 daily_signature_2011 <- daily_scaled %>%
@@ -481,46 +427,88 @@ annual_signature_2012 <- annual_scaled %>%
 Each observation inherits the climatic signature of the year associated with its environment. The 2011 environments receive the 2011 daily and annual signatures; the 2012 environments receive the 2012 signatures. Missing year-specific blocks are filled with `NA` and later replaced with zero so that the final matrix can be used in a cross-product.
 
 ```{r build-w}
-build_weather_block <- function(obs_ids, daily_sig, annual_sig, other_daily_sig = NULL) {
-  main_daily <- as.data.frame(daily_sig[rep(1, length(obs_ids)), , drop = FALSE])
-  rownames(main_daily) <- obs_ids
-
-  if (is.null(other_daily_sig)) {
-    other_daily <- NULL
-  } else {
-    other_daily <- as.data.frame(
-      matrix(
-        NA_real_,
-        nrow = length(obs_ids),
-        ncol = ncol(other_daily_sig),
-        dimnames = list(obs_ids, colnames(other_daily_sig))
-      )
-    )
-  }
-
-  annual_block <- as.data.frame(annual_sig[rep(1, length(obs_ids)), , drop = FALSE])
-  rownames(annual_block) <- obs_ids
-
-  if (is.null(other_daily)) {
-    out <- cbind(main_daily, annual_block)
-  } else {
-    out <- cbind(main_daily, other_daily, annual_block)
-  }
-
-  out <- as.data.frame(out)
-  rownames(out) <- obs_ids
-  out
-}
-
 ids_a <- a$ObsID
 ids_b <- b$ObsID
 ids_c <- c$ObsID
 ids_d <- d$ObsID
 
-ECs.a <- build_weather_block(ids_a, daily_signature_2011, annual_signature_2011, daily_signature_2012)
-ECs.b <- build_weather_block(ids_b, daily_signature_2011, annual_signature_2011, daily_signature_2012)
-ECs.c <- build_weather_block(ids_c, daily_signature_2012, annual_signature_2012, daily_signature_2011)
-ECs.d <- build_weather_block(ids_d, daily_signature_2012, annual_signature_2012, daily_signature_2011)
+# Environments from 2011 receive the 2011 daily and annual signatures.
+ECs.a_main_daily <- as.data.frame(daily_signature_2011[rep(1, length(ids_a)), , drop = FALSE])
+rownames(ECs.a_main_daily) <- ids_a
+
+ECs.a_other_daily <- as.data.frame(
+  matrix(
+    NA_real_,
+    nrow = length(ids_a),
+    ncol = ncol(daily_signature_2012),
+    dimnames = list(ids_a, colnames(daily_signature_2012))
+  )
+)
+
+ECs.a_annual <- as.data.frame(annual_signature_2011[rep(1, length(ids_a)), , drop = FALSE])
+rownames(ECs.a_annual) <- ids_a
+
+ECs.a <- cbind(ECs.a_main_daily, ECs.a_other_daily, ECs.a_annual)
+ECs.a <- as.data.frame(ECs.a)
+rownames(ECs.a) <- ids_a
+
+ECs.b_main_daily <- as.data.frame(daily_signature_2011[rep(1, length(ids_b)), , drop = FALSE])
+rownames(ECs.b_main_daily) <- ids_b
+
+ECs.b_other_daily <- as.data.frame(
+  matrix(
+    NA_real_,
+    nrow = length(ids_b),
+    ncol = ncol(daily_signature_2012),
+    dimnames = list(ids_b, colnames(daily_signature_2012))
+  )
+)
+
+ECs.b_annual <- as.data.frame(annual_signature_2011[rep(1, length(ids_b)), , drop = FALSE])
+rownames(ECs.b_annual) <- ids_b
+
+ECs.b <- cbind(ECs.b_main_daily, ECs.b_other_daily, ECs.b_annual)
+ECs.b <- as.data.frame(ECs.b)
+rownames(ECs.b) <- ids_b
+
+# Environments from 2012 receive the 2012 daily and annual signatures.
+ECs.c_main_daily <- as.data.frame(daily_signature_2012[rep(1, length(ids_c)), , drop = FALSE])
+rownames(ECs.c_main_daily) <- ids_c
+
+ECs.c_other_daily <- as.data.frame(
+  matrix(
+    NA_real_,
+    nrow = length(ids_c),
+    ncol = ncol(daily_signature_2011),
+    dimnames = list(ids_c, colnames(daily_signature_2011))
+  )
+)
+
+ECs.c_annual <- as.data.frame(annual_signature_2012[rep(1, length(ids_c)), , drop = FALSE])
+rownames(ECs.c_annual) <- ids_c
+
+ECs.c <- cbind(ECs.c_main_daily, ECs.c_other_daily, ECs.c_annual)
+ECs.c <- as.data.frame(ECs.c)
+rownames(ECs.c) <- ids_c
+
+ECs.d_main_daily <- as.data.frame(daily_signature_2012[rep(1, length(ids_d)), , drop = FALSE])
+rownames(ECs.d_main_daily) <- ids_d
+
+ECs.d_other_daily <- as.data.frame(
+  matrix(
+    NA_real_,
+    nrow = length(ids_d),
+    ncol = ncol(daily_signature_2011),
+    dimnames = list(ids_d, colnames(daily_signature_2011))
+  )
+)
+
+ECs.d_annual <- as.data.frame(annual_signature_2012[rep(1, length(ids_d)), , drop = FALSE])
+rownames(ECs.d_annual) <- ids_d
+
+ECs.d <- cbind(ECs.d_main_daily, ECs.d_other_daily, ECs.d_annual)
+ECs.d <- as.data.frame(ECs.d)
+rownames(ECs.d) <- ids_d
 
 W <- rbind(ECs.a, ECs.b, ECs.c, ECs.d)
 W <- as.data.frame(W)
@@ -546,18 +534,45 @@ Before building interactions and nonlinear kernels, we summarize the main linear
 ```{r kernel-summary-linear}
 reference_ids <- Pheno$ObsID
 
-kernel_inventory_linear <- bind_rows(
-  check_kernel_alignment(ZG, reference_ids) %>% mutate(kernel = "ZG (genomic)"),
-  check_kernel_alignment(ZP, reference_ids) %>% mutate(kernel = "ZP (phenomic/NIR)"),
-  check_kernel_alignment(ZEZE, reference_ids) %>% mutate(kernel = "ZEZE (categorical environment)"),
-  check_kernel_alignment(ZW, reference_ids) %>% mutate(kernel = "ZW (weather-derived)")
-) %>%
-  dplyr::select(kernel, everything())
-
-knitr::kable(
-  kernel_inventory_linear,
-  caption = "Diagnostic summary of the main linear kernels."
+kernel_inventory_linear <- data.frame(
+  kernel = c("ZG (genomic)", "ZP (phenomic/NIR)", "ZEZE (categorical environment effect)", "ZW (weather kernel)"),
+  n_rows = c(nrow(ZG), nrow(ZP), nrow(ZEZE), nrow(ZW)),
+  n_cols = c(ncol(ZG), ncol(ZP), ncol(ZEZE), ncol(ZW)),
+  is_square = c(
+    nrow(ZG) == ncol(ZG),
+    nrow(ZP) == ncol(ZP),
+    nrow(ZEZE) == ncol(ZEZE),
+    nrow(ZW) == ncol(ZW)
+  ),
+  symmetric_names = c(
+    identical(rownames(ZG), colnames(ZG)),
+    identical(rownames(ZP), colnames(ZP)),
+    identical(rownames(ZEZE), colnames(ZEZE)),
+    identical(rownames(ZW), colnames(ZW))
+  ),
+  aligned_with_reference = c(
+    identical(rownames(ZG), reference_ids),
+    identical(rownames(ZP), reference_ids),
+    identical(rownames(ZEZE), reference_ids),
+    identical(rownames(ZW), reference_ids)
+  )
 )
+
+kernel_inventory_linear %>%
+  dplyr::mutate(
+    n_rows = format(n_rows, big.mark = ","),
+    n_cols = format(n_cols, big.mark = ",")
+  ) %>%
+  knitr::kable(
+    caption = "Diagnostic summary of the main linear kernels.",
+    align = "lcccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "260px")
 ```
 
 ### 10.1 Spot-check selected observations
@@ -590,6 +605,8 @@ all(colnames(ZW) == colnames(ZP))
 
 We postpone the final diagnostic figures until the Gaussian and arc-cosine kernels are available. This allows us to compare the linear and nonlinear representations within the genomic and phenomic spaces separately, which is more informative for the article than mixing weather and phenomic matrices in a single panel.
 
+Even though `ZW` is not shown in the integrated heatmap figure, it remains a central object in the reduced pipeline because it supports the weather-augmented models (`M10`-`M18`) and their interaction terms.
+
 
 ## 11. Build interaction kernels
 
@@ -614,9 +631,9 @@ saveRDS(ZPZE, "output/Matrizes/ZPZE.rds")
 
 The linear kernels above capture additive similarity. To explore nonlinear relationships, we also build Gaussian kernels for the genomic and phenomic spaces.
 
-### 12.1 Optimization function for the Gaussian kernel
+### 12.1 Core mathematical function for the Gaussian kernel
 
-The function below optimizes the Gaussian bandwidth parameter by maximizing the marginal likelihood.
+The next function is kept because it is part of the Gaussian kernel estimation itself. We use it to optimize the bandwidth parameter by maximizing the marginal likelihood.
 
 ```{r gk-functions}
 margh.fun <- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
@@ -700,6 +717,8 @@ GGK[1:5, 1:5]
 
 The phenomic Gaussian kernel uses Euclidean distances derived from the standardized NIR matrix.
 
+As in the genomic Gaussian kernel, the optimization step in the current pipeline uses **GY as the reference trait**, and the resulting phenomic Gaussian kernel is then reused for both GY and KW.
+
 ```{r pgk}
 DP <- (as.matrix(dist(NIR.all)))^2
 q05P <- quantile(DP, 0.05)
@@ -759,7 +778,9 @@ PGKW <- PGK * ZW
 
 Arc-cosine kernels offer a second nonlinear representation. They are inspired by neural-network geometry and can capture hierarchical nonlinear patterns through recursive transformations.
 
-### 13.1 Helper functions for arc-cosine kernels
+In this tutorial we keep the mathematical functions below explicitly in the script because they define the arc-cosine kernel itself. Even though they are written as functions, they are part of the method rather than programming shortcuts.
+
+### 13.1 Core mathematical functions for arc-cosine kernels
 
 ```{r ak-functions}
 AK1.fun <- function(X) {
@@ -838,6 +859,8 @@ AK.fun <- function(AK1, nl) {
 
 ### 13.2 Genomic arc-cosine kernel (`GAK`)
 
+The arc-cosine kernels follow the same practical rule adopted for the Gaussian kernels. In the current pipeline, the number of hidden layers is selected **once using GY as the reference trait**, and the resulting kernel is then reused in both trait analyses.
+
 ```{r gak}
 GAK1 <- AK1.fun(Geno)
 dim(GAK1)
@@ -869,6 +892,8 @@ GAK[1:5, 1:5]
 ```
 
 ### 13.3 Phenomic arc-cosine kernel (`PAK`)
+
+The phenomic arc-cosine kernel is also calibrated **once using GY as the reference trait**, and the final kernel is reused for both GY and KW in the downstream models.
 
 ```{r pak}
 PAK1 <- AK1.fun(NIR.all)
@@ -921,26 +946,48 @@ PAKW[1:5, 1:5]
 The table below provides a final integrity check for the nonlinear kernels before export.
 
 ```{r kernel-summary-nonlinear}
-kernel_inventory_nonlinear <- bind_rows(
-  check_kernel_alignment(GGK, reference_ids) %>% mutate(kernel = "GGK"),
-  check_kernel_alignment(PGK, reference_ids) %>% mutate(kernel = "PGK"),
-  check_kernel_alignment(GAK, reference_ids) %>% mutate(kernel = "GAK"),
-  check_kernel_alignment(PAK, reference_ids) %>% mutate(kernel = "PAK"),
-  check_kernel_alignment(GGKE, reference_ids) %>% mutate(kernel = "GGKE"),
-  check_kernel_alignment(PGKE, reference_ids) %>% mutate(kernel = "PGKE"),
-  check_kernel_alignment(GGKW, reference_ids) %>% mutate(kernel = "GGKW"),
-  check_kernel_alignment(PGKW, reference_ids) %>% mutate(kernel = "PGKW"),
-  check_kernel_alignment(GAKE, reference_ids) %>% mutate(kernel = "GAKE"),
-  check_kernel_alignment(PAKE, reference_ids) %>% mutate(kernel = "PAKE"),
-  check_kernel_alignment(GAKW, reference_ids) %>% mutate(kernel = "GAKW"),
-  check_kernel_alignment(PAKW, reference_ids) %>% mutate(kernel = "PAKW")
-) %>%
-  dplyr::select(kernel, everything())
-
-knitr::kable(
-  kernel_inventory_nonlinear,
-  caption = "Diagnostic summary of the nonlinear and interaction kernels."
+kernel_inventory_nonlinear <- data.frame(
+  kernel = c("GGK", "PGK", "GAK", "PAK", "GGKE", "PGKE", "GGKW", "PGKW", "GAKE", "PAKE", "GAKW", "PAKW"),
+  n_rows = c(nrow(GGK), nrow(PGK), nrow(GAK), nrow(PAK), nrow(GGKE), nrow(PGKE), nrow(GGKW), nrow(PGKW), nrow(GAKE), nrow(PAKE), nrow(GAKW), nrow(PAKW)),
+  n_cols = c(ncol(GGK), ncol(PGK), ncol(GAK), ncol(PAK), ncol(GGKE), ncol(PGKE), ncol(GGKW), ncol(PGKW), ncol(GAKE), ncol(PAKE), ncol(GAKW), ncol(PAKW)),
+  is_square = c(
+    nrow(GGK) == ncol(GGK), nrow(PGK) == ncol(PGK), nrow(GAK) == ncol(GAK), nrow(PAK) == ncol(PAK),
+    nrow(GGKE) == ncol(GGKE), nrow(PGKE) == ncol(PGKE), nrow(GGKW) == ncol(GGKW), nrow(PGKW) == ncol(PGKW),
+    nrow(GAKE) == ncol(GAKE), nrow(PAKE) == ncol(PAKE), nrow(GAKW) == ncol(GAKW), nrow(PAKW) == ncol(PAKW)
+  ),
+  symmetric_names = c(
+    identical(rownames(GGK), colnames(GGK)), identical(rownames(PGK), colnames(PGK)),
+    identical(rownames(GAK), colnames(GAK)), identical(rownames(PAK), colnames(PAK)),
+    identical(rownames(GGKE), colnames(GGKE)), identical(rownames(PGKE), colnames(PGKE)),
+    identical(rownames(GGKW), colnames(GGKW)), identical(rownames(PGKW), colnames(PGKW)),
+    identical(rownames(GAKE), colnames(GAKE)), identical(rownames(PAKE), colnames(PAKE)),
+    identical(rownames(GAKW), colnames(GAKW)), identical(rownames(PAKW), colnames(PAKW))
+  ),
+  aligned_with_reference = c(
+    identical(rownames(GGK), reference_ids), identical(rownames(PGK), reference_ids),
+    identical(rownames(GAK), reference_ids), identical(rownames(PAK), reference_ids),
+    identical(rownames(GGKE), reference_ids), identical(rownames(PGKE), reference_ids),
+    identical(rownames(GGKW), reference_ids), identical(rownames(PGKW), reference_ids),
+    identical(rownames(GAKE), reference_ids), identical(rownames(PAKE), reference_ids),
+    identical(rownames(GAKW), reference_ids), identical(rownames(PAKW), reference_ids)
+  )
 )
+
+kernel_inventory_nonlinear %>%
+  dplyr::mutate(
+    n_rows = format(n_rows, big.mark = ","),
+    n_cols = format(n_cols, big.mark = ",")
+  ) %>%
+  knitr::kable(
+    caption = "Diagnostic summary of the nonlinear and interaction kernels.",
+    align = "lcccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "340px")
 ```
 
 ## 15. Diagnostic figures for article reporting
@@ -950,54 +997,226 @@ To keep the visual narrative aligned with the manuscript, we generate a single i
 ### 15.1 Integrated genomic and phenomic kernel figure
 
 ```{r kernel-diagnostic-figure-integrated, fig.width=12, fig.height=8, fig.cap="Figure 1. Integrated diagnostic view of the genomic and phenomic kernel families. The first row shows the genomic kernels: linear genomic kernel (ZG), Gaussian genomic kernel (GGK), and arc-cosine genomic kernel (GAK). The second row shows the phenomic kernels: linear phenomic kernel (ZP), Gaussian phenomic kernel (PGK), and arc-cosine phenomic kernel (PAK)."}
-p_zg <- plot_kernel_excerpt(
-  ZG,
-  title = "ZG",
-  subtitle = "Linear genomic kernel",
-  n_show = 60
-)
+n_show <- 60
 
-p_ggk <- plot_kernel_excerpt(
-  GGK,
-  title = "GGK",
-  subtitle = "Gaussian genomic kernel",
-  n_show = 60
-)
+# ZG
+ZG_sub <- ZG[seq_len(min(n_show, nrow(ZG))), seq_len(min(n_show, ncol(ZG))), drop = FALSE]
+ZG_df <- as.data.frame(as.table(ZG_sub))
+colnames(ZG_df) <- c("Row", "Column", "Value")
+ZG_df$Row <- factor(ZG_df$Row, levels = rev(rownames(ZG_sub)))
+ZG_df$Column <- factor(ZG_df$Column, levels = colnames(ZG_sub))
 
-p_gak <- plot_kernel_excerpt(
-  GAK,
-  title = "GAK",
-  subtitle = "Arc-cosine genomic kernel",
-  n_show = 60
-)
+p_zg <- ggplot(ZG_df, aes(x = Column, y = Row, fill = Value)) +
+  geom_raster() +
+  scale_fill_gradient2(
+    low = "#2166AC",
+    mid = "white",
+    high = "#B2182B",
+    midpoint = median(ZG_df$Value, na.rm = TRUE),
+    name = "Kernel value"
+  ) +
+  labs(
+    title = "ZG",
+    subtitle = "Linear genomic kernel",
+    x = "Observation index",
+    y = "Observation index"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(size = 8),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 8),
+    panel.grid = element_blank()
+  )
 
-p_zp <- plot_kernel_excerpt(
-  ZP,
-  title = "ZP",
-  subtitle = "Linear phenomic kernel",
-  n_show = 60
-)
+# GGK
+GGK_sub <- GGK[seq_len(min(n_show, nrow(GGK))), seq_len(min(n_show, ncol(GGK))), drop = FALSE]
+GGK_df <- as.data.frame(as.table(GGK_sub))
+colnames(GGK_df) <- c("Row", "Column", "Value")
+GGK_df$Row <- factor(GGK_df$Row, levels = rev(rownames(GGK_sub)))
+GGK_df$Column <- factor(GGK_df$Column, levels = colnames(GGK_sub))
 
-p_pgk <- plot_kernel_excerpt(
-  PGK,
-  title = "PGK",
-  subtitle = "Gaussian phenomic kernel",
-  n_show = 60
-)
+p_ggk <- ggplot(GGK_df, aes(x = Column, y = Row, fill = Value)) +
+  geom_raster() +
+  scale_fill_gradient2(
+    low = "#2166AC",
+    mid = "white",
+    high = "#B2182B",
+    midpoint = median(GGK_df$Value, na.rm = TRUE),
+    name = "Kernel value"
+  ) +
+  labs(
+    title = "GGK",
+    subtitle = "Gaussian genomic kernel",
+    x = "Observation index",
+    y = "Observation index"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(size = 8),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 8),
+    panel.grid = element_blank()
+  )
 
-p_pak <- plot_kernel_excerpt(
-  PAK,
-  title = "PAK",
-  subtitle = "Arc-cosine phenomic kernel",
-  n_show = 60
-)
+# GAK
+GAK_sub <- GAK[seq_len(min(n_show, nrow(GAK))), seq_len(min(n_show, ncol(GAK))), drop = FALSE]
+GAK_df <- as.data.frame(as.table(GAK_sub))
+colnames(GAK_df) <- c("Row", "Column", "Value")
+GAK_df$Row <- factor(GAK_df$Row, levels = rev(rownames(GAK_sub)))
+GAK_df$Column <- factor(GAK_df$Column, levels = colnames(GAK_sub))
 
-kernel_integrated_plot <- patchwork::wrap_plots(
-  p_zg, p_ggk, p_gak,
-  p_zp, p_pgk, p_pak,
-  ncol = 3
-) +
-  patchwork::plot_annotation(
+p_gak <- ggplot(GAK_df, aes(x = Column, y = Row, fill = Value)) +
+  geom_raster() +
+  scale_fill_gradient2(
+    low = "#2166AC",
+    mid = "white",
+    high = "#B2182B",
+    midpoint = median(GAK_df$Value, na.rm = TRUE),
+    name = "Kernel value"
+  ) +
+  labs(
+    title = "GAK",
+    subtitle = "Arc-cosine genomic kernel",
+    x = "Observation index",
+    y = "Observation index"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(size = 8),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 8),
+    panel.grid = element_blank()
+  )
+
+# ZP
+ZP_sub <- ZP[seq_len(min(n_show, nrow(ZP))), seq_len(min(n_show, ncol(ZP))), drop = FALSE]
+ZP_df <- as.data.frame(as.table(ZP_sub))
+colnames(ZP_df) <- c("Row", "Column", "Value")
+ZP_df$Row <- factor(ZP_df$Row, levels = rev(rownames(ZP_sub)))
+ZP_df$Column <- factor(ZP_df$Column, levels = colnames(ZP_sub))
+
+p_zp <- ggplot(ZP_df, aes(x = Column, y = Row, fill = Value)) +
+  geom_raster() +
+  scale_fill_gradient2(
+    low = "#2166AC",
+    mid = "white",
+    high = "#B2182B",
+    midpoint = median(ZP_df$Value, na.rm = TRUE),
+    name = "Kernel value"
+  ) +
+  labs(
+    title = "ZP",
+    subtitle = "Linear phenomic kernel",
+    x = "Observation index",
+    y = "Observation index"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(size = 8),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 8),
+    panel.grid = element_blank()
+  )
+
+# PGK
+PGK_sub <- PGK[seq_len(min(n_show, nrow(PGK))), seq_len(min(n_show, ncol(PGK))), drop = FALSE]
+PGK_df <- as.data.frame(as.table(PGK_sub))
+colnames(PGK_df) <- c("Row", "Column", "Value")
+PGK_df$Row <- factor(PGK_df$Row, levels = rev(rownames(PGK_sub)))
+PGK_df$Column <- factor(PGK_df$Column, levels = colnames(PGK_sub))
+
+p_pgk <- ggplot(PGK_df, aes(x = Column, y = Row, fill = Value)) +
+  geom_raster() +
+  scale_fill_gradient2(
+    low = "#2166AC",
+    mid = "white",
+    high = "#B2182B",
+    midpoint = median(PGK_df$Value, na.rm = TRUE),
+    name = "Kernel value"
+  ) +
+  labs(
+    title = "PGK",
+    subtitle = "Gaussian phenomic kernel",
+    x = "Observation index",
+    y = "Observation index"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(size = 8),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 8),
+    panel.grid = element_blank()
+  )
+
+# PAK
+PAK_sub <- PAK[seq_len(min(n_show, nrow(PAK))), seq_len(min(n_show, ncol(PAK))), drop = FALSE]
+PAK_df <- as.data.frame(as.table(PAK_sub))
+colnames(PAK_df) <- c("Row", "Column", "Value")
+PAK_df$Row <- factor(PAK_df$Row, levels = rev(rownames(PAK_sub)))
+PAK_df$Column <- factor(PAK_df$Column, levels = colnames(PAK_sub))
+
+p_pak <- ggplot(PAK_df, aes(x = Column, y = Row, fill = Value)) +
+  geom_raster() +
+  scale_fill_gradient2(
+    low = "#2166AC",
+    mid = "white",
+    high = "#B2182B",
+    midpoint = median(PAK_df$Value, na.rm = TRUE),
+    name = "Kernel value"
+  ) +
+  labs(
+    title = "PAK",
+    subtitle = "Arc-cosine phenomic kernel",
+    x = "Observation index",
+    y = "Observation index"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(size = 8),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 8),
+    panel.grid = element_blank()
+  )
+
+kernel_integrated_plot <- (p_zg + p_ggk + p_gak) / (p_zp + p_pgk + p_pak) +
+  plot_annotation(
     title = "Integrated diagnostic view of genomic and phenomic kernels",
     subtitle = "Top row: genomic kernels | Bottom row: phenomic kernels",
     theme = theme(
@@ -1022,6 +1241,8 @@ ggsave(
 ## 16. Save outputs and reset the environment
 
 The kernel objects created in this tutorial are computationally expensive to reproduce. For that reason, the final step saves them as `.rds` files and cleans the workspace so the next modeling script can start from a lighter memory state.
+
+This last section is also written in a direct way: we list which objects will be saved, write them to disk, export the diagnostic tables, remove the remaining temporary objects, and then reload the saved matrices.
 
 ```{r save-and-clean, message=FALSE}
 keep_names <- c(

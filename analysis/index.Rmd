@@ -1,97 +1,59 @@
 ---
-title: "Kernel-Based Integration of Near-Infrared Spectroscopy and Genomic Data"
-author: 
-  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, weverton.costa@ufv.br]
+title: "Home"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
-    toc: FALSE
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    code_download: true
 editor_options:
   chunk_output_type: console
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-```
+## Project overview
 
-# Kernel-Based Integration of Near-Infrared Spectroscopy and Genomic Data
+This project investigates whether genomic, phenomic, and weather-derived information can improve prediction for grain yield and kernel weight in multi-environment maize trials.
 
-Welcome. This website organizes the analytical workflows, intermediate products, and manuscript-oriented reports for the study **"Kernel-Based Integration of Near-Infrared Spectroscopy and Genomic Data for Enhanced Predictive Performance"**.
+The repository and website were organized as a tutorial-style analytical pipeline. Each page corresponds to one major step of the study, from weather data processing to kernel construction, variance component estimation, prediction analyses, and final visualization.
 
-The project investigates whether combining **genomic markers**, **near-infrared spectroscopy (NIRS)**, and **weather covariates** through kernel-based models can improve predictive performance for agronomic traits in **multi-environment maize trials**.
+## Main data sources
 
-## Central scientific question
+The study combines three main types of information:
 
-The study evaluates whether heterogeneous biological information sources provide **complementary predictive signal** when modeled jointly. In practical terms, the repository compares:
+- **Genomic data**, represented by SNP markers
+- **Phenomic data**, represented by NIR spectra
+- **Weather-derived covariates**, used to build the weather kernel (`W`)
 
-- **genomic prediction (G)** based on SNP-derived similarity;
-- **phenomic prediction (P)** based on NIRS-derived similarity;
-- **environmental information (E/W)** represented through fixed or kernel-based structures;
-- **integrated multi-kernel models** combining genomic, phenomic, and environmental components.
+In this website, the term **weather** is used when referring to meteorological covariates derived from NASA POWER and to the kernel built from those covariates. The term **environment** is reserved for the categorical macro-environment effect (`E`) and for the field conditions under which hybrids were evaluated.
 
-The main analytical focus is not only whether integration is possible, but whether it is **stable, reproducible, and genuinely advantageous** across cross-validation scenarios that reflect realistic breeding conditions.
+## Analytical structure
 
-## Study scope
+The workflow is divided into the following main steps:
 
-The analyses are based on maize multi-environment trials conducted in **College Station, Texas**, under two water regimes (**well-watered** and **water-stressed**) across two years (**2011** and **2012**). The repository integrates:
-
-- **phenotypic records** for agronomic traits;
-- **genomic marker data**;
-- **whole-kernel NIRS spectra**;
-- **daily weather covariates** used to derive environmental kernels.
-
-The target traits currently emphasized in the study are:
-
-- **Grain yield (GY)**
-- **500-kernel weight (KW)**
+1. weather data acquisition and processing
+2. construction of genomic, phenomic, environment, and weather kernels
+3. estimation of variance components for the reduced set of 18 models
+4. prediction analyses under four cross-validation scenarios
+5. consolidation of final figures and summary tables
 
 ## Main analytical message
 
-The original motivation of the project was to test whether integrating NIRS and genomic information could improve prediction beyond single-source models. The current version of the study supports a more selective conclusion:
+The current version of the project is structured to support manuscript revision and reproducible reporting. The goal is not to assume that integration automatically improves prediction, but to evaluate whether genomic, phenomic, and weather-derived information provide complementary predictive signals under different kernels and validation scenarios.
 
-- genomic information provided the most robust predictive signal;
-- NIRS captured biologically relevant variation, but with lower stability across environments;
-- the environmental effect was strong and explained an important fraction of the observed variation;
-- adding weather kernels or explicit interaction kernels did not consistently improve predictive performance;
-- integrating **G + P** did not yield clear or systematic gains under the evaluated conditions.
+## Website navigation
 
-This makes the repository useful not only as a positive integration example, but also as a **reproducible case study on when multimodal data fusion does not deliver the expected predictive advantage**.
+The main pages of the project are:
 
-## Website contents
-
-This site is organized around the main components of the analytical pipeline available in the repository:
-
-- **About**: project context, manuscript framing, and study overview.
-- **Climate data**: preprocessing and structuring of weather information used in environmental modeling.
-- **Matrices**: construction of genomic, phenomic, environmental, and interaction kernels.
-- **Prediction analysis**: model fitting and cross-validation using Bayesian multi-kernel regression.
-- **Variance components**: decomposition of explained variation across model structures.
-- **Visualization**: figures and summary plots used to interpret predictive ability and model behavior.
-- **Additional analysis pages**: exploratory and supporting reports used during the development of the study.
-
-## Reproducibility
-
-The project is implemented in **R** and organized with **workflowr** for transparent reporting. Dependencies can be restored locally with `renv`.
-
-```r
-install.packages("renv")
-renv::restore()
-```
-
-The repository structure includes source analyses, data, helper code, intermediate outputs, and rendered website files.
-
-## Repository and contact
-
-**GitHub repository**  
-[WevertonGomesCosta/Integrating-nir-genomic-kernel](https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel)
-
-**Project website**  
-[https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/](https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/)
-
-**Author / Contact**  
-Weverton Gomes da Costa  
-Departamento de Estatística, Universidade Federal de Viçosa (UFV)  
-Email: weverton.costa@ufv.br
+- **Climate data**: weather download, processing, and weather covariate generation
+- **Matrices**: aligned kernel construction
+- **Variance components**: decomposition of model variance
+- **Prediction**: cross-validation analyses
+- **Visualization**: final result summaries
+- **About**: project background and study rationale
+- **License**: licensing information for the repository and website

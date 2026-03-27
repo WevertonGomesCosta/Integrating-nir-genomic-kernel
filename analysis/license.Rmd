@@ -1,13 +1,14 @@
 ---
 title: "License"
-author: 
-  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, weverton.costa@ufv.br]
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
-    toc: FALSE
+    toc: false
+    code_download: true
 editor_options:
   chunk_output_type: console
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
@@ -21,31 +22,31 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 Unless otherwise noted, the materials made available in this repository and website are distributed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
 
-This licensing statement applies to the project documentation and manuscript-oriented materials associated with the study **"Kernel-Based Integration of Near-Infrared Spectroscopy and Genomic Data for Enhanced Predictive Performance"**, including rendered reports, explanatory text, figures, tables, and analytical narratives provided in this repository.
+This licensing statement applies to the project documentation and manuscript-oriented materials associated with this study, including rendered reports, explanatory text, figures, tables, and analytical narratives provided in this repository.
 
 ## What you may do
 
 Under this license, you are free to:
 
-- **Share** — copy and redistribute the material in any medium or format;
-- **Adapt** — remix, transform, and build upon the material.
+- **Share** — copy and redistribute the material in any medium or format
+- **Adapt** — remix, transform, and build upon the material
 
 ## Conditions of use
 
 These permissions are granted provided that you comply with the following conditions:
 
-- **Attribution** — you must give appropriate credit, provide a link to the license, and indicate whether changes were made;
-- **NonCommercial** — you may not use the material for commercial purposes;
-- **ShareAlike** — if you remix, transform, or build upon the material, you must distribute your contributions under the same license.
+- **Attribution** — you must give appropriate credit, provide a link to the license, and indicate whether changes were made
+- **NonCommercial** — you may not use the material for commercial purposes
+- **ShareAlike** — if you remix, transform, or build upon the material, you must distribute your contributions under the same license
 
 ## Scope and limitations
 
 Please note the following:
 
-- This license applies **unless a specific file, dataset, figure, or external resource indicates otherwise**;
-- Some data resources used in this project may originate from previously published studies or external repositories, and their reuse may be subject to the original source terms;
-- Users are responsible for verifying citation requirements, reuse permissions, and any additional restrictions associated with third-party materials;
-- This repository is provided for **research, educational, and reproducibility purposes**.
+- This license applies **unless a specific file, dataset, figure, or external resource indicates otherwise**
+- Some data resources used in this project may originate from previously published studies or external repositories, and their reuse may be subject to the original source terms
+- Users are responsible for verifying citation requirements, reuse permissions, and any additional restrictions associated with third-party materials
+- This repository is provided for **research, educational, and reproducibility purposes**
 
 ## No warranty
 
@@ -63,8 +64,8 @@ If you use this repository in academic work, please cite the corresponding manus
 
 **Author / Contact**  
 Weverton Gomes da Costa  
-Departamento de Estatística, Universidade Federal de Viçosa (UFV)  
-Email: weverton.costa@ufv.br
+Department of Statistics, Federal University of Viçosa (UFV)  
+Email: wevertonufv@gmail.com
 
 **Project website**  
 [https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/](https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/)

@@ -1,107 +1,63 @@
 ---
 title: "About"
-author: 
-  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, weverton.costa@ufv.br]
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
-    toc: FALSE
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    code_download: true
 editor_options:
   chunk_output_type: console
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-```
+## Study background
 
-## About the article
+This project evaluates kernel-based strategies for integrating genomic markers, NIR spectra, and weather-derived covariates in maize prediction models.
 
-This repository accompanies the manuscript **"Kernel-Based Integration of Near-Infrared Spectroscopy and Genomic Data for Enhanced Predictive Performance"** and documents the data-processing, kernel construction, prediction, and visualization workflows used in the study.
+The study focuses on two agronomic traits:
 
-The project evaluates whether kernel-based integration of **genomic markers**, **near-infrared spectroscopy (NIRS)**, and **weather covariates** can improve prediction for agronomic traits in multi-environment maize trials. The analyses were developed under a hierarchical Bayesian framework in **R**, with reproducible workflows organized through **workflowr**.
+- grain yield (GY)
+- 500-kernel weight (KW)
 
-## Study overview
+The analyses were conducted in four macro-environments formed by the combination of year and water regime.
 
-The study was based on multi-environment field trials conducted in **College Station, Texas**, during **2011** and **2012**, under two contrasting water management regimes: **well-watered (WW)** and **water-stressed (WS)**. These combinations generated four macro-environments used throughout the prediction analyses:
+## Why this project was organized this way
 
-- **CS11_WS**
-- **CS11_WW**
-- **CS12_WS**
-- **CS12_WW**
+The website and repository were restructured to support two goals at the same time:
 
-The repository integrates three main sources of information:
+1. provide a reproducible analytical pipeline for the study
+2. serve as a didactic and transparent tutorial for readers who want to understand each analytical step
 
-- **Genomic data**: genome-wide SNP markers obtained by genotyping-by-sequencing.
-- **Phenomic data**: whole-kernel NIRS spectra measured after harvest.
-- **Weather data**: daily meteorological covariates summarized and structured for environmental kernel construction.
+For this reason, the workflow is organized into separate pages that follow the same order used in the manuscript revision process.
 
-The target traits analyzed in the manuscript are:
+## Terminology used in the project
 
-- **Grain yield (GY)**
-- **500-kernel weight (KW)**
+A key adjustment in the current version of the project is the distinction between **environment** and **weather**.
 
-## Analytical scope
+- **Environment (`E`)** refers to the categorical macro-environment effect used in the models.
+- **Weather (`W`)** refers to the kernel derived from meteorological covariates obtained from NASA POWER.
 
-The repository contains the workflows required to:
+This distinction is important because the weather kernel is built only from meteorological variables. It does not include broader environmental descriptors such as soil, management, or other site-level factors.
 
-- harmonize phenotypic, genomic, spectral, and environmental data;
-- construct kernel matrices for genomic (**G**), phenomic/NIRS (**P**), environmental (**W**), and interaction structures;
-- fit single- and multi-kernel prediction models using **BGLR**;
-- compare **Gaussian** and **arc-cosine** kernels;
-- evaluate predictive performance under four validation schemes:
-  - **CV1**: untested genotypes;
-  - **CV2**: untested genotypes with partial information;
-  - **CV0**: untested environment;
-  - **CV00**: untested genotypes and untested environments;
-- summarize variance components and predictive ability across model classes.
+## Main methodological components
 
-## Main findings
+The project includes:
 
-The central hypothesis of the study was that integrating genomic and NIRS information through kernel methods could improve predictive ability relative to single-source models. However, the current analyses indicate a more restrictive result:
+- linear genomic and phenomic kernels
+- nonlinear genomic and phenomic kernels
+- categorical environment effects
+- weather-derived kernels
+- interaction terms such as `G × E`, `P × E`, `G × W`, and `P × W`
+- Bayesian multi-kernel prediction using `BGLR`
 
-- genomic prediction (**G**) was the most robust information source across validation scenarios;
-- phenomic prediction based on **NIRS (P)** showed lower and less stable predictive performance;
-- the **environment effect (E)** explained a substantial portion of the observed variation;
-- adding **weather covariates (W)** or explicitly modeling interaction kernels did not consistently improve prediction;
-- integrating **G + P** did **not** produce clear gains in predictive ability under the evaluated conditions.
+## Current scientific emphasis
 
-These results suggest that, in this dataset, NIRS captured a strong environment-dependent physiological signal, but did not provide a sufficiently stable complementary signal to improve genomic prediction across environments.
+The updated analytical pipeline is designed to support a careful revision of the manuscript. The main emphasis is to evaluate how genomic, phenomic, and weather information behave in the prediction process, rather than to assume that integration necessarily produces better performance.
 
-## Repository structure
-
-The project is organized into the following directories:
-
-- **`analysis/`**: main R Markdown workflows, manuscript-oriented analyses, and website source files;
-- **`code/`**: auxiliary R functions and project utilities;
-- **`data/`**: input datasets used in the analyses;
-- **`output/`**: derived matrices, intermediate objects, and prediction summaries;
-- **`docs/`**: rendered website files for GitHub Pages.
-
-## Reproducibility
-
-All analyses were implemented in **R** and are intended to be reproducible through the project environment. Package dependencies can be restored with `renv`, and the website/reporting workflow is managed with `workflowr`.
-
-A typical local setup is:
-
-```r
-install.packages("renv")
-renv::restore()
-```
-
-## Citation and contact
-
-If you use this repository, please cite the corresponding manuscript when available.
-
-**Author / Contact**  
-Weverton Gomes da Costa  
-Departamento de Estatística, Universidade Federal de Viçosa (UFV)  
-Email: weverton.costa@ufv.br
-
-**Project website**  
-[https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/](https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/)
-
-**GitHub repository**  
-[https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel](https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel)
+This makes the project useful both as a research report and as a methodological example of multi-source kernel modeling in plant breeding.

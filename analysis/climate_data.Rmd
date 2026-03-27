@@ -27,16 +27,18 @@ knitr::opts_chunk$set(
 
 ## 1. Introduction
 
-This tutorial presents the workflow used to obtain and process daily climatic data for the maize experiments conducted in College Station, Texas, during the 2011 and 2012 growing seasons.
+This tutorial presents the workflow used to obtain and process daily weather data for the maize experiments conducted in College Station, Texas, during the 2011 and 2012 growing seasons.
 
-The purpose of this script is not only to download daily weather records, but to convert those time series into a concise and biologically meaningful set of **environmental covariates (ECs)**. These covariates summarize the macro-environmental conditions of each growing season and are later used as the **W** component in prediction models that combine genomic, environmental, and spectral information.
+The purpose of this script is not only to download daily weather records, but to convert those time series into a concise and biologically meaningful set of **weather-derived covariates**. These covariates summarize the main meteorological conditions of each growing season and are later used to build the **weather kernel (W)** in the final prediction pipeline.
+
+In the reduced set of 18 models used in the project, the weather kernel is included in models **M10-M18**. In those models, `W` is used to test whether weather-derived similarity adds useful information beyond the categorical environment effect (`E`) and the genomic (`G`) and phenomic (`P`) kernels. Therefore, `W` should be interpreted as a complementary source of meteorological information and **not** as a replacement for `E`.
 
 In practical terms, the workflow has four goals:
 
 1. Retrieve daily weather data from the NASA POWER database.
 2. Organize the raw data into a reproducible table.
-3. Visually inspect the main climatic differences between years.
-4. Derive annual environmental descriptors that can later be used to construct the environmental kernel.
+3. Visually inspect the main weather differences between years.
+4. Derive annual and daily weather descriptors that can later be used to construct the weather kernel.
 
 **Study location:** College Station, Texas, USA  
 **Growing season window:** May 1 to September 30  
@@ -53,18 +55,20 @@ Each package has a clear role in the workflow:
 - `lubridate`: simplifies date conversion and date-based operations.
 - `patchwork`: combines multiple `ggplot2` figures into publication-ready panels.
 - `ggthemes`: provides the Google Docs discrete scales used to standardize colors across figures.
+- `kableExtra`: improves the presentation of HTML tables in the tutorial.
 
 We also create the output directory at the beginning of the script. This avoids errors when saving figures and tables later in the analysis.
 
 ```{r packages}
 # Uncomment if installation is required
-# install.packages(c("nasapower", "tidyverse", "lubridate", "patchwork", "ggthemes"))
+# install.packages(c("nasapower", "tidyverse", "lubridate", "patchwork", "ggthemes", "kableExtra"))
 
 library(nasapower)
 library(tidyverse)
 library(lubridate)
 library(patchwork)
 library(ggthemes)
+library(kableExtra)
 
 if (!dir.exists("output")) dir.create("output")
 if (!dir.exists("output/climate_results")) dir.create("output/climate_results", recursive = TRUE)
@@ -76,7 +80,7 @@ In this section, we define the basic inputs for the NASA POWER query. These inpu
 
 The geographic coordinates identify the experimental site. The start and end dates define the crop season window to be analyzed. The vector `params` lists the daily climatic variables required for downstream summaries, such as precipitation, temperature, relative humidity, solar radiation, and wind speed.
 
-These variables were selected because they allow us to derive environmental descriptors with direct agronomic interpretation, such as accumulated precipitation, growing degree days, thermal stress, and vapor pressure deficit.
+These variables were selected because they allow us to derive weather-derived descriptors with direct agronomic interpretation, such as accumulated precipitation, growing degree days, thermal stress, and vapor pressure deficit.
 
 ```{r parameters}
 # Experimental site coordinates (College Station, TX)
@@ -148,10 +152,40 @@ texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012) %>%
     year = factor(year, levels = c(2011, 2012))
   )
 
+daily_preview_table <- texas_climate_data %>%
+  select(date, year, PRECTOTCORR, T2M_MAX, T2M_MIN, RH2M, ALLSKY_SFC_SW_DWN, WS2M) %>%
+  slice(1:10) %>%
+  mutate(
+    PRECTOTCORR = round(PRECTOTCORR, 2),
+    T2M_MAX = round(T2M_MAX, 2),
+    T2M_MIN = round(T2M_MIN, 2),
+    RH2M = round(RH2M, 1),
+    ALLSKY_SFC_SW_DWN = round(ALLSKY_SFC_SW_DWN, 2),
+    WS2M = round(WS2M, 2)
+  ) %>%
+  rename(
+    Date = date,
+    Year = year,
+    `Precipitation` = PRECTOTCORR,
+    `Tmax` = T2M_MAX,
+    `Tmin` = T2M_MIN,
+    `Relative humidity` = RH2M,
+    `Solar radiation` = ALLSKY_SFC_SW_DWN,
+    `Wind speed` = WS2M
+  )
+
 knitr::kable(
-  head(texas_climate_data),
-  caption = "Sample of daily climatic data retrieved from NASA POWER."
-)
+  daily_preview_table,
+  align = "c",
+  caption = "Table 1. Sample of daily weather records retrieved from NASA POWER for the Texas trials."
+) %>%
+  kableExtra::kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    position = "center",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 
 write.csv(
   texas_climate_data,
@@ -162,79 +196,34 @@ write.csv(
 
 ## 5. Exploratory analysis and figure generation
 
-Before summarizing the data into environmental covariates, it is good practice to inspect the daily series visually. This step serves two purposes.
+Before summarizing the data into weather-derived covariates, it is good practice to inspect the daily series visually. This step serves two purposes.
 
 First, it helps verify that the downloaded data are coherent and free from obvious structural problems. Second, it helps interpret the climatic contrast between the years under study, which is important for the biological discussion of the experiments.
 
 To make the figures suitable for a scientific article, we define a common visual style and standardize axis titles, units, and panel formatting.
 
-### 5.1 Define a common publication-oriented plotting style
+### 5.1 Prepare shared labels for the figures
 
-The objects created below are used repeatedly across the figures. The custom theme improves readability, while the month labels ensure consistent calendar formatting across panels. We also define helper scales based on the Google Docs palette (`scale_*_gdocs`) so that all figures share the same discrete color standard throughout the tutorial.
+To keep the figures consistent, we define the month labels only once. This avoids mixing different month formats across panels and makes the comparisons easier to read.
 
-```{r figure_helpers}
-theme_article <- function() {
-  theme_bw(base_size = 11) +
-    theme(
-      panel.grid.minor = element_blank(),
-      panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
-      panel.border = element_rect(color = "grey40", linewidth = 0.4),
-      strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
-      strip.text = element_text(face = "bold", size = 10),
-      axis.title = element_text(face = "bold", size = 11),
-      axis.text = element_text(size = 9.5, color = "black"),
-      plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
-      plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
-      plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
-      plot.caption.position = "plot",
-      legend.position = "bottom",
-      legend.justification = "center",
-      legend.direction = "horizontal",
-      legend.title = element_text(face = "bold", size = 10),
-      legend.text = element_text(size = 9),
-      legend.key.width = grid::unit(1.2, "cm"),
-      legend.box.margin = margin(t = 4),
-      plot.margin = margin(8, 10, 8, 8)
-    )
-}
+In this tutorial, the graphical settings are written directly inside each figure. This makes the code longer, but it is also easier to follow for readers who are still learning how each plot is built.
 
-scale_fill_article <- function(...) {
-  ggthemes::scale_fill_gdocs(...)
-}
-
-scale_color_article <- function(...) {
-  ggthemes::scale_color_gdocs(...)
-}
-
-scale_color_temperature_article <- function(...) {
-  ggplot2::scale_color_manual(
-    values = c(
-      "Minimum" = "#4285F4",
-      "Mean" = "#F4B400",
-      "Maximum" = "#DB4437"
-    ),
-    ...
-  )
-}
-
-guide_article <- guide_legend(
-  title.position = "top",
-  nrow = 1,
-  byrow = TRUE
-)
-
+```{r figure_settings}
 month_levels <- 5:9
-month_labels <- month.abb[month_levels]
 
-month_breaks_fn <- function(x) {
-  seq.Date(
-    from = floor_date(min(x, na.rm = TRUE), unit = "month"),
-    to   = floor_date(max(x, na.rm = TRUE), unit = "month"),
-    by   = "1 month"
-  )
-}
+# Month labels are fixed explicitly here so the whole script always uses
+# the same format with an uppercase initial, regardless of local settings.
+month_labels <- c("May", "Jun", "Jul", "Aug", "Sep")
 
-month_labels_fn <- scales::label_date(format = "%b")
+month_breaks <- as.Date(c(
+  "2011-05-01", "2011-06-01", "2011-07-01", "2011-08-01", "2011-09-01",
+  "2012-05-01", "2012-06-01", "2012-07-01", "2012-08-01", "2012-09-01"
+))
+
+month_break_labels <- c(
+  "May", "Jun", "Jul", "Aug", "Sep",
+  "May", "Jun", "Jul", "Aug", "Sep"
+)
 
 daily_data_with_parts <- texas_climate_data %>%
   mutate(
@@ -262,9 +251,30 @@ p_precip_daily <- ggplot(
     y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
     caption = "Bars represent corrected total daily precipitation obtained from NASA POWER."
   ) +
-  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
-  scale_fill_article(limits = c("2011", "2012"), guide = guide_article) +
-  theme_article()
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  theme_bw(base_size = 11) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 10),
+    axis.title = element_text(face = "bold", size = 11),
+    axis.text = element_text(size = 9.5, color = "black"),
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
+    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
+    plot.caption.position = "plot",
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 9),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
 
 p_precip_daily
 ```
@@ -288,8 +298,29 @@ p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill 
     caption = "This arrangement facilitates within-season comparison of rainfall patterns between years."
   ) +
   scale_x_discrete(breaks = c("1", "5", "10", "15", "20", "25", "30", "31")) +
-  scale_fill_article(limits = c("2011", "2012"), guide = guide_article) +
-  theme_article()
+  ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  theme_bw(base_size = 11) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 10),
+    axis.title = element_text(face = "bold", size = 11),
+    axis.text = element_text(size = 9.5, color = "black"),
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
+    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
+    plot.caption.position = "plot",
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 9),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
 
 p1
 ```
@@ -317,8 +348,29 @@ p2 <- ggplot(monthly_precip, aes(x = month, y = total_precipitation, fill = year
     fill = "Year",
     caption = "Bars represent cumulative precipitation within each month of the crop season."
   ) +
-  scale_fill_article(limits = c("2011", "2012"), guide = guide_article) +
-  theme_article()
+  ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  theme_bw(base_size = 11) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 10),
+    axis.title = element_text(face = "bold", size = 11),
+    axis.text = element_text(size = 9.5, color = "black"),
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
+    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
+    plot.caption.position = "plot",
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 9),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
 
 p2
 ```
@@ -365,9 +417,30 @@ p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperatur
     color = "Temperature metric",
     caption = "Dashed LOESS curves are included only to summarize seasonal trajectories for each temperature metric."
   ) +
-  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
-  scale_color_temperature_article(limits = c("Minimum", "Mean", "Maximum"), guide = guide_article) +
-  theme_article()
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  scale_color_manual(values = c("Minimum" = "#4285F4", "Mean" = "#F4B400", "Maximum" = "#DB4437"), limits = c("Minimum", "Mean", "Maximum"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  theme_bw(base_size = 11) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 10),
+    axis.title = element_text(face = "bold", size = 11),
+    axis.text = element_text(size = 9.5, color = "black"),
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
+    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
+    plot.caption.position = "plot",
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 9),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
 
 p3
 ```
@@ -430,9 +503,30 @@ p4 <- ggplot(
     y = expression("Shortwave solar radiation (" * MJ ~ m^{-2} ~ day^{-1} * ")"),
     caption = "Daily incoming shortwave radiation during the crop season."
   ) +
-  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
-  scale_color_article(limits = "Solar radiation", guide = "none") +
-  theme_article()
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  ggthemes::scale_color_gdocs(limits = "Solar radiation", guide = "none") +
+  theme_bw(base_size = 11) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 10),
+    axis.title = element_text(face = "bold", size = 11),
+    axis.text = element_text(size = 9.5, color = "black"),
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
+    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
+    plot.caption.position = "plot",
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 9),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
 
 p5 <- ggplot(
   texas_climate_data,
@@ -448,9 +542,30 @@ p5 <- ggplot(
     y = expression("Wind speed (" * m ~ s^{-1} * ")"),
     caption = "Daily wind speed measured at 2 m above ground level."
   ) +
-  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
-  scale_color_article(limits = "Wind speed", guide = "none") +
-  theme_article()
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  ggthemes::scale_color_gdocs(limits = "Wind speed", guide = "none") +
+  theme_bw(base_size = 11) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 10),
+    axis.title = element_text(face = "bold", size = 11),
+    axis.text = element_text(size = 9.5, color = "black"),
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
+    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
+    plot.caption.position = "plot",
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 9),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
 
 p6 <- ggplot(
   texas_climate_data,
@@ -466,9 +581,30 @@ p6 <- ggplot(
     y = "Relative humidity (%)",
     caption = "Daily relative humidity measured at 2 m above ground level."
   ) +
-  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
-  scale_color_article(limits = "Relative humidity", guide = "none") +
-  theme_article()
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  ggthemes::scale_color_gdocs(limits = "Relative humidity", guide = "none") +
+  theme_bw(base_size = 11) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 10),
+    axis.title = element_text(face = "bold", size = 11),
+    axis.text = element_text(size = 9.5, color = "black"),
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
+    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
+    plot.caption.position = "plot",
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 9),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
 ```
 
 ### 5.8 Combined figure for additional climate variables
@@ -508,15 +644,15 @@ ggsave(
 )
 ```
 
-## 6. Environmental covariates
+## 6. Weather-derived covariates
 
 The next step transforms daily climatic records into annual summary variables. This is the most important analytical transition in the script because it converts a raw time series into features that can be used in downstream prediction models.
 
-These summaries are designed to capture biologically relevant aspects of each environment, including thermal accumulation, water availability, atmospheric dryness, and stress frequency.
+These summaries are designed to capture biologically relevant aspects of each growing season, including thermal accumulation, water availability, atmospheric dryness, and stress frequency.
 
 ### 6.1 Derive daily intermediate variables
 
-Some environmental covariates depend on quantities that are not directly provided by NASA POWER. For this reason, we first compute intermediate daily variables such as growing degree days (GDD), daily thermal amplitude, average daily temperature, saturation vapor pressure, actual vapor pressure, and vapor pressure deficit (VPD).
+Some weather-derived covariates depend on quantities that are not directly provided by NASA POWER. For this reason, we first compute intermediate daily variables such as growing degree days (GDD), daily thermal amplitude, average daily temperature, saturation vapor pressure, actual vapor pressure, and vapor pressure deficit (VPD).
 
 These intermediate variables are calculated day by day and then summarized at the annual level in the next subsection.
 
@@ -538,7 +674,7 @@ texas_climate_data <- texas_climate_data %>%
     VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES
   )
 
-environmental_covariates <- texas_climate_data %>%
+weather_covariates <- texas_climate_data %>%
   mutate(year_numeric = as.integer(as.character(year))) %>%
   group_by(year_numeric) %>%
   summarise(
@@ -568,18 +704,96 @@ environmental_covariates <- texas_climate_data %>%
   ) %>%
   rename(year = year_numeric)
 
-# Optional expanded table: daily weather data plus annual ECs
+# Optional expanded table: daily weather data plus annual weather summaries
+# The output file names keep the historical term "environmental_covariates"
+# only to preserve compatibility with the downstream scripts already used in
+# the project pipeline.
 ecs_expanded <- texas_climate_data %>%
-  mutate(year = as.integer(as.character(year))) %>%
-  left_join(environmental_covariates, by = "year")
+  transmute(
+    year = as.integer(as.character(year)),
+    date = date,
+    PRECTOTCORR = PRECTOTCORR,
+    T2M_MAX = T2M_MAX,
+    T2M_MIN = T2M_MIN,
+    RH2M = RH2M,
+    ALLSKY_SFC_SW_DWN = ALLSKY_SFC_SW_DWN,
+    WS2M = WS2M,
+    GDD = GDD,
+    DTR = DTR,
+    T_AVG_DAILY = T_AVG_DAILY,
+    SAT_VAP_PRES = SAT_VAP_PRES,
+    ACT_VAP_PRES = ACT_VAP_PRES,
+    VPD_DAILY = VPD_DAILY
+  ) %>%
+  left_join(weather_covariates, by = "year")
+
+weather_covariates_dictionary <- tibble::tibble(
+  Variable = c(
+    "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS", "PRECTOT",
+    "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM", "T_AVG",
+    "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS", "PREC_INTENSITY",
+    "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"
+  ),
+  Unit = c(
+    "°C", "°C", "°C day", "days", "mm",
+    "days", "%", "m s^-1", "MJ m^-2", "°C",
+    "°C", "days", "days", "mm day^-1",
+    "days", "kPa", "days"
+  ),
+  Description = c(
+    "Average maximum temperature during the season",
+    "Average minimum temperature during the season",
+    "Accumulated growing degree days",
+    "Number of heat stress days",
+    "Total precipitation during the season",
+    "Number of dry days",
+    "Average relative humidity",
+    "Average wind speed at 2 m",
+    "Accumulated shortwave radiation",
+    "Average mean temperature",
+    "Average daily temperature range",
+    "Number of cold stress days",
+    "Number of rainy days",
+    "Average rainfall intensity on rainy days",
+    "Number of low-humidity days",
+    "Average vapor pressure deficit",
+    "Number of vapor pressure deficit stress days"
+  )
+)
 
 knitr::kable(
-  environmental_covariates,
-  caption = "Annual environmental covariates derived from NASA POWER data."
-)
+  weather_covariates_dictionary,
+  align = c("l", "c", "l"),
+  caption = "Table 2. Weather-derived covariates used to characterize the growing seasons and to support the construction of the weather kernel."
+) %>%
+  kableExtra::kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    position = "center",
+    font_size = 12
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+
+weather_covariates_display <- weather_covariates %>%
+  mutate(across(-year, ~ round(.x, 2))) %>%
+  rename(Year = year)
+
+knitr::kable(
+  weather_covariates_display,
+  align = c("c", rep("c", ncol(weather_covariates_display) - 1)),
+  caption = "Table 3. Annual weather-derived covariates derived from NASA POWER data for the 2011 and 2012 growing seasons."
+) %>%
+  kableExtra::kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    position = "center",
+    font_size = 11
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
 ```
 
-### 6.2 Interpretation of the resulting environmental covariates
+### 6.2 Interpretation of the resulting weather-derived covariates
 
 The final table contains one row per year and several climatic descriptors.
 
@@ -591,7 +805,9 @@ For example:
 - `VPD_AVG` and `VPD_STRESS_DAYS` capture atmospheric dryness.
 - `RAD_CUM` summarizes the seasonal solar energy available to the crop.
 
-This table is the practical output that connects the climate tutorial to the predictive modeling stage of the project and to the subsequent construction of the environmental kernel.
+This table is the practical output that connects the climate tutorial to the predictive modeling stage of the project and to the subsequent construction of the weather kernel.
+
+In the final reduced pipeline, these weather-derived outputs are used only in the models that explicitly include `W`, namely M10-M18. They are not intended to replace the categorical environment effect (`E`), which still captures the distinction among the four macro-environments. Because the weather information is summarized at the year level, CS11_WS and CS11_WW share the 2011 weather signature, whereas CS12_WS and CS12_WW share the 2012 weather signature.
 
 ## 7. Save the final outputs
 
@@ -599,13 +815,15 @@ The last section stores the processed files generated by the tutorial. Saving th
 
 Three files are exported:
 
-1. `texas_climate_data_raw.csv`: raw daily climatic records.
-2. `environmental_covariates.csv`: one row per year with the derived annual summaries.
-3. `environmental_covariates_expanded.csv`: daily records linked to the annual environmental summaries.
+1. `texas_climate_data_raw.csv`: raw daily weather records.
+2. `environmental_covariates.csv`: one row per year with the derived annual weather summaries.
+3. `environmental_covariates_expanded.csv`: cleaned daily weather records linked to the annual weather summaries.
+
+The last two files retain their historical names for compatibility with the downstream scripts, even though they now represent weather-derived covariates.
 
 ```{r save_csv}
 write.csv(
-  environmental_covariates,
+  weather_covariates,
   "output/climate_results/environmental_covariates.csv",
   row.names = FALSE
 )
@@ -621,6 +839,8 @@ cat("Climate files successfully saved in 'output/climate_results/'.")
 
 ## 8. Final remarks
 
-This tutorial establishes a reproducible climatic preprocessing pipeline for the study. Starting from daily weather observations, it produces a curated set of environmental covariates and article-ready figures.
+This tutorial establishes a reproducible weather preprocessing pipeline for the study. Starting from daily weather observations, it produces a curated set of weather-derived covariates and article-ready figures.
 
-In the broader workflow of the project, these outputs are not the final goal. They are intermediate scientific objects that support the construction of the environmental component (W) and the environmental kernel used in later genomic prediction models.
+In the broader workflow of the project, these outputs are not the final goal. They are intermediate scientific objects that support the construction of the weather kernel (`W`) used in models M10-M18.
+
+It is also important to note that the weather kernel does not replace the categorical environment effect (`E`). In this dataset, the 2011 weather signature is shared by CS11_WS and CS11_WW, and the 2012 weather signature is shared by CS12_WS and CS12_WW. Therefore, `W` captures year-specific meteorological similarity, whereas `E` still represents the categorical distinction among the four macro-environments.
