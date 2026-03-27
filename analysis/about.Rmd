@@ -1,81 +1,108 @@
 ---
 title: "About"
 author: 
-  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, weverton.costa@ufv.br]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
-url: https://wevertongomescosta.github.io/asq-rf-paper/
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
     toc: FALSE
   highlight: github
 editor_options:
   chunk_output_type: console
-github-repo: wevertongomescosta/asq-rf-paper
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
-## 📌 Sobre o Projeto | About the Project  
+## About the article
 
-Este repositório reúne e documenta os dados simulados, códigos e análises utilizados no estudo **"ASQ-RF: Adaptive Stacked Quantile Random Forest for Genomic Prediction"**, que propõe um método híbrido inovador para predição genômica capaz de se adaptar automaticamente a diferentes arquiteturas genéticas, incluindo epistasia.
+This repository accompanies the manuscript **"Kernel-Based Integration of Near-Infrared Spectroscopy and Genomic Data for Enhanced Predictive Performance"** and documents the data-processing, kernel construction, prediction, and visualization workflows used in the study.
 
-O conjunto de dados foi gerado por simulação computacional e inclui:
+The project evaluates whether kernel-based integration of **genomic markers**, **near-infrared spectroscopy (NIRS)**, and **weather covariates** can improve prediction for agronomic traits in multi-environment maize trials. The analyses were developed under a hierarchical Bayesian framework in **R**, with reproducible workflows organized through **workflowr**.
 
-- **Genótipos**: população F2 simulada com 80 marcadores moleculares (40 por cromossomo) para 300 indivíduos, utilizando o pacote `qtl` do R.
-- **Fenótipos**: valores fenotípicos gerados sob três arquiteturas genéticas distintas:
-  - **Cenário aditivo**: 30 QTLs com efeitos pequenos e puramente aditivos.
-  - **Cenário epistático**: 10 pares de marcadores com interação do tipo "AND" (efeito apenas quando ambos são homozigotos).
-  - **Cenário misto**: 25 efeitos aditivos pequenos + 6 pares epistáticos.
-- **Herdabilidade**: fixada em 0,5 para todos os cenários, com adição de erro ambiental normalmente distribuído.
-- **Metadados**: estrutura de repetições (10 por cenário) para permitir avaliação robusta da acurácia preditiva.
+## Study overview
 
-**Objetivo**: avaliar se o método ASQ-RF, que combina regressão quantílica adaptativa (seleção do melhor τ na grade 0,1 a 0,9 (passo 0,1) por AIC) com Florestas Aleatórias, pode superar o GBLUP tradicional na predição de fenótipos, especialmente em cenários com interações genéticas complexas.
+The study was based on multi-environment field trials conducted in **College Station, Texas**, during **2011** and **2012**, under two contrasting water management regimes: **well-watered (WW)** and **water-stressed (WS)**. These combinations generated four macro-environments used throughout the prediction analyses:
 
-**Principais contribuições**:
-- Proposta de um pipeline adaptativo que transforma marcadores em "scores" otimizados por quantil.
-- Evidência de que a escolha dos quantis reflete a arquitetura genética subjacente.
-- Comparação sistemática com GBLUP em cenários controlados, demonstrando vantagens do ASQ-RF na presença de epistasia.
+- **CS11_WS**
+- **CS11_WW**
+- **CS12_WS**
+- **CS12_WW**
 
-Este projeto integra as atividades do [LICAE (Laboratório de Inteligência Computacional e Aprendizado Estatístico) da UFV](https://www.licae.ufv.br/).
+The repository integrates three main sources of information:
 
----
+- **Genomic data**: genome-wide SNP markers obtained by genotyping-by-sequencing.
+- **Phenomic data**: whole-kernel NIRS spectra measured after harvest.
+- **Weather data**: daily meteorological covariates summarized and structured for environmental kernel construction.
 
-This repository compiles and documents the simulated data, code, and analyses used in the study **"ASQ-RF: Adaptive Stacked Quantile Random Forest for Genomic Prediction"**, which proposes an innovative hybrid method for genomic prediction capable of automatically adapting to different genetic architectures, including epistasis.
+The target traits analyzed in the manuscript are:
 
-The dataset was generated through computer simulation and includes:
+- **Grain yield (GY)**
+- **500-kernel weight (KW)**
 
-- **Genotypes**: simulated F2 population with 80 molecular markers (40 per chromosome) for 300 individuals, using the R package `qtl`.
-- **Phenotypes**: phenotypic values generated under three distinct genetic architectures:
-  - **Additive scenario**: 30 QTLs with small, purely additive effects.
-  - **Epistatic scenario**: 10 pairs of markers with "AND" type interaction (effect only when both are homozygous).
-  - **Mixed scenario**: 25 small additive effects + 6 epistatic pairs.
-- **Heritability**: fixed at 0.5 for all scenarios, with normally distributed environmental error added.
-- **Metadata**: replication structure (10 per scenario) to allow robust evaluation of predictive accuracy.
+## Analytical scope
 
-**Objective**: to evaluate whether the ASQ-RF method, which combines adaptive quantile regression (selecting the best τ on the grid 0.1 to 0.9 (step 0.1) by AIC) with Random Forests, can outperform traditional GBLUP in phenotype prediction, especially in scenarios with complex genetic interactions.
+The repository contains the workflows required to:
 
-**Main contributions**:
-- Proposal of an adaptive pipeline that transforms markers into quantile-optimized "scores".
-- Evidence that quantile choice reflects the underlying genetic architecture.
-- Systematic comparison with GBLUP under controlled scenarios, demonstrating ASQ-RF advantages in the presence of epistasis.
+- harmonize phenotypic, genomic, spectral, and environmental data;
+- construct kernel matrices for genomic (**G**), phenomic/NIRS (**P**), environmental (**W**), and interaction structures;
+- fit single- and multi-kernel prediction models using **BGLR**;
+- compare **Gaussian** and **arc-cosine** kernels;
+- evaluate predictive performance under four validation schemes:
+  - **CV1**: untested genotypes;
+  - **CV2**: untested genotypes with partial information;
+  - **CV0**: untested environment;
+  - **CV00**: untested genotypes and untested environments;
+- summarize variance components and predictive ability across model classes.
 
-This project is part of the activities at the [LICAE Laboratory, UFV](https://www.licae.ufv.br/).
+## Main findings
 
+The central hypothesis of the study was that integrating genomic and NIRS information through kernel methods could improve predictive ability relative to single-source models. However, the current analyses indicate a more restrictive result:
 
-## 🔬 Workflows disponíveis no projeto
+- genomic prediction (**G**) was the most robust information source across validation scenarios;
+- phenomic prediction based on **NIRS (P)** showed lower and less stable predictive performance;
+- the **environment effect (E)** explained a substantial portion of the observed variation;
+- adding **weather covariates (W)** or explicitly modeling interaction kernels did not consistently improve prediction;
+- integrating **G + P** did **not** produce clear gains in predictive ability under the evaluated conditions.
 
-- **`analysis.Rmd`**: simulação controlada (cenários aditivo, epistático e misto) com comparação ASQ-RF vs GBLUP e diagnóstico da seleção de quantis.
-- **`analysis_data_genes.Rmd`**: aplicação usando dados simulados no software Genes, com validação repetida por variável fenotípica e os mesmos diagnósticos numéricos de estabilidade (falhas de QR e fallback para LM).
+These results suggest that, in this dataset, NIRS captured a strong environment-dependent physiological signal, but did not provide a sufficiently stable complementary signal to improve genomic prediction across environments.
 
-Os dois fluxos foram preparados para execução em **R/RStudio**, priorizando reprodutibilidade via `renv` + `workflowr`.
+## Repository structure
 
----
+The project is organized into the following directories:
 
-**Repositório oficial | Official repository**:  
-[https://github.com/wevertongomescosta/asq-rf-paper](https://github.com/wevertongomescosta/asq-rf-paper)
+- **`analysis/`**: main R Markdown workflows, manuscript-oriented analyses, and website source files;
+- **`code/`**: auxiliary R functions and project utilities;
+- **`data/`**: input datasets used in the analyses;
+- **`output/`**: derived matrices, intermediate objects, and prediction summaries;
+- **`docs/`**: rendered website files for GitHub Pages.
 
-**Contato | Contact**:  
-Weverton Gomes da Costa – wevertonufv@gmail.com
+## Reproducibility
+
+All analyses were implemented in **R** and are intended to be reproducible through the project environment. Package dependencies can be restored with `renv`, and the website/reporting workflow is managed with `workflowr`.
+
+A typical local setup is:
+
+```r
+install.packages("renv")
+renv::restore()
+```
+
+## Citation and contact
+
+If you use this repository, please cite the corresponding manuscript when available.
+
+**Author / Contact**  
+Weverton Gomes da Costa  
+Departamento de Estatística, Universidade Federal de Viçosa (UFV)  
+Email: weverton.costa@ufv.br
+
+**Project website**  
+[https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/](https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/)
+
+**GitHub repository**  
+[https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel](https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel)
