@@ -1,372 +1,529 @@
 ---
-title: "Tutorial: Preparação de Dados Climáticos (NASA POWER)"
+title: "Tutorial: Climate Data Acquisition and Processing (NASA POWER)"
 author: 
-  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
-    toc: TRUE
+    toc: true
     toc_depth: 3
-    toc_float: TRUE
-  highlight: github
-  code_download: yes
+    toc_float: true
+    highlight: github
+    code_download: yes
 editor_options:
   chunk_output_type: console
-github-repo: wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, out.width = "100%")
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
 ```
 
-## 1. Introdução
+## 1. Introduction
 
-Este tutorial detalha o processo de obtenção e processamento de dados climáticos diários para os experimentos de milho no Texas (College Station, TX) realizados em 2011 e 2012.
+This tutorial presents the workflow used to obtain and process daily climatic data for the maize experiments conducted in College Station, Texas, during the 2011 and 2012 growing seasons.
 
-O **objetivo principal** deste script não é apenas baixar os dados, mas transformá-los de séries temporais diárias (ex: 150 dias de temperatura) em um conjunto conciso de **Covariáveis Ambientais (ECs)**. Essas ECs (ex: "total de dias de estresse térmico", "GDD acumulado", "VPD médio") quantificam as características macroambientais de cada ano.
+The purpose of this script is not only to download daily weather records, but to convert those time series into a concise and biologically meaningful set of **environmental covariates (ECs)**. These covariates summarize the macro-environmental conditions of each growing season and are later used as the **W** component in prediction models that combine genomic, environmental, and spectral information.
 
-Essas ECs são o componente "W" (de *Weather*, ou Clima) em nossos modelos preditivos ($G + E + W$). Elas serão usadas posteriormente para construir uma matriz de parentesco climático (ou *kernel*, $K_W$), que nos permite modelar as interações $G \times W$ e melhorar a precisão da predição genômica.
+In practical terms, the workflow has four goals:
 
-* **Local:** College Station, TX.
-* **Períodos:** Estação de crescimento (1 de Maio a 30 de Setembro) para os anos de **2011 e 2012**.
+1. Retrieve daily weather data from the NASA POWER database.
+2. Organize the raw data into a reproducible table.
+3. Visually inspect the main climatic differences between years.
+4. Derive annual environmental descriptors that can later be used to construct the environmental kernel.
 
-## 2. Configuração do Ambiente R
+**Study location:** College Station, Texas, USA  
+**Growing season window:** May 1 to September 30  
+**Study years:** 2011 and 2012
 
-Primeiro, carregamos nossa "caixa de ferramentas". Cada pacote R tem uma função específica:
+## 2. R environment
 
-* `nasapower`: O pacote principal. Ele fornece uma interface de cliente R para a API [NASA POWER](https://power.larc.nasa.gov/), permitindo-nos baixar dados climáticos globais diretamente para o R.
-* `dplyr` e `lubridate`: Nossas ferramentas de manipulação de dados. `dplyr` é usado para filtrar, agrupar e resumir os dados, enquanto `lubridate` facilita o trabalho com datas.
-* `ggplot2`: Usado para a análise exploratória visual, permitindo-nos "ver" as condições climáticas de cada ano.
+Before starting the analysis, we load the packages required for data retrieval, data manipulation, visualization, and multi-panel figure assembly.
 
-```{r packages, message=FALSE, warning=FALSE}
-# Se os pacotes não estiverem instalados, descomente e execute as linhas abaixo
-# install.packages("nasapower")
-# install.packages("tidyverse")
-# install.packages("lubridate")
+Each package has a clear role in the workflow:
 
-# Carregar os pacotes
+- `nasapower`: connects R to the NASA POWER database.
+- `tidyverse`: supports data wrangling and plotting.
+- `lubridate`: simplifies date conversion and date-based operations.
+- `patchwork`: combines multiple `ggplot2` figures into publication-ready panels.
+- `ggthemes`: provides the Google Docs discrete scales used to standardize colors across figures.
+
+We also create the output directory at the beginning of the script. This avoids errors when saving figures and tables later in the analysis.
+
+```{r packages}
+# Uncomment if installation is required
+# install.packages(c("nasapower", "tidyverse", "lubridate", "patchwork", "ggthemes"))
+
 library(nasapower)
 library(tidyverse)
 library(lubridate)
+library(patchwork)
+library(ggthemes)
+
+if (!dir.exists("output")) dir.create("output")
+if (!dir.exists("output/climate_results")) dir.create("output/climate_results", recursive = TRUE)
 ```
 
-## 3. Definição dos Parâmetros
+## 3. Query parameters
 
-Definimos as constantes para nossa consulta à API.
+In this section, we define the basic inputs for the NASA POWER query. These inputs determine **where**, **when**, and **which climatic variables** will be retrieved.
 
-  * `coords_texas`: As coordenadas geográficas exatas do local do experimento.
-  * `dates`: As datas de início e fim da estação de crescimento do milho para cada ano (Maio a Setembro).
-  * `params`: Os parâmetros climáticos específicos que solicitamos à NASA. Escolhemos estes porque são os "ingredientes brutos" necessários para nossas Covariáveis Ambientais (ECs). Por exemplo, `T2M_MAX` e `T2M_MIN` são necessários para calcular os Graus-Dia Acumulados (GDD), e `RH2M` é usado para calcular o Déficit de Pressão de Vapor (VPD).
+The geographic coordinates identify the experimental site. The start and end dates define the crop season window to be analyzed. The vector `params` lists the daily climatic variables required for downstream summaries, such as precipitation, temperature, relative humidity, solar radiation, and wind speed.
+
+These variables were selected because they allow us to derive environmental descriptors with direct agronomic interpretation, such as accumulated precipitation, growing degree days, thermal stress, and vapor pressure deficit.
 
 ```{r parameters}
-# Coordenadas do local de experimento no Texas
+# Experimental site coordinates (College Station, TX)
 coords_texas <- c(lon = -96.3344, lat = 30.6282)
 
-# Período de interesse (estação de crescimento do milho)
+# Growing season intervals
 start_date_2011 <- "2011-05-01"
-end_date_2011 <- "2011-09-30"
+end_date_2011   <- "2011-09-30"
 
 start_date_2012 <- "2012-05-01"
-end_date_2012 <- "2012-09-30"
+end_date_2012   <- "2012-09-30"
 
-# Parâmetros climáticos a serem baixados
-# PRECTOTCORR = Precipitação Total Corrigida (mm/dia)
-# T2M_MAX = Temperatura Máxima a 2 metros (°C)
-# T2M_MIN = Temperatura Mínima a 2 metros (°C)
-# RH2M = Umidade Relativa a 2 metros (%)
-params <- c("PRECTOTCORR", "T2M_MAX", "T2M_MIN", "RH2M",   # Originais
-            "ALLSKY_SFC_SW_DWN",                          # Radiação Solar
-            "WS2M")                                       # Velocidade do Vento
+# NASA POWER variables
+# PRECTOTCORR      = Corrected total precipitation (mm/day)
+# T2M_MAX, T2M_MIN = Maximum and minimum air temperature at 2 m (°C)
+# RH2M             = Relative humidity at 2 m (%)
+# ALLSKY_SFC_SW_DWN= All-sky shortwave downward radiation (MJ m^-2 day^-1)
+# WS2M             = Wind speed at 2 m (m/s)
+params <- c(
+  "PRECTOTCORR",
+  "T2M_MAX",
+  "T2M_MIN",
+  "RH2M",
+  "ALLSKY_SFC_SW_DWN",
+  "WS2M"
+)
 ```
 
-## 4. Obtenção dos Dados via API NASA POWER
+## 4. Data retrieval from NASA POWER
 
-Com nossos parâmetros definidos, usamos a função `get_power()` para consultar os servidores da NASA.
+This section performs the download of daily climatic data from NASA POWER.
 
-Fazemos duas chamadas separadas: uma para a estação de 2011 e outra para 2012. Em seguida, usamos `bind_rows()` do `dplyr` para empilhar esses dois conjuntos de dados em um único *dataframe* (`texas_climate_data`).
+We run one query for each growing season. This keeps the workflow transparent and makes it easier to confirm that each experimental year was retrieved correctly. After retrieval, the two annual tables will be merged into a single object for the remaining steps of the analysis.
 
-Por fim, convertemos a coluna de data (que vem como `YYYYMMDD`) para um formato de data R adequado usando `lubridate::ymd()`. Salvamos este arquivo "bruto" como um CSV para reprodutibilidade, garantindo que não precisemos baixar os dados novamente.
+### 4.1 Download daily climate data for each year
+
+The code below sends two independent requests to the NASA POWER service, one for 2011 and one for 2012. A `year` identifier is added immediately after retrieval so that the origin of each record remains explicit throughout the workflow.
 
 ```{r get_data}
-# Obter dados para Texas 2011
 data_tx_2011 <- get_power(
   community = "AG",
   lonlat = coords_texas,
   pars = params,
   dates = c(start_date_2011, end_date_2011),
   temporal_api = "DAILY"
-) %>% mutate(year = 2011)
+) %>%
+  mutate(year = 2011)
 
-# Obter dados para Texas 2012
 data_tx_2012 <- get_power(
   community = "AG",
   lonlat = coords_texas,
   pars = params,
   dates = c(start_date_2012, end_date_2012),
   temporal_api = "DAILY"
-) %>% mutate(year = 2012)
+) %>%
+  mutate(year = 2012)
 ```
+
+### 4.2 Merge, format, and save the raw dataset
+
+Once both yearly tables are available, we merge them into a single dataset and convert the date column to a proper R date format. This step is essential because the original date is returned as a numeric string, and later visualizations depend on a valid date object.
+
+We also save the raw daily dataset as a CSV file. This is an important reproducibility step because it preserves the exact version of the retrieved data used in the analysis.
 
 ```{r get_data2}
-# Combinar os dados do Texas em um único dataframe
-texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012)
+texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012) %>%
+  mutate(
+    date = ymd(YYYYMMDD),
+    year = factor(year, levels = c(2011, 2012))
+  )
 
-# Transformar a data para o formato correto e adicionar mês para facilitar a plotagem
-texas_climate_data <- texas_climate_data %>%
-  mutate(date = ymd(YYYYMMDD))
-
-# Visualizar as primeiras linhas da tabela de dados
-knitr::kable(head(texas_climate_data), caption = "Amostra dos Dados Climáticos do Texas")
-
-# Salvar os dados brutos para referência futura
-write.csv(texas_climate_data, "output/climate_results/texas_climate_data_raw.csv", row.names = FALSE)
-```
-
-## 5. Análise Exploratória e Visualização (EDA)
-
-Antes de processar os dados, devemos sempre visualizá-los. Esta etapa de Análise Exploratória de Dados (EDA) é vital para:
-
-1.  **Validação:** Confirmar se os dados parecem razoáveis (sem picos ou vales absurdos).
-2.  **Compreensão:** Entender a natureza dos ambientes. Os artigos originais descrevem 2011 como um ano de seca severa. Nossos gráficos devem confirmar isso.
-
-### 5.1 Precipitação Diária (mm/dia)
-
-Este gráfico nos permite "ver" o estresse hídrico. A diferença entre os dois anos é nítida: 2011 teve precipitação quase nula durante a maior parte da estação de crescimento, confirmando as condições de seca. 2012 teve eventos de chuva mais significativos e distribuídos.
-
-```{r plot_precipitation, fig.width=10, fig.height=6}
-ggplot(texas_climate_data, aes(x = date, y = PRECTOTCORR)) +
-geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
-facet_wrap(~ year, scales = "free_x") +
-labs(
- title = "Daily Precipitation in College Station, TX (2011-2012)",
- subtitle = "Data obtained from the NASA POWER API",
- x = "Date",
- y = "Precipitation (mm/day)"
-) +
-theme_minimal() +
-scale_x_date(date_labels = "%b", date_breaks = "1 month") # Show the month
-```
-
-No entanto, o gráfico acima não facilita a comparação direta entre os dois anos para cada dia do mês. Para melhorar isso, podemos criar um gráfico de barras agrupadas (lado a lado) para cada dia do mês, separado por mês.
-
-```{r}
-# 1. Create necessary categorical columns
-daily_data_with_parts <- texas_climate_data %>%
-mutate(
- # Factor for 'fill' (grouping)
- ano = factor(year(date)),
- # Factor for panels (facets) - Use label = TRUE for month names (e.g., "Jan")
- mes = lubridate::month(date, label = TRUE),
- # Factor for X-axis (categorical)
- dia_mes = factor(mday(date))
+knitr::kable(
+  head(texas_climate_data),
+  caption = "Sample of daily climatic data retrieved from NASA POWER."
 )
 
-# 2. Plot with dia_mes (x), ano (fill/dodge) and mes (facet)
-# We store this plot in the variable 'p1'
-p1 <- ggplot(daily_data_with_parts, aes(x = dia_mes, y = PRECTOTCORR, fill = ano)) +
-# position = "dodge" now works, as 'dia_mes' is a factor
-geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
+write.csv(
+  texas_climate_data,
+  "output/climate_results/texas_climate_data_raw.csv",
+  row.names = FALSE
+)
+```
 
-# Use facet_wrap to separate months (facets will now have names)
-# (Changed to ncol = 6 for a cleaner 2-row layout)
-facet_wrap(~ mes, scales = "free_x", ncol = 6) +
+## 5. Exploratory analysis and figure generation
 
-labs(
- title = "Daily Precipitation in College Station, TX (2011 vs 2012)",
- subtitle = "Daily comparison, grouped by month",
- x = "Day of Month",
- y = "Precipitation (mm/day)",
- fill = "Year" # Legend title
+Before summarizing the data into environmental covariates, it is good practice to inspect the daily series visually. This step serves two purposes.
+
+First, it helps verify that the downloaded data are coherent and free from obvious structural problems. Second, it helps interpret the climatic contrast between the years under study, which is important for the biological discussion of the experiments.
+
+To make the figures suitable for a scientific article, we define a common visual style and standardize axis titles, units, and panel formatting.
+
+### 5.1 Define a common publication-oriented plotting style
+
+The objects created below are used repeatedly across the figures. The custom theme improves readability, while the month labels ensure consistent calendar formatting across panels. We also define helper scales based on the Google Docs palette (`scale_*_gdocs`) so that all figures share the same discrete color standard throughout the tutorial.
+
+```{r figure_helpers}
+theme_article <- function() {
+  theme_bw(base_size = 11) +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+      panel.border = element_rect(color = "grey40", linewidth = 0.4),
+      strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+      strip.text = element_text(face = "bold", size = 10),
+      axis.title = element_text(face = "bold", size = 11),
+      axis.text = element_text(size = 9.5, color = "black"),
+      plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
+      plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
+      plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
+      plot.caption.position = "plot",
+      legend.position = "bottom",
+      legend.justification = "center",
+      legend.direction = "horizontal",
+      legend.title = element_text(face = "bold", size = 10),
+      legend.text = element_text(size = 9),
+      legend.key.width = grid::unit(1.2, "cm"),
+      legend.box.margin = margin(t = 4),
+      plot.margin = margin(8, 10, 8, 8)
+    )
+}
+
+scale_fill_article <- function(...) {
+  ggthemes::scale_fill_gdocs(...)
+}
+
+scale_color_article <- function(...) {
+  ggthemes::scale_color_gdocs(...)
+}
+
+scale_color_temperature_article <- function(...) {
+  ggplot2::scale_color_manual(
+    values = c(
+      "Minimum" = "#4285F4",
+      "Mean" = "#F4B400",
+      "Maximum" = "#DB4437"
+    ),
+    ...
+  )
+}
+
+guide_article <- guide_legend(
+  title.position = "top",
+  nrow = 1,
+  byrow = TRUE
+)
+
+month_levels <- 5:9
+month_labels <- month.abb[month_levels]
+
+month_breaks_fn <- function(x) {
+  seq.Date(
+    from = floor_date(min(x, na.rm = TRUE), unit = "month"),
+    to   = floor_date(max(x, na.rm = TRUE), unit = "month"),
+    by   = "1 month"
+  )
+}
+
+month_labels_fn <- scales::label_date(format = "%b")
+
+daily_data_with_parts <- texas_climate_data %>%
+  mutate(
+    Year = factor(year(date), levels = c(2011, 2012)),
+    Month = factor(month(date), levels = month_levels, labels = month_labels),
+    Day_of_month = factor(mday(date))
+  )
+```
+
+### 5.2 Daily precipitation overview
+
+This first figure provides a direct view of daily rainfall over time. It is useful for identifying dry periods, rainfall concentration, and broad differences between the two years.
+
+```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figure 1. Daily precipitation across the 2011 and 2012 maize growing seasons in College Station, Texas. Bars represent corrected daily precipitation obtained from NASA POWER."}
+p_precip_daily <- ggplot(
+  texas_climate_data,
+  aes(x = date, y = PRECTOTCORR, fill = year)
 ) +
-theme_minimal() +
+  geom_col(alpha = 0.85, show.legend = FALSE) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Daily precipitation",
+    subtitle = "College Station, Texas, USA, 2011-2012",
+    x = "Month",
+    y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
+    caption = "Bars represent corrected total daily precipitation obtained from NASA POWER."
+  ) +
+  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
+  scale_fill_article(limits = c("2011", "2012"), guide = guide_article) +
+  theme_article()
 
-# Optional: Clean up the X-axis, as 31 labels can be cluttered
-# Show only days 1, 5, 10, 15, 20, 25, 30
-scale_x_discrete(breaks = c(1, 5, 10, 15, 20, 25, 30))
+p_precip_daily
+```
+
+### 5.3 Daily precipitation by month and day of month
+
+The next figure reorganizes the same rainfall information in a way that facilitates within-season comparison. Instead of plotting only the chronological series, we compare days of the month across the two years inside each monthly panel.
+
+This layout is especially helpful when the goal is to see whether one season was systematically drier or wetter during specific periods of crop development.
+
+```{r plot_precipitation_grouped, fig.width=12, fig.height=6.4, fig.align="center", fig.cap="Figure 2. Daily precipitation arranged by day of month within each month to facilitate between-year comparison during the crop season."}
+p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill = Year)) +
+  geom_col(position = position_dodge(width = 0.85), alpha = 0.85, width = 0.8) +
+  facet_wrap(~ Month, scales = "free_x", ncol = 5) +
+  labs(
+    title = "Daily precipitation by month and year",
+    subtitle = "Grouped by day of month within each monthly panel",
+    x = "Day of month",
+    y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
+    fill = "Year",
+    caption = "This arrangement facilitates within-season comparison of rainfall patterns between years."
+  ) +
+  scale_x_discrete(breaks = c("1", "5", "10", "15", "20", "25", "30", "31")) +
+  scale_fill_article(limits = c("2011", "2012"), guide = guide_article) +
+  theme_article()
 
 p1
 ```
 
-Para melhorar a visualização da precipitação mensal total, podemos agregar os dados diários em totais mensais e plotar as barras lado a lado para cada ano.
+### 5.4 Monthly precipitation totals
 
-```{r}
-# 1. Summarize daily data to monthly totals
+Daily precipitation is informative, but monthly totals provide a simpler seasonal summary. This figure aggregates the daily series and allows a cleaner comparison of cumulative water input between years and months.
+
+```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figure 3. Monthly precipitation totals during the maize growing seasons of 2011 and 2012 in College Station, Texas."}
 monthly_precip <- texas_climate_data %>%
-mutate(
- year = factor(year(date)), # Convert year to factor (for grouping)
- # Use label = TRUE for month names (e.g., "Jan")
- month = lubridate::month(date, label = TRUE) 
-) %>%
-group_by(year, month) %>%
-summarise(Total_Precip = sum(PRECTOTCORR, na.rm = TRUE), .groups = 'drop')
+  mutate(
+    year = factor(year(date), levels = c(2011, 2012)),
+    month = factor(month(date), levels = month_levels, labels = month_labels)
+  ) %>%
+  group_by(year, month) %>%
+  summarise(total_precipitation = sum(PRECTOTCORR, na.rm = TRUE), .groups = "drop")
 
-# 2. Plot monthly data with side-by-side bars (position = "dodge")
-# We store this plot in the variable 'p2'
-p2 <- ggplot(monthly_precip, aes(x = month, y = Total_Precip, fill = year)) +
-# Use position = "dodge" to place bars side-by-side
-geom_bar(stat = "identity", position = "dodge") +
-# No facet_wrap needed, as 'fill' now separates the years
-labs(
- title = "Monthly Precipitation in College Station, TX (2011-2012)",
- subtitle = "Bars grouped by year",
- x = "Month",
- y = "Total Precipitation (mm/month)",
- fill = "Year" # Legend title
-) +
-theme_minimal()
+p2 <- ggplot(monthly_precip, aes(x = month, y = total_precipitation, fill = year)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7, alpha = 0.9) +
+  labs(
+    title = "Monthly precipitation totals",
+    subtitle = "Growing season comparison between 2011 and 2012",
+    x = "Month",
+    y = "Total precipitation (mm)",
+    fill = "Year",
+    caption = "Bars represent cumulative precipitation within each month of the crop season."
+  ) +
+  scale_fill_article(limits = c("2011", "2012"), guide = guide_article) +
+  theme_article()
 
 p2
 ```
 
-### 5.2 Temperatura Máxima Diária (°C)
+### 5.5 Daily air temperature
 
-Este gráfico nos ajuda a identificar o estresse térmico. Ambos os anos mostram longos períodos de calor extremo (acima de 35°C), mas 2011 parece ter um período de calor intenso mais sustentado. Na próxima seção, quantificaremos isso contando os "dias de estresse térmico".
+Temperature is another core descriptor of crop environment. In this figure, we compare minimum, mean, and maximum daily temperature profiles across the two seasons.
 
-```{r plot_temperature, fig.width=10, fig.height=6}
-# We store this plot in the variable 'p3'
-p3 <- texas_climate_data %>%
-mutate(T2M_MEAN = (T2M_MAX + T2M_MIN) / 2) %>%
-pivot_longer(
- cols = c(T2M_MEAN, T2M_MAX, T2M_MIN),
- names_to = "Temperature_Type",
- values_to = "Temperature"
-) %>%
-# Removed 'fill = Temperature_Type' from here
-ggplot(aes(x = date, y = Temperature)) +
-# Added 'color' mapping INSIDE aes()
-geom_line(aes(color = Temperature_Type), alpha = 0.8) +
-geom_smooth(
- method = "loess",
- se = FALSE,
- linetype = "dashed",
- color = "black"
-) +
-facet_wrap( ~ year, scales = "free_x") +
-labs(
- title = "Daily Temperature in College Station, TX (2011-2012)",
- subtitle = "Dashed line represents the smoothed trend",
- x = "Date",
- y = "Temperature (°C)",
-  color = "Temp. Type" # Legend title for color
-) +
-theme_minimal() +
-scale_x_date(date_labels = "%b", date_breaks = "1 month")
+The dashed smoothing lines do not replace the original data. Their role is only to help visualize the general seasonal trends for each temperature metric.
+
+```{r plot_temperature, fig.width=10, fig.height=6, fig.align="center", fig.cap="Figure 4. Daily minimum, mean, and maximum air temperature during the 2011 and 2012 maize growing seasons. Dashed lines indicate LOESS trends used only to aid visual interpretation."}
+temperature_data <- texas_climate_data %>%
+  mutate(T2M_MEAN = (T2M_MAX + T2M_MIN) / 2) %>%
+  pivot_longer(
+    cols = c(T2M_MIN, T2M_MEAN, T2M_MAX),
+    names_to = "Temperature_metric",
+    values_to = "Temperature"
+  ) %>%
+  mutate(
+    Temperature_metric = factor(
+      Temperature_metric,
+      levels = c("T2M_MIN", "T2M_MEAN", "T2M_MAX"),
+      labels = c("Minimum", "Mean", "Maximum")
+    )
+  )
+
+p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperature_metric)) +
+  geom_line(linewidth = 0.55, alpha = 0.85) +
+  geom_smooth(
+    aes(group = Temperature_metric),
+    method = "loess",
+    se = FALSE,
+    linetype = "dashed",
+    color = "black",
+    linewidth = 0.5,
+    show.legend = FALSE
+  ) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Daily air temperature",
+    subtitle = "Minimum, mean, and maximum values; dashed lines indicate LOESS trends",
+    x = "Month",
+    y = expression("Air temperature (" * degree * "C)"),
+    color = "Temperature metric",
+    caption = "Dashed LOESS curves are included only to summarize seasonal trajectories for each temperature metric."
+  ) +
+  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
+  scale_color_temperature_article(limits = c("Minimum", "Mean", "Maximum"), guide = guide_article) +
+  theme_article()
 
 p3
 ```
 
-```{r, include=FALSE, eval=FALSE}
-# Load necessary libraries
-# install.packages("patchwork") # Uncomment this line if you haven't installed it
-library(patchwork)
+### 5.6 Combined main climate figure
 
-# Use patchwork to combine the plots
-# Layout: p1 on the top row
-#    p2 and p3 on the bottom row
-combined_plot <- (p1) / (p2 + p3)
+After creating the main precipitation and temperature plots, we combine them into a single multi-panel figure. This is useful when the final output is intended for reports, manuscripts, or supplementary material.
 
-# Add automatic tagging (A, B, C) for publication
-combined_plot <- combined_plot + plot_annotation(tag_levels = 'A')
+The figure is also exported as a high-resolution TIFF file, which is a common requirement for journal submission.
 
-# Print the combined plot to the screen
+```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 5. Multi-panel summary of the main climatic contrasts between years, including daily precipitation by month, monthly precipitation totals, and daily air temperature profiles."}
+main_layout <- "
+AA
+BC
+"
+
+combined_plot <- patchwork::wrap_plots(
+  A = p1,
+  B = p2,
+  C = p3,
+  design = main_layout
+) +
+  patchwork::plot_annotation(
+    tag_levels = "A",
+    title = "Main climatic contrasts between growing seasons",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 8))
+    )
+  )
+
 print(combined_plot)
 
-# Save the combined plot to a single file
-ggsave("output/climate_results/combined_climate_plot.tiff",
-   plot = combined_plot,
-   width = 14,
-   height = 10,
-   dpi = 300)
+ggsave(
+  filename = "output/climate_results/combined_climate_plot.tiff",
+  plot = combined_plot,
+  width = 14,
+  height = 10,
+  dpi = 300,
+  compression = "lzw",
+  bg = "white"
+)
 ```
 
-## Gráfico de todas variaveis
+### 5.7 Additional daily climate variables
 
-```{r additional_plots, fig.width=10, fig.height=6}
-# Plot para Radiação Solar Diária
-p4 <- ggplot(texas_climate_data, aes(x = date, y = ALLSKY_SFC_SW_DWN)) +
-  geom_line(color = "orange", alpha = 0.8) +
-  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black") +
+In addition to precipitation and temperature, the script also examines solar radiation, wind speed, and relative humidity. These variables are important because they help describe evaporative demand, atmospheric dryness, and energy availability during the crop cycle.
+
+```{r additional_plots, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 6. Additional daily climatic variables monitored during the maize growing seasons, including solar radiation, wind speed, and relative humidity."}
+p4 <- ggplot(
+  texas_climate_data,
+  aes(x = date, y = ALLSKY_SFC_SW_DWN, color = "Solar radiation")
+) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
   facet_wrap(~ year, scales = "free_x") +
   labs(
-    title = "Daily Solar Radiation in College Station, TX (2011-2012)",
-    subtitle = "Dashed line represents the smoothed trend",
-    x = "Date",
-    y = "Solar Radiation (W/m²)"
+    title = "Daily shortwave solar radiation",
+    subtitle = "Dashed line indicates the LOESS trend",
+    x = "Month",
+    y = expression("Shortwave solar radiation (" * MJ ~ m^{-2} ~ day^{-1} * ")"),
+    caption = "Daily incoming shortwave radiation during the crop season."
   ) +
-  theme_minimal() +
-  scale_x_date(date_labels = "%b", date_breaks = "1 month")
+  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
+  scale_color_article(limits = "Solar radiation", guide = "none") +
+  theme_article()
 
-# Plot para Velocidade do Vento Diária
-p5 <- ggplot(texas_climate_data, aes(x = date, y = WS2M)) +
-  geom_line(color = "purple", alpha = 0.8) +
-  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black") +
+p5 <- ggplot(
+  texas_climate_data,
+  aes(x = date, y = WS2M, color = "Wind speed")
+) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
   facet_wrap(~ year, scales = "free_x") +
   labs(
-    title = "Daily Wind Speed in College Station, TX (2011-2012)",
-    subtitle = "Dashed line represents the smoothed trend",
-    x = "Date",
-    y = "Wind Speed (m/s)"
+    title = "Daily wind speed at 2 m",
+    subtitle = "Dashed line indicates the LOESS trend",
+    x = "Month",
+    y = expression("Wind speed (" * m ~ s^{-1} * ")"),
+    caption = "Daily wind speed measured at 2 m above ground level."
   ) +
-  theme_minimal() +
-  scale_x_date(date_labels = "%b", date_breaks = "1 month")
+  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
+  scale_color_article(limits = "Wind speed", guide = "none") +
+  theme_article()
 
-# Plot para RH2M
-p6 <- ggplot(texas_climate_data, aes(x = date, y = RH2M)) +
-  geom_line(color = "green", alpha = 0.8) +
-  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black") +
+p6 <- ggplot(
+  texas_climate_data,
+  aes(x = date, y = RH2M, color = "Relative humidity")
+) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
   facet_wrap(~ year, scales = "free_x") +
   labs(
-    title = "Daily Relative Humidity in College Station, TX (2011-2012)",
-    subtitle = "Dashed line represents the smoothed trend",
-    x = "Date",
-    y = "Relative Humidity (%)"
+    title = "Daily relative humidity at 2 m",
+    subtitle = "Dashed line indicates the LOESS trend",
+    x = "Month",
+    y = "Relative humidity (%)",
+    caption = "Daily relative humidity measured at 2 m above ground level."
   ) +
-  theme_minimal() +
-  scale_x_date(date_labels = "%b", date_breaks = "1 month")
+  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
+  scale_color_article(limits = "Relative humidity", guide = "none") +
+  theme_article()
+```
 
-# Combine the additional plots using patchwork
-combined_additional_plots <- (p4 | p5) / p6 + plot_annotation(tag_levels = 'A')
-# Print the combined additional plots to the screen
+### 5.8 Combined figure for additional climate variables
+
+As in the previous subsection, we combine the individual plots into a single figure. The layout was built using `patchwork::wrap_plots()`, which avoids the composition error generated when the patchwork operators are not correctly recognized during rendering.
+
+```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 7. Multi-panel summary of additional climatic variables across years, including shortwave solar radiation, wind speed, and relative humidity."}
+additional_layout <- "
+AB
+CC
+"
+
+combined_additional_plots <- patchwork::wrap_plots(
+  A = p4,
+  B = p5,
+  C = p6,
+  design = additional_layout
+) +
+  patchwork::plot_annotation(
+    tag_levels = "A",
+    title = "Additional climatic contrasts between growing seasons",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 8))
+    )
+  )
+
 print(combined_additional_plots)
-# Save the combined additional plots to a single file
-ggsave("output/climate_results/combined_additional_climate_plots.tiff",
-   plot = combined_additional_plots,
-   width = 14,
-   height = 10,
-   dpi = 300)
+
+ggsave(
+  filename = "output/climate_results/combined_additional_climate_plots.tiff",
+  plot = combined_additional_plots,
+  width = 14,
+  height = 10,
+  dpi = 300,
+  compression = "lzw",
+  bg = "white"
+)
 ```
 
+## 6. Environmental covariates
 
-## 6. Criação das Covariáveis Ambientais (ECs)
+The next step transforms daily climatic records into annual summary variables. This is the most important analytical transition in the script because it converts a raw time series into features that can be used in downstream prediction models.
 
-Esta é a etapa mais crítica do script. Transformamos os dados de séries temporais diárias (\~150 linhas por ano) em apenas **uma linha por ano**, onde cada coluna representa uma característica resumida daquele ambiente.
+These summaries are designed to capture biologically relevant aspects of each environment, including thermal accumulation, water availability, atmospheric dryness, and stress frequency.
 
-### 6.1. Cálculo de Métricas Diárias
+### 6.1 Derive daily intermediate variables
 
-Primeiro, usamos `mutate()` para calcular novas métricas *para cada dia*:
+Some environmental covariates depend on quantities that are not directly provided by NASA POWER. For this reason, we first compute intermediate daily variables such as growing degree days (GDD), daily thermal amplitude, average daily temperature, saturation vapor pressure, actual vapor pressure, and vapor pressure deficit (VPD).
 
-  * **GDD (Growing Degree Days):** Uma medida agronômica padrão de acúmulo de calor para o desenvolvimento da planta. Usamos a fórmula padrão para milho (Base 10°C, Teto 30°C).
-  * **DTR (Diurnal Temperature Range):** A diferença entre o máximo e o mínimo do dia.
-  * **VPD\_DAILY (Vapor Pressure Deficit):** Uma métrica crucial que combina temperatura e umidade. É um indicador muito melhor do "estresse de seca" atmosférico do que a umidade relativa sozinha. Calculamos manualmente usando a fórmula de Tetens.
-
-### 6.2. Agregação por Ano
-
-Em seguida, usamos `group_by(year)` e `summarise()` para agregar essas métricas diárias em **Covariáveis Ambientais (ECs)** anuais. Por exemplo:
-
-  * `GDD_CUM`: A *soma* de todos os GDDs diários da estação.
-  * `HEAT_STRESS_DAYS`: A *contagem* de dias em que `T2M_MAX > 35`.
-  * `PRECTOT`: A *soma* de toda a precipitação.
-  * `VPD_AVG`: A *média* do VPD diário ao longo da estação.
-
-O resultado, `environmental_covariates`, é um *dataframe* pequeno (neste caso, 2 linhas x \~20 colunas) que captura numericamente a essência de cada ambiente. Por fim, juntamos essas ECs de volta ao dataframe original para manter a estrutura completa.
+These intermediate variables are calculated day by day and then summarized at the annual level in the next subsection.
 
 ```{r feature_engineering}
-# Calcula GDD diário, DTR diário e VPD diário
 texas_climate_data <- texas_climate_data %>%
   mutate(
-    # --- Cálculos de Temperatura ---
     T_base = 10,
     T_upper = 30,
     T_eff_min = if_else(T2M_MIN < T_base, T_base, T2M_MIN),
@@ -375,79 +532,96 @@ texas_climate_data <- texas_climate_data %>%
     GDD = T_avg_eff - T_base,
     DTR = T2M_MAX - T2M_MIN,
     T_AVG_DAILY = (T2M_MAX + T2M_MIN) / 2,
-    
-    # --- CÁLCULO MANUAL DE VPD (O SUBSTITUTO) ---
-    # 1. Pressão de Saturação de Vapor (e_s) em kPa (usando T_AVG_DAILY)
-    #    (Fórmula de Tetens)
+
+    # Tetens equation, resulting in kPa
     SAT_VAP_PRES = 0.6108 * exp((17.27 * T_AVG_DAILY) / (T_AVG_DAILY + 237.3)),
-    
-    # 2. Pressão de Vapor Atual (e_a) em kPa (usando RH2M)
     ACT_VAP_PRES = SAT_VAP_PRES * (RH2M / 100),
-    
-    # 3. Déficit de Pressão de Vapor (VPD) diário
     VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES
   )
 
-# Agrega os dados por ano para criar as ECs
-# Este é o dataframe final que será usado para construir o kernel W
 environmental_covariates <- texas_climate_data %>%
-  group_by(year) %>%
+  mutate(year_numeric = as.integer(as.character(year))) %>%
+  group_by(year_numeric) %>%
   summarise(
-    # Covariáveis de Temperatura (Originais)
     TMAX_AVG = mean(T2M_MAX, na.rm = TRUE),
     TMIN_AVG = mean(T2M_MIN, na.rm = TRUE),
     GDD_CUM = sum(GDD, na.rm = TRUE),
     HEAT_STRESS_DAYS = sum(T2M_MAX > 35, na.rm = TRUE),
-    
-    # Covariáveis Hídricas (Originais)
+
     PRECTOT = sum(PRECTOTCORR, na.rm = TRUE),
     DRY_DAYS = sum(PRECTOTCORR == 0, na.rm = TRUE),
     RH_AVG = mean(RH2M, na.rm = TRUE),
-    
-    # Vento e Radiação (Originais)
+
     WS2M_AVG = mean(WS2M, na.rm = TRUE),
     RAD_CUM = sum(ALLSKY_SFC_SW_DWN, na.rm = TRUE),
-    
-    # Covariáveis de Temperatura (Adicionais)
+
     T_AVG = mean(T_AVG_DAILY, na.rm = TRUE),
     DTR_AVG = mean(DTR, na.rm = TRUE),
     COLD_STRESS_DAYS = sum(T2M_MIN < 10, na.rm = TRUE),
-    
-    # Covariáveis Hídricas (Adicionais)
+
     RAINY_DAYS = sum(PRECTOTCORR > 0, na.rm = TRUE),
-    PREC_INTENSITY = ifelse(RAINY_DAYS > 0, PRECTOT / RAINY_DAYS, 0),
+    PREC_INTENSITY = if_else(RAINY_DAYS > 0, PRECTOT / RAINY_DAYS, 0),
     LOW_RH_DAYS = sum(RH2M < 30, na.rm = TRUE),
 
-    # --- NOVAS ECs (SUBSTITUTOS DE VPD/PET) ---
     VPD_AVG = mean(VPD_DAILY, na.rm = TRUE),
-    VPD_STRESS_DAYS = sum(VPD_DAILY > 1.5, na.rm = TRUE), # Limiar de 1.5 kPa
-    
-    .groups = 'drop'
-  )
+    VPD_STRESS_DAYS = sum(VPD_DAILY > 1.5, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  rename(year = year_numeric)
 
+# Optional expanded table: daily weather data plus annual ECs
+ecs_expanded <- texas_climate_data %>%
+  mutate(year = as.integer(as.character(year))) %>%
+  left_join(environmental_covariates, by = "year")
 
-# Replica as linhas para cada combinação de manejo hídrico (WS e WW)
-# No seu modelo, a diferença WS/WW já é capturada pelo efeito de ambiente (E)
-# As ECs representam o "macro-ambiente" (ano).
-ecs_final <- texas_climate_data %>%
-  full_join(environmental_covariates)
-
-# Visualiza as covariáveis finais
-head(ecs_final)
+knitr::kable(
+  environmental_covariates,
+  caption = "Annual environmental covariates derived from NASA POWER data."
+)
 ```
 
-## 7. Salvar as Covariáveis
+### 6.2 Interpretation of the resulting environmental covariates
 
-Finalmente, salvamos nosso *dataframe* agregado `ecs_final` em um arquivo CSV.
+The final table contains one row per year and several climatic descriptors.
 
-Este arquivo é o **produto final** deste script. Ele será carregado pelo script principal da análise (não mostrado aqui) para construir a matriz de parentesco climático (Kernel W), que quantifica a similaridade entre os ambientes (anos) com base em seus perfis climáticos.
+For example:
+
+- `GDD_CUM` summarizes thermal accumulation during the crop cycle.
+- `PRECTOT` summarizes total water input from rainfall.
+- `DRY_DAYS` and `HEAT_STRESS_DAYS` quantify stress frequency.
+- `VPD_AVG` and `VPD_STRESS_DAYS` capture atmospheric dryness.
+- `RAD_CUM` summarizes the seasonal solar energy available to the crop.
+
+This table is the practical output that connects the climate tutorial to the predictive modeling stage of the project and to the subsequent construction of the environmental kernel.
+
+## 7. Save the final outputs
+
+The last section stores the processed files generated by the tutorial. Saving the outputs explicitly is important because it separates data acquisition from downstream modeling, making the workflow easier to reproduce and audit.
+
+Three files are exported:
+
+1. `texas_climate_data_raw.csv`: raw daily climatic records.
+2. `environmental_covariates.csv`: one row per year with the derived annual summaries.
+3. `environmental_covariates_expanded.csv`: daily records linked to the annual environmental summaries.
 
 ```{r save_csv}
-# Garante que a pasta 'output/climate_results' exista
-if (!dir.exists("output/climate_results")) dir.create("output/climate_results")
+write.csv(
+  environmental_covariates,
+  "output/climate_results/environmental_covariates.csv",
+  row.names = FALSE
+)
 
-# Salva o arquivo de *covariáveis agregadas*
-write.csv(ecs_final, "output/climate_results/environmental_covariates.csv", row.names = FALSE)
+write.csv(
+  ecs_expanded,
+  "output/climate_results/environmental_covariates_expanded.csv",
+  row.names = FALSE
+)
 
-cat("Arquivo 'environmental_covariates.csv' salvo com sucesso na pasta 'output/climate_results'!")
+cat("Climate files successfully saved in 'output/climate_results/'.")
 ```
+
+## 8. Final remarks
+
+This tutorial establishes a reproducible climatic preprocessing pipeline for the study. Starting from daily weather observations, it produces a curated set of environmental covariates and article-ready figures.
+
+In the broader workflow of the project, these outputs are not the final goal. They are intermediate scientific objects that support the construction of the environmental component (W) and the environmental kernel used in later genomic prediction models.

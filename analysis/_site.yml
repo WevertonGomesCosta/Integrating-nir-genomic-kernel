@@ -1,29 +1,34 @@
 name: "Integrating-nir-genomic-kernel"
 output_dir: ../docs
+
 navbar:
   title: "NIR and Genomic Kernel Integration"
   left:
-  - text: Home
-    href: index.html
-  - text: Climate data
-    href: climate_data.html
-  - text: Variance components
-    href: variance_components.html
-  - text: Prediction
-    href: analysis.html
-  - text: About
-    href: about.html
-  - text: License
-    href: license.html
+    - text: "Home"
+      href: index.html
+    - text: "Climate data"
+      href: climate_data.html
+    - text: "Matrices"
+      href: matrizes.html
+    - text: "Variance components"
+      href: variance_components.html
+    - text: "Prediction"
+      href: analysis_prediction.html
+    - text: "Visualization"
+      href: visualization.html
+    - text: "About"
+      href: about.html
+    - text: "License"
+      href: license.html
   right:
-  - icon: fa-github
-    text: Source code
-    href: https://github.com/wevertongomescosta/Integrating-nir-genomic-kernel
+    - icon: fa-github
+      text: "Source code"
+      href: https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 output:
   workflowr::wflow_html:
-    toc: yes
-    toc_float: yes
+    toc: true
+    toc_float: true
     theme: cosmo
     highlight: textmate
     df_print: paged
