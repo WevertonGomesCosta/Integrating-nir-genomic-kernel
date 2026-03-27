@@ -1,0 +1,2003 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Costa, W. G." />
+
+<meta name="date" content="2026-03-27" />
+
+<title>Tutorial: Climate Data Acquisition and Processing (NASA POWER)</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">NIR and Genomic Kernel Integration</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="climate_data.html">Climate data</a>
+</li>
+<li>
+  <a href="matrizes.html">Matrices</a>
+</li>
+<li>
+  <a href="variance_components.html">Variance components</a>
+</li>
+<li>
+  <a href="analysis_prediction.html">Prediction</a>
+</li>
+<li>
+  <a href="visualization.html">Visualization</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Tutorial: Climate Data Acquisition and
+Processing (NASA POWER)</h1>
+<h4 class="author">Costa, W. G.<a href="#fn1" class="footnote-ref"
+id="fnref1"><sup>1</sup></a></h4>
+<h4 class="date">2026-03-27</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-03-27
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Integrating-nir-genomic-kernel/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20250829code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20250829)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20250829code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20250829)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree2b820580cecacb4ddf5291c02e97031789aea609targetblank2b82058a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/2b820580cecacb4ddf5291c02e97031789aea609" target="_blank">2b82058</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree2b820580cecacb4ddf5291c02e97031789aea609targetblank2b82058a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/2b820580cecacb4ddf5291c02e97031789aea609" target="_blank">2b82058</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    data/Article_documents/
+    Ignored:    data/Maize-NIRS-GBS-main/
+    Ignored:    output/Matrizes/ZEZE.rds
+    Ignored:    output/adjust_models.rar
+    Ignored:    output/climate_results/additional_climate_plots.tiff
+    Ignored:    output/climate_results/combined_additional_climate_plots.tiff
+    Ignored:    output/climate_results/combined_climate_plot.tiff
+    Ignored:    output/cv-schemes.tiff
+    Ignored:    output/results/
+    Ignored:    output/variance_components/rep_1/
+    Ignored:    output/variance_components/rep_10/
+    Ignored:    output/variance_components/rep_11/
+    Ignored:    output/variance_components/rep_12/
+    Ignored:    output/variance_components/rep_13/
+    Ignored:    output/variance_components/rep_14/
+    Ignored:    output/variance_components/rep_15/
+    Ignored:    output/variance_components/rep_16/
+    Ignored:    output/variance_components/rep_17/
+    Ignored:    output/variance_components/rep_18/
+    Ignored:    output/variance_components/rep_19/
+    Ignored:    output/variance_components/rep_2/
+    Ignored:    output/variance_components/rep_20/
+    Ignored:    output/variance_components/rep_3/
+    Ignored:    output/variance_components/rep_4/
+    Ignored:    output/variance_components/rep_5/
+    Ignored:    output/variance_components/rep_6/
+    Ignored:    output/variance_components/rep_7/
+    Ignored:    output/variance_components/rep_8/
+    Ignored:    output/variance_components/rep_9/
+    Ignored:    output/variance_components/var_components_GY.tiff
+    Ignored:    output/variance_components/var_components_KW.tiff
+    Ignored:    output/variance_components/var_components_combined.tiff
+    Ignored:    output/variance_components/variance_components_all.dat
+    Ignored:    output/variance_components/variance_components_all.rds
+
+Unstaged changes:
+    Modified:   analysis/climate_data.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/climate_data.Rmd</code>) and HTML
+(<code>docs/climate_data.html</code>) files. If you’ve configured a
+remote Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/2b820580cecacb4ddf5291c02e97031789aea609/analysis/climate_data.Rmd" target="_blank">2b82058</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-03-27
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/3573a52abdcdd899eddfa85a10e023b63c9b1874/docs/climate_data.html" target="_blank">3573a52</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-03-27
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/5b10ff7fd2660edc5f9c974320574ea26b8efd79/analysis/climate_data.Rmd" target="_blank">5b10ff7</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-02-24
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/65d9bd8dceef7d0822bf0e87235882005a0907db/analysis/climate_data.Rmd" target="_blank">65d9bd8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-04
+</td>
+<td>
+update climate_data .rmd and html
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/65d9bd8dceef7d0822bf0e87235882005a0907db/docs/climate_data.html" target="_blank">65d9bd8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-04
+</td>
+<td>
+update climate_data .rmd and html
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/c758018716c54d430e8d8fb3ec1f90fda2e025da/analysis/climate_data.Rmd" target="_blank">c758018</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-03
+</td>
+<td>
+update climate_data .rmd and .html
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/c758018716c54d430e8d8fb3ec1f90fda2e025da/docs/climate_data.html" target="_blank">c758018</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-03
+</td>
+<td>
+update climate_data .rmd and .html
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/4128e08777ef642238183cdbf3a803ddb584f73c/analysis/climate_data.Rmd" target="_blank">4128e08</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-03
+</td>
+<td>
+add climate and components variance scripts and html
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/4128e08777ef642238183cdbf3a803ddb584f73c/docs/climate_data.html" target="_blank">4128e08</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-03
+</td>
+<td>
+add climate and components variance scripts and html
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>1. Introduction</h2>
+<p>This tutorial presents the workflow used to obtain and process daily
+climatic data for the maize experiments conducted in College Station,
+Texas, during the 2011 and 2012 growing seasons.</p>
+<p>The purpose of this script is not only to download daily weather
+records, but to convert those time series into a concise and
+biologically meaningful set of <strong>environmental covariates
+(ECs)</strong>. These covariates summarize the macro-environmental
+conditions of each growing season and are later used as the
+<strong>W</strong> component in prediction models that combine genomic,
+environmental, and spectral information.</p>
+<p>In practical terms, the workflow has four goals:</p>
+<ol style="list-style-type: decimal">
+<li>Retrieve daily weather data from the NASA POWER database.</li>
+<li>Organize the raw data into a reproducible table.</li>
+<li>Visually inspect the main climatic differences between years.</li>
+<li>Derive annual environmental descriptors that can later be used to
+construct the environmental kernel.</li>
+</ol>
+<p><strong>Study location:</strong> College Station, Texas, USA<br />
+<strong>Growing season window:</strong> May 1 to September 30<br />
+<strong>Study years:</strong> 2011 and 2012</p>
+</div>
+<div id="r-environment" class="section level2">
+<h2>2. R environment</h2>
+<p>Before starting the analysis, we load the packages required for data
+retrieval, data manipulation, visualization, and multi-panel figure
+assembly.</p>
+<p>Each package has a clear role in the workflow:</p>
+<ul>
+<li><code>nasapower</code>: connects R to the NASA POWER database.</li>
+<li><code>tidyverse</code>: supports data wrangling and plotting.</li>
+<li><code>lubridate</code>: simplifies date conversion and date-based
+operations.</li>
+<li><code>patchwork</code>: combines multiple <code>ggplot2</code>
+figures into publication-ready panels.</li>
+<li><code>ggthemes</code>: provides the Google Docs discrete scales used
+to standardize colors across figures.</li>
+</ul>
+<p>We also create the output directory at the beginning of the script.
+This avoids errors when saving figures and tables later in the
+analysis.</p>
+<pre class="r"><code># Uncomment if installation is required
+# install.packages(c(&quot;nasapower&quot;, &quot;tidyverse&quot;, &quot;lubridate&quot;, &quot;patchwork&quot;, &quot;ggthemes&quot;))
+
+library(nasapower)
+library(tidyverse)
+library(lubridate)
+library(patchwork)
+library(ggthemes)
+
+if (!dir.exists(&quot;output&quot;)) dir.create(&quot;output&quot;)
+if (!dir.exists(&quot;output/climate_results&quot;)) dir.create(&quot;output/climate_results&quot;, recursive = TRUE)</code></pre>
+</div>
+<div id="query-parameters" class="section level2">
+<h2>3. Query parameters</h2>
+<p>In this section, we define the basic inputs for the NASA POWER query.
+These inputs determine <strong>where</strong>, <strong>when</strong>,
+and <strong>which climatic variables</strong> will be retrieved.</p>
+<p>The geographic coordinates identify the experimental site. The start
+and end dates define the crop season window to be analyzed. The vector
+<code>params</code> lists the daily climatic variables required for
+downstream summaries, such as precipitation, temperature, relative
+humidity, solar radiation, and wind speed.</p>
+<p>These variables were selected because they allow us to derive
+environmental descriptors with direct agronomic interpretation, such as
+accumulated precipitation, growing degree days, thermal stress, and
+vapor pressure deficit.</p>
+<pre class="r"><code># Experimental site coordinates (College Station, TX)
+coords_texas &lt;- c(lon = -96.3344, lat = 30.6282)
+
+# Growing season intervals
+start_date_2011 &lt;- &quot;2011-05-01&quot;
+end_date_2011   &lt;- &quot;2011-09-30&quot;
+
+start_date_2012 &lt;- &quot;2012-05-01&quot;
+end_date_2012   &lt;- &quot;2012-09-30&quot;
+
+# NASA POWER variables
+# PRECTOTCORR      = Corrected total precipitation (mm/day)
+# T2M_MAX, T2M_MIN = Maximum and minimum air temperature at 2 m (°C)
+# RH2M             = Relative humidity at 2 m (%)
+# ALLSKY_SFC_SW_DWN= All-sky shortwave downward radiation (MJ m^-2 day^-1)
+# WS2M             = Wind speed at 2 m (m/s)
+params &lt;- c(
+  &quot;PRECTOTCORR&quot;,
+  &quot;T2M_MAX&quot;,
+  &quot;T2M_MIN&quot;,
+  &quot;RH2M&quot;,
+  &quot;ALLSKY_SFC_SW_DWN&quot;,
+  &quot;WS2M&quot;
+)</code></pre>
+</div>
+<div id="data-retrieval-from-nasa-power" class="section level2">
+<h2>4. Data retrieval from NASA POWER</h2>
+<p>This section performs the download of daily climatic data from NASA
+POWER.</p>
+<p>We run one query for each growing season. This keeps the workflow
+transparent and makes it easier to confirm that each experimental year
+was retrieved correctly. After retrieval, the two annual tables will be
+merged into a single object for the remaining steps of the analysis.</p>
+<div id="download-daily-climate-data-for-each-year"
+class="section level3">
+<h3>4.1 Download daily climate data for each year</h3>
+<p>The code below sends two independent requests to the NASA POWER
+service, one for 2011 and one for 2012. A <code>year</code> identifier
+is added immediately after retrieval so that the origin of each record
+remains explicit throughout the workflow.</p>
+<pre class="r"><code>data_tx_2011 &lt;- get_power(
+  community = &quot;AG&quot;,
+  lonlat = coords_texas,
+  pars = params,
+  dates = c(start_date_2011, end_date_2011),
+  temporal_api = &quot;DAILY&quot;
+) %&gt;%
+  mutate(year = 2011)
+
+data_tx_2012 &lt;- get_power(
+  community = &quot;AG&quot;,
+  lonlat = coords_texas,
+  pars = params,
+  dates = c(start_date_2012, end_date_2012),
+  temporal_api = &quot;DAILY&quot;
+) %&gt;%
+  mutate(year = 2012)</code></pre>
+</div>
+<div id="merge-format-and-save-the-raw-dataset" class="section level3">
+<h3>4.2 Merge, format, and save the raw dataset</h3>
+<p>Once both yearly tables are available, we merge them into a single
+dataset and convert the date column to a proper R date format. This step
+is essential because the original date is returned as a numeric string,
+and later visualizations depend on a valid date object.</p>
+<p>We also save the raw daily dataset as a CSV file. This is an
+important reproducibility step because it preserves the exact version of
+the retrieved data used in the analysis.</p>
+<pre class="r"><code>texas_climate_data &lt;- bind_rows(data_tx_2011, data_tx_2012) %&gt;%
+  mutate(
+    date = ymd(YYYYMMDD),
+    year = factor(year, levels = c(2011, 2012))
+  )
+
+knitr::kable(
+  head(texas_climate_data),
+  caption = &quot;Sample of daily climatic data retrieved from NASA POWER.&quot;
+)</code></pre>
+<table>
+<caption>Sample of daily climatic data retrieved from NASA
+POWER.</caption>
+<colgroup>
+<col width="7%" />
+<col width="6%" />
+<col width="4%" />
+<col width="2%" />
+<col width="2%" />
+<col width="3%" />
+<col width="9%" />
+<col width="10%" />
+<col width="6%" />
+<col width="6%" />
+<col width="5%" />
+<col width="15%" />
+<col width="4%" />
+<col width="4%" />
+<col width="9%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">LON</th>
+<th align="right">LAT</th>
+<th align="right">YEAR</th>
+<th align="right">MM</th>
+<th align="right">DD</th>
+<th align="right">DOY</th>
+<th align="left">YYYYMMDD</th>
+<th align="right">PRECTOTCORR</th>
+<th align="right">T2M_MAX</th>
+<th align="right">T2M_MIN</th>
+<th align="right">RH2M</th>
+<th align="right">ALLSKY_SFC_SW_DWN</th>
+<th align="right">WS2M</th>
+<th align="left">year</th>
+<th align="left">date</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">1</td>
+<td align="right">121</td>
+<td align="left">2011-05-01</td>
+<td align="right">0.00</td>
+<td align="right">33.95</td>
+<td align="right">16.93</td>
+<td align="right">66.05</td>
+<td align="right">18.35</td>
+<td align="right">4.13</td>
+<td align="left">2011</td>
+<td align="left">2011-05-01</td>
+</tr>
+<tr class="even">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">2</td>
+<td align="right">122</td>
+<td align="left">2011-05-02</td>
+<td align="right">0.99</td>
+<td align="right">20.62</td>
+<td align="right">11.77</td>
+<td align="right">69.83</td>
+<td align="right">8.63</td>
+<td align="right">3.73</td>
+<td align="left">2011</td>
+<td align="left">2011-05-02</td>
+</tr>
+<tr class="odd">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">3</td>
+<td align="right">123</td>
+<td align="left">2011-05-03</td>
+<td align="right">0.14</td>
+<td align="right">25.13</td>
+<td align="right">10.30</td>
+<td align="right">50.50</td>
+<td align="right">28.29</td>
+<td align="right">3.67</td>
+<td align="left">2011</td>
+<td align="left">2011-05-03</td>
+</tr>
+<tr class="even">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">4</td>
+<td align="right">124</td>
+<td align="left">2011-05-04</td>
+<td align="right">0.00</td>
+<td align="right">27.91</td>
+<td align="right">9.52</td>
+<td align="right">36.35</td>
+<td align="right">28.73</td>
+<td align="right">1.69</td>
+<td align="left">2011</td>
+<td align="left">2011-05-04</td>
+</tr>
+<tr class="odd">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">5</td>
+<td align="right">125</td>
+<td align="left">2011-05-05</td>
+<td align="right">0.01</td>
+<td align="right">30.96</td>
+<td align="right">12.09</td>
+<td align="right">38.21</td>
+<td align="right">29.31</td>
+<td align="right">1.22</td>
+<td align="left">2011</td>
+<td align="left">2011-05-05</td>
+</tr>
+<tr class="even">
+<td align="right">-96.3344</td>
+<td align="right">30.6282</td>
+<td align="right">2011</td>
+<td align="right">5</td>
+<td align="right">6</td>
+<td align="right">126</td>
+<td align="left">2011-05-06</td>
+<td align="right">0.00</td>
+<td align="right">32.76</td>
+<td align="right">13.95</td>
+<td align="right">50.22</td>
+<td align="right">28.19</td>
+<td align="right">2.39</td>
+<td align="left">2011</td>
+<td align="left">2011-05-06</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>write.csv(
+  texas_climate_data,
+  &quot;output/climate_results/texas_climate_data_raw.csv&quot;,
+  row.names = FALSE
+)</code></pre>
+</div>
+</div>
+<div id="exploratory-analysis-and-figure-generation"
+class="section level2">
+<h2>5. Exploratory analysis and figure generation</h2>
+<p>Before summarizing the data into environmental covariates, it is good
+practice to inspect the daily series visually. This step serves two
+purposes.</p>
+<p>First, it helps verify that the downloaded data are coherent and free
+from obvious structural problems. Second, it helps interpret the
+climatic contrast between the years under study, which is important for
+the biological discussion of the experiments.</p>
+<p>To make the figures suitable for a scientific article, we define a
+common visual style and standardize axis titles, units, and panel
+formatting.</p>
+<div id="define-a-common-publication-oriented-plotting-style"
+class="section level3">
+<h3>5.1 Define a common publication-oriented plotting style</h3>
+<p>The objects created below are used repeatedly across the figures. The
+custom theme improves readability, while the month labels ensure
+consistent calendar formatting across panels. We also define helper
+scales based on the Google Docs palette (<code>scale_*_gdocs</code>) so
+that all figures share the same discrete color standard throughout the
+tutorial.</p>
+<pre class="r"><code>theme_article &lt;- function() {
+  theme_bw(base_size = 11) +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = &quot;grey90&quot;, linewidth = 0.25),
+      panel.border = element_rect(color = &quot;grey40&quot;, linewidth = 0.4),
+      strip.background = element_rect(fill = &quot;grey95&quot;, color = &quot;grey70&quot;, linewidth = 0.3),
+      strip.text = element_text(face = &quot;bold&quot;, size = 10),
+      axis.title = element_text(face = &quot;bold&quot;, size = 11),
+      axis.text = element_text(size = 9.5, color = &quot;black&quot;),
+      plot.title = element_text(face = &quot;bold&quot;, size = 12, hjust = 0.5, margin = margin(b = 4)),
+      plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
+      plot.caption = element_text(size = 8.5, hjust = 0, color = &quot;grey30&quot;, margin = margin(t = 8)),
+      plot.caption.position = &quot;plot&quot;,
+      legend.position = &quot;bottom&quot;,
+      legend.justification = &quot;center&quot;,
+      legend.direction = &quot;horizontal&quot;,
+      legend.title = element_text(face = &quot;bold&quot;, size = 10),
+      legend.text = element_text(size = 9),
+      legend.key.width = grid::unit(1.2, &quot;cm&quot;),
+      legend.box.margin = margin(t = 4),
+      plot.margin = margin(8, 10, 8, 8)
+    )
+}
+
+scale_fill_article &lt;- function(...) {
+  ggthemes::scale_fill_gdocs(...)
+}
+
+scale_color_article &lt;- function(...) {
+  ggthemes::scale_color_gdocs(...)
+}
+
+scale_color_temperature_article &lt;- function(...) {
+  ggplot2::scale_color_manual(
+    values = c(
+      &quot;Minimum&quot; = &quot;#4285F4&quot;,
+      &quot;Mean&quot; = &quot;#F4B400&quot;,
+      &quot;Maximum&quot; = &quot;#DB4437&quot;
+    ),
+    ...
+  )
+}
+
+guide_article &lt;- guide_legend(
+  title.position = &quot;top&quot;,
+  nrow = 1,
+  byrow = TRUE
+)
+
+month_levels &lt;- 5:9
+month_labels &lt;- month.abb[month_levels]
+
+month_breaks_fn &lt;- function(x) {
+  seq.Date(
+    from = floor_date(min(x, na.rm = TRUE), unit = &quot;month&quot;),
+    to   = floor_date(max(x, na.rm = TRUE), unit = &quot;month&quot;),
+    by   = &quot;1 month&quot;
+  )
+}
+
+month_labels_fn &lt;- scales::label_date(format = &quot;%b&quot;)
+
+daily_data_with_parts &lt;- texas_climate_data %&gt;%
+  mutate(
+    Year = factor(year(date), levels = c(2011, 2012)),
+    Month = factor(month(date), levels = month_levels, labels = month_labels),
+    Day_of_month = factor(mday(date))
+  )</code></pre>
+</div>
+<div id="daily-precipitation-overview" class="section level3">
+<h3>5.2 Daily precipitation overview</h3>
+<p>This first figure provides a direct view of daily rainfall over time.
+It is useful for identifying dry periods, rainfall concentration, and
+broad differences between the two years.</p>
+<pre class="r"><code>p_precip_daily &lt;- ggplot(
+  texas_climate_data,
+  aes(x = date, y = PRECTOTCORR, fill = year)
+) +
+  geom_col(alpha = 0.85, show.legend = FALSE) +
+  facet_wrap(~ year, scales = &quot;free_x&quot;) +
+  labs(
+    title = &quot;Daily precipitation&quot;,
+    subtitle = &quot;College Station, Texas, USA, 2011-2012&quot;,
+    x = &quot;Month&quot;,
+    y = expression(&quot;Precipitation (&quot; * mm ~ day^{-1} * &quot;)&quot;),
+    caption = &quot;Bars represent corrected total daily precipitation obtained from NASA POWER.&quot;
+  ) +
+  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
+  scale_fill_article(limits = c(&quot;2011&quot;, &quot;2012&quot;), guide = guide_article) +
+  theme_article()
+
+p_precip_daily</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/climate_data.Rmd/plot_precipitation_overview-1.png" alt="Figure 1. Daily precipitation across the 2011 and 2012 maize growing seasons in College Station, Texas. Bars represent corrected daily precipitation obtained from NASA POWER." width="100%" />
+<p class="caption">
+Figure 1. Daily precipitation across the 2011 and 2012 maize growing
+seasons in College Station, Texas. Bars represent corrected daily
+precipitation obtained from NASA POWER.
+</p>
+</div>
+</div>
+<div id="daily-precipitation-by-month-and-day-of-month"
+class="section level3">
+<h3>5.3 Daily precipitation by month and day of month</h3>
+<p>The next figure reorganizes the same rainfall information in a way
+that facilitates within-season comparison. Instead of plotting only the
+chronological series, we compare days of the month across the two years
+inside each monthly panel.</p>
+<p>This layout is especially helpful when the goal is to see whether one
+season was systematically drier or wetter during specific periods of
+crop development.</p>
+<pre class="r"><code>p1 &lt;- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill = Year)) +
+  geom_col(position = position_dodge(width = 0.85), alpha = 0.85, width = 0.8) +
+  facet_wrap(~ Month, scales = &quot;free_x&quot;, ncol = 5) +
+  labs(
+    title = &quot;Daily precipitation by month and year&quot;,
+    subtitle = &quot;Grouped by day of month within each monthly panel&quot;,
+    x = &quot;Day of month&quot;,
+    y = expression(&quot;Precipitation (&quot; * mm ~ day^{-1} * &quot;)&quot;),
+    fill = &quot;Year&quot;,
+    caption = &quot;This arrangement facilitates within-season comparison of rainfall patterns between years.&quot;
+  ) +
+  scale_x_discrete(breaks = c(&quot;1&quot;, &quot;5&quot;, &quot;10&quot;, &quot;15&quot;, &quot;20&quot;, &quot;25&quot;, &quot;30&quot;, &quot;31&quot;)) +
+  scale_fill_article(limits = c(&quot;2011&quot;, &quot;2012&quot;), guide = guide_article) +
+  theme_article()
+
+p1</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/climate_data.Rmd/plot_precipitation_grouped-1.png" alt="Figure 2. Daily precipitation arranged by day of month within each month to facilitate between-year comparison during the crop season." width="100%" />
+<p class="caption">
+Figure 2. Daily precipitation arranged by day of month within each month
+to facilitate between-year comparison during the crop season.
+</p>
+</div>
+</div>
+<div id="monthly-precipitation-totals" class="section level3">
+<h3>5.4 Monthly precipitation totals</h3>
+<p>Daily precipitation is informative, but monthly totals provide a
+simpler seasonal summary. This figure aggregates the daily series and
+allows a cleaner comparison of cumulative water input between years and
+months.</p>
+<pre class="r"><code>monthly_precip &lt;- texas_climate_data %&gt;%
+  mutate(
+    year = factor(year(date), levels = c(2011, 2012)),
+    month = factor(month(date), levels = month_levels, labels = month_labels)
+  ) %&gt;%
+  group_by(year, month) %&gt;%
+  summarise(total_precipitation = sum(PRECTOTCORR, na.rm = TRUE), .groups = &quot;drop&quot;)
+
+p2 &lt;- ggplot(monthly_precip, aes(x = month, y = total_precipitation, fill = year)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7, alpha = 0.9) +
+  labs(
+    title = &quot;Monthly precipitation totals&quot;,
+    subtitle = &quot;Growing season comparison between 2011 and 2012&quot;,
+    x = &quot;Month&quot;,
+    y = &quot;Total precipitation (mm)&quot;,
+    fill = &quot;Year&quot;,
+    caption = &quot;Bars represent cumulative precipitation within each month of the crop season.&quot;
+  ) +
+  scale_fill_article(limits = c(&quot;2011&quot;, &quot;2012&quot;), guide = guide_article) +
+  theme_article()
+
+p2</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/climate_data.Rmd/plot_monthly_precipitation-1.png" alt="Figure 3. Monthly precipitation totals during the maize growing seasons of 2011 and 2012 in College Station, Texas." width="100%" />
+<p class="caption">
+Figure 3. Monthly precipitation totals during the maize growing seasons
+of 2011 and 2012 in College Station, Texas.
+</p>
+</div>
+</div>
+<div id="daily-air-temperature" class="section level3">
+<h3>5.5 Daily air temperature</h3>
+<p>Temperature is another core descriptor of crop environment. In this
+figure, we compare minimum, mean, and maximum daily temperature profiles
+across the two seasons.</p>
+<p>The dashed smoothing lines do not replace the original data. Their
+role is only to help visualize the general seasonal trends for each
+temperature metric.</p>
+<pre class="r"><code>temperature_data &lt;- texas_climate_data %&gt;%
+  mutate(T2M_MEAN = (T2M_MAX + T2M_MIN) / 2) %&gt;%
+  pivot_longer(
+    cols = c(T2M_MIN, T2M_MEAN, T2M_MAX),
+    names_to = &quot;Temperature_metric&quot;,
+    values_to = &quot;Temperature&quot;
+  ) %&gt;%
+  mutate(
+    Temperature_metric = factor(
+      Temperature_metric,
+      levels = c(&quot;T2M_MIN&quot;, &quot;T2M_MEAN&quot;, &quot;T2M_MAX&quot;),
+      labels = c(&quot;Minimum&quot;, &quot;Mean&quot;, &quot;Maximum&quot;)
+    )
+  )
+
+p3 &lt;- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperature_metric)) +
+  geom_line(linewidth = 0.55, alpha = 0.85) +
+  geom_smooth(
+    aes(group = Temperature_metric),
+    method = &quot;loess&quot;,
+    se = FALSE,
+    linetype = &quot;dashed&quot;,
+    color = &quot;black&quot;,
+    linewidth = 0.5,
+    show.legend = FALSE
+  ) +
+  facet_wrap(~ year, scales = &quot;free_x&quot;) +
+  labs(
+    title = &quot;Daily air temperature&quot;,
+    subtitle = &quot;Minimum, mean, and maximum values; dashed lines indicate LOESS trends&quot;,
+    x = &quot;Month&quot;,
+    y = expression(&quot;Air temperature (&quot; * degree * &quot;C)&quot;),
+    color = &quot;Temperature metric&quot;,
+    caption = &quot;Dashed LOESS curves are included only to summarize seasonal trajectories for each temperature metric.&quot;
+  ) +
+  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
+  scale_color_temperature_article(limits = c(&quot;Minimum&quot;, &quot;Mean&quot;, &quot;Maximum&quot;), guide = guide_article) +
+  theme_article()
+
+p3</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/climate_data.Rmd/plot_temperature-1.png" alt="Figure 4. Daily minimum, mean, and maximum air temperature during the 2011 and 2012 maize growing seasons. Dashed lines indicate LOESS trends used only to aid visual interpretation." width="100%" />
+<p class="caption">
+Figure 4. Daily minimum, mean, and maximum air temperature during the
+2011 and 2012 maize growing seasons. Dashed lines indicate LOESS trends
+used only to aid visual interpretation.
+</p>
+</div>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-plot_temperature-1">
+Past versions of plot_temperature-1.png
+</button>
+</p>
+<div id="fig-plot_temperature-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/3573a52abdcdd899eddfa85a10e023b63c9b1874/docs/figure/climate_data.Rmd/plot_temperature-1.png" target="_blank">3573a52</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-03-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/65d9bd8dceef7d0822bf0e87235882005a0907db/docs/figure/climate_data.Rmd/plot_temperature-1.png" target="_blank">65d9bd8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-04
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/c758018716c54d430e8d8fb3ec1f90fda2e025da/docs/figure/climate_data.Rmd/plot_temperature-1.png" target="_blank">c758018</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-03
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/4128e08777ef642238183cdbf3a803ddb584f73c/docs/figure/climate_data.Rmd/plot_temperature-1.png" target="_blank">4128e08</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2025-11-03
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="combined-main-climate-figure" class="section level3">
+<h3>5.6 Combined main climate figure</h3>
+<p>After creating the main precipitation and temperature plots, we
+combine them into a single multi-panel figure. This is useful when the
+final output is intended for reports, manuscripts, or supplementary
+material.</p>
+<p>The figure is also exported as a high-resolution TIFF file, which is
+a common requirement for journal submission.</p>
+<pre class="r"><code>main_layout &lt;- &quot;
+AA
+BC
+&quot;
+
+combined_plot &lt;- patchwork::wrap_plots(
+  A = p1,
+  B = p2,
+  C = p3,
+  design = main_layout
+) +
+  patchwork::plot_annotation(
+    tag_levels = &quot;A&quot;,
+    title = &quot;Main climatic contrasts between growing seasons&quot;,
+    theme = theme(
+      plot.title = element_text(face = &quot;bold&quot;, size = 13, hjust = 0.5, margin = margin(b = 8))
+    )
+  )
+
+print(combined_plot)</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/climate_data.Rmd/combined_main_plot-1.png" alt="Figure 5. Multi-panel summary of the main climatic contrasts between years, including daily precipitation by month, monthly precipitation totals, and daily air temperature profiles." width="100%" />
+<p class="caption">
+Figure 5. Multi-panel summary of the main climatic contrasts between
+years, including daily precipitation by month, monthly precipitation
+totals, and daily air temperature profiles.
+</p>
+</div>
+<pre class="r"><code>ggsave(
+  filename = &quot;output/climate_results/combined_climate_plot.tiff&quot;,
+  plot = combined_plot,
+  width = 14,
+  height = 10,
+  dpi = 300,
+  compression = &quot;lzw&quot;,
+  bg = &quot;white&quot;
+)</code></pre>
+</div>
+<div id="additional-daily-climate-variables" class="section level3">
+<h3>5.7 Additional daily climate variables</h3>
+<p>In addition to precipitation and temperature, the script also
+examines solar radiation, wind speed, and relative humidity. These
+variables are important because they help describe evaporative demand,
+atmospheric dryness, and energy availability during the crop cycle.</p>
+<pre class="r"><code>p4 &lt;- ggplot(
+  texas_climate_data,
+  aes(x = date, y = ALLSKY_SFC_SW_DWN, color = &quot;Solar radiation&quot;)
+) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = &quot;loess&quot;, se = FALSE, linetype = &quot;dashed&quot;, color = &quot;black&quot;, linewidth = 0.5) +
+  facet_wrap(~ year, scales = &quot;free_x&quot;) +
+  labs(
+    title = &quot;Daily shortwave solar radiation&quot;,
+    subtitle = &quot;Dashed line indicates the LOESS trend&quot;,
+    x = &quot;Month&quot;,
+    y = expression(&quot;Shortwave solar radiation (&quot; * MJ ~ m^{-2} ~ day^{-1} * &quot;)&quot;),
+    caption = &quot;Daily incoming shortwave radiation during the crop season.&quot;
+  ) +
+  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
+  scale_color_article(limits = &quot;Solar radiation&quot;, guide = &quot;none&quot;) +
+  theme_article()
+
+p5 &lt;- ggplot(
+  texas_climate_data,
+  aes(x = date, y = WS2M, color = &quot;Wind speed&quot;)
+) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = &quot;loess&quot;, se = FALSE, linetype = &quot;dashed&quot;, color = &quot;black&quot;, linewidth = 0.5) +
+  facet_wrap(~ year, scales = &quot;free_x&quot;) +
+  labs(
+    title = &quot;Daily wind speed at 2 m&quot;,
+    subtitle = &quot;Dashed line indicates the LOESS trend&quot;,
+    x = &quot;Month&quot;,
+    y = expression(&quot;Wind speed (&quot; * m ~ s^{-1} * &quot;)&quot;),
+    caption = &quot;Daily wind speed measured at 2 m above ground level.&quot;
+  ) +
+  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
+  scale_color_article(limits = &quot;Wind speed&quot;, guide = &quot;none&quot;) +
+  theme_article()
+
+p6 &lt;- ggplot(
+  texas_climate_data,
+  aes(x = date, y = RH2M, color = &quot;Relative humidity&quot;)
+) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = &quot;loess&quot;, se = FALSE, linetype = &quot;dashed&quot;, color = &quot;black&quot;, linewidth = 0.5) +
+  facet_wrap(~ year, scales = &quot;free_x&quot;) +
+  labs(
+    title = &quot;Daily relative humidity at 2 m&quot;,
+    subtitle = &quot;Dashed line indicates the LOESS trend&quot;,
+    x = &quot;Month&quot;,
+    y = &quot;Relative humidity (%)&quot;,
+    caption = &quot;Daily relative humidity measured at 2 m above ground level.&quot;
+  ) +
+  scale_x_date(breaks = month_breaks_fn, labels = month_labels_fn) +
+  scale_color_article(limits = &quot;Relative humidity&quot;, guide = &quot;none&quot;) +
+  theme_article()</code></pre>
+</div>
+<div id="combined-figure-for-additional-climate-variables"
+class="section level3">
+<h3>5.8 Combined figure for additional climate variables</h3>
+<p>As in the previous subsection, we combine the individual plots into a
+single figure. The layout was built using
+<code>patchwork::wrap_plots()</code>, which avoids the composition error
+generated when the patchwork operators are not correctly recognized
+during rendering.</p>
+<pre class="r"><code>additional_layout &lt;- &quot;
+AB
+CC
+&quot;
+
+combined_additional_plots &lt;- patchwork::wrap_plots(
+  A = p4,
+  B = p5,
+  C = p6,
+  design = additional_layout
+) +
+  patchwork::plot_annotation(
+    tag_levels = &quot;A&quot;,
+    title = &quot;Additional climatic contrasts between growing seasons&quot;,
+    theme = theme(
+      plot.title = element_text(face = &quot;bold&quot;, size = 13, hjust = 0.5, margin = margin(b = 8))
+    )
+  )
+
+print(combined_additional_plots)</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/climate_data.Rmd/combined_additional_plot-1.png" alt="Figure 7. Multi-panel summary of additional climatic variables across years, including shortwave solar radiation, wind speed, and relative humidity." width="100%" />
+<p class="caption">
+Figure 7. Multi-panel summary of additional climatic variables across
+years, including shortwave solar radiation, wind speed, and relative
+humidity.
+</p>
+</div>
+<pre class="r"><code>ggsave(
+  filename = &quot;output/climate_results/combined_additional_climate_plots.tiff&quot;,
+  plot = combined_additional_plots,
+  width = 14,
+  height = 10,
+  dpi = 300,
+  compression = &quot;lzw&quot;,
+  bg = &quot;white&quot;
+)</code></pre>
+</div>
+</div>
+<div id="environmental-covariates" class="section level2">
+<h2>6. Environmental covariates</h2>
+<p>The next step transforms daily climatic records into annual summary
+variables. This is the most important analytical transition in the
+script because it converts a raw time series into features that can be
+used in downstream prediction models.</p>
+<p>These summaries are designed to capture biologically relevant aspects
+of each environment, including thermal accumulation, water availability,
+atmospheric dryness, and stress frequency.</p>
+<div id="derive-daily-intermediate-variables" class="section level3">
+<h3>6.1 Derive daily intermediate variables</h3>
+<p>Some environmental covariates depend on quantities that are not
+directly provided by NASA POWER. For this reason, we first compute
+intermediate daily variables such as growing degree days (GDD), daily
+thermal amplitude, average daily temperature, saturation vapor pressure,
+actual vapor pressure, and vapor pressure deficit (VPD).</p>
+<p>These intermediate variables are calculated day by day and then
+summarized at the annual level in the next subsection.</p>
+<pre class="r"><code>texas_climate_data &lt;- texas_climate_data %&gt;%
+  mutate(
+    T_base = 10,
+    T_upper = 30,
+    T_eff_min = if_else(T2M_MIN &lt; T_base, T_base, T2M_MIN),
+    T_eff_max = if_else(T2M_MAX &gt; T_upper, T_upper, T2M_MAX),
+    T_avg_eff = (T_eff_min + T_eff_max) / 2,
+    GDD = T_avg_eff - T_base,
+    DTR = T2M_MAX - T2M_MIN,
+    T_AVG_DAILY = (T2M_MAX + T2M_MIN) / 2,
+
+    # Tetens equation, resulting in kPa
+    SAT_VAP_PRES = 0.6108 * exp((17.27 * T_AVG_DAILY) / (T_AVG_DAILY + 237.3)),
+    ACT_VAP_PRES = SAT_VAP_PRES * (RH2M / 100),
+    VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES
+  )
+
+environmental_covariates &lt;- texas_climate_data %&gt;%
+  mutate(year_numeric = as.integer(as.character(year))) %&gt;%
+  group_by(year_numeric) %&gt;%
+  summarise(
+    TMAX_AVG = mean(T2M_MAX, na.rm = TRUE),
+    TMIN_AVG = mean(T2M_MIN, na.rm = TRUE),
+    GDD_CUM = sum(GDD, na.rm = TRUE),
+    HEAT_STRESS_DAYS = sum(T2M_MAX &gt; 35, na.rm = TRUE),
+
+    PRECTOT = sum(PRECTOTCORR, na.rm = TRUE),
+    DRY_DAYS = sum(PRECTOTCORR == 0, na.rm = TRUE),
+    RH_AVG = mean(RH2M, na.rm = TRUE),
+
+    WS2M_AVG = mean(WS2M, na.rm = TRUE),
+    RAD_CUM = sum(ALLSKY_SFC_SW_DWN, na.rm = TRUE),
+
+    T_AVG = mean(T_AVG_DAILY, na.rm = TRUE),
+    DTR_AVG = mean(DTR, na.rm = TRUE),
+    COLD_STRESS_DAYS = sum(T2M_MIN &lt; 10, na.rm = TRUE),
+
+    RAINY_DAYS = sum(PRECTOTCORR &gt; 0, na.rm = TRUE),
+    PREC_INTENSITY = if_else(RAINY_DAYS &gt; 0, PRECTOT / RAINY_DAYS, 0),
+    LOW_RH_DAYS = sum(RH2M &lt; 30, na.rm = TRUE),
+
+    VPD_AVG = mean(VPD_DAILY, na.rm = TRUE),
+    VPD_STRESS_DAYS = sum(VPD_DAILY &gt; 1.5, na.rm = TRUE),
+    .groups = &quot;drop&quot;
+  ) %&gt;%
+  rename(year = year_numeric)
+
+# Optional expanded table: daily weather data plus annual ECs
+ecs_expanded &lt;- texas_climate_data %&gt;%
+  mutate(year = as.integer(as.character(year))) %&gt;%
+  left_join(environmental_covariates, by = &quot;year&quot;)
+
+knitr::kable(
+  environmental_covariates,
+  caption = &quot;Annual environmental covariates derived from NASA POWER data.&quot;
+)</code></pre>
+<table>
+<caption>Annual environmental covariates derived from NASA POWER
+data.</caption>
+<colgroup>
+<col width="2%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="8%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="8%" />
+<col width="5%" />
+<col width="7%" />
+<col width="6%" />
+<col width="4%" />
+<col width="8%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">year</th>
+<th align="right">TMAX_AVG</th>
+<th align="right">TMIN_AVG</th>
+<th align="right">GDD_CUM</th>
+<th align="right">HEAT_STRESS_DAYS</th>
+<th align="right">PRECTOT</th>
+<th align="right">DRY_DAYS</th>
+<th align="right">RH_AVG</th>
+<th align="right">WS2M_AVG</th>
+<th align="right">RAD_CUM</th>
+<th align="right">T_AVG</th>
+<th align="right">DTR_AVG</th>
+<th align="right">COLD_STRESS_DAYS</th>
+<th align="right">RAINY_DAYS</th>
+<th align="right">PREC_INTENSITY</th>
+<th align="right">LOW_RH_DAYS</th>
+<th align="right">VPD_AVG</th>
+<th align="right">VPD_STRESS_DAYS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2011</td>
+<td align="right">37.65373</td>
+<td align="right">23.22837</td>
+<td align="right">2530.040</td>
+<td align="right">120</td>
+<td align="right">168.36</td>
+<td align="right">74</td>
+<td align="right">51.71516</td>
+<td align="right">2.58549</td>
+<td align="right">3687.10</td>
+<td align="right">30.44105</td>
+<td align="right">14.42536</td>
+<td align="right">1</td>
+<td align="right">79</td>
+<td align="right">2.131139</td>
+<td align="right">4</td>
+<td align="right">2.159130</td>
+<td align="right">125</td>
+</tr>
+<tr class="even">
+<td align="right">2012</td>
+<td align="right">33.97667</td>
+<td align="right">21.97902</td>
+<td align="right">2417.415</td>
+<td align="right">64</td>
+<td align="right">442.25</td>
+<td align="right">49</td>
+<td align="right">68.11471</td>
+<td align="right">2.02085</td>
+<td align="right">3414.31</td>
+<td align="right">27.97784</td>
+<td align="right">11.99765</td>
+<td align="right">0</td>
+<td align="right">104</td>
+<td align="right">4.252404</td>
+<td align="right">0</td>
+<td align="right">1.251411</td>
+<td align="right">50</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="interpretation-of-the-resulting-environmental-covariates"
+class="section level3">
+<h3>6.2 Interpretation of the resulting environmental covariates</h3>
+<p>The final table contains one row per year and several climatic
+descriptors.</p>
+<p>For example:</p>
+<ul>
+<li><code>GDD_CUM</code> summarizes thermal accumulation during the crop
+cycle.</li>
+<li><code>PRECTOT</code> summarizes total water input from
+rainfall.</li>
+<li><code>DRY_DAYS</code> and <code>HEAT_STRESS_DAYS</code> quantify
+stress frequency.</li>
+<li><code>VPD_AVG</code> and <code>VPD_STRESS_DAYS</code> capture
+atmospheric dryness.</li>
+<li><code>RAD_CUM</code> summarizes the seasonal solar energy available
+to the crop.</li>
+</ul>
+<p>This table is the practical output that connects the climate tutorial
+to the predictive modeling stage of the project and to the subsequent
+construction of the environmental kernel.</p>
+</div>
+</div>
+<div id="save-the-final-outputs" class="section level2">
+<h2>7. Save the final outputs</h2>
+<p>The last section stores the processed files generated by the
+tutorial. Saving the outputs explicitly is important because it
+separates data acquisition from downstream modeling, making the workflow
+easier to reproduce and audit.</p>
+<p>Three files are exported:</p>
+<ol style="list-style-type: decimal">
+<li><code>texas_climate_data_raw.csv</code>: raw daily climatic
+records.</li>
+<li><code>environmental_covariates.csv</code>: one row per year with the
+derived annual summaries.</li>
+<li><code>environmental_covariates_expanded.csv</code>: daily records
+linked to the annual environmental summaries.</li>
+</ol>
+<pre class="r"><code>write.csv(
+  environmental_covariates,
+  &quot;output/climate_results/environmental_covariates.csv&quot;,
+  row.names = FALSE
+)
+
+write.csv(
+  ecs_expanded,
+  &quot;output/climate_results/environmental_covariates_expanded.csv&quot;,
+  row.names = FALSE
+)
+
+cat(&quot;Climate files successfully saved in &#39;output/climate_results/&#39;.&quot;)</code></pre>
+<pre><code>Climate files successfully saved in &#39;output/climate_results/&#39;.</code></pre>
+</div>
+<div id="final-remarks" class="section level2">
+<h2>8. Final remarks</h2>
+<p>This tutorial establishes a reproducible climatic preprocessing
+pipeline for the study. Starting from daily weather observations, it
+produces a curated set of environmental covariates and article-ready
+figures.</p>
+<p>In the broader workflow of the project, these outputs are not the
+final goal. They are intermediate scientific objects that support the
+construction of the environmental component (W) and the environmental
+kernel used in later genomic prediction models.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ggthemes_5.2.0  patchwork_1.3.2 lubridate_1.9.4 forcats_1.0.1  
+ [5] stringr_1.6.0   dplyr_1.2.0     purrr_1.2.1     readr_2.2.0    
+ [9] tidyr_1.3.2     tibble_3.3.1    ggplot2_4.0.2   tidyverse_2.0.0
+[13] nasapower_4.2.5
+
+loaded via a namespace (and not attached):
+ [1] gtable_0.3.6       xfun_0.54          bslib_0.9.0        lattice_0.22-7    
+ [5] tzdb_0.5.0         vctrs_0.7.1        tools_4.5.1        generics_0.1.4    
+ [9] curl_7.0.0         parallel_4.5.1     pkgconfig_2.0.3    Matrix_1.7-4      
+[13] RColorBrewer_1.1-3 S7_0.2.1           lifecycle_1.0.5    compiler_4.5.1    
+[17] farver_2.1.2       git2r_0.36.2       textshaping_1.0.4  httpuv_1.6.16     
+[21] htmltools_0.5.9    sass_0.4.10        yaml_2.3.12        later_1.4.4       
+[25] pillar_1.11.1      crayon_1.5.3       jquerylib_0.1.4    whisker_0.4.1     
+[29] cachem_1.1.0       nlme_3.1-168       tidyselect_1.2.1   digest_0.6.39     
+[33] stringi_1.8.7      splines_4.5.1      labeling_0.4.3     rprojroot_2.1.1   
+[37] fastmap_1.2.0      grid_4.5.1         cli_3.6.5          magrittr_2.0.4    
+[41] triebeard_0.4.1    crul_1.6.0         withr_3.0.2        scales_1.4.0      
+[45] promises_1.5.0     bit64_4.6.0-1      timechange_0.3.0   rmarkdown_2.30    
+[49] bit_4.6.0          otel_0.2.0         workflowr_1.7.2    ragg_1.5.0        
+[53] hms_1.1.4          evaluate_1.0.5     knitr_1.50         mgcv_1.9-4        
+[57] rlang_1.1.7        urltools_1.7.3.1   Rcpp_1.1.1         glue_1.8.0        
+[61] httpcode_0.3.0     rstudioapi_0.17.1  vroom_1.7.0        jsonlite_2.0.0    
+[65] R6_2.6.1           systemfonts_1.3.1  fs_1.6.6          </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Weverton Gomes da Costa, Postdoctoral Researcher,
+Department of Statistics - Universidade Federal de Viçosa, <a
+href="mailto:wevertonufv@gmail.com"
+class="email">wevertonufv@gmail.com</a><a href="#fnref1"
+class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlR1dG9yaWFsOiBDbGltYXRlIERhdGEgQWNxdWlzaXRpb24gYW5kIFByb2Nlc3NpbmcgKE5BU0EgUE9XRVIpIg0KYXV0aG9yOiANCiAgLSBDb3N0YSwgVy4gRy5eW1dldmVydG9uIEdvbWVzIGRhIENvc3RhLCBQb3N0ZG9jdG9yYWwgUmVzZWFyY2hlciwgRGVwYXJ0bWVudCBvZiBTdGF0aXN0aWNzIC0gVW5pdmVyc2lkYWRlIEZlZGVyYWwgZGUgVmnDp29zYSwgd2V2ZXJ0b251ZnZAZ21haWwuY29tXQ0KZGF0ZTogImByIFN5cy5EYXRlKClgIg0Kc2l0ZTogd29ya2Zsb3dyOjp3Zmxvd19zaXRlDQp1cmw6IGh0dHBzOi8vd2V2ZXJ0b25nb21lc2Nvc3RhLmdpdGh1Yi5pby9JbnRlZ3JhdGluZy1uaXItZ2Vub21pYy1rZXJuZWwvDQpvdXRwdXQ6DQogIHdvcmtmbG93cjo6d2Zsb3dfaHRtbDoNCiAgICB0b2M6IHRydWUNCiAgICB0b2NfZGVwdGg6IDMNCiAgICB0b2NfZmxvYXQ6IHRydWUNCiAgICBjb2RlX2Rvd25sb2FkOiB5ZXMNCmVkaXRvcl9vcHRpb25zOg0KICBjaHVua19vdXRwdXRfdHlwZTogY29uc29sZQ0KZ2l0aHViLXJlcG86IFdldmVydG9uR29tZXNDb3N0YS9JbnRlZ3JhdGluZy1uaXItZ2Vub21pYy1rZXJuZWwNCi0tLQ0KDQpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0NCmtuaXRyOjpvcHRzX2NodW5rJHNldCgNCiAgZWNobyA9IFRSVUUsDQogIHdhcm5pbmcgPSBGQUxTRSwNCiAgbWVzc2FnZSA9IEZBTFNFLA0KICBvdXQud2lkdGggPSAiMTAwJSINCikNCmBgYA0KDQojIyAxLiBJbnRyb2R1Y3Rpb24NCg0KVGhpcyB0dXRvcmlhbCBwcmVzZW50cyB0aGUgd29ya2Zsb3cgdXNlZCB0byBvYnRhaW4gYW5kIHByb2Nlc3MgZGFpbHkgY2xpbWF0aWMgZGF0YSBmb3IgdGhlIG1haXplIGV4cGVyaW1lbnRzIGNvbmR1Y3RlZCBpbiBDb2xsZWdlIFN0YXRpb24sIFRleGFzLCBkdXJpbmcgdGhlIDIwMTEgYW5kIDIwMTIgZ3Jvd2luZyBzZWFzb25zLg0KDQpUaGUgcHVycG9zZSBvZiB0aGlzIHNjcmlwdCBpcyBub3Qgb25seSB0byBkb3dubG9hZCBkYWlseSB3ZWF0aGVyIHJlY29yZHMsIGJ1dCB0byBjb252ZXJ0IHRob3NlIHRpbWUgc2VyaWVzIGludG8gYSBjb25jaXNlIGFuZCBiaW9sb2dpY2FsbHkgbWVhbmluZ2Z1bCBzZXQgb2YgKiplbnZpcm9ubWVudGFsIGNvdmFyaWF0ZXMgKEVDcykqKi4gVGhlc2UgY292YXJpYXRlcyBzdW1tYXJpemUgdGhlIG1hY3JvLWVudmlyb25tZW50YWwgY29uZGl0aW9ucyBvZiBlYWNoIGdyb3dpbmcgc2Vhc29uIGFuZCBhcmUgbGF0ZXIgdXNlZCBhcyB0aGUgKipXKiogY29tcG9uZW50IGluIHByZWRpY3Rpb24gbW9kZWxzIHRoYXQgY29tYmluZSBnZW5vbWljLCBlbnZpcm9ubWVudGFsLCBhbmQgc3BlY3RyYWwgaW5mb3JtYXRpb24uDQoNCkluIHByYWN0aWNhbCB0ZXJtcywgdGhlIHdvcmtmbG93IGhhcyBmb3VyIGdvYWxzOg0KDQoxLiBSZXRyaWV2ZSBkYWlseSB3ZWF0aGVyIGRhdGEgZnJvbSB0aGUgTkFTQSBQT1dFUiBkYXRhYmFzZS4NCjIuIE9yZ2FuaXplIHRoZSByYXcgZGF0YSBpbnRvIGEgcmVwcm9kdWNpYmxlIHRhYmxlLg0KMy4gVmlzdWFsbHkgaW5zcGVjdCB0aGUgbWFpbiBjbGltYXRpYyBkaWZmZXJlbmNlcyBiZXR3ZWVuIHllYXJzLg0KNC4gRGVyaXZlIGFubnVhbCBlbnZpcm9ubWVudGFsIGRlc2NyaXB0b3JzIHRoYXQgY2FuIGxhdGVyIGJlIHVzZWQgdG8gY29uc3RydWN0IHRoZSBlbnZpcm9ubWVudGFsIGtlcm5lbC4NCg0KKipTdHVkeSBsb2NhdGlvbjoqKiBDb2xsZWdlIFN0YXRpb24sIFRleGFzLCBVU0EgIA0KKipHcm93aW5nIHNlYXNvbiB3aW5kb3c6KiogTWF5IDEgdG8gU2VwdGVtYmVyIDMwICANCioqU3R1ZHkgeWVhcnM6KiogMjAxMSBhbmQgMjAxMg0KDQojIyAyLiBSIGVudmlyb25tZW50DQoNCkJlZm9yZSBzdGFydGluZyB0aGUgYW5hbHlzaXMsIHdlIGxvYWQgdGhlIHBhY2thZ2VzIHJlcXVpcmVkIGZvciBkYXRhIHJldHJpZXZhbCwgZGF0YSBtYW5pcHVsYXRpb24sIHZpc3VhbGl6YXRpb24sIGFuZCBtdWx0aS1wYW5lbCBmaWd1cmUgYXNzZW1ibHkuDQoNCkVhY2ggcGFja2FnZSBoYXMgYSBjbGVhciByb2xlIGluIHRoZSB3b3JrZmxvdzoNCg0KLSBgbmFzYXBvd2VyYDogY29ubmVjdHMgUiB0byB0aGUgTkFTQSBQT1dFUiBkYXRhYmFzZS4NCi0gYHRpZHl2ZXJzZWA6IHN1cHBvcnRzIGRhdGEgd3JhbmdsaW5nIGFuZCBwbG90dGluZy4NCi0gYGx1YnJpZGF0ZWA6IHNpbXBsaWZpZXMgZGF0ZSBjb252ZXJzaW9uIGFuZCBkYXRlLWJhc2VkIG9wZXJhdGlvbnMuDQotIGBwYXRjaHdvcmtgOiBjb21iaW5lcyBtdWx0aXBsZSBgZ2dwbG90MmAgZmlndXJlcyBpbnRvIHB1YmxpY2F0aW9uLXJlYWR5IHBhbmVscy4NCi0gYGdndGhlbWVzYDogcHJvdmlkZXMgdGhlIEdvb2dsZSBEb2NzIGRpc2NyZXRlIHNjYWxlcyB1c2VkIHRvIHN0YW5kYXJkaXplIGNvbG9ycyBhY3Jvc3MgZmlndXJlcy4NCg0KV2UgYWxzbyBjcmVhdGUgdGhlIG91dHB1dCBkaXJlY3RvcnkgYXQgdGhlIGJlZ2lubmluZyBvZiB0aGUgc2NyaXB0LiBUaGlzIGF2b2lkcyBlcnJvcnMgd2hlbiBzYXZpbmcgZmlndXJlcyBhbmQgdGFibGVzIGxhdGVyIGluIHRoZSBhbmFseXNpcy4NCg0KYGBge3IgcGFja2FnZXN9DQojIFVuY29tbWVudCBpZiBpbnN0YWxsYXRpb24gaXMgcmVxdWlyZWQNCiMgaW5zdGFsbC5wYWNrYWdlcyhjKCJuYXNhcG93ZXIiLCAidGlkeXZlcnNlIiwgImx1YnJpZGF0ZSIsICJwYXRjaHdvcmsiLCAiZ2d0aGVtZXMiKSkNCg0KbGlicmFyeShuYXNhcG93ZXIpDQpsaWJyYXJ5KHRpZHl2ZXJzZSkNCmxpYnJhcnkobHVicmlkYXRlKQ0KbGlicmFyeShwYXRjaHdvcmspDQpsaWJyYXJ5KGdndGhlbWVzKQ0KDQppZiAoIWRpci5leGlzdHMoIm91dHB1dCIpKSBkaXIuY3JlYXRlKCJvdXRwdXQiKQ0KaWYgKCFkaXIuZXhpc3RzKCJvdXRwdXQvY2xpbWF0ZV9yZXN1bHRzIikpIGRpci5jcmVhdGUoIm91dHB1dC9jbGltYXRlX3Jlc3VsdHMiLCByZWN1cnNpdmUgPSBUUlVFKQ0KYGBgDQoNCiMjIDMuIFF1ZXJ5IHBhcmFtZXRlcnMNCg0KSW4gdGhpcyBzZWN0aW9uLCB3ZSBkZWZpbmUgdGhlIGJhc2ljIGlucHV0cyBmb3IgdGhlIE5BU0EgUE9XRVIgcXVlcnkuIFRoZXNlIGlucHV0cyBkZXRlcm1pbmUgKip3aGVyZSoqLCAqKndoZW4qKiwgYW5kICoqd2hpY2ggY2xpbWF0aWMgdmFyaWFibGVzKiogd2lsbCBiZSByZXRyaWV2ZWQuDQoNClRoZSBnZW9ncmFwaGljIGNvb3JkaW5hdGVzIGlkZW50aWZ5IHRoZSBleHBlcmltZW50YWwgc2l0ZS4gVGhlIHN0YXJ0IGFuZCBlbmQgZGF0ZXMgZGVmaW5lIHRoZSBjcm9wIHNlYXNvbiB3aW5kb3cgdG8gYmUgYW5hbHl6ZWQuIFRoZSB2ZWN0b3IgYHBhcmFtc2AgbGlzdHMgdGhlIGRhaWx5IGNsaW1hdGljIHZhcmlhYmxlcyByZXF1aXJlZCBmb3IgZG93bnN0cmVhbSBzdW1tYXJpZXMsIHN1Y2ggYXMgcHJlY2lwaXRhdGlvbiwgdGVtcGVyYXR1cmUsIHJlbGF0aXZlIGh1bWlkaXR5LCBzb2xhciByYWRpYXRpb24sIGFuZCB3aW5kIHNwZWVkLg0KDQpUaGVzZSB2YXJpYWJsZXMgd2VyZSBzZWxlY3RlZCBiZWNhdXNlIHRoZXkgYWxsb3cgdXMgdG8gZGVyaXZlIGVudmlyb25tZW50YWwgZGVzY3JpcHRvcnMgd2l0aCBkaXJlY3QgYWdyb25vbWljIGludGVycHJldGF0aW9uLCBzdWNoIGFzIGFjY3VtdWxhdGVkIHByZWNpcGl0YXRpb24sIGdyb3dpbmcgZGVncmVlIGRheXMsIHRoZXJtYWwgc3RyZXNzLCBhbmQgdmFwb3IgcHJlc3N1cmUgZGVmaWNpdC4NCg0KYGBge3IgcGFyYW1ldGVyc30NCiMgRXhwZXJpbWVudGFsIHNpdGUgY29vcmRpbmF0ZXMgKENvbGxlZ2UgU3RhdGlvbiwgVFgpDQpjb29yZHNfdGV4YXMgPC0gYyhsb24gPSAtOTYuMzM0NCwgbGF0ID0gMzAuNjI4MikNCg0KIyBHcm93aW5nIHNlYXNvbiBpbnRlcnZhbHMNCnN0YXJ0X2RhdGVfMjAxMSA8LSAiMjAxMS0wNS0wMSINCmVuZF9kYXRlXzIwMTEgICA8LSAiMjAxMS0wOS0zMCINCg0Kc3RhcnRfZGF0ZV8yMDEyIDwtICIyMDEyLTA1LTAxIg0KZW5kX2RhdGVfMjAxMiAgIDwtICIyMDEyLTA5LTMwIg0KDQojIE5BU0EgUE9XRVIgdmFyaWFibGVzDQojIFBSRUNUT1RDT1JSICAgICAgPSBDb3JyZWN0ZWQgdG90YWwgcHJlY2lwaXRhdGlvbiAobW0vZGF5KQ0KIyBUMk1fTUFYLCBUMk1fTUlOID0gTWF4aW11bSBhbmQgbWluaW11bSBhaXIgdGVtcGVyYXR1cmUgYXQgMiBtICjCsEMpDQojIFJIMk0gICAgICAgICAgICAgPSBSZWxhdGl2ZSBodW1pZGl0eSBhdCAyIG0gKCUpDQojIEFMTFNLWV9TRkNfU1dfRFdOPSBBbGwtc2t5IHNob3J0d2F2ZSBkb3dud2FyZCByYWRpYXRpb24gKE1KIG1eLTIgZGF5Xi0xKQ0KIyBXUzJNICAgICAgICAgICAgID0gV2luZCBzcGVlZCBhdCAyIG0gKG0vcykNCnBhcmFtcyA8LSBjKA0KICAiUFJFQ1RPVENPUlIiLA0KICAiVDJNX01BWCIsDQogICJUMk1fTUlOIiwNCiAgIlJIMk0iLA0KICAiQUxMU0tZX1NGQ19TV19EV04iLA0KICAiV1MyTSINCikNCmBgYA0KDQojIyA0LiBEYXRhIHJldHJpZXZhbCBmcm9tIE5BU0EgUE9XRVINCg0KVGhpcyBzZWN0aW9uIHBlcmZvcm1zIHRoZSBkb3dubG9hZCBvZiBkYWlseSBjbGltYXRpYyBkYXRhIGZyb20gTkFTQSBQT1dFUi4NCg0KV2UgcnVuIG9uZSBxdWVyeSBmb3IgZWFjaCBncm93aW5nIHNlYXNvbi4gVGhpcyBrZWVwcyB0aGUgd29ya2Zsb3cgdHJhbnNwYXJlbnQgYW5kIG1ha2VzIGl0IGVhc2llciB0byBjb25maXJtIHRoYXQgZWFjaCBleHBlcmltZW50YWwgeWVhciB3YXMgcmV0cmlldmVkIGNvcnJlY3RseS4gQWZ0ZXIgcmV0cmlldmFsLCB0aGUgdHdvIGFubnVhbCB0YWJsZXMgd2lsbCBiZSBtZXJnZWQgaW50byBhIHNpbmdsZSBvYmplY3QgZm9yIHRoZSByZW1haW5pbmcgc3RlcHMgb2YgdGhlIGFuYWx5c2lzLg0KDQojIyMgNC4xIERvd25sb2FkIGRhaWx5IGNsaW1hdGUgZGF0YSBmb3IgZWFjaCB5ZWFyDQoNClRoZSBjb2RlIGJlbG93IHNlbmRzIHR3byBpbmRlcGVuZGVudCByZXF1ZXN0cyB0byB0aGUgTkFTQSBQT1dFUiBzZXJ2aWNlLCBvbmUgZm9yIDIwMTEgYW5kIG9uZSBmb3IgMjAxMi4gQSBgeWVhcmAgaWRlbnRpZmllciBpcyBhZGRlZCBpbW1lZGlhdGVseSBhZnRlciByZXRyaWV2YWwgc28gdGhhdCB0aGUgb3JpZ2luIG9mIGVhY2ggcmVjb3JkIHJlbWFpbnMgZXhwbGljaXQgdGhyb3VnaG91dCB0aGUgd29ya2Zsb3cuDQoNCmBgYHtyIGdldF9kYXRhfQ0KZGF0YV90eF8yMDExIDwtIGdldF9wb3dlcigNCiAgY29tbXVuaXR5ID0gIkFHIiwNCiAgbG9ubGF0ID0gY29vcmRzX3RleGFzLA0KICBwYXJzID0gcGFyYW1zLA0KICBkYXRlcyA9IGMoc3RhcnRfZGF0ZV8yMDExLCBlbmRfZGF0ZV8yMDExKSwNCiAgdGVtcG9yYWxfYXBpID0gIkRBSUxZIg0KKSAlPiUNCiAgbXV0YXRlKHllYXIgPSAyMDExKQ0KDQpkYXRhX3R4XzIwMTIgPC0gZ2V0X3Bvd2VyKA0KICBjb21tdW5pdHkgPSAiQUciLA0KICBsb25sYXQgPSBjb29yZHNfdGV4YXMsDQogIHBhcnMgPSBwYXJhbXMsDQogIGRhdGVzID0gYyhzdGFydF9kYXRlXzIwMTIsIGVuZF9kYXRlXzIwMTIpLA0KICB0ZW1wb3JhbF9hcGkgPSAiREFJTFkiDQopICU+JQ0KICBtdXRhdGUoeWVhciA9IDIwMTIpDQpgYGANCg0KIyMjIDQuMiBNZXJnZSwgZm9ybWF0LCBhbmQgc2F2ZSB0aGUgcmF3IGRhdGFzZXQNCg0KT25jZSBib3RoIHllYXJseSB0YWJsZXMgYXJlIGF2YWlsYWJsZSwgd2UgbWVyZ2UgdGhlbSBpbnRvIGEgc2luZ2xlIGRhdGFzZXQgYW5kIGNvbnZlcnQgdGhlIGRhdGUgY29sdW1uIHRvIGEgcHJvcGVyIFIgZGF0ZSBmb3JtYXQuIFRoaXMgc3RlcCBpcyBlc3NlbnRpYWwgYmVjYXVzZSB0aGUgb3JpZ2luYWwgZGF0ZSBpcyByZXR1cm5lZCBhcyBhIG51bWVyaWMgc3RyaW5nLCBhbmQgbGF0ZXIgdmlzdWFsaXphdGlvbnMgZGVwZW5kIG9uIGEgdmFsaWQgZGF0ZSBvYmplY3QuDQoNCldlIGFsc28gc2F2ZSB0aGUgcmF3IGRhaWx5IGRhdGFzZXQgYXMgYSBDU1YgZmlsZS4gVGhpcyBpcyBhbiBpbXBvcnRhbnQgcmVwcm9kdWNpYmlsaXR5IHN0ZXAgYmVjYXVzZSBpdCBwcmVzZXJ2ZXMgdGhlIGV4YWN0IHZlcnNpb24gb2YgdGhlIHJldHJpZXZlZCBkYXRhIHVzZWQgaW4gdGhlIGFuYWx5c2lzLg0KDQpgYGB7ciBnZXRfZGF0YTJ9DQp0ZXhhc19jbGltYXRlX2RhdGEgPC0gYmluZF9yb3dzKGRhdGFfdHhfMjAxMSwgZGF0YV90eF8yMDEyKSAlPiUNCiAgbXV0YXRlKA0KICAgIGRhdGUgPSB5bWQoWVlZWU1NREQpLA0KICAgIHllYXIgPSBmYWN0b3IoeWVhciwgbGV2ZWxzID0gYygyMDExLCAyMDEyKSkNCiAgKQ0KDQprbml0cjo6a2FibGUoDQogIGhlYWQodGV4YXNfY2xpbWF0ZV9kYXRhKSwNCiAgY2FwdGlvbiA9ICJTYW1wbGUgb2YgZGFpbHkgY2xpbWF0aWMgZGF0YSByZXRyaWV2ZWQgZnJvbSBOQVNBIFBPV0VSLiINCikNCg0Kd3JpdGUuY3N2KA0KICB0ZXhhc19jbGltYXRlX2RhdGEsDQogICJvdXRwdXQvY2xpbWF0ZV9yZXN1bHRzL3RleGFzX2NsaW1hdGVfZGF0YV9yYXcuY3N2IiwNCiAgcm93Lm5hbWVzID0gRkFMU0UNCikNCmBgYA0KDQojIyA1LiBFeHBsb3JhdG9yeSBhbmFseXNpcyBhbmQgZmlndXJlIGdlbmVyYXRpb24NCg0KQmVmb3JlIHN1bW1hcml6aW5nIHRoZSBkYXRhIGludG8gZW52aXJvbm1lbnRhbCBjb3ZhcmlhdGVzLCBpdCBpcyBnb29kIHByYWN0aWNlIHRvIGluc3BlY3QgdGhlIGRhaWx5IHNlcmllcyB2aXN1YWxseS4gVGhpcyBzdGVwIHNlcnZlcyB0d28gcHVycG9zZXMuDQoNCkZpcnN0LCBpdCBoZWxwcyB2ZXJpZnkgdGhhdCB0aGUgZG93bmxvYWRlZCBkYXRhIGFyZSBjb2hlcmVudCBhbmQgZnJlZSBmcm9tIG9idmlvdXMgc3RydWN0dXJhbCBwcm9ibGVtcy4gU2Vjb25kLCBpdCBoZWxwcyBpbnRlcnByZXQgdGhlIGNsaW1hdGljIGNvbnRyYXN0IGJldHdlZW4gdGhlIHllYXJzIHVuZGVyIHN0dWR5LCB3aGljaCBpcyBpbXBvcnRhbnQgZm9yIHRoZSBiaW9sb2dpY2FsIGRpc2N1c3Npb24gb2YgdGhlIGV4cGVyaW1lbnRzLg0KDQpUbyBtYWtlIHRoZSBmaWd1cmVzIHN1aXRhYmxlIGZvciBhIHNjaWVudGlmaWMgYXJ0aWNsZSwgd2UgZGVmaW5lIGEgY29tbW9uIHZpc3VhbCBzdHlsZSBhbmQgc3RhbmRhcmRpemUgYXhpcyB0aXRsZXMsIHVuaXRzLCBhbmQgcGFuZWwgZm9ybWF0dGluZy4NCg0KIyMjIDUuMSBEZWZpbmUgYSBjb21tb24gcHVibGljYXRpb24tb3JpZW50ZWQgcGxvdHRpbmcgc3R5bGUNCg0KVGhlIG9iamVjdHMgY3JlYXRlZCBiZWxvdyBhcmUgdXNlZCByZXBlYXRlZGx5IGFjcm9zcyB0aGUgZmlndXJlcy4gVGhlIGN1c3RvbSB0aGVtZSBpbXByb3ZlcyByZWFkYWJpbGl0eSwgd2hpbGUgdGhlIG1vbnRoIGxhYmVscyBlbnN1cmUgY29uc2lzdGVudCBjYWxlbmRhciBmb3JtYXR0aW5nIGFjcm9zcyBwYW5lbHMuIFdlIGFsc28gZGVmaW5lIGhlbHBlciBzY2FsZXMgYmFzZWQgb24gdGhlIEdvb2dsZSBEb2NzIHBhbGV0dGUgKGBzY2FsZV8qX2dkb2NzYCkgc28gdGhhdCBhbGwgZmlndXJlcyBzaGFyZSB0aGUgc2FtZSBkaXNjcmV0ZSBjb2xvciBzdGFuZGFyZCB0aHJvdWdob3V0IHRoZSB0dXRvcmlhbC4NCg0KYGBge3IgZmlndXJlX2hlbHBlcnN9DQp0aGVtZV9hcnRpY2xlIDwtIGZ1bmN0aW9uKCkgew0KICB0aGVtZV9idyhiYXNlX3NpemUgPSAxMSkgKw0KICAgIHRoZW1lKA0KICAgICAgcGFuZWwuZ3JpZC5taW5vciA9IGVsZW1lbnRfYmxhbmsoKSwNCiAgICAgIHBhbmVsLmdyaWQubWFqb3IgPSBlbGVtZW50X2xpbmUoY29sb3IgPSAiZ3JleTkwIiwgbGluZXdpZHRoID0gMC4yNSksDQogICAgICBwYW5lbC5ib3JkZXIgPSBlbGVtZW50X3JlY3QoY29sb3IgPSAiZ3JleTQwIiwgbGluZXdpZHRoID0gMC40KSwNCiAgICAgIHN0cmlwLmJhY2tncm91bmQgPSBlbGVtZW50X3JlY3QoZmlsbCA9ICJncmV5OTUiLCBjb2xvciA9ICJncmV5NzAiLCBsaW5ld2lkdGggPSAwLjMpLA0KICAgICAgc3RyaXAudGV4dCA9IGVsZW1lbnRfdGV4dChmYWNlID0gImJvbGQiLCBzaXplID0gMTApLA0KICAgICAgYXhpcy50aXRsZSA9IGVsZW1lbnRfdGV4dChmYWNlID0gImJvbGQiLCBzaXplID0gMTEpLA0KICAgICAgYXhpcy50ZXh0ID0gZWxlbWVudF90ZXh0KHNpemUgPSA5LjUsIGNvbG9yID0gImJsYWNrIiksDQogICAgICBwbG90LnRpdGxlID0gZWxlbWVudF90ZXh0KGZhY2UgPSAiYm9sZCIsIHNpemUgPSAxMiwgaGp1c3QgPSAwLjUsIG1hcmdpbiA9IG1hcmdpbihiID0gNCkpLA0KICAgICAgcGxvdC5zdWJ0aXRsZSA9IGVsZW1lbnRfdGV4dChzaXplID0gMTAsIGhqdXN0ID0gMC41LCBtYXJnaW4gPSBtYXJnaW4oYiA9IDgpKSwNCiAgICAgIHBsb3QuY2FwdGlvbiA9IGVsZW1lbnRfdGV4dChzaXplID0gOC41LCBoanVzdCA9IDAsIGNvbG9yID0gImdyZXkzMCIsIG1hcmdpbiA9IG1hcmdpbih0ID0gOCkpLA0KICAgICAgcGxvdC5jYXB0aW9uLnBvc2l0aW9uID0gInBsb3QiLA0KICAgICAgbGVnZW5kLnBvc2l0aW9uID0gImJvdHRvbSIsDQogICAgICBsZWdlbmQuanVzdGlmaWNhdGlvbiA9ICJjZW50ZXIiLA0KICAgICAgbGVnZW5kLmRpcmVjdGlvbiA9ICJob3Jpem9udGFsIiwNCiAgICAgIGxlZ2VuZC50aXRsZSA9IGVsZW1lbnRfdGV4dChmYWNlID0gImJvbGQiLCBzaXplID0gMTApLA0KICAgICAgbGVnZW5kLnRleHQgPSBlbGVtZW50X3RleHQoc2l6ZSA9IDkpLA0KICAgICAgbGVnZW5kLmtleS53aWR0aCA9IGdyaWQ6OnVuaXQoMS4yLCAiY20iKSwNCiAgICAgIGxlZ2VuZC5ib3gubWFyZ2luID0gbWFyZ2luKHQgPSA0KSwNCiAgICAgIHBsb3QubWFyZ2luID0gbWFyZ2luKDgsIDEwLCA4LCA4KQ0KICAgICkNCn0NCg0Kc2NhbGVfZmlsbF9hcnRpY2xlIDwtIGZ1bmN0aW9uKC4uLikgew0KICBnZ3RoZW1lczo6c2NhbGVfZmlsbF9nZG9jcyguLi4pDQp9DQoNCnNjYWxlX2NvbG9yX2FydGljbGUgPC0gZnVuY3Rpb24oLi4uKSB7DQogIGdndGhlbWVzOjpzY2FsZV9jb2xvcl9nZG9jcyguLi4pDQp9DQoNCnNjYWxlX2NvbG9yX3RlbXBlcmF0dXJlX2FydGljbGUgPC0gZnVuY3Rpb24oLi4uKSB7DQogIGdncGxvdDI6OnNjYWxlX2NvbG9yX21hbnVhbCgNCiAgICB2YWx1ZXMgPSBjKA0KICAgICAgIk1pbmltdW0iID0gIiM0Mjg1RjQiLA0KICAgICAgIk1lYW4iID0gIiNGNEI0MDAiLA0KICAgICAgIk1heGltdW0iID0gIiNEQjQ0MzciDQogICAgKSwNCiAgICAuLi4NCiAgKQ0KfQ0KDQpndWlkZV9hcnRpY2xlIDwtIGd1aWRlX2xlZ2VuZCgNCiAgdGl0bGUucG9zaXRpb24gPSAidG9wIiwNCiAgbnJvdyA9IDEsDQogIGJ5cm93ID0gVFJVRQ0KKQ0KDQptb250aF9sZXZlbHMgPC0gNTo5DQptb250aF9sYWJlbHMgPC0gbW9udGguYWJiW21vbnRoX2xldmVsc10NCg0KbW9udGhfYnJlYWtzX2ZuIDwtIGZ1bmN0aW9uKHgpIHsNCiAgc2VxLkRhdGUoDQogICAgZnJvbSA9IGZsb29yX2RhdGUobWluKHgsIG5hLnJtID0gVFJVRSksIHVuaXQgPSAibW9udGgiKSwNCiAgICB0byAgID0gZmxvb3JfZGF0ZShtYXgoeCwgbmEucm0gPSBUUlVFKSwgdW5pdCA9ICJtb250aCIpLA0KICAgIGJ5ICAgPSAiMSBtb250aCINCiAgKQ0KfQ0KDQptb250aF9sYWJlbHNfZm4gPC0gc2NhbGVzOjpsYWJlbF9kYXRlKGZvcm1hdCA9ICIlYiIpDQoNCmRhaWx5X2RhdGFfd2l0aF9wYXJ0cyA8LSB0ZXhhc19jbGltYXRlX2RhdGEgJT4lDQogIG11dGF0ZSgNCiAgICBZZWFyID0gZmFjdG9yKHllYXIoZGF0ZSksIGxldmVscyA9IGMoMjAxMSwgMjAxMikpLA0KICAgIE1vbnRoID0gZmFjdG9yKG1vbnRoKGRhdGUpLCBsZXZlbHMgPSBtb250aF9sZXZlbHMsIGxhYmVscyA9IG1vbnRoX2xhYmVscyksDQogICAgRGF5X29mX21vbnRoID0gZmFjdG9yKG1kYXkoZGF0ZSkpDQogICkNCmBgYA0KDQojIyMgNS4yIERhaWx5IHByZWNpcGl0YXRpb24gb3ZlcnZpZXcNCg0KVGhpcyBmaXJzdCBmaWd1cmUgcHJvdmlkZXMgYSBkaXJlY3QgdmlldyBvZiBkYWlseSByYWluZmFsbCBvdmVyIHRpbWUuIEl0IGlzIHVzZWZ1bCBmb3IgaWRlbnRpZnlpbmcgZHJ5IHBlcmlvZHMsIHJhaW5mYWxsIGNvbmNlbnRyYXRpb24sIGFuZCBicm9hZCBkaWZmZXJlbmNlcyBiZXR3ZWVuIHRoZSB0d28geWVhcnMuDQoNCmBgYHtyIHBsb3RfcHJlY2lwaXRhdGlvbl9vdmVydmlldywgZmlnLndpZHRoPTEwLCBmaWcuaGVpZ2h0PTUuOCwgZmlnLmFsaWduPSJjZW50ZXIiLCBmaWcuY2FwPSJGaWd1cmUgMS4gRGFpbHkgcHJlY2lwaXRhdGlvbiBhY3Jvc3MgdGhlIDIwMTEgYW5kIDIwMTIgbWFpemUgZ3Jvd2luZyBzZWFzb25zIGluIENvbGxlZ2UgU3RhdGlvbiwgVGV4YXMuIEJhcnMgcmVwcmVzZW50IGNvcnJlY3RlZCBkYWlseSBwcmVjaXBpdGF0aW9uIG9idGFpbmVkIGZyb20gTkFTQSBQT1dFUi4ifQ0KcF9wcmVjaXBfZGFpbHkgPC0gZ2dwbG90KA0KICB0ZXhhc19jbGltYXRlX2RhdGEsDQogIGFlcyh4ID0gZGF0ZSwgeSA9IFBSRUNUT1RDT1JSLCBmaWxsID0geWVhcikNCikgKw0KICBnZW9tX2NvbChhbHBoYSA9IDAuODUsIHNob3cubGVnZW5kID0gRkFMU0UpICsNCiAgZmFjZXRfd3JhcCh+IHllYXIsIHNjYWxlcyA9ICJmcmVlX3giKSArDQogIGxhYnMoDQogICAgdGl0bGUgPSAiRGFpbHkgcHJlY2lwaXRhdGlvbiIsDQogICAgc3VidGl0bGUgPSAiQ29sbGVnZSBTdGF0aW9uLCBUZXhhcywgVVNBLCAyMDExLTIwMTIiLA0KICAgIHggPSAiTW9udGgiLA0KICAgIHkgPSBleHByZXNzaW9uKCJQcmVjaXBpdGF0aW9uICgiICogbW0gfiBkYXleey0xfSAqICIpIiksDQogICAgY2FwdGlvbiA9ICJCYXJzIHJlcHJlc2VudCBjb3JyZWN0ZWQgdG90YWwgZGFpbHkgcHJlY2lwaXRhdGlvbiBvYnRhaW5lZCBmcm9tIE5BU0EgUE9XRVIuIg0KICApICsNCiAgc2NhbGVfeF9kYXRlKGJyZWFrcyA9IG1vbnRoX2JyZWFrc19mbiwgbGFiZWxzID0gbW9udGhfbGFiZWxzX2ZuKSArDQogIHNjYWxlX2ZpbGxfYXJ0aWNsZShsaW1pdHMgPSBjKCIyMDExIiwgIjIwMTIiKSwgZ3VpZGUgPSBndWlkZV9hcnRpY2xlKSArDQogIHRoZW1lX2FydGljbGUoKQ0KDQpwX3ByZWNpcF9kYWlseQ0KYGBgDQoNCiMjIyA1LjMgRGFpbHkgcHJlY2lwaXRhdGlvbiBieSBtb250aCBhbmQgZGF5IG9mIG1vbnRoDQoNClRoZSBuZXh0IGZpZ3VyZSByZW9yZ2FuaXplcyB0aGUgc2FtZSByYWluZmFsbCBpbmZvcm1hdGlvbiBpbiBhIHdheSB0aGF0IGZhY2lsaXRhdGVzIHdpdGhpbi1zZWFzb24gY29tcGFyaXNvbi4gSW5zdGVhZCBvZiBwbG90dGluZyBvbmx5IHRoZSBjaHJvbm9sb2dpY2FsIHNlcmllcywgd2UgY29tcGFyZSBkYXlzIG9mIHRoZSBtb250aCBhY3Jvc3MgdGhlIHR3byB5ZWFycyBpbnNpZGUgZWFjaCBtb250aGx5IHBhbmVsLg0KDQpUaGlzIGxheW91dCBpcyBlc3BlY2lhbGx5IGhlbHBmdWwgd2hlbiB0aGUgZ29hbCBpcyB0byBzZWUgd2hldGhlciBvbmUgc2Vhc29uIHdhcyBzeXN0ZW1hdGljYWxseSBkcmllciBvciB3ZXR0ZXIgZHVyaW5nIHNwZWNpZmljIHBlcmlvZHMgb2YgY3JvcCBkZXZlbG9wbWVudC4NCg0KYGBge3IgcGxvdF9wcmVjaXBpdGF0aW9uX2dyb3VwZWQsIGZpZy53aWR0aD0xMiwgZmlnLmhlaWdodD02LjQsIGZpZy5hbGlnbj0iY2VudGVyIiwgZmlnLmNhcD0iRmlndXJlIDIuIERhaWx5IHByZWNpcGl0YXRpb24gYXJyYW5nZWQgYnkgZGF5IG9mIG1vbnRoIHdpdGhpbiBlYWNoIG1vbnRoIHRvIGZhY2lsaXRhdGUgYmV0d2Vlbi15ZWFyIGNvbXBhcmlzb24gZHVyaW5nIHRoZSBjcm9wIHNlYXNvbi4ifQ0KcDEgPC0gZ2dwbG90KGRhaWx5X2RhdGFfd2l0aF9wYXJ0cywgYWVzKHggPSBEYXlfb2ZfbW9udGgsIHkgPSBQUkVDVE9UQ09SUiwgZmlsbCA9IFllYXIpKSArDQogIGdlb21fY29sKHBvc2l0aW9uID0gcG9zaXRpb25fZG9kZ2Uod2lkdGggPSAwLjg1KSwgYWxwaGEgPSAwLjg1LCB3aWR0aCA9IDAuOCkgKw0KICBmYWNldF93cmFwKH4gTW9udGgsIHNjYWxlcyA9ICJmcmVlX3giLCBuY29sID0gNSkgKw0KICBsYWJzKA0KICAgIHRpdGxlID0gIkRhaWx5IHByZWNpcGl0YXRpb24gYnkgbW9udGggYW5kIHllYXIiLA0KICAgIHN1YnRpdGxlID0gIkdyb3VwZWQgYnkgZGF5IG9mIG1vbnRoIHdpdGhpbiBlYWNoIG1vbnRobHkgcGFuZWwiLA0KICAgIHggPSAiRGF5IG9mIG1vbnRoIiwNCiAgICB5ID0gZXhwcmVzc2lvbigiUHJlY2lwaXRhdGlvbiAoIiAqIG1tIH4gZGF5XnstMX0gKiAiKSIpLA0KICAgIGZpbGwgPSAiWWVhciIsDQogICAgY2FwdGlvbiA9ICJUaGlzIGFycmFuZ2VtZW50IGZhY2lsaXRhdGVzIHdpdGhpbi1zZWFzb24gY29tcGFyaXNvbiBvZiByYWluZmFsbCBwYXR0ZXJucyBiZXR3ZWVuIHllYXJzLiINCiAgKSArDQogIHNjYWxlX3hfZGlzY3JldGUoYnJlYWtzID0gYygiMSIsICI1IiwgIjEwIiwgIjE1IiwgIjIwIiwgIjI1IiwgIjMwIiwgIjMxIikpICsNCiAgc2NhbGVfZmlsbF9hcnRpY2xlKGxpbWl0cyA9IGMoIjIwMTEiLCAiMjAxMiIpLCBndWlkZSA9IGd1aWRlX2FydGljbGUpICsNCiAgdGhlbWVfYXJ0aWNsZSgpDQoNCnAxDQpgYGANCg0KIyMjIDUuNCBNb250aGx5IHByZWNpcGl0YXRpb24gdG90YWxzDQoNCkRhaWx5IHByZWNpcGl0YXRpb24gaXMgaW5mb3JtYXRpdmUsIGJ1dCBtb250aGx5IHRvdGFscyBwcm92aWRlIGEgc2ltcGxlciBzZWFzb25hbCBzdW1tYXJ5LiBUaGlzIGZpZ3VyZSBhZ2dyZWdhdGVzIHRoZSBkYWlseSBzZXJpZXMgYW5kIGFsbG93cyBhIGNsZWFuZXIgY29tcGFyaXNvbiBvZiBjdW11bGF0aXZlIHdhdGVyIGlucHV0IGJldHdlZW4geWVhcnMgYW5kIG1vbnRocy4NCg0KYGBge3IgcGxvdF9tb250aGx5X3ByZWNpcGl0YXRpb24sIGZpZy53aWR0aD04LjUsIGZpZy5oZWlnaHQ9NS40LCBmaWcuYWxpZ249ImNlbnRlciIsIGZpZy5jYXA9IkZpZ3VyZSAzLiBNb250aGx5IHByZWNpcGl0YXRpb24gdG90YWxzIGR1cmluZyB0aGUgbWFpemUgZ3Jvd2luZyBzZWFzb25zIG9mIDIwMTEgYW5kIDIwMTIgaW4gQ29sbGVnZSBTdGF0aW9uLCBUZXhhcy4ifQ0KbW9udGhseV9wcmVjaXAgPC0gdGV4YXNfY2xpbWF0ZV9kYXRhICU+JQ0KICBtdXRhdGUoDQogICAgeWVhciA9IGZhY3Rvcih5ZWFyKGRhdGUpLCBsZXZlbHMgPSBjKDIwMTEsIDIwMTIpKSwNCiAgICBtb250aCA9IGZhY3Rvcihtb250aChkYXRlKSwgbGV2ZWxzID0gbW9udGhfbGV2ZWxzLCBsYWJlbHMgPSBtb250aF9sYWJlbHMpDQogICkgJT4lDQogIGdyb3VwX2J5KHllYXIsIG1vbnRoKSAlPiUNCiAgc3VtbWFyaXNlKHRvdGFsX3ByZWNpcGl0YXRpb24gPSBzdW0oUFJFQ1RPVENPUlIsIG5hLnJtID0gVFJVRSksIC5ncm91cHMgPSAiZHJvcCIpDQoNCnAyIDwtIGdncGxvdChtb250aGx5X3ByZWNpcCwgYWVzKHggPSBtb250aCwgeSA9IHRvdGFsX3ByZWNpcGl0YXRpb24sIGZpbGwgPSB5ZWFyKSkgKw0KICBnZW9tX2NvbChwb3NpdGlvbiA9IHBvc2l0aW9uX2RvZGdlKHdpZHRoID0gMC44KSwgd2lkdGggPSAwLjcsIGFscGhhID0gMC45KSArDQogIGxhYnMoDQogICAgdGl0bGUgPSAiTW9udGhseSBwcmVjaXBpdGF0aW9uIHRvdGFscyIsDQogICAgc3VidGl0bGUgPSAiR3Jvd2luZyBzZWFzb24gY29tcGFyaXNvbiBiZXR3ZWVuIDIwMTEgYW5kIDIwMTIiLA0KICAgIHggPSAiTW9udGgiLA0KICAgIHkgPSAiVG90YWwgcHJlY2lwaXRhdGlvbiAobW0pIiwNCiAgICBmaWxsID0gIlllYXIiLA0KICAgIGNhcHRpb24gPSAiQmFycyByZXByZXNlbnQgY3VtdWxhdGl2ZSBwcmVjaXBpdGF0aW9uIHdpdGhpbiBlYWNoIG1vbnRoIG9mIHRoZSBjcm9wIHNlYXNvbi4iDQogICkgKw0KICBzY2FsZV9maWxsX2FydGljbGUobGltaXRzID0gYygiMjAxMSIsICIyMDEyIiksIGd1aWRlID0gZ3VpZGVfYXJ0aWNsZSkgKw0KICB0aGVtZV9hcnRpY2xlKCkNCg0KcDINCmBgYA0KDQojIyMgNS41IERhaWx5IGFpciB0ZW1wZXJhdHVyZQ0KDQpUZW1wZXJhdHVyZSBpcyBhbm90aGVyIGNvcmUgZGVzY3JpcHRvciBvZiBjcm9wIGVudmlyb25tZW50LiBJbiB0aGlzIGZpZ3VyZSwgd2UgY29tcGFyZSBtaW5pbXVtLCBtZWFuLCBhbmQgbWF4aW11bSBkYWlseSB0ZW1wZXJhdHVyZSBwcm9maWxlcyBhY3Jvc3MgdGhlIHR3byBzZWFzb25zLg0KDQpUaGUgZGFzaGVkIHNtb290aGluZyBsaW5lcyBkbyBub3QgcmVwbGFjZSB0aGUgb3JpZ2luYWwgZGF0YS4gVGhlaXIgcm9sZSBpcyBvbmx5IHRvIGhlbHAgdmlzdWFsaXplIHRoZSBnZW5lcmFsIHNlYXNvbmFsIHRyZW5kcyBmb3IgZWFjaCB0ZW1wZXJhdHVyZSBtZXRyaWMuDQoNCmBgYHtyIHBsb3RfdGVtcGVyYXR1cmUsIGZpZy53aWR0aD0xMCwgZmlnLmhlaWdodD02LCBmaWcuYWxpZ249ImNlbnRlciIsIGZpZy5jYXA9IkZpZ3VyZSA0LiBEYWlseSBtaW5pbXVtLCBtZWFuLCBhbmQgbWF4aW11bSBhaXIgdGVtcGVyYXR1cmUgZHVyaW5nIHRoZSAyMDExIGFuZCAyMDEyIG1haXplIGdyb3dpbmcgc2Vhc29ucy4gRGFzaGVkIGxpbmVzIGluZGljYXRlIExPRVNTIHRyZW5kcyB1c2VkIG9ubHkgdG8gYWlkIHZpc3VhbCBpbnRlcnByZXRhdGlvbi4ifQ0KdGVtcGVyYXR1cmVfZGF0YSA8LSB0ZXhhc19jbGltYXRlX2RhdGEgJT4lDQogIG11dGF0ZShUMk1fTUVBTiA9IChUMk1fTUFYICsgVDJNX01JTikgLyAyKSAlPiUNCiAgcGl2b3RfbG9uZ2VyKA0KICAgIGNvbHMgPSBjKFQyTV9NSU4sIFQyTV9NRUFOLCBUMk1fTUFYKSwNCiAgICBuYW1lc190byA9ICJUZW1wZXJhdHVyZV9tZXRyaWMiLA0KICAgIHZhbHVlc190byA9ICJUZW1wZXJhdHVyZSINCiAgKSAlPiUNCiAgbXV0YXRlKA0KICAgIFRlbXBlcmF0dXJlX21ldHJpYyA9IGZhY3RvcigNCiAgICAgIFRlbXBlcmF0dXJlX21ldHJpYywNCiAgICAgIGxldmVscyA9IGMoIlQyTV9NSU4iLCAiVDJNX01FQU4iLCAiVDJNX01BWCIpLA0KICAgICAgbGFiZWxzID0gYygiTWluaW11bSIsICJNZWFuIiwgIk1heGltdW0iKQ0KICAgICkNCiAgKQ0KDQpwMyA8LSBnZ3Bsb3QodGVtcGVyYXR1cmVfZGF0YSwgYWVzKHggPSBkYXRlLCB5ID0gVGVtcGVyYXR1cmUsIGNvbG9yID0gVGVtcGVyYXR1cmVfbWV0cmljKSkgKw0KICBnZW9tX2xpbmUobGluZXdpZHRoID0gMC41NSwgYWxwaGEgPSAwLjg1KSArDQogIGdlb21fc21vb3RoKA0KICAgIGFlcyhncm91cCA9IFRlbXBlcmF0dXJlX21ldHJpYyksDQogICAgbWV0aG9kID0gImxvZXNzIiwNCiAgICBzZSA9IEZBTFNFLA0KICAgIGxpbmV0eXBlID0gImRhc2hlZCIsDQogICAgY29sb3IgPSAiYmxhY2siLA0KICAgIGxpbmV3aWR0aCA9IDAuNSwNCiAgICBzaG93LmxlZ2VuZCA9IEZBTFNFDQogICkgKw0KICBmYWNldF93cmFwKH4geWVhciwgc2NhbGVzID0gImZyZWVfeCIpICsNCiAgbGFicygNCiAgICB0aXRsZSA9ICJEYWlseSBhaXIgdGVtcGVyYXR1cmUiLA0KICAgIHN1YnRpdGxlID0gIk1pbmltdW0sIG1lYW4sIGFuZCBtYXhpbXVtIHZhbHVlczsgZGFzaGVkIGxpbmVzIGluZGljYXRlIExPRVNTIHRyZW5kcyIsDQogICAgeCA9ICJNb250aCIsDQogICAgeSA9IGV4cHJlc3Npb24oIkFpciB0ZW1wZXJhdHVyZSAoIiAqIGRlZ3JlZSAqICJDKSIpLA0KICAgIGNvbG9yID0gIlRlbXBlcmF0dXJlIG1ldHJpYyIsDQogICAgY2FwdGlvbiA9ICJEYXNoZWQgTE9FU1MgY3VydmVzIGFyZSBpbmNsdWRlZCBvbmx5IHRvIHN1bW1hcml6ZSBzZWFzb25hbCB0cmFqZWN0b3JpZXMgZm9yIGVhY2ggdGVtcGVyYXR1cmUgbWV0cmljLiINCiAgKSArDQogIHNjYWxlX3hfZGF0ZShicmVha3MgPSBtb250aF9icmVha3NfZm4sIGxhYmVscyA9IG1vbnRoX2xhYmVsc19mbikgKw0KICBzY2FsZV9jb2xvcl90ZW1wZXJhdHVyZV9hcnRpY2xlKGxpbWl0cyA9IGMoIk1pbmltdW0iLCAiTWVhbiIsICJNYXhpbXVtIiksIGd1aWRlID0gZ3VpZGVfYXJ0aWNsZSkgKw0KICB0aGVtZV9hcnRpY2xlKCkNCg0KcDMNCmBgYA0KDQojIyMgNS42IENvbWJpbmVkIG1haW4gY2xpbWF0ZSBmaWd1cmUNCg0KQWZ0ZXIgY3JlYXRpbmcgdGhlIG1haW4gcHJlY2lwaXRhdGlvbiBhbmQgdGVtcGVyYXR1cmUgcGxvdHMsIHdlIGNvbWJpbmUgdGhlbSBpbnRvIGEgc2luZ2xlIG11bHRpLXBhbmVsIGZpZ3VyZS4gVGhpcyBpcyB1c2VmdWwgd2hlbiB0aGUgZmluYWwgb3V0cHV0IGlzIGludGVuZGVkIGZvciByZXBvcnRzLCBtYW51c2NyaXB0cywgb3Igc3VwcGxlbWVudGFyeSBtYXRlcmlhbC4NCg0KVGhlIGZpZ3VyZSBpcyBhbHNvIGV4cG9ydGVkIGFzIGEgaGlnaC1yZXNvbHV0aW9uIFRJRkYgZmlsZSwgd2hpY2ggaXMgYSBjb21tb24gcmVxdWlyZW1lbnQgZm9yIGpvdXJuYWwgc3VibWlzc2lvbi4NCg0KYGBge3IgY29tYmluZWRfbWFpbl9wbG90LCBmaWcud2lkdGg9MTIsIGZpZy5oZWlnaHQ9MTAsIGZpZy5hbGlnbj0iY2VudGVyIiwgZmlnLmNhcD0iRmlndXJlIDUuIE11bHRpLXBhbmVsIHN1bW1hcnkgb2YgdGhlIG1haW4gY2xpbWF0aWMgY29udHJhc3RzIGJldHdlZW4geWVhcnMsIGluY2x1ZGluZyBkYWlseSBwcmVjaXBpdGF0aW9uIGJ5IG1vbnRoLCBtb250aGx5IHByZWNpcGl0YXRpb24gdG90YWxzLCBhbmQgZGFpbHkgYWlyIHRlbXBlcmF0dXJlIHByb2ZpbGVzLiJ9DQptYWluX2xheW91dCA8LSAiDQpBQQ0KQkMNCiINCg0KY29tYmluZWRfcGxvdCA8LSBwYXRjaHdvcms6OndyYXBfcGxvdHMoDQogIEEgPSBwMSwNCiAgQiA9IHAyLA0KICBDID0gcDMsDQogIGRlc2lnbiA9IG1haW5fbGF5b3V0DQopICsNCiAgcGF0Y2h3b3JrOjpwbG90X2Fubm90YXRpb24oDQogICAgdGFnX2xldmVscyA9ICJBIiwNCiAgICB0aXRsZSA9ICJNYWluIGNsaW1hdGljIGNvbnRyYXN0cyBiZXR3ZWVuIGdyb3dpbmcgc2Vhc29ucyIsDQogICAgdGhlbWUgPSB0aGVtZSgNCiAgICAgIHBsb3QudGl0bGUgPSBlbGVtZW50X3RleHQoZmFjZSA9ICJib2xkIiwgc2l6ZSA9IDEzLCBoanVzdCA9IDAuNSwgbWFyZ2luID0gbWFyZ2luKGIgPSA4KSkNCiAgICApDQogICkNCg0KcHJpbnQoY29tYmluZWRfcGxvdCkNCg0KZ2dzYXZlKA0KICBmaWxlbmFtZSA9ICJvdXRwdXQvY2xpbWF0ZV9yZXN1bHRzL2NvbWJpbmVkX2NsaW1hdGVfcGxvdC50aWZmIiwNCiAgcGxvdCA9IGNvbWJpbmVkX3Bsb3QsDQogIHdpZHRoID0gMTQsDQogIGhlaWdodCA9IDEwLA0KICBkcGkgPSAzMDAsDQogIGNvbXByZXNzaW9uID0gImx6dyIsDQogIGJnID0gIndoaXRlIg0KKQ0KYGBgDQoNCiMjIyA1LjcgQWRkaXRpb25hbCBkYWlseSBjbGltYXRlIHZhcmlhYmxlcw0KDQpJbiBhZGRpdGlvbiB0byBwcmVjaXBpdGF0aW9uIGFuZCB0ZW1wZXJhdHVyZSwgdGhlIHNjcmlwdCBhbHNvIGV4YW1pbmVzIHNvbGFyIHJhZGlhdGlvbiwgd2luZCBzcGVlZCwgYW5kIHJlbGF0aXZlIGh1bWlkaXR5LiBUaGVzZSB2YXJpYWJsZXMgYXJlIGltcG9ydGFudCBiZWNhdXNlIHRoZXkgaGVscCBkZXNjcmliZSBldmFwb3JhdGl2ZSBkZW1hbmQsIGF0bW9zcGhlcmljIGRyeW5lc3MsIGFuZCBlbmVyZ3kgYXZhaWxhYmlsaXR5IGR1cmluZyB0aGUgY3JvcCBjeWNsZS4NCg0KYGBge3IgYWRkaXRpb25hbF9wbG90cywgZmlnLndpZHRoPTEyLCBmaWcuaGVpZ2h0PTEwLCBmaWcuYWxpZ249ImNlbnRlciIsIGZpZy5jYXA9IkZpZ3VyZSA2LiBBZGRpdGlvbmFsIGRhaWx5IGNsaW1hdGljIHZhcmlhYmxlcyBtb25pdG9yZWQgZHVyaW5nIHRoZSBtYWl6ZSBncm93aW5nIHNlYXNvbnMsIGluY2x1ZGluZyBzb2xhciByYWRpYXRpb24sIHdpbmQgc3BlZWQsIGFuZCByZWxhdGl2ZSBodW1pZGl0eS4ifQ0KcDQgPC0gZ2dwbG90KA0KICB0ZXhhc19jbGltYXRlX2RhdGEsDQogIGFlcyh4ID0gZGF0ZSwgeSA9IEFMTFNLWV9TRkNfU1dfRFdOLCBjb2xvciA9ICJTb2xhciByYWRpYXRpb24iKQ0KKSArDQogIGdlb21fbGluZShhbHBoYSA9IDAuODUsIGxpbmV3aWR0aCA9IDAuNTUsIHNob3cubGVnZW5kID0gRkFMU0UpICsNCiAgZ2VvbV9zbW9vdGgobWV0aG9kID0gImxvZXNzIiwgc2UgPSBGQUxTRSwgbGluZXR5cGUgPSAiZGFzaGVkIiwgY29sb3IgPSAiYmxhY2siLCBsaW5ld2lkdGggPSAwLjUpICsNCiAgZmFjZXRfd3JhcCh+IHllYXIsIHNjYWxlcyA9ICJmcmVlX3giKSArDQogIGxhYnMoDQogICAgdGl0bGUgPSAiRGFpbHkgc2hvcnR3YXZlIHNvbGFyIHJhZGlhdGlvbiIsDQogICAgc3VidGl0bGUgPSAiRGFzaGVkIGxpbmUgaW5kaWNhdGVzIHRoZSBMT0VTUyB0cmVuZCIsDQogICAgeCA9ICJNb250aCIsDQogICAgeSA9IGV4cHJlc3Npb24oIlNob3J0d2F2ZSBzb2xhciByYWRpYXRpb24gKCIgKiBNSiB+IG1eey0yfSB+IGRheV57LTF9ICogIikiKSwNCiAgICBjYXB0aW9uID0gIkRhaWx5IGluY29taW5nIHNob3J0d2F2ZSByYWRpYXRpb24gZHVyaW5nIHRoZSBjcm9wIHNlYXNvbi4iDQogICkgKw0KICBzY2FsZV94X2RhdGUoYnJlYWtzID0gbW9udGhfYnJlYWtzX2ZuLCBsYWJlbHMgPSBtb250aF9sYWJlbHNfZm4pICsNCiAgc2NhbGVfY29sb3JfYXJ0aWNsZShsaW1pdHMgPSAiU29sYXIgcmFkaWF0aW9uIiwgZ3VpZGUgPSAibm9uZSIpICsNCiAgdGhlbWVfYXJ0aWNsZSgpDQoNCnA1IDwtIGdncGxvdCgNCiAgdGV4YXNfY2xpbWF0ZV9kYXRhLA0KICBhZXMoeCA9IGRhdGUsIHkgPSBXUzJNLCBjb2xvciA9ICJXaW5kIHNwZWVkIikNCikgKw0KICBnZW9tX2xpbmUoYWxwaGEgPSAwLjg1LCBsaW5ld2lkdGggPSAwLjU1LCBzaG93LmxlZ2VuZCA9IEZBTFNFKSArDQogIGdlb21fc21vb3RoKG1ldGhvZCA9ICJsb2VzcyIsIHNlID0gRkFMU0UsIGxpbmV0eXBlID0gImRhc2hlZCIsIGNvbG9yID0gImJsYWNrIiwgbGluZXdpZHRoID0gMC41KSArDQogIGZhY2V0X3dyYXAofiB5ZWFyLCBzY2FsZXMgPSAiZnJlZV94IikgKw0KICBsYWJzKA0KICAgIHRpdGxlID0gIkRhaWx5IHdpbmQgc3BlZWQgYXQgMiBtIiwNCiAgICBzdWJ0aXRsZSA9ICJEYXNoZWQgbGluZSBpbmRpY2F0ZXMgdGhlIExPRVNTIHRyZW5kIiwNCiAgICB4ID0gIk1vbnRoIiwNCiAgICB5ID0gZXhwcmVzc2lvbigiV2luZCBzcGVlZCAoIiAqIG0gfiBzXnstMX0gKiAiKSIpLA0KICAgIGNhcHRpb24gPSAiRGFpbHkgd2luZCBzcGVlZCBtZWFzdXJlZCBhdCAyIG0gYWJvdmUgZ3JvdW5kIGxldmVsLiINCiAgKSArDQogIHNjYWxlX3hfZGF0ZShicmVha3MgPSBtb250aF9icmVha3NfZm4sIGxhYmVscyA9IG1vbnRoX2xhYmVsc19mbikgKw0KICBzY2FsZV9jb2xvcl9hcnRpY2xlKGxpbWl0cyA9ICJXaW5kIHNwZWVkIiwgZ3VpZGUgPSAibm9uZSIpICsNCiAgdGhlbWVfYXJ0aWNsZSgpDQoNCnA2IDwtIGdncGxvdCgNCiAgdGV4YXNfY2xpbWF0ZV9kYXRhLA0KICBhZXMoeCA9IGRhdGUsIHkgPSBSSDJNLCBjb2xvciA9ICJSZWxhdGl2ZSBodW1pZGl0eSIpDQopICsNCiAgZ2VvbV9saW5lKGFscGhhID0gMC44NSwgbGluZXdpZHRoID0gMC41NSwgc2hvdy5sZWdlbmQgPSBGQUxTRSkgKw0KICBnZW9tX3Ntb290aChtZXRob2QgPSAibG9lc3MiLCBzZSA9IEZBTFNFLCBsaW5ldHlwZSA9ICJkYXNoZWQiLCBjb2xvciA9ICJibGFjayIsIGxpbmV3aWR0aCA9IDAuNSkgKw0KICBmYWNldF93cmFwKH4geWVhciwgc2NhbGVzID0gImZyZWVfeCIpICsNCiAgbGFicygNCiAgICB0aXRsZSA9ICJEYWlseSByZWxhdGl2ZSBodW1pZGl0eSBhdCAyIG0iLA0KICAgIHN1YnRpdGxlID0gIkRhc2hlZCBsaW5lIGluZGljYXRlcyB0aGUgTE9FU1MgdHJlbmQiLA0KICAgIHggPSAiTW9udGgiLA0KICAgIHkgPSAiUmVsYXRpdmUgaHVtaWRpdHkgKCUpIiwNCiAgICBjYXB0aW9uID0gIkRhaWx5IHJlbGF0aXZlIGh1bWlkaXR5IG1lYXN1cmVkIGF0IDIgbSBhYm92ZSBncm91bmQgbGV2ZWwuIg0KICApICsNCiAgc2NhbGVfeF9kYXRlKGJyZWFrcyA9IG1vbnRoX2JyZWFrc19mbiwgbGFiZWxzID0gbW9udGhfbGFiZWxzX2ZuKSArDQogIHNjYWxlX2NvbG9yX2FydGljbGUobGltaXRzID0gIlJlbGF0aXZlIGh1bWlkaXR5IiwgZ3VpZGUgPSAibm9uZSIpICsNCiAgdGhlbWVfYXJ0aWNsZSgpDQpgYGANCg0KIyMjIDUuOCBDb21iaW5lZCBmaWd1cmUgZm9yIGFkZGl0aW9uYWwgY2xpbWF0ZSB2YXJpYWJsZXMNCg0KQXMgaW4gdGhlIHByZXZpb3VzIHN1YnNlY3Rpb24sIHdlIGNvbWJpbmUgdGhlIGluZGl2aWR1YWwgcGxvdHMgaW50byBhIHNpbmdsZSBmaWd1cmUuIFRoZSBsYXlvdXQgd2FzIGJ1aWx0IHVzaW5nIGBwYXRjaHdvcms6OndyYXBfcGxvdHMoKWAsIHdoaWNoIGF2b2lkcyB0aGUgY29tcG9zaXRpb24gZXJyb3IgZ2VuZXJhdGVkIHdoZW4gdGhlIHBhdGNod29yayBvcGVyYXRvcnMgYXJlIG5vdCBjb3JyZWN0bHkgcmVjb2duaXplZCBkdXJpbmcgcmVuZGVyaW5nLg0KDQpgYGB7ciBjb21iaW5lZF9hZGRpdGlvbmFsX3Bsb3QsIGZpZy53aWR0aD0xMiwgZmlnLmhlaWdodD0xMCwgZmlnLmFsaWduPSJjZW50ZXIiLCBmaWcuY2FwPSJGaWd1cmUgNy4gTXVsdGktcGFuZWwgc3VtbWFyeSBvZiBhZGRpdGlvbmFsIGNsaW1hdGljIHZhcmlhYmxlcyBhY3Jvc3MgeWVhcnMsIGluY2x1ZGluZyBzaG9ydHdhdmUgc29sYXIgcmFkaWF0aW9uLCB3aW5kIHNwZWVkLCBhbmQgcmVsYXRpdmUgaHVtaWRpdHkuIn0NCmFkZGl0aW9uYWxfbGF5b3V0IDwtICINCkFCDQpDQw0KIg0KDQpjb21iaW5lZF9hZGRpdGlvbmFsX3Bsb3RzIDwtIHBhdGNod29yazo6d3JhcF9wbG90cygNCiAgQSA9IHA0LA0KICBCID0gcDUsDQogIEMgPSBwNiwNCiAgZGVzaWduID0gYWRkaXRpb25hbF9sYXlvdXQNCikgKw0KICBwYXRjaHdvcms6OnBsb3RfYW5ub3RhdGlvbigNCiAgICB0YWdfbGV2ZWxzID0gIkEiLA0KICAgIHRpdGxlID0gIkFkZGl0aW9uYWwgY2xpbWF0aWMgY29udHJhc3RzIGJldHdlZW4gZ3Jvd2luZyBzZWFzb25zIiwNCiAgICB0aGVtZSA9IHRoZW1lKA0KICAgICAgcGxvdC50aXRsZSA9IGVsZW1lbnRfdGV4dChmYWNlID0gImJvbGQiLCBzaXplID0gMTMsIGhqdXN0ID0gMC41LCBtYXJnaW4gPSBtYXJnaW4oYiA9IDgpKQ0KICAgICkNCiAgKQ0KDQpwcmludChjb21iaW5lZF9hZGRpdGlvbmFsX3Bsb3RzKQ0KDQpnZ3NhdmUoDQogIGZpbGVuYW1lID0gIm91dHB1dC9jbGltYXRlX3Jlc3VsdHMvY29tYmluZWRfYWRkaXRpb25hbF9jbGltYXRlX3Bsb3RzLnRpZmYiLA0KICBwbG90ID0gY29tYmluZWRfYWRkaXRpb25hbF9wbG90cywNCiAgd2lkdGggPSAxNCwNCiAgaGVpZ2h0ID0gMTAsDQogIGRwaSA9IDMwMCwNCiAgY29tcHJlc3Npb24gPSAibHp3IiwNCiAgYmcgPSAid2hpdGUiDQopDQpgYGANCg0KIyMgNi4gRW52aXJvbm1lbnRhbCBjb3ZhcmlhdGVzDQoNClRoZSBuZXh0IHN0ZXAgdHJhbnNmb3JtcyBkYWlseSBjbGltYXRpYyByZWNvcmRzIGludG8gYW5udWFsIHN1bW1hcnkgdmFyaWFibGVzLiBUaGlzIGlzIHRoZSBtb3N0IGltcG9ydGFudCBhbmFseXRpY2FsIHRyYW5zaXRpb24gaW4gdGhlIHNjcmlwdCBiZWNhdXNlIGl0IGNvbnZlcnRzIGEgcmF3IHRpbWUgc2VyaWVzIGludG8gZmVhdHVyZXMgdGhhdCBjYW4gYmUgdXNlZCBpbiBkb3duc3RyZWFtIHByZWRpY3Rpb24gbW9kZWxzLg0KDQpUaGVzZSBzdW1tYXJpZXMgYXJlIGRlc2lnbmVkIHRvIGNhcHR1cmUgYmlvbG9naWNhbGx5IHJlbGV2YW50IGFzcGVjdHMgb2YgZWFjaCBlbnZpcm9ubWVudCwgaW5jbHVkaW5nIHRoZXJtYWwgYWNjdW11bGF0aW9uLCB3YXRlciBhdmFpbGFiaWxpdHksIGF0bW9zcGhlcmljIGRyeW5lc3MsIGFuZCBzdHJlc3MgZnJlcXVlbmN5Lg0KDQojIyMgNi4xIERlcml2ZSBkYWlseSBpbnRlcm1lZGlhdGUgdmFyaWFibGVzDQoNClNvbWUgZW52aXJvbm1lbnRhbCBjb3ZhcmlhdGVzIGRlcGVuZCBvbiBxdWFudGl0aWVzIHRoYXQgYXJlIG5vdCBkaXJlY3RseSBwcm92aWRlZCBieSBOQVNBIFBPV0VSLiBGb3IgdGhpcyByZWFzb24sIHdlIGZpcnN0IGNvbXB1dGUgaW50ZXJtZWRpYXRlIGRhaWx5IHZhcmlhYmxlcyBzdWNoIGFzIGdyb3dpbmcgZGVncmVlIGRheXMgKEdERCksIGRhaWx5IHRoZXJtYWwgYW1wbGl0dWRlLCBhdmVyYWdlIGRhaWx5IHRlbXBlcmF0dXJlLCBzYXR1cmF0aW9uIHZhcG9yIHByZXNzdXJlLCBhY3R1YWwgdmFwb3IgcHJlc3N1cmUsIGFuZCB2YXBvciBwcmVzc3VyZSBkZWZpY2l0IChWUEQpLg0KDQpUaGVzZSBpbnRlcm1lZGlhdGUgdmFyaWFibGVzIGFyZSBjYWxjdWxhdGVkIGRheSBieSBkYXkgYW5kIHRoZW4gc3VtbWFyaXplZCBhdCB0aGUgYW5udWFsIGxldmVsIGluIHRoZSBuZXh0IHN1YnNlY3Rpb24uDQoNCmBgYHtyIGZlYXR1cmVfZW5naW5lZXJpbmd9DQp0ZXhhc19jbGltYXRlX2RhdGEgPC0gdGV4YXNfY2xpbWF0ZV9kYXRhICU+JQ0KICBtdXRhdGUoDQogICAgVF9iYXNlID0gMTAsDQogICAgVF91cHBlciA9IDMwLA0KICAgIFRfZWZmX21pbiA9IGlmX2Vsc2UoVDJNX01JTiA8IFRfYmFzZSwgVF9iYXNlLCBUMk1fTUlOKSwNCiAgICBUX2VmZl9tYXggPSBpZl9lbHNlKFQyTV9NQVggPiBUX3VwcGVyLCBUX3VwcGVyLCBUMk1fTUFYKSwNCiAgICBUX2F2Z19lZmYgPSAoVF9lZmZfbWluICsgVF9lZmZfbWF4KSAvIDIsDQogICAgR0REID0gVF9hdmdfZWZmIC0gVF9iYXNlLA0KICAgIERUUiA9IFQyTV9NQVggLSBUMk1fTUlOLA0KICAgIFRfQVZHX0RBSUxZID0gKFQyTV9NQVggKyBUMk1fTUlOKSAvIDIsDQoNCiAgICAjIFRldGVucyBlcXVhdGlvbiwgcmVzdWx0aW5nIGluIGtQYQ0KICAgIFNBVF9WQVBfUFJFUyA9IDAuNjEwOCAqIGV4cCgoMTcuMjcgKiBUX0FWR19EQUlMWSkgLyAoVF9BVkdfREFJTFkgKyAyMzcuMykpLA0KICAgIEFDVF9WQVBfUFJFUyA9IFNBVF9WQVBfUFJFUyAqIChSSDJNIC8gMTAwKSwNCiAgICBWUERfREFJTFkgPSBTQVRfVkFQX1BSRVMgLSBBQ1RfVkFQX1BSRVMNCiAgKQ0KDQplbnZpcm9ubWVudGFsX2NvdmFyaWF0ZXMgPC0gdGV4YXNfY2xpbWF0ZV9kYXRhICU+JQ0KICBtdXRhdGUoeWVhcl9udW1lcmljID0gYXMuaW50ZWdlcihhcy5jaGFyYWN0ZXIoeWVhcikpKSAlPiUNCiAgZ3JvdXBfYnkoeWVhcl9udW1lcmljKSAlPiUNCiAgc3VtbWFyaXNlKA0KICAgIFRNQVhfQVZHID0gbWVhbihUMk1fTUFYLCBuYS5ybSA9IFRSVUUpLA0KICAgIFRNSU5fQVZHID0gbWVhbihUMk1fTUlOLCBuYS5ybSA9IFRSVUUpLA0KICAgIEdERF9DVU0gPSBzdW0oR0RELCBuYS5ybSA9IFRSVUUpLA0KICAgIEhFQVRfU1RSRVNTX0RBWVMgPSBzdW0oVDJNX01BWCA+IDM1LCBuYS5ybSA9IFRSVUUpLA0KDQogICAgUFJFQ1RPVCA9IHN1bShQUkVDVE9UQ09SUiwgbmEucm0gPSBUUlVFKSwNCiAgICBEUllfREFZUyA9IHN1bShQUkVDVE9UQ09SUiA9PSAwLCBuYS5ybSA9IFRSVUUpLA0KICAgIFJIX0FWRyA9IG1lYW4oUkgyTSwgbmEucm0gPSBUUlVFKSwNCg0KICAgIFdTMk1fQVZHID0gbWVhbihXUzJNLCBuYS5ybSA9IFRSVUUpLA0KICAgIFJBRF9DVU0gPSBzdW0oQUxMU0tZX1NGQ19TV19EV04sIG5hLnJtID0gVFJVRSksDQoNCiAgICBUX0FWRyA9IG1lYW4oVF9BVkdfREFJTFksIG5hLnJtID0gVFJVRSksDQogICAgRFRSX0FWRyA9IG1lYW4oRFRSLCBuYS5ybSA9IFRSVUUpLA0KICAgIENPTERfU1RSRVNTX0RBWVMgPSBzdW0oVDJNX01JTiA8IDEwLCBuYS5ybSA9IFRSVUUpLA0KDQogICAgUkFJTllfREFZUyA9IHN1bShQUkVDVE9UQ09SUiA+IDAsIG5hLnJtID0gVFJVRSksDQogICAgUFJFQ19JTlRFTlNJVFkgPSBpZl9lbHNlKFJBSU5ZX0RBWVMgPiAwLCBQUkVDVE9UIC8gUkFJTllfREFZUywgMCksDQogICAgTE9XX1JIX0RBWVMgPSBzdW0oUkgyTSA8IDMwLCBuYS5ybSA9IFRSVUUpLA0KDQogICAgVlBEX0FWRyA9IG1lYW4oVlBEX0RBSUxZLCBuYS5ybSA9IFRSVUUpLA0KICAgIFZQRF9TVFJFU1NfREFZUyA9IHN1bShWUERfREFJTFkgPiAxLjUsIG5hLnJtID0gVFJVRSksDQogICAgLmdyb3VwcyA9ICJkcm9wIg0KICApICU+JQ0KICByZW5hbWUoeWVhciA9IHllYXJfbnVtZXJpYykNCg0KIyBPcHRpb25hbCBleHBhbmRlZCB0YWJsZTogZGFpbHkgd2VhdGhlciBkYXRhIHBsdXMgYW5udWFsIEVDcw0KZWNzX2V4cGFuZGVkIDwtIHRleGFzX2NsaW1hdGVfZGF0YSAlPiUNCiAgbXV0YXRlKHllYXIgPSBhcy5pbnRlZ2VyKGFzLmNoYXJhY3Rlcih5ZWFyKSkpICU+JQ0KICBsZWZ0X2pvaW4oZW52aXJvbm1lbnRhbF9jb3ZhcmlhdGVzLCBieSA9ICJ5ZWFyIikNCg0Ka25pdHI6OmthYmxlKA0KICBlbnZpcm9ubWVudGFsX2NvdmFyaWF0ZXMsDQogIGNhcHRpb24gPSAiQW5udWFsIGVudmlyb25tZW50YWwgY292YXJpYXRlcyBkZXJpdmVkIGZyb20gTkFTQSBQT1dFUiBkYXRhLiINCikNCmBgYA0KDQojIyMgNi4yIEludGVycHJldGF0aW9uIG9mIHRoZSByZXN1bHRpbmcgZW52aXJvbm1lbnRhbCBjb3ZhcmlhdGVzDQoNClRoZSBmaW5hbCB0YWJsZSBjb250YWlucyBvbmUgcm93IHBlciB5ZWFyIGFuZCBzZXZlcmFsIGNsaW1hdGljIGRlc2NyaXB0b3JzLg0KDQpGb3IgZXhhbXBsZToNCg0KLSBgR0REX0NVTWAgc3VtbWFyaXplcyB0aGVybWFsIGFjY3VtdWxhdGlvbiBkdXJpbmcgdGhlIGNyb3AgY3ljbGUuDQotIGBQUkVDVE9UYCBzdW1tYXJpemVzIHRvdGFsIHdhdGVyIGlucHV0IGZyb20gcmFpbmZhbGwuDQotIGBEUllfREFZU2AgYW5kIGBIRUFUX1NUUkVTU19EQVlTYCBxdWFudGlmeSBzdHJlc3MgZnJlcXVlbmN5Lg0KLSBgVlBEX0FWR2AgYW5kIGBWUERfU1RSRVNTX0RBWVNgIGNhcHR1cmUgYXRtb3NwaGVyaWMgZHJ5bmVzcy4NCi0gYFJBRF9DVU1gIHN1bW1hcml6ZXMgdGhlIHNlYXNvbmFsIHNvbGFyIGVuZXJneSBhdmFpbGFibGUgdG8gdGhlIGNyb3AuDQoNClRoaXMgdGFibGUgaXMgdGhlIHByYWN0aWNhbCBvdXRwdXQgdGhhdCBjb25uZWN0cyB0aGUgY2xpbWF0ZSB0dXRvcmlhbCB0byB0aGUgcHJlZGljdGl2ZSBtb2RlbGluZyBzdGFnZSBvZiB0aGUgcHJvamVjdCBhbmQgdG8gdGhlIHN1YnNlcXVlbnQgY29uc3RydWN0aW9uIG9mIHRoZSBlbnZpcm9ubWVudGFsIGtlcm5lbC4NCg0KIyMgNy4gU2F2ZSB0aGUgZmluYWwgb3V0cHV0cw0KDQpUaGUgbGFzdCBzZWN0aW9uIHN0b3JlcyB0aGUgcHJvY2Vzc2VkIGZpbGVzIGdlbmVyYXRlZCBieSB0aGUgdHV0b3JpYWwuIFNhdmluZyB0aGUgb3V0cHV0cyBleHBsaWNpdGx5IGlzIGltcG9ydGFudCBiZWNhdXNlIGl0IHNlcGFyYXRlcyBkYXRhIGFjcXVpc2l0aW9uIGZyb20gZG93bnN0cmVhbSBtb2RlbGluZywgbWFraW5nIHRoZSB3b3JrZmxvdyBlYXNpZXIgdG8gcmVwcm9kdWNlIGFuZCBhdWRpdC4NCg0KVGhyZWUgZmlsZXMgYXJlIGV4cG9ydGVkOg0KDQoxLiBgdGV4YXNfY2xpbWF0ZV9kYXRhX3Jhdy5jc3ZgOiByYXcgZGFpbHkgY2xpbWF0aWMgcmVjb3Jkcy4NCjIuIGBlbnZpcm9ubWVudGFsX2NvdmFyaWF0ZXMuY3N2YDogb25lIHJvdyBwZXIgeWVhciB3aXRoIHRoZSBkZXJpdmVkIGFubnVhbCBzdW1tYXJpZXMuDQozLiBgZW52aXJvbm1lbnRhbF9jb3ZhcmlhdGVzX2V4cGFuZGVkLmNzdmA6IGRhaWx5IHJlY29yZHMgbGlua2VkIHRvIHRoZSBhbm51YWwgZW52aXJvbm1lbnRhbCBzdW1tYXJpZXMuDQoNCmBgYHtyIHNhdmVfY3N2fQ0Kd3JpdGUuY3N2KA0KICBlbnZpcm9ubWVudGFsX2NvdmFyaWF0ZXMsDQogICJvdXRwdXQvY2xpbWF0ZV9yZXN1bHRzL2Vudmlyb25tZW50YWxfY292YXJpYXRlcy5jc3YiLA0KICByb3cubmFtZXMgPSBGQUxTRQ0KKQ0KDQp3cml0ZS5jc3YoDQogIGVjc19leHBhbmRlZCwNCiAgIm91dHB1dC9jbGltYXRlX3Jlc3VsdHMvZW52aXJvbm1lbnRhbF9jb3ZhcmlhdGVzX2V4cGFuZGVkLmNzdiIsDQogIHJvdy5uYW1lcyA9IEZBTFNFDQopDQoNCmNhdCgiQ2xpbWF0ZSBmaWxlcyBzdWNjZXNzZnVsbHkgc2F2ZWQgaW4gJ291dHB1dC9jbGltYXRlX3Jlc3VsdHMvJy4iKQ0KYGBgDQoNCiMjIDguIEZpbmFsIHJlbWFya3MNCg0KVGhpcyB0dXRvcmlhbCBlc3RhYmxpc2hlcyBhIHJlcHJvZHVjaWJsZSBjbGltYXRpYyBwcmVwcm9jZXNzaW5nIHBpcGVsaW5lIGZvciB0aGUgc3R1ZHkuIFN0YXJ0aW5nIGZyb20gZGFpbHkgd2VhdGhlciBvYnNlcnZhdGlvbnMsIGl0IHByb2R1Y2VzIGEgY3VyYXRlZCBzZXQgb2YgZW52aXJvbm1lbnRhbCBjb3ZhcmlhdGVzIGFuZCBhcnRpY2xlLXJlYWR5IGZpZ3VyZXMuDQoNCkluIHRoZSBicm9hZGVyIHdvcmtmbG93IG9mIHRoZSBwcm9qZWN0LCB0aGVzZSBvdXRwdXRzIGFyZSBub3QgdGhlIGZpbmFsIGdvYWwuIFRoZXkgYXJlIGludGVybWVkaWF0ZSBzY2llbnRpZmljIG9iamVjdHMgdGhhdCBzdXBwb3J0IHRoZSBjb25zdHJ1Y3Rpb24gb2YgdGhlIGVudmlyb25tZW50YWwgY29tcG9uZW50IChXKSBhbmQgdGhlIGVudmlyb25tZW50YWwga2VybmVsIHVzZWQgaW4gbGF0ZXIgZ2Vub21pYyBwcmVkaWN0aW9uIG1vZGVscy4NCg==</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeSourceEmbed("climate_data.Rmd");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
