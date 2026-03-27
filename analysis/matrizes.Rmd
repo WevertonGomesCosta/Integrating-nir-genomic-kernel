@@ -1,475 +1,580 @@
 ---
-title: "Analysis of NIR and Genomic Kernel Integration - Scale all"
-author: 
-  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+title: "Construction of Genomic, Phenomic, Environmental, and Interaction Kernels"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
-    toc: TRUE
+    toc: true
     toc_depth: 3
-    toc_float: TRUE
-  code_download: yes
+    toc_float: true
+    code_download: true
 editor_options:
   chunk_output_type: console
-github-repo: wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, out.width = "100%")
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = "center",
+  out.width = "100%"
+)
 ```
 
-# Analysis of NIR and Genomic Kernel Integration
+# 1. Introduction
 
-Este documento detalha o *pipeline* de análise para integrar dados de Espectroscopia de Refletância no Infravermelho Próximo (NIR), dados genômicos e climáticos usando métodos de *kernel* para aumentar a precisão da predição. A análise inclui o pré-processamento de dados, ajuste de modelos e avaliação do desempenho preditivo.
+This tutorial documents how the project constructs the core kernels used in the genomic prediction analyses. The goal is not simply to read files and calculate matrices. The goal is to transform heterogeneous information sources into aligned scientific objects that can be used in multi-environment prediction models.
 
-Este script foca especificamente nas etapas iniciais e cruciais de **carregamento, limpeza e alinhamento** dos diferentes tipos de dados.
+The script integrates four data layers:
 
-## 1) Load Required Libraries and Data
+1. **Phenotypic records** (`Pheno`): grain yield (`GY`) and kernel weight (`KW`) by genotype and environment.
+2. **Genomic markers** (`Geno`): SNP markers processed in numerical format.
+3. **NIR spectra** (`NIR`): phenomic measurements used to build a spectral similarity kernel.
+4. **Environmental covariates** (`W`): weather-derived descriptors generated in the climate tutorial.
 
-Nesta etapa, carregamos nosso "kit de ferramentas" de pacotes R. Cada um deles é essencial para diferentes partes da análise:
+The final outputs of this script are the matrices used later in the prediction models:
 
-  * `tidyverse`: Uma coleção de pacotes (como `dplyr` e `tidyr`) para a manipulação, limpeza e organização geral dos dados.
-  * `data.table`: Extremamente eficiente para ler e manipular arquivos de dados muito grandes, como nossas matrizes genômicas (SNPs) e espectrais (NIR).
-  * `BGLR`: O pacote central para a modelagem Bayesiana. Ele será usado posteriormente para ajustar os modelos de predição genômica usando os *kernels* que prepararemos.
-  * `parallel` & `doParallel`: Ferramentas para paralelizar nossos cálculos. Essenciais para rodar as análises de validação cruzada (CV) em tempo hábil.
-  * `MASS`: Contém funções estatísticas adicionais que podem ser úteis.
+- **Linear kernels**: `ZG`, `ZP`, `ZEZE`, `ZW`
+- **Interaction kernels**: `ZGZE`, `ZPZE`, `ZGZW`, `ZPZW`
+- **Nonlinear Gaussian kernels**: `GGK`, `PGK`, `GGKE`, `PGKE`, `GGKW`, `PGKW`
+- **Nonlinear arc-cosine kernels**: `GAK`, `PAK`, `GAKE`, `PAKE`, `GAKW`, `PAKW`
 
-```{r load-libraries, message=FALSE}
-# Pacotes principais
-library(tidyverse)    # Manipulação de dados
-library(data.table)   # Leitura eficiente de grandes arquivos
-library(BGLR)         # Modelagem Bayesiana para predição genômica
+A key practical objective of this tutorial is to guarantee that all matrices are constructed in the **same observation order**. If the kernels are not perfectly aligned, the downstream prediction analyses become invalid.
 
-# Paralelismo
-library(parallel)     
-library(doParallel)   
+## 2. R environment and dependencies
 
-# Funções estatísticas adicionais
-library(MASS)                                     # Funções estatísticas
-library(gridExtra) 
-library(grid) 
+We first load the packages required for data handling, kernel construction, visualization, and memory management.
+
+- `tidyverse`: data wrangling and plotting.
+- `data.table`: fast reading of large files.
+- `BGLR`: downstream Bayesian genomic prediction framework.
+- `parallel` and `doParallel`: support for computationally intensive tasks.
+- `MASS`: additional statistical utilities.
+- `patchwork`: multi-panel figure composition for diagnostic plots.
+
+```{r load-libraries}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(data.table)
+  library(BGLR)
+  library(parallel)
+  library(doParallel)
+  library(MASS)
+  library(gridExtra)
+  library(grid)
+  library(patchwork)
+})
+
+dir.create("output/Matrizes", recursive = TRUE, showWarnings = FALSE)
+dir.create("output/Matrizes/figures", recursive = TRUE, showWarnings = FALSE)
 ```
 
-## 2) Data Loading and Preprocessing
+## 2.1 Graphical helper functions
 
-Os dados utilizados nesta análise vêm de três fontes principais. O objetivo desta seção é carregá-los e garantir que estejam consistentes entre si.
+This script is primarily matrix-oriented, but a small set of diagnostic figures is useful to verify whether the main kernels have the expected block structure and alignment. The helpers below standardize the visual style for article-oriented diagnostics.
 
-### 2.1) Carregamento dos Dados
+```{r helper-functions}
+theme_article_matrix <- function() {
+  theme_minimal(base_size = 11) +
+    theme(
+      plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+      plot.subtitle = element_text(size = 10, hjust = 0.5),
+      axis.title = element_text(face = "bold"),
+      axis.text = element_text(size = 8),
+      legend.title = element_text(face = "bold"),
+      legend.text = element_text(size = 8),
+      panel.grid = element_blank(),
+      strip.text = element_text(face = "bold")
+    )
+}
 
-Primeiro, carregamos os arquivos brutos do disco.
+matrix_to_long <- function(K, n_show = 60) {
+  n_show <- min(n_show, nrow(K))
+  K_sub <- K[seq_len(n_show), seq_len(n_show), drop = FALSE]
+  df <- as.data.frame(as.table(K_sub))
+  colnames(df) <- c("Row", "Column", "Value")
+  df$Row <- factor(df$Row, levels = rev(rownames(K_sub)))
+  df$Column <- factor(df$Column, levels = colnames(K_sub))
+  df
+}
 
-  * **NIR.csv**: Este é um arquivo rico que contém múltiplos tipos de informação:
-    1.  IDs (`Pedigree`, `Env`).
-    2.  As variáveis de resposta (traits) que queremos prever, como `GY` (Produtividade) e `KW` (Peso de Grão), que provavelmente são BLUPs calculados anteriormente.
-    3.  As próprias leituras espectrais (bandas do NIR), que usaremos como preditores.
-  * **GAPIT.Genotype.Numerical.txt**: Contém os dados genotípicos.
-    1.  `taxa`: O ID do genótipo.
-    2.  Colunas de marcadores (SNPs) em formato numérico (ex: -1, 0, 1), que é o formato ideal para construir uma matriz de parentesco genômico (Kernel G).
-  * **Pheno**: Este objeto não é carregado de um arquivo. Em vez disso, ele é **extraído** do arquivo `NIR` para isolar as variáveis de resposta (fenótipos) que nossos modelos tentarão prever.
+plot_kernel_excerpt <- function(K, title, subtitle = NULL, n_show = 60) {
+  df <- matrix_to_long(K, n_show = n_show)
 
-Dados fenotípicos com leituras espectrais e os blups
+  ggplot(df, aes(x = Column, y = Row, fill = Value)) +
+    geom_raster() +
+    scale_fill_gradient2(
+      low = "#2166AC",
+      mid = "white",
+      high = "#B2182B",
+      midpoint = median(df$Value, na.rm = TRUE),
+      name = "Kernel value"
+    ) +
+    labs(
+      title = title,
+      subtitle = subtitle,
+      x = "Observation index",
+      y = "Observation index"
+    ) +
+    theme_article_matrix() +
+    theme(
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank()
+    )
+}
+
+check_kernel_alignment <- function(K, reference_ids) {
+  tibble(
+    n_rows = nrow(K),
+    n_cols = ncol(K),
+    is_square = nrow(K) == ncol(K),
+    symmetric_names = identical(rownames(K), colnames(K)),
+    aligned_with_reference = identical(rownames(K), reference_ids)
+  )
+}
+```
+
+## 3. Load the raw data
+
+This section reads the raw inputs used in the kernel construction pipeline. At this stage, the goal is only to import the data and inspect the basic structure of each source.
+
+### 3.1 Load NIR records and phenotypes
+
+The `NIR.csv` file contains identifiers, environments, phenotypic traits, and the spectral bands used later to build the phenomic kernel.
 
 ```{r load-nir-data}
-# Carrega dados fenômicos (NIR)
 NIR <- fread("data/NIR.csv") %>% as.data.frame()
 
-# Visualização inicial
-head(NIR[, 1:7])    # primeiras colunas
-unique(NIR$Env)     # ambientes disponíveis
+head(NIR[, 1:7])
+unique(NIR$Env)
 ```
 
-Dados genotípicos com marcadores SNP
+### 3.2 Load genomic markers
 
-```{r load-genotipic-data}
-# Carrega dados genotípicos (SNPs processados pelo GAPIT)
+The genotype file contains one row per genotype and one column per marker. The first column (`taxa`) is the genotype identifier used to align genomic and phenotypic information.
+
+```{r load-genotypic-data}
 Geno <- fread("data/GAPIT.Genotype.Numerical.txt") %>% as.data.frame()
 
-# Visualização inicial
 head(Geno[, 1:5])
 ```
 
-Dados fenotipicos com BLUPs
+### 3.3 Build the phenotype table used downstream
 
-```{r load-blups}
-# Extrai as colunas de ID (Pedigree, Env) e as traits (GY, KW) do 
-# dataframe NIR para criar nosso dataframe 'Pheno' (fenótipos).
-Pheno <- NIR[, c("Pedigree", "Env", "GY", "KW")]  %>% 
-  arrange(Env, Pedigree) # Ordena os dados para consistência
+The modeling scripts later require a clean phenotype table containing only the identifiers and the target traits. We extract those columns directly from the NIR file to guarantee that the phenotype table remains synchronized with the observation-level spectral records.
 
-# Visualização inicial
+We also create an **observation identifier** (`ObsID`) combining environment and genotype. This is useful because the same genotype can appear in more than one environment, and unique observation labels greatly improve traceability and alignment checks.
+
+```{r build-pheno-table}
+Pheno <- NIR %>%
+  dplyr::select(Pedigree, Env, GY, KW) %>%
+  arrange(Env, Pedigree) %>%
+  mutate(ObsID = paste(Env, Pedigree, sep = "__"))
+
 head(Pheno)
 ```
 
-### 2.2) Alinhamento de Genótipos
+## 4. Harmonize genotype IDs across data sources
 
-Esta é uma etapa **crítica**. Nossos modelos assumem que a linha *i* da matriz genômica (`Geno`) corresponde ao indivíduo da linha *i* da matriz fenotípica (`Pheno`). Se os dados não estiverem perfeitamente alinhados, os resultados serão inválidos.
+This is a critical validation step. The genomic file and the NIR/phenotypic file must refer to the same genotypes. If the IDs are not harmonized before matrix construction, every downstream kernel will be misaligned.
 
-Aqui, garantimos que todos os *dataframes* (`NIR`, `Geno`, `Pheno`) contenham **exatamente o mesmo conjunto de genótipos**.
-
-Filtra os dados para manter apenas os genótipos compartilhados em ambos os conjuntos
-
-```{r filter-shared-genotypes}
-# Identifica genótipos compartilhados
-# A função 'intersect' encontra os IDs de genótipos (Pedigree/taxa) 
-# que estão presentes EM AMBOS os arquivos, Geno e NIR.
+```{r harmonize-genotypes}
 Pedigree <- intersect(Geno$taxa, NIR$Pedigree)
 
-# Filtra os dataframes para manter APENAS os genótipos compartilhados
-NIR   <- NIR[NIR$Pedigree %in% Pedigree, ]
-Geno  <- Geno[Geno$taxa %in% Pedigree, ]
-Pheno <- Pheno[Pheno$Pedigree %in% Pedigree, ]
+NIR <- NIR[NIR$Pedigree %in% Pedigree, ] %>%
+  arrange(Env, Pedigree) %>%
+  mutate(ObsID = paste(Env, Pedigree, sep = "__"))
 
-# Checagem de sanidade: verifica se o número de genótipos únicos
-# é o mesmo em todos os objetos de dados.
-cat("Genótipos em NIR:", length(unique(NIR$Pedigree)), "\n")
-cat("Genótipos em Geno:", length(Geno$taxa), "\n")
-cat("Genótipos em Pheno:", length(unique(Pheno$Pedigree)), "\n")
+Geno <- Geno[Geno$taxa %in% Pedigree, ] %>%
+  arrange(taxa)
+
+Pheno <- Pheno[Pheno$Pedigree %in% Pedigree, ] %>%
+  arrange(Env, Pedigree) %>%
+  mutate(ObsID = paste(Env, Pedigree, sep = "__"))
+
+cat("Shared genotypes in NIR :", length(unique(NIR$Pedigree)), "\n")
+cat("Shared genotypes in Geno:", nrow(Geno), "\n")
+cat("Shared genotypes in Pheno:", length(unique(Pheno$Pedigree)), "\n")
 ```
 
-## 3) Dividindo os dados NIR por ambiente
+## 5. Split NIR observations by environment
 
-Para modelar as interações Genótipo-por-Ambiente (GxE), muitas vezes precisamos analisar os dados por ambiente ou construir *kernels* específicos para cada ambiente.
+The study has four environments:
 
-Esta seção prepara os dados para essa análise, separando o *dataframe* `NIR` (que contém os dados espectrais) em quatro subconjuntos, um para cada ambiente experimental.
+- `CS11_WS`
+- `CS11_WW`
+- `CS12_WS`
+- `CS12_WW`
 
-Separa NIR em quatro subconjuntos (a, b, c, d), correspondentes aos ambientes CS11\_WS, CS11\_WW, CS12\_WS e CS12\_WW.
+The kernel construction later uses environment-specific blocks. For that reason, we separate the NIR observations into four environment-specific data frames while preserving the observation identifiers.
 
-```{r preprocess-data}
-# Cria um dataframe separado para cada um dos quatro ambientes
-a <- NIR[NIR$Env == "CS11_WS", ]
-b <- NIR[NIR$Env == "CS11_WW", ]
-c <- NIR[NIR$Env == "CS12_WS", ]
-d <- NIR[NIR$Env == "CS12_WW", ]
+```{r split-by-environment}
+a <- NIR %>% filter(Env == "CS11_WS") %>% arrange(Pedigree)
+b <- NIR %>% filter(Env == "CS11_WW") %>% arrange(Pedigree)
+c <- NIR %>% filter(Env == "CS12_WS") %>% arrange(Pedigree)
+d <- NIR %>% filter(Env == "CS12_WW") %>% arrange(Pedigree)
 
-# Define nomes de linhas
-# Define o 'Pedigree' como o nome da linha (rownames).
-# Isso é essencial para alinhar matrizes e kernels posteriormente.
-rownames(a) <- a$Pedigree
-rownames(b) <- b$Pedigree
-rownames(c) <- c$Pedigree
-rownames(d) <- d$Pedigree
-
-# Ordena por Pedigree
-# Garante que as linhas em cada dataframe ambiental estejam
-# na mesma ordem alfabética de 'Pedigree'.
-a <- a[order(rownames(a)), ]
-b <- b[order(rownames(b)), ]
-c <- c[order(rownames(c)), ]
-d <- d[order(rownames(d)), ]
+rownames(a) <- a$ObsID
+rownames(b) <- b$ObsID
+rownames(c) <- c$ObsID
+rownames(d) <- d$ObsID
 ```
 
-### 3.1) Identificação de Genótipos Comuns a Todos os Ambientes
+### 5.1 Identify genotypes observed in all environments
 
-Embora já tenhamos filtrado os genótipos comuns entre `Geno` e `NIR`, alguns genótipos podem não ter sido cultivados em *todos* os quatro ambientes.
+This object is informative for balanced-data checks and for interpreting the overlap across trials.
 
-Para análises de interação GxE que exigem dados balanceados (ou para criar a matriz de parentesco principal), geralmente usamos apenas o conjunto de genótipos que têm dados em *todos* os ambientes.
+```{r shared-genotypes-all-envs}
+Pedigree_communs <- Reduce(
+  intersect,
+  list(Geno$taxa, a$Pedigree, b$Pedigree, c$Pedigree, d$Pedigree)
+)
 
-Identifica os genótipos presentes em todos os ambientes
-
-```{r shared-genotypes}
-# Identifica os genótipos presentes em todos os ambientes
-# 'Reduce(intersect, ...)' aplica a função 'intersect' cumulativamente
-# à lista de IDs de pedigree dos 4 ambientes (a, b, c, d) e do 'Geno'.
-# O resultado é a lista de genótipos que estão presentes em TODO LUGAR.
-Pedigree_communs <- Reduce(intersect, list(Geno$taxa, a$Pedigree, b$Pedigree, c$Pedigree, d$Pedigree))
-length(Pedigree_communs)  # Número de genótipos consistentes
+length(Pedigree_communs)
 ```
 
-## 4) Criando a matriz de relacionamento genômico (ZG)
+## 6. Build the linear genomic kernel (K_G stored as `ZG`)
 
-Nesta seção, criamos o *kernel* genômico, `ZG`. Um "kernel" é fundamentalmente uma matriz de parentesco ou similaridade.
+The genomic kernel measures similarity among observations based on SNP markers.
 
-O passo crucial aqui é que, em vez de criar um kernel único para os 300+ genótipos únicos, estamos criando um kernel para as **observações** (genótipo *dentro* de um ambiente). A lógica é:
+The legacy pipeline used in this project standardizes marker values **within each environment-specific observation block** before stacking the data. Although this is not the only possible strategy, we preserve it here to maintain compatibility with the downstream analyses already developed for the article.
 
-1.  **Ordenar e Preparar `Geno`**: Asseguramos que a matriz genômica (`Geno`) esteja ordenada alfabeticamente por genótipo (`taxa`), definimos os `rownames` e removemos a coluna de ID, deixando apenas os marcadores numéricos.
-2.  **Escalonar *Por* Ambiente**: Este é o passo mais importante. Usamos `scale(subset(Geno, ...))` para padronizar (centralizar e escalonar) os marcadores SNP. Note que isso é feito *separadamente* para o conjunto de genótipos em cada ambiente (a, b, c, d). Isso padroniza os alelos com base na média e variância daquele subconjunto específico de indivíduos.
-3.  **Empilhar (`rbind`)**: Combinamos as quatro matrizes genômicas escalonadas (Geno.a, Geno.b, Geno.c, Geno.d) em uma única matriz grande, `Geno.all`. A ordem das linhas em `Geno.all` agora corresponde à ordem das observações no *dataframe* `Pheno`.
-4.  **Calcular o Kernel (`tcrossprod`)**: Usamos o produto cruzado (`tcrossprod`) dividido pelo número de marcadores (`ncol`) para calcular a matriz de parentesco genômico (similar ao método 1 de VanRaden).
+The practical steps are:
 
-O resultado, `ZG`, é uma grande matriz de parentesco (N total de observações x N total de observações) que representa a similaridade genômica entre todas as observações.
+1. Sort the genotype matrix and remove the ID column.
+2. Subset the genotype matrix according to the genotypes observed in each environment.
+3. Standardize markers within each block.
+4. Stack the environment-specific matrices in the same order used by the observation table.
+5. Compute the linear kernel by the cross-product of the standardized marker matrix.
 
-```{r zg}
-# Ordena os dados genotípicos por taxa
+```{r build-zg}
 Geno <- Geno[order(Geno$taxa), ]
 rownames(Geno) <- Geno$taxa
-Geno <- Geno[, -1]  # remove coluna taxa
+Geno <- Geno[, -1, drop = FALSE]
 
-# Escalonamento por ambiente
-Geno.a <- scale(subset(Geno, rownames(Geno) %in% a$Pedigree),
-                center = TRUE,
-                scale = TRUE)
-Geno.b <- scale(subset(Geno, rownames(Geno) %in% b$Pedigree),
-                center = TRUE,
-                scale = TRUE)
-Geno.c <- scale(subset(Geno, rownames(Geno) %in% c$Pedigree),
-                center = TRUE,
-                scale = TRUE)
-Geno.d <- scale(subset(Geno, rownames(Geno) %in% d$Pedigree),
-                center = TRUE,
-                scale = TRUE)
+Geno.a <- scale(Geno[a$Pedigree, , drop = FALSE], center = TRUE, scale = TRUE)
+Geno.b <- scale(Geno[b$Pedigree, , drop = FALSE], center = TRUE, scale = TRUE)
+Geno.c <- scale(Geno[c$Pedigree, , drop = FALSE], center = TRUE, scale = TRUE)
+Geno.d <- scale(Geno[d$Pedigree, , drop = FALSE], center = TRUE, scale = TRUE)
 
-# Combina todos os ambientes (já escalonados por ambiente)
+rownames(Geno.a) <- a$ObsID
+rownames(Geno.b) <- b$ObsID
+rownames(Geno.c) <- c$ObsID
+rownames(Geno.d) <- d$ObsID
+
 Geno.all <- rbind(Geno.a, Geno.b, Geno.c, Geno.d)
-dim(Geno.all)
-```
 
-```{r zg2}
-# Calcula matriz de relacionamento genômico
 ZG <- tcrossprod(as.matrix(Geno.all)) / ncol(Geno.all)
-```
+rownames(ZG) <- rownames(Geno.all)
+colnames(ZG) <- rownames(Geno.all)
 
-Uma rápida verificação das dimensões e dos primeiros elementos da matriz `ZG` para garantir que o cálculo foi bem-sucedido.
-
-```{r zg-checagem}
-# Checagem
 dim(ZG)
 ZG[1:5, 1:5]
 ```
 
-## 5) Criando a matriz de relacionamento fenômica (ZP)
+## 7. Build the linear phenomic kernel (K_P stored as `ZP`)
 
-Seguimos uma lógica **idêntica** à da seção anterior, mas desta vez usamos os dados espectrais do NIR (que chamamos de 'P' de *phenomic* ou *proximal sensing*).
+The phenomic kernel uses the NIR spectral bands. The same blockwise logic is used here to keep the observation order synchronized with the genomic and environmental kernels.
 
-1.  **Preparar `NIR`**: Para cada ambiente (a, b, c, d), removemos as 5 primeiras colunas de metadados (IDs, traits) e usamos `scale()` para padronizar os valores de cada banda espectral.
-2.  **Empilhar (`rbind`)**: Combinamos as quatro matrizes NIR escalonadas em `NIR.all`.
-3.  **Calcular o Kernel (`tcrossprod`)**: Calculamos `ZP`.
+```{r build-zp}
+# Identify spectral variables defensively: keep only numeric columns and remove
+# metadata/trait columns that should not enter the phenomic kernel.
+metadata_cols <- c("Pedigree", "Env", "GY", "KW", "ObsID")
 
-O resultado, `ZP`, é uma matriz (N total x N total) que mede a **similaridade espectral** entre cada par de observações. A hipótese é que indivíduos com espectros NIR similares podem compartilhar características fisiológicas ou de composição, independentemente de seu parentesco genômico.
+nir_feature_cols <- setdiff(colnames(NIR), metadata_cols)
+nir_feature_cols <- nir_feature_cols[
+  vapply(NIR[, nir_feature_cols, drop = FALSE], is.numeric, logical(1))
+]
 
-```{r zp}
-# Remove colunas de identificação e escala por ambiente
-NIR.a <- scale(a[, -c(1:5)], center = TRUE, scale = TRUE)
-NIR.b <- scale(b[, -c(1:5)], center = TRUE, scale = TRUE)
-NIR.c <- scale(c[, -c(1:5)], center = TRUE, scale = TRUE)
-NIR.d <- scale(d[, -c(1:5)], center = TRUE, scale = TRUE)
+if (length(nir_feature_cols) == 0) {
+  stop("No numeric NIR feature columns were found after filtering metadata columns.")
+}
 
-# Combina todos os ambientes (já escalonados)
+excluded_non_numeric <- setdiff(setdiff(colnames(NIR), metadata_cols), nir_feature_cols)
+
+cat("Number of NIR feature columns used in ZP:", length(nir_feature_cols), "\n")
+if (length(excluded_non_numeric) > 0) {
+  cat("Excluded non-numeric columns:", paste(excluded_non_numeric, collapse = ", "), "\n")
+}
+
+NIR.a <- scale(as.matrix(a[, nir_feature_cols, drop = FALSE]), center = TRUE, scale = TRUE)
+NIR.b <- scale(as.matrix(b[, nir_feature_cols, drop = FALSE]), center = TRUE, scale = TRUE)
+NIR.c <- scale(as.matrix(c[, nir_feature_cols, drop = FALSE]), center = TRUE, scale = TRUE)
+NIR.d <- scale(as.matrix(d[, nir_feature_cols, drop = FALSE]), center = TRUE, scale = TRUE)
+
+rownames(NIR.a) <- a$ObsID
+rownames(NIR.b) <- b$ObsID
+rownames(NIR.c) <- c$ObsID
+rownames(NIR.d) <- d$ObsID
+
 NIR.all <- rbind(NIR.a, NIR.b, NIR.c, NIR.d)
-dim(NIR.all)
-```
 
-```{r zp-2}
-# Calcula matriz de relacionamento fenômico
-ZP <- tcrossprod(as.matrix(NIR.all)) / ncol(NIR.all)
-```
+ZP <- tcrossprod(NIR.all) / ncol(NIR.all)
+rownames(ZP) <- rownames(NIR.all)
+colnames(ZP) <- rownames(NIR.all)
 
-Novamente, verificamos as dimensões e o conteúdo da matriz `ZP`.
-
-```{r zp-checagem}
-# Checagem
 dim(ZP)
 ZP[1:5, 1:5]
 ```
 
-## 6) Criando a matriz de relacionamento ambiental (ZE)
+## 8. Build the categorical environmental kernel (K_E)
 
-Esta é a forma mais **simples** de criar um kernel ambiental.
+The simplest environmental representation treats each environment as a categorical factor. We first build the incidence matrix `ZE`, then convert it into a kernel (`ZEZE`) through the cross-product.
 
-1.  **Matriz de Incidência (`ZE`)**: `model.matrix` cria uma matriz "dummy" (ou *one-hot encoding*). Ela tem uma linha para cada observação e uma coluna para cada ambiente (4 colunas no total). Um valor '1' é colocado na coluna correspondente ao ambiente daquela observação.
-2.  **Kernel (`ZEZE`)**: Ao calcular `tcrossprod(ZE)`, criamos uma matriz (N total x N total) onde o elemento `[i, j]` é '1' se as observações *i* e *j* são do **mesmo ambiente**, e '0' caso contrário.
+This kernel assigns full environmental similarity to observations from the same environment and zero similarity to observations from different environments.
 
-Este kernel modela um efeito ambiental "clássico" (ou de bloco), onde todas as observações dentro de um mesmo ambiente são tratadas como 100% relacionadas entre si (em termos de ambiente) e 0% relacionadas a observações de outros ambientes.
+```{r build-ze}
+Pheno <- Pheno %>% arrange(match(ObsID, rownames(ZG)))
 
-```{r ze-zeze}
-# Cria matriz de incidência de ambientes (0/1)
 ZE <- model.matrix(~ as.factor(Pheno$Env) - 1)
+rownames(ZE) <- Pheno$ObsID
+colnames(ZE) <- gsub("^as.factor\\(Pheno\\$Env\\)", "", colnames(ZE))
 
-# Calcula matriz de relacionamento ambiental (produto cruzado)
 ZEZE <- tcrossprod(ZE)
+rownames(ZEZE) <- rownames(ZE)
+colnames(ZEZE) <- rownames(ZE)
 
-# Checagens
-cat("Dimensões da matriz ZE:", dim(ZE), "\n")
-cat("Dimensões da matriz ZEZE:", dim(ZEZE), "\n")
+cat("Dimensions of ZE   :", dim(ZE), "\n")
+cat("Dimensions of ZEZE :", dim(ZEZE), "\n")
 
-# Visualiza primeiras linhas
-dim(ZE)
 ZEZE[1:5, 1:5]
 ```
 
-## 6.1) Criando a Matriz de Relacionamento Ambiental com Dados Climáticos (W)
+## 9. Build the weather-derived environmental kernel (K_W stored as `ZW`)
 
-Esta é uma abordagem muito mais **sofisticada** para modelar o ambiente, em vez de apenas usar os blocos da Seção 6. O objetivo é criar um kernel `ZW` (W de *Weather*, Clima) onde a similaridade entre duas observações é baseada na **similaridade climática real** dos seus ambientes.
+The weather kernel uses the climate outputs created in the `climate_data` tutorial. The updated climate workflow now exports two files:
 
-A construção desta matriz `W` é complexa:
+1. `environmental_covariates.csv`: one row per year with aggregated environmental summaries.
+2. `environmental_covariates_expanded.csv`: daily records linked to those annual summaries.
 
-1.  **Carregar ECs**: Carregamos as Covariáveis Ambientais (ECs) do script anterior.
-2.  **Separar Dados**: O código inteligentemente separa os dados climáticos em dois tipos:
-      * **Agregados**: Dados que são um *único valor* para o ano (ex: `TMAX_AVG`, `GDD_CUM`). `ECs.2011` e `ECs.2012` armazenam esses vetores.
-      * **Diários**: Dados que têm um valor por dia (ex: `PRECTOTCORR`).
-3.  **Criar "Assinatura Climática"**: O `pivot_wider` é usado para transformar os dados *diários* de um formato "longo" (muitas linhas) para "largo". O resultado (`env_wide_2011`) é uma **única linha** (um vetor) que contém a "assinatura climática" completa daquele ano (ex: T2M\_dia1, T2M\_dia2, ..., T2M\_dia150).
-4.  **Construir Matriz por Observação**: Para cada observação (linha) em um ambiente (ex: ambiente 'a', que é 2011):
-      * Anexamos a "assinatura diária" de 2011 (replicada para aquela linha).
-      * Anexamos as colunas para os dados diários de 2012, preenchidas com `NA`.
-      * Anexamos o vetor de dados "agregados" de 2011.
-      * Isso é repetido para todos os ambientes (a, b, c, d), preenchendo com `NA` os anos que não se aplicam.
-5.  **Empilhar e Limpar**: `rbind` combina tudo na matriz `W`. `W[is.na(W)] <- 0` substitui os `NA`s por 0. Isso assume que a "não aplicabilidade" (ex: dados de 2012 para uma observação de 2011) contribui com 0 para a similaridade.
-6.  **Calcular Kernel `ZW`**: Finalmente, `tcrossprod(W)` cria o kernel. `ZW` é uma matriz (N total x N total) que mede a similaridade climática detalhada entre cada par de observações, usando tanto dados diários quanto agregados.
+This script uses **both** files:
 
-```{r load-ecs}
-# --- 1. Preparação Inicial dos Dados Climáticos (Feita uma vez) ---
+- The annual file provides the summary covariates.
+- The expanded file provides the daily weather trajectories used to describe the within-season climatic signature of each year.
 
-# Carrega os dados climáticos
-ECs_data <- read.csv("output/climate_results/environmental_covariates.csv") %>%
-  dplyr::select(PRECTOTCORR:date, T_eff_min:VPD_STRESS_DAYS)
+### 9.1 Load climate files
 
-# --- 2. Escalonamento dos Dados Climáticos (Feito 1x) ---
-# Seleciona apenas as covariáveis AGREGADAS (médias, somas)
-ECs_data_scaled <- ECs_data %>%
-  dplyr::select(TMAX_AVG:VPD_STRESS_DAYS) %>%
-  scale(., center = TRUE, scale = TRUE) %>% unique()
+```{r load-climate-files}
+annual_ec_file <- "output/climate_results/environmental_covariates.csv"
+expanded_ec_file <- "output/climate_results/environmental_covariates_expanded.csv"
 
-# Cria ECs.2011 (1 linha com dados agregados e escalonados de 2011)
-ECs.2011 <- matrix(ECs_data_scaled[1, ], nrow = 1)
-colnames(ECs.2011) <- colnames(ECs_data_scaled)
-
-# Cria ECs.2012 (1 linha com dados agregados e escalonados de 2012)
-ECs.2012 <- matrix(ECs_data_scaled[2, ], nrow = 1)
-colnames(ECs.2012) <- colnames(ECs_data_scaled)
-
-# Prepara 2011: Filtra dados DIÁRIOS, extrai datas e escala
-ECs.2011_filtered <- ECs_data %>% filter(year == 2011)
-ECs.2011_scaled <- ECs.2011_filtered %>%
-  dplyr::select(-year, -date, -(TMAX_AVG:VPD_STRESS_DAYS)) %>%
-  scale(. , center = TRUE, scale = TRUE)
-ECs.2011_dates <- ECs.2011_filtered$date
-
-# Prepara 2012: Filtra dados DIÁRIOS, extrai datas e escala
-ECs.2012_filtered <- ECs_data %>% filter(year == 2012)
-ECs.2012_scaled <-    ECs.2012_filtered %>%
-  dplyr::select(-year, -date, -(TMAX_AVG:VPD_STRESS_DAYS)) %>%
-  scale(., center = TRUE, scale = TRUE)
-ECs.2012_dates <- ECs.2012_filtered$date
-
-# --- 3. Criar a Linha Única de Dados Climáticos "Largos" (Feito 2x) ---
-
-# Cria o dataframe "largo" (1 linha) para 2011 (assinatura diária)
-env_wide_2011 <- as.data.frame(ECs.2011_scaled) %>%
-  mutate(date = ECs.2011_dates) %>%
-  pivot_wider(names_from = date, values_from = -date)
-
-# Cria o dataframe "largo" (1 linha) para 2012 (assinatura diária)
-env_wide_2012 <- as.data.frame(ECs.2012_scaled) %>%
-  mutate(date = ECs.2012_dates) %>%
-  pivot_wider(names_from = date, values_from = -date)
-
-# --- 4. Construção das Matrizes por Ambiente (em etapas) ---
-
-# (Assumindo que os dataframes 'a', 'b', 'c', e 'd' já existem
-# E que SEUS ROWNAMES são os IDs únicos, ex: "A188", "A1881"...)
-
-# Etapa A: Ambiente CS11_WS
-# **MUDANÇA AQUI: Use rownames(a) em vez de a$Pedigree**
-ids_a <- rownames(a) 
-ECs.a <- env_wide_2011[rep(1, length(ids_a)), ] 
-ECs.a <- cbind(ECs.a, matrix(
-  NA,
-  nrow = length(ids_a),
-  ncol = length(env_wide_2012),
-  # **MUDANÇA AQUI: Atribui os nomes corretos imediatamente**
-  dimnames = list(ids_a, colnames(env_wide_2012)) 
-))
-ECs.a <- cbind(ECs.a, ECs.2011) %>% as.matrix()
-# A linha abaixo não é mais necessária, pois os nomes foram definidos no 'dimnames'
-# rownames(ECs.a) <- ids_a 
-dim(ECs.a)
-
-# Etapa B: Ambiente CS11_WW
-# **MUDANÇA AQUI: Use rownames(b)**
-ids_b <- rownames(b)
-ECs.b <- env_wide_2011[rep(1, length(ids_b)), ]
-ECs.b <- cbind(ECs.b, matrix(
-  NA,
-  nrow = length(ids_b),
-  ncol = length(env_wide_2012),
-  # **MUDANÇA AQUI**
-  dimnames = list(ids_b, colnames(env_wide_2012))
-))
-ECs.b <- cbind(ECs.b, ECs.2011) %>% as.matrix()
-dim(ECs.b)
-
-# Etapa C: Ambiente CS12_WS
-# **MUDANÇA AQUI: Use rownames(c)**
-ids_c <- rownames(c)
-ECs.c <- env_wide_2012[rep(1, length(ids_c)), ]
-ECs.c <- cbind(matrix(
-  NA,
-  nrow = length(ids_c),
-  ncol = length(env_wide_2011),
-  # **MUDANÇA AQUI**
-  dimnames = list(ids_c, colnames(env_wide_2011))
-),  ECs.c)
-ECs.c <- cbind(ECs.c, ECs.2012) %>% as.matrix()
-dim(ECs.c)
-
-# Etapa D: Ambiente CS12_WW
-# **MUDANÇA AQUI: Use rownames(d)**
-ids_d <- rownames(d)
-ECs.d <- env_wide_2012[rep(1, length(ids_d)), ]
-ECs.d <- cbind(matrix(
-  NA,
-  nrow = length(ids_d),
-  ncol = length(env_wide_2011),
-  # **MUDANÇA AQUI**
-  dimnames = list(ids_d, colnames(env_wide_2011))
-), ECs.d)
-ECs.d <- cbind(ECs.d, ECs.2012) %>% as.matrix()
-dim(ECs.d)
-
-# --- 5. Combinação e Criação da Matriz W ---
-W <- rbind(ECs.a, ECs.b, ECs.c, ECs.d)
-
-# --- CORREÇÃO: Alinhar os nomes de W com ZG ---
-# Verifica se o número de linhas é o mesmo
-print(paste("Linhas em W:", nrow(W)))
-print(paste("Linhas em ZG:", nrow(ZG)))
-
-if (nrow(W) == nrow(ZG)) {
-  # Se for, assume que a ordem está correta e copia os nomes
-  rownames(W) <- rownames(ZG)
-  colnames(W) <- colnames(W) # Apenas para garantir
-  print("Nomes de linha (rownames) de W atualizados para corresponder a ZG.")
-} else {
-  stop("ERRO: O número de linhas em W e ZG é diferente. A ordem está incorreta.")
+if (!file.exists(annual_ec_file)) {
+  stop("The file 'output/climate_results/environmental_covariates.csv' was not found. Run climate_data.Rmd first.")
 }
 
-# Verificação (opcional, mas recomendado)
-# W[str_detect(rownames(W), "A188"), 1:5] 
-# (Agora deve mostrar "A188", "A1881", "A1882", "A1883")
+if (!file.exists(expanded_ec_file)) {
+  stop("The file 'output/climate_results/environmental_covariates_expanded.csv' was not found. Run climate_data.Rmd first.")
+}
 
-# Substitui NAs por 0 para permitir o cálculo do tcrossprod
+ECs_annual <- read.csv(annual_ec_file)
+ECs_expanded <- read.csv(expanded_ec_file)
+
+annual_cols <- c(
+  "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS",
+  "PRECTOT", "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM",
+  "T_AVG", "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS",
+  "PREC_INTENSITY", "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"
+)
+
+# Keep only true daily weather variables. Exclude identifiers, date encodings,
+# coordinate fields, and any annual summary columns that may also be present in
+# the expanded file.
+daily_id_cols <- c(
+  "year", "Year", "YEAR",
+  "date", "Date",
+  "YYYYMMDD", "MMDD", "DOY",
+  "month", "Month", "MM",
+  "day", "DD",
+  "LON", "LAT"
+)
+candidate_daily_cols <- setdiff(
+  colnames(ECs_expanded),
+  c(daily_id_cols, annual_cols)
+)
+
+daily_cols <- candidate_daily_cols[
+  vapply(ECs_expanded[, candidate_daily_cols, drop = FALSE], is.numeric, logical(1))
+]
+
+excluded_daily_cols <- setdiff(candidate_daily_cols, daily_cols)
+
+if (length(daily_cols) == 0) {
+  stop("No numeric daily climate variables were found in environmental_covariates_expanded.csv.")
+}
+
+cat("Number of daily climate variables used in ZW:", length(daily_cols), "\n")
+if (length(excluded_daily_cols) > 0) {
+  cat("Excluded non-climatic or non-numeric columns:", paste(excluded_daily_cols, collapse = ", "), "\n")
+}
+
+ECs_annual <- ECs_annual %>%
+  mutate(year = as.integer(year)) %>%
+  dplyr::select(year, all_of(annual_cols))
+
+ECs_expanded <- ECs_expanded %>%
+  mutate(
+    year = as.integer(year),
+    date = as.character(date)
+  )
+```
+
+### 9.2 Standardize annual summaries and daily trajectories
+
+The purpose of this step is to place heterogeneous environmental variables on a comparable scale before kernel construction.
+
+```{r standardize-climate-data}
+annual_scaled <- ECs_annual %>%
+  dplyr::select(all_of(annual_cols)) %>%
+  scale(center = TRUE, scale = TRUE) %>%
+  as.data.frame()
+
+annual_scaled <- bind_cols(
+  year = ECs_annual$year,
+  annual_scaled
+)
+
+daily_scaled <- ECs_expanded %>%
+  dplyr::select(year, date, all_of(daily_cols)) %>%
+  group_by(year) %>%
+  mutate(across(all_of(daily_cols), ~ as.numeric(scale(.x, center = TRUE, scale = TRUE)))) %>%
+  ungroup()
+```
+
+### 9.3 Create year-specific climatic signatures
+
+For each year, we transform the daily climatic trajectories into a single wide-row signature. This gives each year a reproducible vector representing its within-season weather profile.
+
+```{r create-year-signatures}
+daily_signature_2011 <- daily_scaled %>%
+  filter(year == 2011) %>%
+  dplyr::select(date, all_of(daily_cols)) %>%
+  pivot_longer(cols = -date, names_to = "variable", values_to = "value") %>%
+  mutate(signature_col = paste(variable, date, sep = "__")) %>%
+  dplyr::select(signature_col, value) %>%
+  pivot_wider(names_from = signature_col, values_from = value)
+
+daily_signature_2012 <- daily_scaled %>%
+  filter(year == 2012) %>%
+  dplyr::select(date, all_of(daily_cols)) %>%
+  pivot_longer(cols = -date, names_to = "variable", values_to = "value") %>%
+  mutate(signature_col = paste(variable, date, sep = "__")) %>%
+  dplyr::select(signature_col, value) %>%
+  pivot_wider(names_from = signature_col, values_from = value)
+
+annual_signature_2011 <- annual_scaled %>%
+  filter(year == 2011) %>%
+  dplyr::select(-year)
+
+annual_signature_2012 <- annual_scaled %>%
+  filter(year == 2012) %>%
+  dplyr::select(-year)
+```
+
+### 9.4 Build the observation-level W matrix
+
+Each observation inherits the climatic signature of the year associated with its environment. The 2011 environments receive the 2011 daily and annual signatures; the 2012 environments receive the 2012 signatures. Missing year-specific blocks are filled with `NA` and later replaced with zero so that the final matrix can be used in a cross-product.
+
+```{r build-w}
+build_weather_block <- function(obs_ids, daily_sig, annual_sig, other_daily_sig = NULL) {
+  main_daily <- as.data.frame(daily_sig[rep(1, length(obs_ids)), , drop = FALSE])
+  rownames(main_daily) <- obs_ids
+
+  if (is.null(other_daily_sig)) {
+    other_daily <- NULL
+  } else {
+    other_daily <- as.data.frame(
+      matrix(
+        NA_real_,
+        nrow = length(obs_ids),
+        ncol = ncol(other_daily_sig),
+        dimnames = list(obs_ids, colnames(other_daily_sig))
+      )
+    )
+  }
+
+  annual_block <- as.data.frame(annual_sig[rep(1, length(obs_ids)), , drop = FALSE])
+  rownames(annual_block) <- obs_ids
+
+  if (is.null(other_daily)) {
+    out <- cbind(main_daily, annual_block)
+  } else {
+    out <- cbind(main_daily, other_daily, annual_block)
+  }
+
+  out <- as.data.frame(out)
+  rownames(out) <- obs_ids
+  out
+}
+
+ids_a <- a$ObsID
+ids_b <- b$ObsID
+ids_c <- c$ObsID
+ids_d <- d$ObsID
+
+ECs.a <- build_weather_block(ids_a, daily_signature_2011, annual_signature_2011, daily_signature_2012)
+ECs.b <- build_weather_block(ids_b, daily_signature_2011, annual_signature_2011, daily_signature_2012)
+ECs.c <- build_weather_block(ids_c, daily_signature_2012, annual_signature_2012, daily_signature_2011)
+ECs.d <- build_weather_block(ids_d, daily_signature_2012, annual_signature_2012, daily_signature_2011)
+
+W <- rbind(ECs.a, ECs.b, ECs.c, ECs.d)
+W <- as.data.frame(W)
+rownames(W) <- c(ids_a, ids_b, ids_c, ids_d)
+
+W <- W[Pheno$ObsID, , drop = FALSE]
 W[is.na(W)] <- 0
 
-# --- 6. Calcular a matriz de relacionamento ---
 ZW <- tcrossprod(as.matrix(W)) / ncol(W)
+rownames(ZW) <- rownames(W)
+colnames(ZW) <- rownames(W)
 
-# --- 7. Verificação Final ---
-print(paste("ZW e ZG estão alinhados:", all(rownames(ZW) == rownames(ZG))))
-print(paste("ZW e ZP estão alinhados:", all(rownames(ZW) == rownames(ZP))))
+print(paste("Rows in W :", nrow(W)))
+print(paste("Rows in ZG:", nrow(ZG)))
+print(paste("ZW and ZG aligned:", identical(rownames(ZW), rownames(ZG))))
+print(paste("ZW and ZP aligned:", identical(rownames(ZW), rownames(ZP))))
 ```
 
-## 7) Verificações Finais de Alinhamento
+## 10. Check kernel dimensions and alignment
 
-Antes de prosseguir para a modelagem, executamos algumas verificações cruciais.
+Before building interactions and nonlinear kernels, we summarize the main linear kernels. This table is useful both for quality control and for tutorial purposes.
 
-Primeiro, uma verificação pontual (spot-check) para um genótipo específico ('A188') para ver se os dados parecem corretos e alinhados nas matrizes empilhadas.
+```{r kernel-summary-linear}
+reference_ids <- Pheno$ObsID
 
-```{r}
+kernel_inventory_linear <- bind_rows(
+  check_kernel_alignment(ZG, reference_ids) %>% mutate(kernel = "ZG (genomic)"),
+  check_kernel_alignment(ZP, reference_ids) %>% mutate(kernel = "ZP (phenomic/NIR)"),
+  check_kernel_alignment(ZEZE, reference_ids) %>% mutate(kernel = "ZEZE (categorical environment)"),
+  check_kernel_alignment(ZW, reference_ids) %>% mutate(kernel = "ZW (weather-derived)")
+) %>%
+  dplyr::select(kernel, everything())
+
+knitr::kable(
+  kernel_inventory_linear,
+  caption = "Diagnostic summary of the main linear kernels."
+)
+```
+
+### 10.1 Spot-check selected observations
+
+We inspect the same pedigree across matrices to verify that the stacked observation ordering remains coherent.
+
+```{r spot-check}
 Geno.all[str_detect(rownames(Geno.all), "A188"), 1:5]
 W[str_detect(rownames(W), "A188"), 1:5]
-NIR.all[str_detect(rownames(W), "A188"), 1:5]
+NIR.all[str_detect(rownames(NIR.all), "A188"), 1:5]
 ```
 
-Esta é a **verificação de alinhamento mais importante** da análise. Antes de passar os *kernels* para o BGLR, devemos garantir que todos eles (`ZW`, `ZG`, `ZP`) são:
+### 10.2 Global alignment tests
 
-1.  Quadrados (mesmo número de linhas e colunas).
-2.  Simétricos (nomes de linhas == nomes de colunas).
-3.  Perfeitamente alinhados entre si (nomes de linhas de ZW == nomes de linhas de ZG, etc.).
+All checks below should return `TRUE`.
 
-Se todos os testes abaixo retornarem `TRUE`, nossos *kernels* estão perfeitamente alinhados e prontos para a modelagem.
-
-```{r}
+```{r alignment-tests}
 all(rownames(ZW) == colnames(ZW))
 all(rownames(ZG) == colnames(ZG))
 all(rownames(ZP) == colnames(ZP))
@@ -479,300 +584,238 @@ all(rownames(ZW) == rownames(ZP))
 
 all(colnames(ZW) == colnames(ZG))
 all(colnames(ZW) == colnames(ZP))
-
-all(unique(rownames(ZG)) == unique(colnames(ZG)))
-all(unique(rownames(ZP)) == unique(colnames(ZP)))
-all(unique(rownames(ZW)) == unique(colnames(ZW)))
 ```
 
-Por fim, inspecionamos os cantos superiores esquerdos das três matrizes de relacionamento. Isso nos dá uma ideia visual dos valores de similaridade calculados e confirma que os `rownames` e `colnames` estão idênticos.
+### 10.3 Diagnostic figures will be generated after all kernel families are built
 
-```{r}
-ZW[1:5, 1:5]
-ZG[1:5, 1:5]
-ZP[1:5, 1:5]
-```
+We postpone the final diagnostic figures until the Gaussian and arc-cosine kernels are available. This allows us to compare the linear and nonlinear representations within the genomic and phenomic spaces separately, which is more informative for the article than mixing weather and phenomic matrices in a single panel.
 
-## 8) Interações
 
-Nesta seção, começamos a modelar as **interações**, como Genótipo-por-Ambiente (GxE) e Fenótipo-por-Ambiente (PxE). Estas interações são cruciais para entender como o desempenho de um genótipo (ou seu perfil NIR) muda em diferentes condições.
+## 11. Build interaction kernels
 
-O método usado aqui é o **produto de Hadamard** (a multiplicação simples, elemento a elemento, `*` no R). A lógica é a seguinte:
+The interaction kernels are obtained through the Hadamard product (element-wise multiplication). This operation restricts genomic or phenomic similarity to the environmental context represented by `ZEZE` or `ZW`.
 
-  * `ZGZE = ZG * ZEZE`: Esta matriz representa a interação **Genômico × Ambiente (Categórico)**. Um elemento `[i, j]` nesta matriz só será diferente de zero se as observações *i* e *j* forem do **mesmo ambiente** (de `ZEZE`) *E* se elas estiverem **genomicamente relacionadas** (de `ZG`). Isso isola a variação genômica que é específica de cada ambiente.
-  * `ZPZE`: Da mesma forma, representa a interação **Fenômico/NIR × Ambiente (Categórico)**.
-  * `ZGZW` e `ZPZW`: Representam as interações **Genômico × Clima** e **Fenômico/NIR × Clima**. Esta é uma abordagem mais avançada, pois a força da interação não se baseia apenas em "estar no mesmo ambiente" (como `ZEZE`), mas na "similaridade climática real" (de `ZW`).
-
-```{r interactions}
-# Interação genômica × ambiente
+```{r build-interactions}
 ZGZE <- ZG * ZEZE
-ZGZE[1:5, 1:5]
-
-# Interação fenômica × ambiente
 ZPZE <- ZP * ZEZE
-ZPZE[1:5, 1:5]
+ZGZW <- ZG * ZW
+ZPZW <- ZP * ZW
 
-# Salva com nomes padronizados (sem sufixo _all)
+ZGZE[1:5, 1:5]
+ZPZE[1:5, 1:5]
+ZGZW[1:5, 1:5]
+ZPZW[1:5, 1:5]
+
 saveRDS(ZGZE, "output/Matrizes/ZGZE.rds")
 saveRDS(ZPZE, "output/Matrizes/ZPZE.rds")
-
-# Interação genômica × clima
-ZGZW <- ZG * ZW
-ZGZW[1:5, 1:5]
-
-# Interação fenômica × clima
-ZPZW <- ZP * ZW
-ZPZW[1:5, 1:5]
 ```
 
-## 9) GK and AK kernels
+## 12. Build nonlinear Gaussian kernels
 
-**Objetivo geral:** Os *kernels* lineares que criamos até agora (`ZG`, `ZP`) capturam apenas relações **aditivas**. No entanto, as interações biológicas são frequentemente **não-lineares**. Para capturar esses padrões complexos, construiremos dois tipos de *kernels* não-lineares. Estes *kernels* serão então usados para construir os modelos na seção 10.
+The linear kernels above capture additive similarity. To explore nonlinear relationships, we also build Gaussian kernels for the genomic and phenomic spaces.
 
-**Tipos de kernels:**
+### 12.1 Optimization function for the Gaussian kernel
 
-  * **GK (Gaussian Kernel):** Mede a similaridade usando uma função gaussiana da distância. É poderoso para capturar "relações locais", onde indivíduos muito similares têm uma relação muito mais forte do que indivíduos moderadamente similares.
-  * **AK (arc-cosseno Kernel):** Mede a similaridade com base no *ângulo* (correlação) entre os vetores dos indivíduos. É derivado da teoria de redes neurais e é eficaz na captura de padrões complexos e não-aditivos.
-
-### 9.1) Gaussian kernel (GK)
-
-Construir kernels baseados em funções de similaridade gaussiana, que capturam relações não lineares entre genótipos e fenótipos.
-
-#### 9.1.1) Função de Otimização do Kernel Gaussiano
-
-Antes de construir o *kernel*, precisamos encontrar o **hiperparâmetro de suavidade (`h`)** ideal. Um `h` errado pode fazer o modelo ter *overfitting* ou *underfitting*.
-
-Esta função, `margh.fun`, é uma "função objetivo" que será usada por um otimizador (`optim`). Seu objetivo é encontrar o valor de `h` (e um parâmetro de escala `phi`) que **maximiza a log-verossimilhança marginal**.
-
-Em termos simples: dado o nosso *kernel* candidato (`Kh`) e nossos dados fenotípicos (`y`), a função calcula o quão "prováveis" são os dados. O otimizador encontrará o `h` que torna os dados o mais provável possível.
-
-  * `Kh <- exp(-h * D / q)`: Constrói o *kernel* gaussiano candidato.
-  * `eigenKh`: Realiza a decomposição espectral, um passo matemático necessário.
-  * `lden <- ...`: Calcula a log-verossimilhança marginal.
-  * `return(-(lden + lprior))`: Retorna o *negativo* da log-verossimilhança (pois os otimizadores, por padrão, *minimizam*).
+The function below optimizes the Gaussian bandwidth parameter by maximizing the marginal likelihood.
 
 ```{r gk-functions}
-# Função de otimização do hiperparâmetro h
 margh.fun <- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
                       nuh = NULL, Sch = NULL, prior = NULL) {
-  h <- theta[1]    # Parâmetro de suavidade do kernel
-  phi <- theta[2]  # Parâmetro de escala
-  
-  Kh <- exp(-h * D / q)  # Matriz kernel gaussiana
-  eigenKh <- eigen(Kh)   # Decomposição espectral
-  
-  nr <- length(which(eigenKh$values > 1e-10))  # Número de componentes relevantes
-  Uh <- eigenKh$vectors[, 1:nr]                # Autovetores
-  Sh <- eigenKh$values[1:nr]                   # Autovalores
-  
-  d <- t(Uh) %*% scale(y, scale = FALSE)    # Projeção dos dados
-  
-  # Log-verossimilhança marginal
+  h <- theta[1]
+  phi <- theta[2]
+
+  Kh <- exp(-h * D / q)
+  eigenKh <- eigen(Kh)
+
+  nr <- length(which(eigenKh$values > 1e-10))
+  Uh <- eigenKh$vectors[, 1:nr, drop = FALSE]
+  Sh <- eigenKh$values[1:nr]
+
+  d <- t(Uh) %*% scale(y, scale = FALSE)
+
   lden <- -0.5 * sum(log(1 + phi * Sh)) -
     (nu + nr - 1) / 2 * log(Sc + sum(d^2 / (1 + phi * Sh)))
-  
-  # Prior opcional sobre h
+
   if (!is.null(prior)) {
     lprior <- dgamma(h, nuh, Sch, log = TRUE)
   } else {
     lprior <- 0
   }
-  
-  return(-(lden + lprior))  # Retorna negativo da log-verossimilhança
+
+  return(-(lden + lprior))
 }
 ```
 
-#### 9.1.2) Construindo o Kernel Gaussiano Genômico (GGK)
+### 12.2 Genomic Gaussian kernel (`GGK`)
 
-Aqui, aplicamos a função de otimização aos nossos dados genômicos.
-
-1.  `DG <- (as.matrix(dist(Geno)))^2`: Calcula a matriz de **distância** Euclidiana ao quadrado entre todos os **genótipos únicos** (ex: 300x300).
-2.  `DG_proj <- ...`: Este é um passo crucial. `DG` é uma matriz de genótipos únicos, mas nosso modelo precisa de um *kernel* no espaço das **observações** (ex: 1200x1200). Este código "projeta" a matriz de distância `DG` para o espaço de observação `Pheno` usando a matriz de incidência `Z`. O resultado `DG_proj[i, j]` conterá a distância genômica entre a observação *i* e a observação *j*.
-3.  `solG <- optim(...)`: Executa o otimizador (`optim`) usando `margh.fun` para encontrar o melhor `h` (baseado no trait `Pheno$GY`).
-4.  `hG <- solG$par[1]`: Extrai o valor `h` otimizado.
-5.  `GGK <- ...`: Constrói a matriz *kernel* `GGK` final usando o `hG` otimizado.
+We first compute genomic distances among unique genotypes, then project them into the observation space.
 
 ```{r ggk}
-# Distâncias genômicas
 DG <- (as.matrix(dist(Geno)))^2
 q05G <- quantile(DG, 0.05)
-DG[1:5,1:5]
 
-# Projeta DG para o espaço dos genótipos
 IDs <- as.character(Pheno$Pedigree)
-DG <- DG[rownames(DG) %in% IDs, rownames(DG) %in% IDs]
+DG <- DG[rownames(DG) %in% IDs, rownames(DG) %in% IDs, drop = FALSE]
 
 IDs <- factor(IDs, levels = rownames(DG))
 Z <- as.matrix(model.matrix(~ IDs - 1))
+rownames(Z) <- Pheno$ObsID
+
 ZD <- tcrossprod(Z, DG)
 DG_proj <- tcrossprod(ZD, Z)
+
+rownames(DG_proj) <- Pheno$ObsID
+colnames(DG_proj) <- Pheno$ObsID
 ```
 
-```{r ggk-1, eval = FALSE}
-# Otimização
-solG <- optim(c(1, 1), margh.fun, y = Pheno$GY, D = DG_proj, q = q05G,
-              method = "L-BFGS-B", lower = c(0.05, 0.05), upper = c(6, 30))
+```{r ggk-optimize, eval=FALSE}
+solG <- optim(
+  c(1, 1),
+  margh.fun,
+  y = Pheno$GY,
+  D = DG_proj,
+  q = q05G,
+  method = "L-BFGS-B",
+  lower = c(0.05, 0.05),
+  upper = c(6, 30)
+)
 ```
 
-```{r, include=FALSE}
+```{r ggk-read-solution, include=FALSE}
 solG <- readRDS("output/Matrizes/solG.RDS")
 ```
 
-```{r ggk-2}
+```{r ggk-final}
 hG <- solG$par[1]
 
-# Kernel genômico
-GGK <- exp(-hG * DG_proj / median(DG_proj))
-```
+GGK <- exp(-hG * DG_proj / q05G)
+rownames(GGK) <- Pheno$ObsID
+colnames(GGK) <- Pheno$ObsID
 
-```{r ggk-checagem}
-# Checagem
 dim(GGK)
-GGK[1:5,1:5]
+GGK[1:5, 1:5]
 ```
 
-#### 9.1.3) Construindo o Kernel Gaussiano Fenômico (PGK)
+### 12.3 Phenomic Gaussian kernel (`PGK`)
 
-Repetimos a mesma lógica, mas desta vez usando os dados espectrais (NIR).
-
-1.  `DP <- (as.matrix(dist(NIR.all)))^2`: Calcula a matriz de distância Euclidiana ao quadrado diretamente dos dados espectrais (`NIR.all`). Como `NIR.all` já está no nível de observação (N total x N total), esta matriz `DP` já tem a dimensão correta.
-2.  `DP_proj <- ...`: Este passo projeta a matriz `DP` (apesar de já ter a dimensão correta), garantindo que ela esteja perfeitamente alinhada com os `rownames` das outras matrizes *kernel*.
-3.  `solP <- optim(...)`: Executa o otimizador para encontrar o `hP` ideal para os dados NIR.
-4.  `PGK <- ...`: Constrói o *kernel* `PGK` final usando o `hP` otimizado.
+The phenomic Gaussian kernel uses Euclidean distances derived from the standardized NIR matrix.
 
 ```{r pgk}
-# Distâncias fenômicas
 DP <- (as.matrix(dist(NIR.all)))^2
 q05P <- quantile(DP, 0.05)
 
 IDs <- rownames(NIR.all)
-DP <- DP[rownames(DP) %in% IDs, rownames(DP) %in% IDs]
+DP <- DP[rownames(DP) %in% IDs, rownames(DP) %in% IDs, drop = FALSE]
 
-IDs <- IDs
 Z <- as.matrix(model.matrix(~ IDs - 1))
+rownames(Z) <- IDs
+
 Z0 <- tcrossprod(Z, Z)
 ZD <- tcrossprod(Z0, DP)
 DP_proj <- tcrossprod(ZD, Z0)
+
+rownames(DP_proj) <- IDs
+colnames(DP_proj) <- IDs
 ```
 
-```{r pgk-1, eval = FALSE}
-# Otimização
-solP <- optim(c(1, 1), margh.fun, y = Pheno$GY, D = DP_proj, q = q05P,
-              method = "L-BFGS-B", lower = c(0.05, 0.05), upper = c(6, 30))
+```{r pgk-optimize, eval=FALSE}
+solP <- optim(
+  c(1, 1),
+  margh.fun,
+  y = Pheno$GY,
+  D = DP_proj,
+  q = q05P,
+  method = "L-BFGS-B",
+  lower = c(0.05, 0.05),
+  upper = c(6, 30)
+)
 ```
 
-```{r, include=FALSE}
+```{r pgk-read-solution, include=FALSE}
 solP <- readRDS("output/Matrizes/solP.RDS")
 ```
 
-```{r pgk-2}
+```{r pgk-final}
 hP <- solP$par[1]
 
-# Kernel fenômico
-PGK <- exp(-hP * DP_proj / median(DP_proj))
-```
+PGK <- exp(-hP * DP_proj / q05P)
+rownames(PGK) <- rownames(NIR.all)
+colnames(PGK) <- rownames(NIR.all)
 
-```{r pgk-checagem}
-# Checagem
 dim(PGK)
-PGK[1:5,1:5]
+PGK[1:5, 1:5]
 ```
 
-#### 9.1.4) Interações com Kernels Gaussianos
-
-Agora, podemos criar *kernels* de interação não-linear usando o produto de Hadamard com nossos novos *kernels* `GGK` e `PGK`. Isso nos permite modelar interações GxE e PxE **não-lineares**.
-
-  * GGKE: interação genômico gaussiano × ambiente (categórico).
-  * PGKE: interação fenômico gaussiano × ambiente (categórico).
-  * GGKW: interação genômico gaussiano × clima.
-  * PGKW: interação fenômico gaussiano × clima.
+### 12.4 Gaussian interaction kernels
 
 ```{r interactions-gk}
-GGKE    <- GGK * ZEZE
-PGKE    <- PGK * ZEZE
-GGKW    <- GGK * ZW
-PGKW    <- PGK * ZW
+GGKE <- GGK * ZEZE
+PGKE <- PGK * ZEZE
+GGKW <- GGK * ZW
+PGKW <- PGK * ZW
 ```
 
-### 9.2) Arc-cossin Kernels (AK)
+## 13. Build nonlinear arc-cosine kernels
 
-Este é um método alternativo para capturar não-linearidade. O *kernel* Arc-cosseno é baseado no **ângulo** (ou correlação) entre os vetores de características dos indivíduos.
+Arc-cosine kernels offer a second nonlinear representation. They are inspired by neural-network geometry and can capture hierarchical nonlinear patterns through recursive transformations.
 
-Uma característica chave deste método é o "nível de recursão" (`nl`). Um `nl = 1` é como um modelo linear, mas `nl > 1` é análogo a adicionar camadas a uma rede neural, permitindo que o *kernel* capture padrões cada vez mais complexos.
-
-#### 9.2.1) Funções Auxiliares do Kernel Arc-Cosseno
-
-Precisamos de um conjunto de funções para construir e otimizar este *kernel*.
-
-  * `AK1.fun(X)`: Constrói o *kernel* de nível 1 (base). Ele calcula a correlação, converte em ângulo (`acos`) e então calcula o *kernel* com base nesse ângulo.
-  * `AK.fun(AK1, nl)`: A função de recursão. Ela pega um *kernel* (como `AK1`) e aplica a transformação de arc-cosseno `nl` vezes.
-  * `marg.AK(y, AK1, ml)`: A função de otimização. Assim como `margh.fun`, ela usa a log-verossimilhança marginal. Ela testa iterativamente `nl = 1`, `nl = 2`, etc., até um máximo `ml`, e **retorna o nível `nl`** que maximizou a verossimilhança.
+### 13.1 Helper functions for arc-cosine kernels
 
 ```{r ak-functions}
-###############################################################
-# Código para AK (arc-cosseno Kernel)
-# Referência: Crossa et al., 2019
-# Objetivo: Ajustar um modelo de predição genômica usando kernel arc-cosseno
-# com seleção automática do nível de recursão e modelagem de interação G×E.
-###############################################################
-
-# Função para calcular o kernel arc-cosseno de nível 1
 AK1.fun <- function(X) {
-  n <- nrow(X)
-  cosalfa <- cor(t(X))  # Correlação entre vetores
+  cosalfa <- cor(t(X))
   cosalfa[cosalfa > 1] <- 1
   cosalfa[cosalfa < -1] <- -1
-  angulo <- acos(cosalfa)  # Ângulo entre vetores
-  mag <- sqrt(apply(X, 1, function(x) crossprod(x)))  # Magnitude dos vetores
-  sxy <- tcrossprod(mag)  # Produto cruzado das magnitudes
+  angulo <- acos(cosalfa)
+  mag <- sqrt(apply(X, 1, function(x) crossprod(x)))
+  sxy <- tcrossprod(mag)
   AK1 <- (1 / pi) * sxy * (sin(angulo) + (pi - angulo) * cosalfa)
-  AK1 <- AK1 / median(AK1, na.rm = TRUE)  # Normalização
+  AK1 <- AK1 / median(AK1, na.rm = TRUE)
   colnames(AK1) <- rownames(X)
   rownames(AK1) <- rownames(X)
   return(AK1)
 }
 
-# Função para selecionar o nível ótimo de recursão
 marg.AK <- function(y, AK1, ml) {
   lden.fun <- function(phi, nr, Uh, Sh, d) {
-    lden <- -0.5 * sum(log((1 + phi * Sh))) - (nr - 1) / 2 * log(sum(d^2 / ((1 + phi * Sh))))
+    lden <- -0.5 * sum(log(1 + phi * Sh)) -
+      (nr - 1) / 2 * log(sum(d^2 / (1 + phi * Sh)))
     return(-lden)
   }
-  
+
   vero <- function(y, GC) {
     Kh <- GC
     eigenKh <- eigen(Kh)
     nr <- length(which(eigenKh$values > 1e-10))
-    Uh <- eigenKh$vectors[, 1:nr]
+    Uh <- eigenKh$vectors[, 1:nr, drop = FALSE]
     Sh <- eigenKh$values[1:nr]
     d <- t(Uh) %*% scale(y, scale = FALSE)
     sol <- optimize(lden.fun, nr = nr, Uh = Uh, Sh = Sh, d = d,
                     lower = 0.0005, upper = 200)
     phi <- sol[[1]]
-    log.vero <- 0.5 * sum(log((1 + phi * Sh))) -
-      (nr - 1) / 2 * log(sum(d^2 / ((1 + phi * Sh))))
+    log.vero <- 0.5 * sum(log(1 + phi * Sh)) -
+      (nr - 1) / 2 * log(sum(d^2 / (1 + phi * Sh)))
     return(log.vero)
   }
-  
+
   GC <- AK1
   l <- 1
   GC2 <- GC
   vero1 <- vero(y = y, GC = GC2)
   m <- 0
-  
+
   while (m == 0 && (l < ml)) {
     l <- l + 1
     GC <- AK.fun(AK1 = GC2, nl = 1)
     GC2 <- GC
     vero2 <- vero(y = y, GC = GC2)
-    if (vero2 < vero1) m = 1
+    if (vero2 < vero1) m <- 1
     vero1 <- vero2
   }
-  
-  return(l - 1)  # Retorna o nível ótimo de recursão
+
+  return(l - 1)
 }
 
-# Função para aplicar recursão ao kernel arc-cosseno
 AK.fun <- function(AK1, nl) {
   n <- nrow(AK1)
   AK <- AK1
@@ -793,172 +836,250 @@ AK.fun <- function(AK1, nl) {
 }
 ```
 
-#### 9.2.2) Construindo o Kernel Arc-Cosseno Genômico (GAK)
-
-1.  `GAK1 <- AK1.fun(Geno)`: Calcula o *kernel* base (`nl=1`) a partir dos dados dos **genótipos únicos**.
-2.  `G <- tcrossprod(...)`: Projeta o *kernel* `GAK1` (ex: 300x300) para o **espaço de observação** (ex: 1200x1200) para a otimização.
-3.  `Gl <- marg.AK(...)`: Executa a otimização para encontrar o **nível de recursão ótimo (`Gl`)** que melhor explica `Pheno$GY`.
-4.  `G.L <- tcrossprod(...)`: Projeta o *kernel* base `GAK1` para o espaço de observação final (similar ao passo 2).
-5.  `GAK <- AK.fun(...)`: Constrói o *kernel* **`GAK` final** aplicando a transformação de arc-cosseno `Gl` vezes.
+### 13.2 Genomic arc-cosine kernel (`GAK`)
 
 ```{r gak}
-# Calcula o kernel arc-cosseno de nível 1 com base na matriz de marcadores
 GAK1 <- AK1.fun(Geno)
 dim(GAK1)
 GAK1[1:5, 1:5]
 
-# Seleciona os IDs do conjunto de dados
-IDs <- as.character(Pheno[, "Pedigree"])
-GAK1 <- GAK1[rownames(GAK1) %in% IDs, rownames(GAK1) %in% IDs]
+IDs <- as.character(Pheno$Pedigree)
+GAK1 <- GAK1[rownames(GAK1) %in% IDs, rownames(GAK1) %in% IDs, drop = FALSE]
 
-# Projeta o kernel para o espaço dos genótipos de treino
 IDs <- factor(IDs, levels = rownames(GAK1))
 Z <- as.matrix(model.matrix(~ IDs - 1))
+rownames(Z) <- Pheno$ObsID
 G <- tcrossprod(tcrossprod(Z, GAK1), Z)
 
-# Seleciona o nível ótimo de recursão
 Gl <- marg.AK(y = Pheno$GY, AK1 = G, ml = 50)
 
-# Projeta o kernel para todos os indivíduos
-IDs.L <- Pheno[, "Pedigree"]
-IDs.L <- factor(IDs.L, levels = rownames(GAK1))
+IDs.L <- factor(Pheno$Pedigree, levels = rownames(GAK1))
 Z.L <- as.matrix(model.matrix(~ IDs.L - 1))
+rownames(Z.L) <- Pheno$ObsID
 G.L <- tcrossprod(tcrossprod(Z.L, GAK1), Z.L)
 
-# Aplica recursão
 GAK <- AK.fun(AK1 = G.L, nl = Gl)
+rownames(GAK) <- Pheno$ObsID
+colnames(GAK) <- Pheno$ObsID
 ```
 
-```{r gak-checagem}
-# Checagem
+```{r gak-check}
 dim(GAK)
 GAK[1:5, 1:5]
 ```
 
-#### 9.2.3) Construindo o Kernel Arc-Cosseno Fenômico (PAK)
-
-Repetimos a lógica para os dados NIR.
-
-1.  `PAK1 <- AK1.fun(NIR.all)`: Calcula o *kernel* base (`nl=1`) a partir dos dados espectrais (`NIR.all`).
-2.  `P <- tcrossprod(...)`: Projeta/alinha o *kernel* `PAK1`.
-3.  `Pl <- marg.AK(...)`: Encontra o **nível de recursão ótimo (`Pl`)** para os dados NIR.
-4.  `P.L <- tcrossprod(...)`: Projeta o *kernel* base `PAK1` para o espaço de observação final.
-5.  `PAK <- AK.fun(...)`: Constrói o *kernel* **`PAK` final** aplicando a transformação `Pl` vezes.
+### 13.3 Phenomic arc-cosine kernel (`PAK`)
 
 ```{r pak}
-# Calcula o kernel arc-cosseno de nível 1 com base na matriz fenômica
 PAK1 <- AK1.fun(NIR.all)
 dim(PAK1)
 PAK1[1:5, 1:5]
 
-# Seleciona os IDs do conjunto de dados
-IDs <- as.character(rownames(NIR.all))
-PAK1 <- PAK1[rownames(PAK1) %in% IDs, rownames(PAK1) %in% IDs]
+IDs <- rownames(NIR.all)
+PAK1 <- PAK1[rownames(PAK1) %in% IDs, rownames(PAK1) %in% IDs, drop = FALSE]
 
-# Projeta o kernel para o espaço dos fenótipos
-IDs <- IDs
 Z <- as.matrix(model.matrix(~ IDs - 1))
+rownames(Z) <- IDs
 Z0 <- tcrossprod(Z, Z)
 ZD <- tcrossprod(Z0, PAK1)
 P <- tcrossprod(ZD, Z0)
 
-# Seleciona o nível ótimo de recursão
 Pl <- marg.AK(y = Pheno$GY, AK1 = P, ml = 50)
 
-# Projeta o kernel para todos os indivíduos
 IDs.L <- rownames(NIR.all)
 Z.L <- as.matrix(model.matrix(~ IDs.L - 1))
+rownames(Z.L) <- IDs.L
 Z0.L <- tcrossprod(Z.L, Z.L)
 P.L <- tcrossprod(tcrossprod(Z0.L, PAK1), Z0.L)
 
-# Aplica recursão
 PAK <- AK.fun(AK1 = P.L, nl = Pl)
+rownames(PAK) <- rownames(NIR.all)
+colnames(PAK) <- rownames(NIR.all)
 ```
 
-```{r pak-checagem}
+```{r pak-check}
 dim(PAK)
 PAK[1:5, 1:5]
 ```
 
-#### 9.2.4) Interações com Arc-cosseno Kernels
+### 13.4 Arc-cosine interaction kernels
 
-Finalmente, criamos os *kernels* de interação não-linear finais usando o produto de Hadamard com `GAK` e `PAK`.
-
-  * GAKE: interação GAK × Ambiente (Categórico).
-  * PAKE: interação PAK × Ambiente (Categórico).
-  * GAKW: interação GAK × Clima (Baseado em ECs).
-  * PAKW: interação PAK × Clima (Baseado em ECs).
-
-```{r interaction-AK}
-# GAK × Ambiente
+```{r interaction-ak}
 GAKE <- GAK * ZEZE
-GAKE[1:5,1:5]
-
-# PAK × Ambiente
 PAKE <- PAK * ZEZE
-PAKE[1:5,1:5]
-
-# GAK × Clima
 GAKW <- GAK * ZW
-GAKW[1:5,1:5]
-
-# PAK × Clima
 PAKW <- PAK * ZW
-PAKW[1:5,1:5]
+
+GAKE[1:5, 1:5]
+PAKE[1:5, 1:5]
+GAKW[1:5, 1:5]
+PAKW[1:5, 1:5]
 ```
 
-## 10) Limpar o ambiente
+## 14. Summarize nonlinear kernels
 
-Esta é uma etapa crucial de **gerenciamento de memória** e **checkpointing** (salvamento de progresso).
+The table below provides a final integrity check for the nonlinear kernels before export.
 
-O processo de criação de *kernels* (especialmente os *kernels* GK e AK nas seções 8 e 9) é computacionalmente e intensivo em termos de memória. Ele cria muitos objetos intermediários grandes (ex: `DG`, `DP`, `solG`, `GAK1`, `Geno.a`, etc.) que não são mais necessários para a modelagem.
+```{r kernel-summary-nonlinear}
+kernel_inventory_nonlinear <- bind_rows(
+  check_kernel_alignment(GGK, reference_ids) %>% mutate(kernel = "GGK"),
+  check_kernel_alignment(PGK, reference_ids) %>% mutate(kernel = "PGK"),
+  check_kernel_alignment(GAK, reference_ids) %>% mutate(kernel = "GAK"),
+  check_kernel_alignment(PAK, reference_ids) %>% mutate(kernel = "PAK"),
+  check_kernel_alignment(GGKE, reference_ids) %>% mutate(kernel = "GGKE"),
+  check_kernel_alignment(PGKE, reference_ids) %>% mutate(kernel = "PGKE"),
+  check_kernel_alignment(GGKW, reference_ids) %>% mutate(kernel = "GGKW"),
+  check_kernel_alignment(PGKW, reference_ids) %>% mutate(kernel = "PGKW"),
+  check_kernel_alignment(GAKE, reference_ids) %>% mutate(kernel = "GAKE"),
+  check_kernel_alignment(PAKE, reference_ids) %>% mutate(kernel = "PAKE"),
+  check_kernel_alignment(GAKW, reference_ids) %>% mutate(kernel = "GAKW"),
+  check_kernel_alignment(PAKW, reference_ids) %>% mutate(kernel = "PAKW")
+) %>%
+  dplyr::select(kernel, everything())
 
-Se não limpássemos o ambiente, correríamos um sério risco de ficar sem RAM ao tentar ajustar os modelos `BGLR` na próxima seção.
+knitr::kable(
+  kernel_inventory_nonlinear,
+  caption = "Diagnostic summary of the nonlinear and interaction kernels."
+)
+```
 
-A estratégia aqui é dupla:
+## 15. Diagnostic figures for article reporting
 
-1.  **Checkpointing (Cache):** Primeiro, identificamos todos os objetos *essenciais* que precisamos para a próxima etapa (nossos *kernels* finais e `Pheno`) na lista `keep_names`. Em seguida, salvamos cada um deles como um arquivo `.rds` individual. Isso atua como um ponto de salvamento. Se o R travar durante a modelagem, podemos reiniciar e carregar esses arquivos diretamente, sem ter que re-executar todo o script (o que poderia levar horas).
-2.  **Redefinição de Memória (Hard Reset):** Após salvar, o script remove *todos os outros objetos* (`to_remove`) da memória. Em seguida, ele chama o "coletor de lixo" (`gc()`) e **recarrega imediatamente** os arquivos `.rds` que acabamos de salvar. Este processo de salvar, limpar tudo e recarregar é a maneira mais robusta de garantir que o R libere toda a memória "lixo" e comece a próxima etapa com o ambiente mais limpo possível.
+To keep the visual narrative aligned with the manuscript, we generate a single integrated diagnostic figure with two rows and three columns. The first row contains the genomic kernels and the second row contains the phenomic kernels. This layout improves side-by-side comparison between linear, Gaussian, and arc-cosine structures while preserving a compact figure format for the article.
 
-```{r keep_names, message = FALSE}
-# Liste aqui os objetos que deseja manter no ambiente:
-keep_names <- c(
-  # matrizes / objetos para modelos
-  "ZE", "ZG", "ZP", "ZGZE", "ZPZE", "ZW", "ZGZW", "ZPZW",
-  # Kernels
-  "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW", 
-  "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW",
-  # outros objetos importantes
-  "Pheno", "Pedigree"
+### 15.1 Integrated genomic and phenomic kernel figure
+
+```{r kernel-diagnostic-figure-integrated, fig.width=12, fig.height=8, fig.cap="Figure 1. Integrated diagnostic view of the genomic and phenomic kernel families. The first row shows the genomic kernels: linear genomic kernel (ZG), Gaussian genomic kernel (GGK), and arc-cosine genomic kernel (GAK). The second row shows the phenomic kernels: linear phenomic kernel (ZP), Gaussian phenomic kernel (PGK), and arc-cosine phenomic kernel (PAK)."}
+p_zg <- plot_kernel_excerpt(
+  ZG,
+  title = "ZG",
+  subtitle = "Linear genomic kernel",
+  n_show = 60
 )
 
-# Confirmação (opcional): mostra o que será removido e o que será mantido
+p_ggk <- plot_kernel_excerpt(
+  GGK,
+  title = "GGK",
+  subtitle = "Gaussian genomic kernel",
+  n_show = 60
+)
+
+p_gak <- plot_kernel_excerpt(
+  GAK,
+  title = "GAK",
+  subtitle = "Arc-cosine genomic kernel",
+  n_show = 60
+)
+
+p_zp <- plot_kernel_excerpt(
+  ZP,
+  title = "ZP",
+  subtitle = "Linear phenomic kernel",
+  n_show = 60
+)
+
+p_pgk <- plot_kernel_excerpt(
+  PGK,
+  title = "PGK",
+  subtitle = "Gaussian phenomic kernel",
+  n_show = 60
+)
+
+p_pak <- plot_kernel_excerpt(
+  PAK,
+  title = "PAK",
+  subtitle = "Arc-cosine phenomic kernel",
+  n_show = 60
+)
+
+kernel_integrated_plot <- patchwork::wrap_plots(
+  p_zg, p_ggk, p_gak,
+  p_zp, p_pgk, p_pak,
+  ncol = 3
+) +
+  patchwork::plot_annotation(
+    title = "Integrated diagnostic view of genomic and phenomic kernels",
+    subtitle = "Top row: genomic kernels | Bottom row: phenomic kernels",
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 13, hjust = 0.5),
+      plot.subtitle = element_text(size = 10.5, hjust = 0.5)
+    )
+  )
+
+print(kernel_integrated_plot)
+
+ggsave(
+  filename = "output/Matrizes/figures/kernel_integrated_diagnostics.tiff",
+  plot = kernel_integrated_plot,
+  width = 14,
+  height = 9,
+  dpi = 300,
+  compression = "lzw",
+  bg = "white"
+)
+```
+
+## 16. Save outputs and reset the environment
+
+The kernel objects created in this tutorial are computationally expensive to reproduce. For that reason, the final step saves them as `.rds` files and cleans the workspace so the next modeling script can start from a lighter memory state.
+
+```{r save-and-clean, message=FALSE}
+keep_names <- c(
+  "ZE", "ZG", "ZP", "ZGZE", "ZPZE", "ZW", "ZGZW", "ZPZW",
+  "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",
+  "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW",
+  "Pheno", "Pedigree", "Pedigree_communs", "Geno.all", "NIR.all", "W"
+)
+
 current_objs <- ls(envir = .GlobalEnv)
 to_keep <- intersect(current_objs, keep_names)
 to_remove <- setdiff(current_objs, to_keep)
 
-message("Objetos que serão mantidos (", length(to_keep), "): ", paste(to_keep, collapse = ", "))
-message("Objetos que serão removidos (", length(to_remove), "): ", paste(head(to_remove, 40), collapse = ", "),
-        if (length(to_remove) > 40) paste0(" ... (+", length(to_remove) - 40, " mais)"))
+message("Objects kept (", length(to_keep), "): ", paste(to_keep, collapse = ", "))
+message(
+  "Objects removed (", length(to_remove), "): ",
+  paste(head(to_remove, 40), collapse = ", "),
+  if (length(to_remove) > 40) paste0(" ... (+", length(to_remove) - 40, " more)")
+)
 
-# Salva cada objeto como .rds individualmente
 for (obj_name in to_keep) {
   saveRDS(get(obj_name), file = file.path("output/Matrizes", paste0(obj_name, ".rds")))
 }
 
-# Executa remoção
+write.csv(
+  kernel_inventory_linear,
+  file = "output/Matrizes/kernel_inventory_linear.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  kernel_inventory_nonlinear,
+  file = "output/Matrizes/kernel_inventory_nonlinear.csv",
+  row.names = FALSE
+)
+
 rm(list = to_remove, envir = .GlobalEnv)
 gc()
 
-# Lista todos os arquivos .rds na pasta output/Matrizes
 rds_files <- list.files("output/Matrizes", pattern = "\\.rds$", full.names = TRUE)
 
-# Carrega cada objeto e atribui ao ambiente global com seu nome original
 for (file in rds_files) {
   obj_name <- tools::file_path_sans_ext(basename(file))
   assign(obj_name, readRDS(file), envir = .GlobalEnv)
 }
 
-# Confirmação opcional
-message("Objetos carregados: ", paste(tools::file_path_sans_ext(basename(rds_files)), collapse = ", "))
+message("Objects reloaded: ", paste(tools::file_path_sans_ext(basename(rds_files)), collapse = ", "))
 ```
+
+## 16. Final remarks
+
+This tutorial converts raw genomic, phenomic, and climatic information into a reproducible collection of aligned kernels ready for downstream prediction models.
+
+From a scientific workflow perspective, this script plays a structural role in the project:
+
+- it defines the observation order used by the modeling stage,
+- it makes the environmental representation explicit,
+- it stores the kernels as reusable computational artifacts,
+- and it documents how the linear and nonlinear relationships were encoded.
+
+In the next stage of the project, these kernels become the inputs for the genomic prediction models compared in the article.
