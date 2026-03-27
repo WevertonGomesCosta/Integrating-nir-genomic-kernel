@@ -487,18 +487,6 @@ all_variance <- pmap_dfr(
 # Ordenar (opcional)
 all_variance <- all_variance %>% arrange(Model, Rep, Trait, Component)
 
-# Salvar no formato .dat (tab-separado)
-arquivo_saida_dat <- file.path(base_dir, "variance_components_all.dat")
-write.table(
-  all_variance,
-  file = arquivo_saida_dat,
-  sep = "\t",
-  row.names = FALSE,
-  quote = FALSE
-)
-
-message("Arquivo consolidado salvo em: ", arquivo_saida_dat)
-
 # Salvar também como RDS para preservar estrutura
 arquivo_saida_rds <- file.path(base_dir, "variance_components_all.rds")
 saveRDS(all_variance, arquivo_saida_rds)

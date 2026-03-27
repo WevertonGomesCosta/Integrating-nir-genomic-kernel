@@ -3,8 +3,8 @@
 .RData
 .Ruserdata
 *.tiff
-/output/results/*.csv
-*.dat
-*.rds
 *.rar
-/output/Matrizes/*.rds
+*.dat
+/output/results/*.csv
+data/Article_documents
+data/Maize-NIRS-GBS-main
