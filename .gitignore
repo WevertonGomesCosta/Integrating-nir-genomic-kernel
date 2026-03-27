@@ -3,8 +3,8 @@
 .RData
 .Ruserdata
 *.tiff
-output/results/*.csv
+/output/results/*.csv
 *.dat
 *.rds
 *.rar
-output/Matrizes/*.rds
+/output/Matrizes/*.rds
