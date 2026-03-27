@@ -1,7 +1,7 @@
 ---
 title: "License"
 author: 
-  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, weverton.costa@ufv.br]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
@@ -11,39 +11,64 @@ output:
   highlight: github
 editor_options:
   chunk_output_type: console
-github-repo: wevertongomescosta/Integrating-nir-genomic-kernel
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-Este material foi produzido por [Costa, W. G.](https://github.com/WevertonGomesCosta) e está licenciado sob a **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License**.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
 
-Isso significa que você é livre para:
+## License overview
 
-- **Compartilhar** – copiar e redistribuir o material em qualquer formato ou mídia  
-- **Adaptar** – remixar, transformar e construir sobre o material  
+Unless otherwise noted, the materials made available in this repository and website are distributed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
 
-Desde que você siga os termos da licença:
+This licensing statement applies to the project documentation and manuscript-oriented materials associated with the study **"Kernel-Based Integration of Near-Infrared Spectroscopy and Genomic Data for Enhanced Predictive Performance"**, including rendered reports, explanatory text, figures, tables, and analytical narratives provided in this repository.
 
-- **Atribuição** – Você deve dar crédito apropriado, fornecer um link para a licença e indicar se foram feitas alterações. Deve fazê-lo de maneira razoável, mas não de forma a sugerir que o licenciante apoia você ou o seu uso.  
-- **Não Comercial** – Você não pode usar o material para fins comerciais.  
-- **Compartilhamento pela mesma licença** – Se você remixar, transformar ou construir sobre o material, deve distribuir suas contribuições sob a mesma licença que o original.  
+## What you may do
 
-Para mais informações, consulte a licença completa em:  
-[https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.pt](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.pt)
+Under this license, you are free to:
 
----
+- **Share** — copy and redistribute the material in any medium or format;
+- **Adapt** — remix, transform, and build upon the material.
 
-This material was produced by [Costa, W. G.](https://github.com/WevertonGomesCosta) and is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License**.
+## Conditions of use
 
-This means you are free to:
+These permissions are granted provided that you comply with the following conditions:
 
-- **Share** – copy and redistribute the material in any format or medium  
-- **Adapt** – remix, transform, and build upon the material  
+- **Attribution** — you must give appropriate credit, provide a link to the license, and indicate whether changes were made;
+- **NonCommercial** — you may not use the material for commercial purposes;
+- **ShareAlike** — if you remix, transform, or build upon the material, you must distribute your contributions under the same license.
 
-As long as you follow the license terms:
+## Scope and limitations
 
-- **Attribution** – You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.  
-- **Non-Commercial** – You may not use the material for commercial purposes.  
-- **ShareAlike** – If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.  
+Please note the following:
 
-For more information, see the full license at:  
-[https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
+- This license applies **unless a specific file, dataset, figure, or external resource indicates otherwise**;
+- Some data resources used in this project may originate from previously published studies or external repositories, and their reuse may be subject to the original source terms;
+- Users are responsible for verifying citation requirements, reuse permissions, and any additional restrictions associated with third-party materials;
+- This repository is provided for **research, educational, and reproducibility purposes**.
+
+## No warranty
+
+The materials are provided **as is**, without warranty of any kind, express or implied, including but not limited to fitness for a particular purpose, reproducibility under modified computational environments, or suitability for commercial deployment.
+
+## License link
+
+Full license text:
+
+[https://creativecommons.org/licenses/by-nc-sa/4.0/](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+## Citation and contact
+
+If you use this repository in academic work, please cite the corresponding manuscript and acknowledge the repository source.
+
+**Author / Contact**  
+Weverton Gomes da Costa  
+Departamento de Estatística, Universidade Federal de Viçosa (UFV)  
+Email: weverton.costa@ufv.br
+
+**Project website**  
+[https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/](https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/)
+
+**GitHub repository**  
+[https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel](https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel)
