@@ -6,3 +6,4 @@
 output/results/*.csv
 *.dat
 *.rds
+*.rar
