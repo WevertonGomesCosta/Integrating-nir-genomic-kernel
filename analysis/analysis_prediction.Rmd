@@ -8,7 +8,6 @@ output:
     toc: TRUE
     toc_depth: 3
     toc_float: TRUE
-  highlight: github
   code_download: yes
 editor_options:
   chunk_output_type: console
