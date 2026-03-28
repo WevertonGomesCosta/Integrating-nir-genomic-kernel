@@ -1246,7 +1246,7 @@ This last section is also written in a direct way: we list which objects will be
 
 ```{r save-and-clean, message=FALSE}
 keep_names <- c(
-  "ZE", "ZG", "ZP", "ZGZE", "ZPZE", "ZW", "ZGZW", "ZPZW",
+  "ZE", "ZEZE", "ZG", "ZP", "ZGZE", "ZPZE", "ZW", "ZGZW", "ZPZW",
   "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",
   "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW",
   "Pheno", "Pedigree", "Pedigree_communs", "Geno.all", "NIR.all", "W"
