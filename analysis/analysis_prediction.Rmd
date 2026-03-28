@@ -514,14 +514,12 @@ for (trait_name in traits_to_run) {
                   "nIter", "burnIn", "thin", "trait_name", "env_leave")
     ) %dopar% {
       model_label <- model_catalog$Model[m]
-      eta_label <- model_catalog$OriginalEta[m]
 
       run_dir <- file.path(
         "output", "results", "bglr_runs",
         "CV0",
         trait_name,
         model_label,
-        eta_label,
         "rep1",
         "fold1",
         env_leave
@@ -536,7 +534,7 @@ for (trait_name in traits_to_run) {
 
       save_prefix <- file.path(
         run_dir,
-        paste0("CV0_", trait_name, "_", model_label, "_", eta_label, "_rep1_fold1_", env_leave, "_")
+        paste0("CV0_", trait_name, "_", model_label, "_rep1_fold1_", env_leave, "_")
       )
 
       fit_cv0 <- BGLR(
