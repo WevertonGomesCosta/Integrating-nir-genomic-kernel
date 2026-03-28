@@ -992,250 +992,99 @@ kernel_inventory_nonlinear %>%
 
 ## 15. Diagnostic figures for article reporting
 
-To keep the visual narrative aligned with the manuscript, we generate a single integrated diagnostic figure with two rows and three columns. The first row contains the genomic kernels and the second row contains the phenomic kernels. This layout improves side-by-side comparison between linear, Gaussian, and arc-cosine structures while preserving a compact figure format for the article.
+To reveal the internal structure of the kernels more clearly, we now plot the **full matrices** instead of a small upper-left subset. Each matrix is reordered using hierarchical clustering based on the **kernel-induced distance** between individuals or observations:
 
-### 15.1 Integrated genomic and phenomic kernel figure
+\[
+d_{ij}=\sqrt{K_{ii}+K_{jj}-2K_{ij}}
+\]
 
-```{r kernel-diagnostic-figure-integrated, fig.width=12, fig.height=8, fig.cap="Figure 1. Integrated diagnostic view of the genomic and phenomic kernel families. The first row shows the genomic kernels: linear genomic kernel (ZG), Gaussian genomic kernel (GGK), and arc-cosine genomic kernel (GAK). The second row shows the phenomic kernels: linear phenomic kernel (ZP), Gaussian phenomic kernel (PGK), and arc-cosine phenomic kernel (PAK)."}
-n_show <- 60
+The same clustering order is then applied to the rows and columns of the matrix. This makes it easier to identify block structure, local similarity patterns, and contrasts among the linear, Gaussian, and arc-cosine kernels.
 
-# ZG
-ZG_sub <- ZG[seq_len(min(n_show, nrow(ZG))), seq_len(min(n_show, ncol(ZG))), drop = FALSE]
-ZG_df <- as.data.frame(as.table(ZG_sub))
-colnames(ZG_df) <- c("Row", "Column", "Value")
-ZG_df$Row <- factor(ZG_df$Row, levels = rev(rownames(ZG_sub)))
-ZG_df$Column <- factor(ZG_df$Column, levels = colnames(ZG_sub))
+Because these are square matrices, each heatmap is displayed with `coord_fixed()` and exported with `width = height` so that the visual aspect ratio matches the mathematical structure of the matrix.
 
-p_zg <- ggplot(ZG_df, aes(x = Column, y = Row, fill = Value)) +
-  geom_raster() +
-  scale_fill_gradient2(
-    low = "#2166AC",
-    mid = "white",
-    high = "#B2182B",
-    midpoint = median(ZG_df$Value, na.rm = TRUE),
-    name = "Kernel value"
-  ) +
-  labs(
-    title = "ZG",
-    subtitle = "Linear genomic kernel",
-    x = "Observation index",
-    y = "Observation index"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    plot.subtitle = element_text(size = 10, hjust = 0.5),
-    axis.title = element_text(face = "bold"),
-    axis.text = element_text(size = 8),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks = element_blank(),
-    legend.title = element_text(face = "bold"),
-    legend.text = element_text(size = 8),
-    panel.grid = element_blank()
-  )
-
-# GGK
-GGK_sub <- GGK[seq_len(min(n_show, nrow(GGK))), seq_len(min(n_show, ncol(GGK))), drop = FALSE]
-GGK_df <- as.data.frame(as.table(GGK_sub))
-colnames(GGK_df) <- c("Row", "Column", "Value")
-GGK_df$Row <- factor(GGK_df$Row, levels = rev(rownames(GGK_sub)))
-GGK_df$Column <- factor(GGK_df$Column, levels = colnames(GGK_sub))
-
-p_ggk <- ggplot(GGK_df, aes(x = Column, y = Row, fill = Value)) +
-  geom_raster() +
-  scale_fill_gradient2(
-    low = "#2166AC",
-    mid = "white",
-    high = "#B2182B",
-    midpoint = median(GGK_df$Value, na.rm = TRUE),
-    name = "Kernel value"
-  ) +
-  labs(
-    title = "GGK",
-    subtitle = "Gaussian genomic kernel",
-    x = "Observation index",
-    y = "Observation index"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    plot.subtitle = element_text(size = 10, hjust = 0.5),
-    axis.title = element_text(face = "bold"),
-    axis.text = element_text(size = 8),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks = element_blank(),
-    legend.title = element_text(face = "bold"),
-    legend.text = element_text(size = 8),
-    panel.grid = element_blank()
-  )
-
-# GAK
-GAK_sub <- GAK[seq_len(min(n_show, nrow(GAK))), seq_len(min(n_show, ncol(GAK))), drop = FALSE]
-GAK_df <- as.data.frame(as.table(GAK_sub))
-colnames(GAK_df) <- c("Row", "Column", "Value")
-GAK_df$Row <- factor(GAK_df$Row, levels = rev(rownames(GAK_sub)))
-GAK_df$Column <- factor(GAK_df$Column, levels = colnames(GAK_sub))
-
-p_gak <- ggplot(GAK_df, aes(x = Column, y = Row, fill = Value)) +
-  geom_raster() +
-  scale_fill_gradient2(
-    low = "#2166AC",
-    mid = "white",
-    high = "#B2182B",
-    midpoint = median(GAK_df$Value, na.rm = TRUE),
-    name = "Kernel value"
-  ) +
-  labs(
-    title = "GAK",
-    subtitle = "Arc-cosine genomic kernel",
-    x = "Observation index",
-    y = "Observation index"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    plot.subtitle = element_text(size = 10, hjust = 0.5),
-    axis.title = element_text(face = "bold"),
-    axis.text = element_text(size = 8),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks = element_blank(),
-    legend.title = element_text(face = "bold"),
-    legend.text = element_text(size = 8),
-    panel.grid = element_blank()
-  )
-
-# ZP
-ZP_sub <- ZP[seq_len(min(n_show, nrow(ZP))), seq_len(min(n_show, ncol(ZP))), drop = FALSE]
-ZP_df <- as.data.frame(as.table(ZP_sub))
-colnames(ZP_df) <- c("Row", "Column", "Value")
-ZP_df$Row <- factor(ZP_df$Row, levels = rev(rownames(ZP_sub)))
-ZP_df$Column <- factor(ZP_df$Column, levels = colnames(ZP_sub))
-
-p_zp <- ggplot(ZP_df, aes(x = Column, y = Row, fill = Value)) +
-  geom_raster() +
-  scale_fill_gradient2(
-    low = "#2166AC",
-    mid = "white",
-    high = "#B2182B",
-    midpoint = median(ZP_df$Value, na.rm = TRUE),
-    name = "Kernel value"
-  ) +
-  labs(
-    title = "ZP",
-    subtitle = "Linear phenomic kernel",
-    x = "Observation index",
-    y = "Observation index"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    plot.subtitle = element_text(size = 10, hjust = 0.5),
-    axis.title = element_text(face = "bold"),
-    axis.text = element_text(size = 8),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks = element_blank(),
-    legend.title = element_text(face = "bold"),
-    legend.text = element_text(size = 8),
-    panel.grid = element_blank()
-  )
-
-# PGK
-PGK_sub <- PGK[seq_len(min(n_show, nrow(PGK))), seq_len(min(n_show, ncol(PGK))), drop = FALSE]
-PGK_df <- as.data.frame(as.table(PGK_sub))
-colnames(PGK_df) <- c("Row", "Column", "Value")
-PGK_df$Row <- factor(PGK_df$Row, levels = rev(rownames(PGK_sub)))
-PGK_df$Column <- factor(PGK_df$Column, levels = colnames(PGK_sub))
-
-p_pgk <- ggplot(PGK_df, aes(x = Column, y = Row, fill = Value)) +
-  geom_raster() +
-  scale_fill_gradient2(
-    low = "#2166AC",
-    mid = "white",
-    high = "#B2182B",
-    midpoint = median(PGK_df$Value, na.rm = TRUE),
-    name = "Kernel value"
-  ) +
-  labs(
-    title = "PGK",
-    subtitle = "Gaussian phenomic kernel",
-    x = "Observation index",
-    y = "Observation index"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    plot.subtitle = element_text(size = 10, hjust = 0.5),
-    axis.title = element_text(face = "bold"),
-    axis.text = element_text(size = 8),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks = element_blank(),
-    legend.title = element_text(face = "bold"),
-    legend.text = element_text(size = 8),
-    panel.grid = element_blank()
-  )
-
-# PAK
-PAK_sub <- PAK[seq_len(min(n_show, nrow(PAK))), seq_len(min(n_show, ncol(PAK))), drop = FALSE]
-PAK_df <- as.data.frame(as.table(PAK_sub))
-colnames(PAK_df) <- c("Row", "Column", "Value")
-PAK_df$Row <- factor(PAK_df$Row, levels = rev(rownames(PAK_sub)))
-PAK_df$Column <- factor(PAK_df$Column, levels = colnames(PAK_sub))
-
-p_pak <- ggplot(PAK_df, aes(x = Column, y = Row, fill = Value)) +
-  geom_raster() +
-  scale_fill_gradient2(
-    low = "#2166AC",
-    mid = "white",
-    high = "#B2182B",
-    midpoint = median(PAK_df$Value, na.rm = TRUE),
-    name = "Kernel value"
-  ) +
-  labs(
-    title = "PAK",
-    subtitle = "Arc-cosine phenomic kernel",
-    x = "Observation index",
-    y = "Observation index"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    plot.subtitle = element_text(size = 10, hjust = 0.5),
-    axis.title = element_text(face = "bold"),
-    axis.text = element_text(size = 8),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks = element_blank(),
-    legend.title = element_text(face = "bold"),
-    legend.text = element_text(size = 8),
-    panel.grid = element_blank()
-  )
-
-kernel_integrated_plot <- (p_zg + p_ggk + p_gak) / (p_zp + p_pgk + p_pak) +
-  plot_annotation(
-    title = "Integrated diagnostic view of genomic and phenomic kernels",
-    subtitle = "Top row: genomic kernels | Bottom row: phenomic kernels",
-    theme = theme(
-      plot.title = element_text(face = "bold", size = 13, hjust = 0.5),
-      plot.subtitle = element_text(size = 10.5, hjust = 0.5)
-    )
-  )
-
-print(kernel_integrated_plot)
-
-ggsave(
-  filename = "output/Matrizes/figures/kernel_integrated_diagnostics.tiff",
-  plot = kernel_integrated_plot,
-  width = 14,
-  height = 9,
-  dpi = 300,
-  compression = "lzw",
-  bg = "white"
+```{r kernel-diagnostic-figure-square, fig.width=8, fig.height=8}
+kernel_plot_info <- data.frame(
+  KernelName = c("ZG", "GGK", "GAK", "ZP", "PGK", "PAK"),
+  KernelLabel = c(
+    "Linear genomic kernel",
+    "Gaussian genomic kernel",
+    "Arc-cosine genomic kernel",
+    "Linear phenomic kernel",
+    "Gaussian phenomic kernel",
+    "Arc-cosine phenomic kernel"
+  ),
+  stringsAsFactors = FALSE
 )
+
+dir.create("output/Matrizes/figures", recursive = TRUE, showWarnings = FALSE)
+
+for (i in seq_len(nrow(kernel_plot_info))) {
+
+  current_name <- kernel_plot_info$KernelName[i]
+  current_label <- kernel_plot_info$KernelLabel[i]
+  current_matrix <- get(current_name)
+
+  current_matrix <- as.matrix(current_matrix)
+  current_matrix <- (current_matrix + t(current_matrix)) / 2
+
+  diag_values <- diag(current_matrix)
+  distance_squared <- outer(diag_values, diag_values, "+") - 2 * current_matrix
+  distance_squared[distance_squared < 0] <- 0
+  distance_matrix <- sqrt(distance_squared)
+
+  hc <- hclust(as.dist(distance_matrix), method = "average")
+  ord <- hc$order
+
+  current_matrix_ordered <- current_matrix[ord, ord, drop = FALSE]
+
+  rownames(current_matrix_ordered) <- seq_len(nrow(current_matrix_ordered))
+  colnames(current_matrix_ordered) <- seq_len(ncol(current_matrix_ordered))
+
+  current_df <- as.data.frame(as.table(current_matrix_ordered))
+  colnames(current_df) <- c("Row", "Column", "Value")
+  current_df$Row <- factor(current_df$Row, levels = rev(unique(current_df$Row)))
+  current_df$Column <- factor(current_df$Column, levels = unique(current_df$Column))
+
+  current_plot <- ggplot(current_df, aes(x = Column, y = Row, fill = Value)) +
+    geom_raster() +
+    scale_fill_gradient2(
+      low = "#2166AC",
+      mid = "white",
+      high = "#B2182B",
+      midpoint = median(current_df$Value, na.rm = TRUE),
+      name = "Kernel value"
+    ) +
+    coord_fixed() +
+    labs(
+      title = current_name,
+      subtitle = current_label,
+      x = "Ordered observations",
+      y = "Ordered observations"
+    ) +
+    theme_minimal(base_size = 11) +
+    theme(
+      plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+      plot.subtitle = element_text(size = 10, hjust = 0.5),
+      axis.title = element_text(face = "bold"),
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      legend.title = element_text(face = "bold"),
+      legend.text = element_text(size = 8),
+      panel.grid = element_blank()
+    )
+
+  print(current_plot)
+
+  ggsave(
+    filename = paste0("output/Matrizes/figures/", current_name, "_ordered_heatmap.tiff"),
+    plot = current_plot,
+    width = 8,
+    height = 8,
+    dpi = 300,
+    compression = "lzw",
+    bg = "white"
+  )
+}
 ```
 
 ## 16. Save outputs and reset the environment
