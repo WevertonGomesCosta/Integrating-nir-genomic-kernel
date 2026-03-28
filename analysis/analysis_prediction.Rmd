@@ -123,11 +123,6 @@ n_cores
 model_catalog <- data.frame(
   ModelNumber = 1:18,
   Model = sprintf("M%02d", 1:18),
-  OriginalEta = c(
-    "Eta7", "Eta8", "Eta9", "Eta10", "Eta11", "Eta12",
-    "Eta16", "Eta17", "Eta18",
-    "Eta65", "Eta66", "Eta67", "Eta68", "Eta69", "Eta70", "Eta71", "Eta72", "Eta73"
-  ),
   Description = c(
     "E + G + GE",
     "E + P + PE",
@@ -318,14 +313,12 @@ for (trait_name in traits_to_run) {
                     "pedigrees_in_fold", "nIter", "burnIn", "thin", "trait_name", "rep_id", "fold")
       ) %dopar% {
         model_label <- model_catalog$Model[m]
-        eta_label <- model_catalog$OriginalEta[m]
 
         run_dir <- file.path(
           "output", "results", "bglr_runs",
           "CV1",
           trait_name,
           model_label,
-          eta_label,
           paste0("rep", rep_id),
           paste0("fold", fold)
         )
@@ -339,7 +332,7 @@ for (trait_name in traits_to_run) {
 
         save_prefix <- file.path(
           run_dir,
-          paste0("CV1_", trait_name, "_", model_label, "_", eta_label, "_rep", rep_id, "_fold", fold, "_")
+          paste0("CV1_", trait_name, "_", model_label, "_rep", rep_id, "_fold", fold, "_")
         )
 
         fit_cv1 <- BGLR(
@@ -376,12 +369,11 @@ for (trait_name in traits_to_run) {
           }
         }
 
-        list(model_number = m, eta_label = eta_label, model_label = model_label, result_table = out_cv1)
+        list(model_number = m, model_label = model_label, result_table = out_cv1)
       }
 
       for (k in seq_along(cv1_results)) {
         m <- cv1_results[[k]]$model_number
-        eta_label <- cv1_results[[k]]$eta_label
         model_label <- cv1_results[[k]]$model_label
         out_cv1 <- cv1_results[[k]]$result_table
 
@@ -390,11 +382,9 @@ for (trait_name in traits_to_run) {
           file = paste0(
             "output/results/CV1_",
             trait_name,
-            "_Eta", m,
+            "_", model_label,
             "_rep", rep_id,
             "_fold", fold,
-            "_", model_label,
-            "_Orig", eta_label,
             ".csv"
           ),
           row.names = FALSE
@@ -422,14 +412,12 @@ for (trait_name in traits_to_run) {
                     "nIter", "burnIn", "thin", "trait_name", "rep_id", "fold")
       ) %dopar% {
         model_label <- model_catalog$Model[m]
-        eta_label <- model_catalog$OriginalEta[m]
 
         run_dir <- file.path(
           "output", "results", "bglr_runs",
           "CV2",
           trait_name,
           model_label,
-          eta_label,
           paste0("rep", rep_id),
           paste0("fold", fold)
         )
@@ -443,7 +431,7 @@ for (trait_name in traits_to_run) {
 
         save_prefix <- file.path(
           run_dir,
-          paste0("CV2_", trait_name, "_", model_label, "_", eta_label, "_rep", rep_id, "_fold", fold, "_")
+          paste0("CV2_", trait_name, "_", model_label, "_rep", rep_id, "_fold", fold, "_")
         )
 
         fit_cv2 <- BGLR(
@@ -483,12 +471,11 @@ for (trait_name in traits_to_run) {
           }
         }
 
-        list(model_number = m, eta_label = eta_label, model_label = model_label, result_table = out_cv2)
+        list(model_number = m, model_label = model_label, result_table = out_cv2)
       }
 
       for (k in seq_along(cv2_results)) {
         m <- cv2_results[[k]]$model_number
-        eta_label <- cv2_results[[k]]$eta_label
         model_label <- cv2_results[[k]]$model_label
         out_cv2 <- cv2_results[[k]]$result_table
 
@@ -497,11 +484,9 @@ for (trait_name in traits_to_run) {
           file = paste0(
             "output/results/CV2_",
             trait_name,
-            "_Eta", m,
+            "_", model_label,
             "_rep", rep_id,
             "_fold", fold,
-            "_", model_label,
-            "_Orig", eta_label,
             ".csv"
           ),
           row.names = FALSE
@@ -577,12 +562,11 @@ for (trait_name in traits_to_run) {
         stringsAsFactors = FALSE
       )
 
-      list(model_number = m, eta_label = eta_label, model_label = model_label, result_table = out_cv0)
+      list(model_number = m, model_label = model_label, result_table = out_cv0)
     }
 
     for (k in seq_along(cv0_results)) {
       m <- cv0_results[[k]]$model_number
-      eta_label <- cv0_results[[k]]$eta_label
       model_label <- cv0_results[[k]]$model_label
       out_cv0 <- cv0_results[[k]]$result_table
 
@@ -592,11 +576,8 @@ for (trait_name in traits_to_run) {
           "output/results/CV0_",
           trait_name,
           "_", env_parts[1], "_", env_parts[2],
-          "_Eta", m,
-          "_rep1_fold1_",
-          model_label,
-          "_Orig", eta_label,
-          ".csv"
+          "_", model_label,
+          "_rep1_fold1.csv"
         ),
         row.names = FALSE
       )
@@ -621,14 +602,12 @@ for (trait_name in traits_to_run) {
                     "nIter", "burnIn", "thin", "trait_name", "env_leave")
       ) %dopar% {
         model_label <- model_catalog$Model[m]
-        eta_label <- model_catalog$OriginalEta[m]
 
         run_dir <- file.path(
           "output", "results", "bglr_runs",
           "CV00",
           trait_name,
           model_label,
-          eta_label,
           "rep1",
           "fold1",
           env_leave
@@ -643,7 +622,7 @@ for (trait_name in traits_to_run) {
 
         save_prefix <- file.path(
           run_dir,
-          paste0("CV00_", trait_name, "_", model_label, "_", eta_label, "_rep1_fold1_", env_leave, "_")
+          paste0("CV00_", trait_name, "_", model_label, "_rep1_fold1_", env_leave, "_")
         )
 
         fit_cv00 <- BGLR(
@@ -669,12 +648,11 @@ for (trait_name in traits_to_run) {
           stringsAsFactors = FALSE
         )
 
-        list(model_number = m, eta_label = eta_label, model_label = model_label, result_table = out_cv00)
+        list(model_number = m, model_label = model_label, result_table = out_cv00)
       }
 
       for (k in seq_along(cv00_results)) {
         m <- cv00_results[[k]]$model_number
-        eta_label <- cv00_results[[k]]$eta_label
         model_label <- cv00_results[[k]]$model_label
         out_cv00 <- cv00_results[[k]]$result_table
 
@@ -684,11 +662,8 @@ for (trait_name in traits_to_run) {
             "output/results/CV00_",
             trait_name,
             "_", env_parts[1], "_", env_parts[2],
-            "_Eta", m,
-            "_rep1_fold1_",
-            model_label,
-            "_Orig", eta_label,
-            ".csv"
+            "_", model_label,
+            "_rep1_fold1.csv"
           ),
           row.names = FALSE
         )
@@ -702,17 +677,22 @@ for (trait_name in traits_to_run) {
 
 This script produces the raw prediction outputs. The summaries, weighted averages, final tables, and final figures for the manuscript are generated in `visualization.Rmd`.
 
-The current output structure was designed to keep compatibility with the visualization parser while making the saved files more informative.
+The current output structure is fully standardized to the new pipeline.
 
-The CSV filenames in `output/results/` now include:
+The CSV filenames in `output/results/` now include only:
 
 - CV type
 - trait
-- Eta index used for parser compatibility
+- model label (`M01` to `M18`)
 - repetition
 - fold
-- model label (`M01` to `M18`)
-- original Eta label
+
+Examples:
+
+- `CV1_GY_M05_rep2_fold5.csv`
+- `CV2_KW_M12_rep8_fold3.csv`
+- `CV0_GY_CS11_WS_M10_rep1_fold1.csv`
+- `CV00_KW_CS12_WW_M18_rep1_fold1.csv`
 
 The auxiliary files generated by `BGLR` through `saveAt` are stored in subfolders under:
 
@@ -723,7 +703,6 @@ organized by:
 - CV type
 - trait
 - model
-- original Eta
 - repetition
 - fold
 - held-out environment when applicable
