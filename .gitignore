@@ -9,4 +9,6 @@
 data/Article_documents
 data/Maize-NIRS-GBS-main
 *.all.rds
-analysis/article_results_for_manuscript_updated.R
+output/tables/prediction_cv1_cv2_raw.csv
+output/tables/prediction_cv0_cv00_raw.csv
+output/tables//prediction_cv1_cv2_by_rep_fold_env.csv

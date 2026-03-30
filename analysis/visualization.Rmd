@@ -584,8 +584,8 @@ cv12_plot_data <- cv12_summary %>%
     ShortDescription = factor(ShortDescription, levels = model_catalog$ShortDescription)
   )
 
-lower_limit_cv12 <- min(cv12_plot_data$MeanCorrelation - cv12_plot_data$SDCorrelation, na.rm = TRUE)
-upper_limit_cv12 <- max(cv12_plot_data$MeanCorrelation + cv12_plot_data$SDCorrelation, na.rm = TRUE)
+lower_limit_cv12 <- min(0, min(cv12_plot_data$MeanCorrelation - cv12_plot_data$SDCorrelation, na.rm = TRUE) - 0.03)
+upper_limit_cv12 <- max(cv12_plot_data$MeanCorrelation + cv12_plot_data$SDCorrelation, na.rm = TRUE) + 0.03
 
 p_cv12 <- ggplot(cv12_plot_data, aes(x = ShortDescription, y = MeanCorrelation, fill = Group)) +
   geom_col(width = 0.75, color = "grey30") +
@@ -601,7 +601,10 @@ p_cv12 <- ggplot(cv12_plot_data, aes(x = ShortDescription, y = MeanCorrelation, 
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
   scale_y_continuous(
     name = "Predictive correlation",
-    limits = c(lower_limit_cv12 - 0.03, upper_limit_cv12 + 0.03)
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  coord_cartesian(
+    ylim = c(lower_limit_cv12, upper_limit_cv12)
   ) +
   scale_x_discrete(name = "Model description") +
   ggthemes::scale_fill_gdocs(name = "Comparison group") +
@@ -632,8 +635,8 @@ cvloo_plot_data <- cvloo_summary %>%
     Env_leave = factor(Env_leave, levels = c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW"))
   )
 
-lower_limit_cvloo <- min(cvloo_plot_data$MeanCorrelation - cvloo_plot_data$SDCorrelation, na.rm = TRUE)
-upper_limit_cvloo <- max(cvloo_plot_data$MeanCorrelation + cvloo_plot_data$SDCorrelation, na.rm = TRUE)
+lower_limit_cvloo <- min(0, min(cvloo_plot_data$MeanCorrelation - cvloo_plot_data$SDCorrelation, na.rm = TRUE) - 0.03)
+upper_limit_cvloo <- max(cvloo_plot_data$MeanCorrelation + cvloo_plot_data$SDCorrelation, na.rm = TRUE) + 0.03
 
 p_cvloo <- ggplot(cvloo_plot_data, aes(x = ShortDescription, y = MeanCorrelation, fill = Group)) +
   geom_col(width = 0.75, color = "grey30") +
@@ -650,7 +653,10 @@ p_cvloo <- ggplot(cvloo_plot_data, aes(x = ShortDescription, y = MeanCorrelation
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
   scale_y_continuous(
     name = "Predictive correlation",
-    limits = c(lower_limit_cvloo - 0.03, upper_limit_cvloo + 0.03)
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  coord_cartesian(
+    ylim = c(lower_limit_cvloo, upper_limit_cvloo)
   ) +
   scale_x_discrete(name = "Model description") +
   ggthemes::scale_fill_gdocs(name = "Comparison group") +
