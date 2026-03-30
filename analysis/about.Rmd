@@ -61,3 +61,53 @@ The project includes:
 The updated analytical pipeline is designed to support a careful revision of the manuscript. The main emphasis is to evaluate how genomic, phenomic, and weather information behave in the prediction process, rather than to assume that integration necessarily produces better performance.
 
 This makes the project useful both as a research report and as a methodological example of multi-source kernel modeling in plant breeding.
+
+---
+
+## Versão em português
+
+## Contexto do estudo
+
+Este projeto avalia estratégias baseadas em kernels para integrar marcadores genômicos, espectros NIR e covariáveis derivadas do clima em modelos de predição em milho.
+
+O estudo é focado em dois caracteres agronômicos:
+
+- produtividade de grãos (GY)
+- peso de 500 grãos (KW)
+
+As análises foram conduzidas em quatro macroambientes formados pela combinação entre ano e regime hídrico.
+
+## Por que este projeto foi organizado dessa forma
+
+O site e o repositório foram reestruturados para atender simultaneamente a dois objetivos:
+
+1. fornecer um pipeline analítico reprodutível para o estudo
+2. servir como um tutorial didático e transparente para leitores que desejam entender cada etapa analítica
+
+Por isso, o fluxo de trabalho foi organizado em páginas separadas que seguem a mesma ordem usada no processo de revisão do manuscrito.
+
+## Terminologia usada no projeto
+
+Um ajuste central na versão atual do projeto é a distinção entre **environment** e **weather**.
+
+- **Environment (`E`)** refere-se ao efeito categórico de macroambiente usado nos modelos.
+- **Weather (`W`)** refere-se ao kernel derivado de covariáveis meteorológicas obtidas da NASA POWER.
+
+Essa distinção é importante porque o kernel climático é construído apenas a partir de variáveis meteorológicas. Ele não inclui descritores ambientais mais amplos, como solo, manejo ou outros fatores em nível de local.
+
+## Principais componentes metodológicos
+
+O projeto inclui:
+
+- kernels genômicos e fenômicos lineares
+- kernels genômicos e fenômicos não lineares
+- efeitos categóricos de ambiente
+- kernels derivados do clima
+- termos de interação como `G × E`, `P × E`, `G × W` e `P × W`
+- predição Bayesiana multi-kernel usando `BGLR`
+
+## Ênfase científica atual
+
+O pipeline analítico atualizado foi desenhado para apoiar uma revisão cuidadosa do manuscrito. A ênfase principal é avaliar como as informações genômicas, fenômicas e climáticas se comportam no processo de predição, em vez de assumir que a integração necessariamente produz melhor desempenho.
+
+Isso torna o projeto útil tanto como relatório de pesquisa quanto como exemplo metodológico de modelagem multi-origem com kernels em melhoramento de plantas.

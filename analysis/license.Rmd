@@ -72,3 +72,62 @@ Email: wevertonufv@gmail.com
 
 **GitHub repository**  
 [https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel](https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel)
+
+---
+
+## Versão em português
+
+## Visão geral da licença
+
+Salvo indicação em contrário, os materiais disponibilizados neste repositório e neste site são distribuídos sob a **Licença Creative Commons Atribuição-NãoComercial-CompartilhaIgual 4.0 Internacional (CC BY-NC-SA 4.0)**.
+
+Esta declaração de licenciamento aplica-se à documentação do projeto e aos materiais orientados ao manuscrito associados a este estudo, incluindo relatórios renderizados, textos explicativos, figuras, tabelas e narrativas analíticas disponibilizadas neste repositório.
+
+## O que você pode fazer
+
+Sob esta licença, você é livre para:
+
+- **Compartilhar** — copiar e redistribuir o material em qualquer meio ou formato
+- **Adaptar** — remixar, transformar e criar a partir do material
+
+## Condições de uso
+
+Essas permissões são concedidas desde que você cumpra as seguintes condições:
+
+- **Atribuição** — você deve dar o devido crédito, fornecer um link para a licença e indicar se mudanças foram feitas
+- **NãoComercial** — você não pode usar o material para fins comerciais
+- **CompartilhaIgual** — se você remixar, transformar ou criar a partir do material, deverá distribuir suas contribuições sob a mesma licença
+
+## Escopo e limitações
+
+Observe o seguinte:
+
+- Esta licença se aplica **salvo se um arquivo, conjunto de dados, figura ou recurso externo específico indicar o contrário**
+- Alguns recursos de dados usados neste projeto podem ter origem em estudos previamente publicados ou repositórios externos, e sua reutilização pode estar sujeita aos termos da fonte original
+- Os usuários são responsáveis por verificar exigências de citação, permissões de reutilização e quaisquer restrições adicionais associadas a materiais de terceiros
+- Este repositório é disponibilizado para fins de **pesquisa, ensino e reprodutibilidade**
+
+## Sem garantia
+
+Os materiais são fornecidos **no estado em que se encontram**, sem garantia de qualquer tipo, expressa ou implícita, incluindo, entre outras, adequação a uma finalidade específica, reprodutibilidade sob ambientes computacionais modificados ou adequação para implantação comercial.
+
+## Link da licença
+
+Texto completo da licença:
+
+[https://creativecommons.org/licenses/by-nc-sa/4.0/](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+## Citação e contato
+
+Se você utilizar este repositório em trabalho acadêmico, cite o manuscrito correspondente e reconheça a fonte do repositório.
+
+**Autor / Contato**  
+Weverton Gomes da Costa  
+Departamento de Estatística, Universidade Federal de Viçosa (UFV)  
+Email: wevertonufv@gmail.com
+
+**Site do projeto**  
+[https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/](https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/)
+
+**Repositório GitHub**  
+[https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel](https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel)

@@ -57,3 +57,49 @@ The main pages of the project are:
 - **Visualization**: final result summaries
 - **About**: project background and study rationale
 - **License**: licensing information for the repository and website
+
+---
+
+## Versão em português
+
+## Visão geral do projeto
+
+Este projeto investiga se informações genômicas, fenômicas e derivadas do clima podem melhorar a predição de produtividade de grãos e peso de grãos em ensaios de milho multiambientes.
+
+O repositório e o site foram organizados como um pipeline analítico em formato tutorial. Cada página corresponde a uma etapa importante do estudo, desde o processamento dos dados climáticos até a construção dos kernels, a estimação dos componentes de variância, as análises preditivas e a visualização final.
+
+## Principais fontes de dados
+
+O estudo combina três tipos principais de informação:
+
+- **Dados genômicos**, representados por marcadores SNP
+- **Dados fenômicos**, representados por espectros NIR
+- **Covariáveis derivadas do clima**, usadas para construir o kernel climático (`W`)
+
+Neste site, o termo **weather** é usado quando a referência é às covariáveis meteorológicas derivadas da NASA POWER e ao kernel construído a partir delas. O termo **environment** é reservado para o efeito categórico de macroambiente (`E`) e para as condições de campo nas quais os híbridos foram avaliados.
+
+## Estrutura analítica
+
+O fluxo de trabalho é dividido nas seguintes etapas principais:
+
+1. obtenção e processamento de dados climáticos
+2. construção de kernels genômicos, fenômicos, ambientais e climáticos
+3. estimação de componentes de variância para o conjunto reduzido de 18 modelos
+4. análises preditivas sob quatro cenários de validação cruzada
+5. consolidação das figuras finais e das tabelas-resumo
+
+## Principal mensagem analítica
+
+A versão atual do projeto foi estruturada para apoiar a revisão do manuscrito e a documentação reprodutível dos resultados. O objetivo não é assumir que a integração melhora automaticamente a predição, mas avaliar se informações genômicas, fenômicas e derivadas do clima fornecem sinais preditivos complementares sob diferentes kernels e cenários de validação.
+
+## Navegação do site
+
+As páginas principais do projeto são:
+
+- **Climate data**: download meteorológico, processamento e geração de covariáveis climáticas
+- **Matrices**: construção de kernels alinhados
+- **Variance components**: decomposição da variância dos modelos
+- **Prediction**: análises de validação cruzada
+- **Visualization**: resumos finais dos resultados
+- **About**: contexto do projeto e justificativa do estudo
+- **License**: informações de licenciamento do repositório e do site
