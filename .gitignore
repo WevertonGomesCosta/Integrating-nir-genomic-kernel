@@ -11,4 +11,4 @@ data/Maize-NIRS-GBS-main
 *.all.rds
 output/tables/prediction_cv1_cv2_raw.csv
 output/tables/prediction_cv0_cv00_raw.csv
-output/tables//prediction_cv1_cv2_by_rep_fold_env.csv
+output/tables/prediction_cv1_cv2_by_rep_fold_env.csv
