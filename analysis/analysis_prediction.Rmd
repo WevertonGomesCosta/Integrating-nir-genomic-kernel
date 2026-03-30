@@ -365,7 +365,7 @@ length(Eta_list)
 
 This is the computational core of the script. In the didactic version, this section is split into smaller chunks so the reader can understand the workflow step by step.
 
-All chunks below are kept with `eval = FALSE` because this stage is computationally expensive. The idea is that the reader can first understand the structure and then decide whether to run the full prediction step.
+All chunks below are active in this final pipeline-ready version. Because this stage is computationally expensive, the code is still presented step by step so the reader can understand the workflow before running the full prediction stage.
 
 The execution logic remains exactly the same as in the final operational script:
 
