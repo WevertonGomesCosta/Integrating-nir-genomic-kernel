@@ -1,4 +1,4 @@
-# article_results_for_manuscript_final_tutorial.R
+# article_results_for_manuscript_final_tutorial_chunked_v3.R
 # ------------------------------------------------------------
 # Purpose:
 # Collect the main numerical results that will be discussed in the manuscript.
@@ -85,6 +85,10 @@ report_lines <- c(
 # ------------------------------------------------------------
 # This table is exported because many downstream tables only store M01-M18, and
 # the manuscript usually needs an interpretable description for each model.
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# 3.1 Define the base catalog of the 18 final prediction models
 # ------------------------------------------------------------
 
 model_catalog <- tibble(
@@ -192,7 +196,15 @@ model_catalog <- tibble(
   )
 )
 
+# ------------------------------------------------------------
+# 3.2 Export the catalog for downstream manuscript tables
+# ------------------------------------------------------------
+
 write_csv(model_catalog, file.path(article_dir, "model_catalog_18_models.csv"))
+
+# ------------------------------------------------------------
+# 3.3 Register the model-catalog note in the manuscript report
+# ------------------------------------------------------------
 
 report_lines <- c(
   report_lines,
@@ -291,6 +303,10 @@ if (!is.null(Pheno)) {
 # units and a year-wise climate comparison.
 # ------------------------------------------------------------
 
+# ------------------------------------------------------------
+# 5.1 Define variable units and short interpretations
+# ------------------------------------------------------------
+
 climate_units <- tibble(
   Variable = c(
     "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS", "PRECTOT",
@@ -325,7 +341,15 @@ climate_units <- tibble(
   )
 )
 
+# ------------------------------------------------------------
+# 5.2 Export the reference table of climate-variable units
+# ------------------------------------------------------------
+
 write_csv(climate_units, file.path(article_dir, "climate_covariates_units.csv"))
+
+# ------------------------------------------------------------
+# 5.3 Read the annual climate file and build long/wide summaries
+# ------------------------------------------------------------
 
 if (file.exists(file.path(climate_dir, "environmental_covariates.csv"))) {
   climate_annual <- read_csv(file.path(climate_dir, "environmental_covariates.csv"), show_col_types = FALSE)
@@ -358,6 +382,10 @@ if (file.exists(file.path(climate_dir, "environmental_covariates.csv"))) {
       write_csv(climate_wide, file.path(article_dir, "climate_annual_comparison_table.csv"))
     }
 
+    # ------------------------------------------------------------
+    # 5.4 Register the climate-summary note in the report
+    # ------------------------------------------------------------
+
     report_lines <- c(
       report_lines,
       "CLIMATE COVARIATES SUMMARY",
@@ -389,6 +417,10 @@ if (file.exists(file.path(climate_dir, "environmental_covariates.csv"))) {
 # how kernels were built and how Gaussian scaling was defined.
 # ------------------------------------------------------------
 
+# ------------------------------------------------------------
+# 6.1 Read matrix and kernel dimensions
+# ------------------------------------------------------------
+
 kernel_summary <- tibble(
   Object = character(),
   nrow = numeric(),
@@ -416,9 +448,17 @@ for (obj_name in kernel_files_to_check) {
   }
 }
 
+# ------------------------------------------------------------
+# 6.2 Export the kernel-dimension table
+# ------------------------------------------------------------
+
 if (nrow(kernel_summary) > 0) {
   write_csv(kernel_summary, file.path(article_dir, "kernel_dimension_summary.csv"))
 }
+
+# ------------------------------------------------------------
+# 6.3 Recover the Gaussian-kernel scaling quantiles
+# ------------------------------------------------------------
 
 q05_summary <- tibble(
   Quantity = character(),
@@ -462,9 +502,17 @@ if (file.exists(file.path(matrices_dir, "q05P.rds"))) {
   )
 }
 
+# ------------------------------------------------------------
+# 6.4 Export the Gaussian-quantile table
+# ------------------------------------------------------------
+
 if (nrow(q05_summary) > 0) {
   write_csv(q05_summary, file.path(article_dir, "gaussian_kernel_quantiles_q05.csv"))
 }
+
+# ------------------------------------------------------------
+# 6.5 Register the kernel-summary notes in the report
+# ------------------------------------------------------------
 
 if (nrow(kernel_summary) > 0 || nrow(q05_summary) > 0) {
   report_lines <- c(
@@ -500,6 +548,10 @@ if (nrow(kernel_summary) > 0 || nrow(q05_summary) > 0) {
 # the flow easier to read.
 # ------------------------------------------------------------
 
+# ------------------------------------------------------------
+# 7.1 Initialize the main prediction-result objects
+# ------------------------------------------------------------
+
 cv12_summary <- NULL
 cvloo_summary <- NULL
 cv12_top3 <- NULL
@@ -508,6 +560,10 @@ cv12_w_effect <- NULL
 cvloo_w_effect <- NULL
 cv12_kernel_family_compare <- NULL
 cvloo_kernel_family_compare <- NULL
+
+# ------------------------------------------------------------
+# 7.2 Try to load the summary tables already produced by visualization.Rmd
+# ------------------------------------------------------------
 
 if (file.exists(file.path(tables_dir, "prediction_cv1_cv2_summary.csv"))) {
   cv12_summary <- read_csv(file.path(tables_dir, "prediction_cv1_cv2_summary.csv"), show_col_types = FALSE)
@@ -534,6 +590,10 @@ if (file.exists(file.path(tables_dir, "prediction_cv0_cv00_kernel_family_compare
   cvloo_kernel_family_compare <- read_csv(file.path(tables_dir, "prediction_cv0_cv00_kernel_family_compare.csv"), show_col_types = FALSE)
 }
 
+# ------------------------------------------------------------
+# 7.3 Locate the raw prediction CSV files used as fallback input
+# ------------------------------------------------------------
+
 all_result_files <- character(0)
 
 if (dir.exists(results_dir)) {
@@ -543,6 +603,10 @@ if (dir.exists(results_dir)) {
 all_result_names <- basename(all_result_files)
 cv12_files <- all_result_files[grepl("^CV1_|^CV2_", all_result_names)]
 cvloo_files <- all_result_files[grepl("^CV0_|^CV00_", all_result_names)]
+
+# ------------------------------------------------------------
+# 7.4 Reconstruct CV1 and CV2 summaries from raw files when needed
+# ------------------------------------------------------------
 
 if (is.null(cv12_summary) && length(cv12_files) > 0) {
   cv12_list <- vector("list", length(cv12_files))
@@ -621,6 +685,10 @@ if (is.null(cv12_summary) && length(cv12_files) > 0) {
   write_csv(cv12_top3, file.path(article_dir, "prediction_cv1_cv2_top3.csv"))
 }
 
+# ------------------------------------------------------------
+# 7.5 Reconstruct CV0 and CV00 summaries from raw files when needed
+# ------------------------------------------------------------
+
 if (is.null(cvloo_summary) && length(cvloo_files) > 0) {
   cvloo_list <- vector("list", length(cvloo_files))
 
@@ -684,9 +752,12 @@ if (is.null(cvloo_summary) && length(cvloo_files) > 0) {
   write_csv(cvloo_top3, file.path(article_dir, "prediction_cv0_cv00_top3.csv"))
 }
 
+# ------------------------------------------------------------
+# 7.6 Summarize best models and baseline deltas for CV1 and CV2
+# ------------------------------------------------------------
+
 if (!is.null(cv12_summary)) {
   write_csv(cv12_summary, file.path(article_dir, "prediction_cv1_cv2_summary.csv"))
-
 
   cv12_best <- cv12_summary %>%
     group_by(Trait, CV) %>%
@@ -702,6 +773,10 @@ if (!is.null(cv12_summary)) {
     mutate(DeltaVsM01 = MeanCorrelation - BaselineCorrelation)
 
   write_csv(cv12_best_vs_baseline, file.path(article_dir, "prediction_cv1_cv2_best_vs_M01.csv"))
+
+  # ------------------------------------------------------------
+  # 7.7 Register W-effect and kernel-family comparisons for CV1/CV2
+  # ------------------------------------------------------------
 
   report_lines <- c(
     report_lines,
@@ -780,9 +855,12 @@ if (!is.null(cv12_summary)) {
   )
 }
 
+# ------------------------------------------------------------
+# 7.8 Summarize best models for CV0 and CV00
+# ------------------------------------------------------------
+
 if (!is.null(cvloo_summary)) {
   write_csv(cvloo_summary, file.path(article_dir, "prediction_cv0_cv00_summary.csv"))
-
 
   cvloo_best <- cvloo_summary %>%
     group_by(Trait, CV, Env_leave) %>%
@@ -790,6 +868,10 @@ if (!is.null(cvloo_summary)) {
     ungroup()
 
   write_csv(cvloo_best, file.path(article_dir, "prediction_cv0_cv00_best_models.csv"))
+
+  # ------------------------------------------------------------
+  # 7.9 Register W-effect and kernel-family comparisons for CV0/CV00
+  # ------------------------------------------------------------
 
   report_lines <- c(
     report_lines,
@@ -824,6 +906,10 @@ if (!is.null(cvloo_summary)) {
     write_csv(cvloo_kernel_family_compare, file.path(article_dir, "prediction_cv0_cv00_kernel_family_compare.csv"))
   }
 
+  # ------------------------------------------------------------
+  # 7.10 Close the prediction-results section in the report
+  # ------------------------------------------------------------
+
   report_lines <- c(report_lines, "")
 } else {
   report_lines <- c(
@@ -841,6 +927,10 @@ if (!is.null(cvloo_summary)) {
 # harmonizes column names before producing family-level summaries.
 # ------------------------------------------------------------
 
+# ------------------------------------------------------------
+# 8.1 Load either the processed CSV or the full RDS object
+# ------------------------------------------------------------
+
 variance_data <- NULL
 
 if (file.exists(file.path(variance_dir, "variance_components_processed.csv"))) {
@@ -852,6 +942,11 @@ if (is.null(variance_data) && file.exists(file.path(variance_dir, "variance_comp
 }
 
 if (!is.null(variance_data)) {
+
+  # ------------------------------------------------------------
+  # 8.2 Harmonize column names and model identifiers
+  # ------------------------------------------------------------
+
   if (!("ComponentLabel" %in% colnames(variance_data)) && "Component" %in% colnames(variance_data)) {
     variance_data$ComponentLabel <- variance_data$Component
   }
@@ -877,10 +972,18 @@ if (!is.null(variance_data)) {
     variance_data$Trait <- as.character(variance_data$Trait)
   }
 
+  # ------------------------------------------------------------
+  # 8.3 Integrate the variance table with the model catalog
+  # ------------------------------------------------------------
+
   variance_data <- variance_data %>%
     left_join(model_catalog %>% select(Model, Description), by = "Model")
 
   write_csv(variance_data, file.path(article_dir, "variance_components_raw_or_processed_loaded.csv"))
+
+  # ------------------------------------------------------------
+  # 8.4 Summarize variance components by biological/methodological family
+  # ------------------------------------------------------------
 
   variance_family_summary <- variance_data %>%
     mutate(
@@ -902,6 +1005,10 @@ if (!is.null(variance_data)) {
 
   write_csv(variance_family_summary, file.path(article_dir, "variance_components_family_summary.csv"))
 
+  # ------------------------------------------------------------
+  # 8.5 Compute family averages across models
+  # ------------------------------------------------------------
+
   variance_family_average <- variance_family_summary %>%
     group_by(Trait, Family) %>%
     summarise(
@@ -913,6 +1020,10 @@ if (!is.null(variance_data)) {
 
   write_csv(variance_family_average, file.path(article_dir, "variance_components_family_average.csv"))
 
+  # ------------------------------------------------------------
+  # 8.6 Identify the dominant component for each model and trait
+  # ------------------------------------------------------------
+
   dominant_component <- variance_data %>%
     group_by(Trait, Model) %>%
     slice_max(order_by = Percentage, n = 1, with_ties = FALSE) %>%
@@ -920,6 +1031,10 @@ if (!is.null(variance_data)) {
     select(Trait, Model, Description, ComponentLabel, Percentage)
 
   write_csv(dominant_component, file.path(article_dir, "variance_components_dominant_component_by_model.csv"))
+
+  # ------------------------------------------------------------
+  # 8.7 Register the variance-component notes in the report
+  # ------------------------------------------------------------
 
   report_lines <- c(
     report_lines,
