@@ -735,13 +735,19 @@ if (is.null(cvloo_summary) && length(cvloo_files) > 0) {
       )
     }
 
+    # In CV0/CV00 filenames, the held-out environment label is split into
+    # two tokens by the underscore separator (for example, CS11 and WS).
+    # These two parts must be recombined to recover the single Env_leave value.
+    env_leave_part1 <- parts[3]
+    env_leave_part2 <- parts[4]
+
     current_data <- current_data %>%
       rename(Fold = .id) %>%
       mutate(
         Fold = suppressWarnings(as.integer(Fold)),
         CV = parts[1],
         Trait = parts[2],
-        Env_leave = paste(parts[3], parts[4], sep = "_"),
+        Env_leave = paste(env_leave_part1, env_leave_part2, sep = "_"),
         Model = parts[5],
         ModelNumber = as.numeric(gsub("M", "", parts[5])),
         Rep = as.numeric(gsub("rep", "", parts[6]))

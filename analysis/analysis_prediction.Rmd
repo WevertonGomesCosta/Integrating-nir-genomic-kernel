@@ -701,6 +701,8 @@ run_cv0_cv00_for_fold <- function(fold_num, train_geno, pheno, TRAIT, MODEL, mod
 
 After all folds are processed, this helper collapses the fold-level tables with `plyr::ldply(...)` and writes the final CSV files expected by the next scripts in the pipeline.
 
+For `CV0` and `CV00`, each file still corresponds to **one** held-out environment. Because labels such as `CS11_WS` contain an underscore, the environment name is temporarily split into two filename parts and then written back into the final file name without changing its meaning.
+
 ```{r define-output-writing-step}
 write_prediction_outputs <- function(CV1_list, CV2_list, CV0_lists, CV00_lists, TRAIT, model_label, rep_num) {
   CV1out <- plyr::ldply(CV1_list, data.frame)
@@ -726,7 +728,12 @@ write_prediction_outputs <- function(CV1_list, CV2_list, CV0_lists, CV00_lists, 
 
   for (env_idx in seq_along(envs_leaveout)) {
     env_name <- envs_leaveout[env_idx]
-    env_parts <- strsplit(env_name, "_")[[1]]
+
+    # Each CV0/CV00 file represents one held-out environment. Labels such as
+    # CS11_WS are split by "_" into two filename tokens, but they still refer
+    # to a single environment when the file is written.
+    env_label_part1 <- strsplit(env_name, "_")[[1]][1]
+    env_label_part2 <- strsplit(env_name, "_")[[1]][2]
 
     CV00out <- plyr::ldply(CV00_lists[[env_idx]], data.frame)
     CV0out <- plyr::ldply(CV0_lists[[env_idx]], data.frame)
@@ -737,7 +744,7 @@ write_prediction_outputs <- function(CV1_list, CV2_list, CV0_lists, CV00_lists, 
         "output/results",
         paste0(
           "CV00_", TRAIT, "_",
-          env_parts[1], "_", env_parts[2], "_",
+          env_label_part1, "_", env_label_part2, "_",
           model_label, "_rep", rep_num, ".csv"
         )
       ),
@@ -750,7 +757,7 @@ write_prediction_outputs <- function(CV1_list, CV2_list, CV0_lists, CV00_lists, 
         "output/results",
         paste0(
           "CV0_", TRAIT, "_",
-          env_parts[1], "_", env_parts[2], "_",
+          env_label_part1, "_", env_label_part2, "_",
           model_label, "_rep", rep_num, ".csv"
         )
       ),
