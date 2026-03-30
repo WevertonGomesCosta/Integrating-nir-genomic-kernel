@@ -681,11 +681,11 @@ ggsave(file.path(figures_dir, "prediction_cv0_cv00.tiff"), plot = p_cvloo, width
 ## 16. Return dedicated figures for KW
 
 ```{r figure-kw-only}
-p_cv12_kw <- p_cv12 %+% filter(cv12_plot_data, Trait == "KW") +
+p_cv12_kw <- p_cv12  +  filter(cv12_plot_data, Trait == "KW") +
   facet_grid(. ~ CV) +
   labs(title = "Kernel weight (KW) under CV1 and CV2")
 
-p_cvloo_kw <- p_cvloo %+% filter(cvloo_plot_data, Trait == "KW") +
+p_cvloo_kw <- p_cvloo + filter(cvloo_plot_data, Trait == "KW") +
   facet_grid(Env_leave ~ CV) +
   labs(title = "Kernel weight (KW) under CV0 and CV00")
 
