@@ -380,7 +380,7 @@ The execution logic remains exactly the same as in the final operational script:
 
 This first chunk creates the directories used by the prediction stage and removes previous prediction outputs. This cleanup is important because the script rewrites all CV tables from scratch.
 
-```{r prepare-output-folders, eval=FALSE}
+```{r prepare-output-folders}
 dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path("output", "results", "bglr_runs"), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path("output", "tables"), recursive = TRUE, showWarnings = FALSE)
@@ -410,7 +410,7 @@ To keep the workflow readable, the execution helper and the summarization helper
 
 This function reproduces the fitting logic of the final operational script. It stores the essential metrics in an `.rds` file and returns only the predicted values and runtime needed by the rest of the pipeline.
 
-```{r helper-run-bglr, eval=FALSE}
+```{r helper-run-bglr}
 run_bglr <- function(y2_vector, ETA, nIter, burnIn, thin, save_prefix) {
   y_t <- as.numeric(y2_vector)
   dir.create(dirname(save_prefix), recursive = TRUE, showWarnings = FALSE)
@@ -472,7 +472,7 @@ run_bglr <- function(y2_vector, ETA, nIter, burnIn, thin, save_prefix) {
 
 This second helper receives a data frame with observed and predicted values and returns the correlation for each environment.
 
-```{r helper-calc-cor-by-env, eval=FALSE}
+```{r helper-calc-cor-by-env}
 calc_cor_by_env <- function(df_with_yhat, trait_col) {
   df_with_yhat %>%
     dplyr::group_by(Env) %>%
@@ -488,7 +488,7 @@ calc_cor_by_env <- function(df_with_yhat, trait_col) {
 
 The prediction stage is parallelized at the level of `MODEL × REP × TRAIT`. This is the main efficiency decision of the final version because it distributes larger independent jobs across workers instead of parallelizing only inside a single model loop.
 
-```{r define-job-grid, eval=FALSE}
+```{r define-job-grid}
 combos <- expand.grid(
   MODEL = 1:18,
   REP = seq_len(num_rep),
@@ -501,7 +501,7 @@ combos <- expand.grid(
 
 This chunk starts the cluster, registers the workers for `foreach`, and loads the packages that each worker needs during execution.
 
-```{r start-parallel-backend, eval=FALSE}
+```{r start-parallel-backend}
 cl <- parallel::makeCluster(n_cores)
 doParallel::registerDoParallel(cl)
 on.exit({
@@ -527,7 +527,7 @@ The original long execution block is now decomposed into smaller stages. The cod
 
 This helper creates the job-specific objects: a local copy of the phenotype table, empty result lists, the model label, and the pedigree-based fold assignment for the current `MODEL × REP × TRAIT` combination.
 
-```{r define-job-initialization, eval=FALSE}
+```{r define-job-initialization}
 initialize_prediction_job <- function(MODEL, rep_num, TRAIT) {
   model_label <- model_catalog$Model[MODEL]
   pheno <- data.frame(Pheno)
@@ -565,7 +565,7 @@ initialize_prediction_job <- function(MODEL, rep_num, TRAIT) {
 
 This helper reproduces the reference-script logic for the base prediction fit. It prepares the training mask, fits the model, and returns the fold-level tables for `CV1` and `CV2`.
 
-```{r define-cv1-cv2-step, eval=FALSE}
+```{r define-cv1-cv2-step}
 run_cv1_cv2_for_fold <- function(fold_num, folds_df, pheno, TRAIT, MODEL, model_label, rep_num) {
   train_geno <- folds_df$Pedigree[folds_df$fold != fold_num]
   test_geno <- folds_df$Pedigree[folds_df$fold == fold_num]
@@ -628,7 +628,7 @@ run_cv1_cv2_for_fold <- function(fold_num, folds_df, pheno, TRAIT, MODEL, model_
 
 This helper keeps the same logic used in the final corrected script: for each fold, it reuses `train_geno`, removes one environment at a time, fits the model again, and stores fold-level results for `CV0` and `CV00`.
 
-```{r define-cv0-cv00-step, eval=FALSE}
+```{r define-cv0-cv00-step}
 run_cv0_cv00_for_fold <- function(fold_num, train_geno, pheno, TRAIT, MODEL, model_label, rep_num) {
   CV0_fold_results <- lapply(envs_leaveout, function(x) NULL)
   CV00_fold_results <- lapply(envs_leaveout, function(x) NULL)
@@ -701,7 +701,7 @@ run_cv0_cv00_for_fold <- function(fold_num, train_geno, pheno, TRAIT, MODEL, mod
 
 After all folds are processed, this helper collapses the fold-level tables with `plyr::ldply(...)` and writes the final CSV files expected by the next scripts in the pipeline.
 
-```{r define-output-writing-step, eval=FALSE}
+```{r define-output-writing-step}
 write_prediction_outputs <- function(CV1_list, CV2_list, CV0_lists, CV00_lists, TRAIT, model_label, rep_num) {
   CV1out <- plyr::ldply(CV1_list, data.frame)
   CV2out <- plyr::ldply(CV2_list, data.frame)
@@ -764,7 +764,7 @@ write_prediction_outputs <- function(CV1_list, CV2_list, CV0_lists, CV00_lists, 
 
 Now the parallel call itself becomes shorter and easier to follow: each worker initializes one job, iterates over the five folds, updates the result lists, writes the aggregated outputs, and finally returns a compact diagnostics row.
 
-```{r run-jobs, eval=FALSE}
+```{r run-jobs}
 job_diagnostics <- foreach(
   i = seq_len(nrow(combos)),
   .combine = rbind,
@@ -844,7 +844,7 @@ job_diagnostics <- foreach(
 
 The final chunk of this section stores a compact table showing which jobs were completed. This is useful for checking whether all combinations of trait, model, and repetition finished correctly.
 
-```{r save-job-diagnostics, eval=FALSE}
+```{r save-job-diagnostics}
 write.csv(
   job_diagnostics,
   file.path("output", "tables", "analysis_prediction_reference_aligned_jobs.csv"),

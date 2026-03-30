@@ -75,7 +75,8 @@ report_lines <- c(
   paste("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
   "",
   "This report was generated to support the revision of the manuscript.",
-  "The script assumes the new standardized prediction filenames based only on CV, trait, model, repetition, and fold.",
+  "The script assumes the new standardized prediction filenames based on CV, trait, model, repetition, and held-out environment when applicable.",
+  "When fold information is needed, it is recovered from the internal .id column stored in the prediction CSV files.",
   "It summarizes the main numerical results that are usually needed in Results, Discussion, figure captions, and responses to reviewer comments.",
   ""
 )
@@ -618,16 +619,24 @@ if (is.null(cv12_summary) && length(cv12_files) > 0) {
     parts <- strsplit(file_name, "_")[[1]]
 
     current_data <- read_csv(current_file, show_col_types = FALSE)
-    current_data$CV <- parts[1]
-    current_data$Trait <- parts[2]
-    current_data$Model <- parts[3]
-    current_data$ModelNumber <- as.numeric(gsub("M", "", current_data$Model[1]))
-    current_data$Rep <- as.numeric(gsub("rep", "", parts[4]))
-    if (length(parts) >= 5) {
-      current_data$Fold <- as.numeric(gsub("fold", "", parts[5]))
-    } else {
-      current_data$Fold <- 1
+
+    if (!(".id" %in% names(current_data)) || !("Env" %in% names(current_data)) || !("cor" %in% names(current_data))) {
+      stop(
+        "Unexpected column structure in file: ", file_name,
+        ". Expected columns including .id, Env, and cor in the final prediction outputs."
+      )
     }
+
+    current_data <- current_data %>%
+      rename(Fold = .id) %>%
+      mutate(
+        Fold = suppressWarnings(as.integer(Fold)),
+        CV = parts[1],
+        Trait = parts[2],
+        Model = parts[3],
+        ModelNumber = as.numeric(gsub("M", "", parts[3])),
+        Rep = as.numeric(gsub("rep", "", parts[4]))
+      )
 
     cv12_list[[i]] <- current_data
   }
@@ -638,41 +647,60 @@ if (is.null(cv12_summary) && length(cv12_files) > 0) {
   write_csv(cv12_raw, file.path(article_dir, "prediction_cv1_cv2_raw.csv"))
 
   cv12_env_fold <- cv12_raw %>%
-    group_by(ModelNumber, Model, Trait, CV, Rep, Fold, Env) %>%
+    group_by(
+      ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+      Description, Trait, CV, Rep, Fold, Env
+    ) %>%
     summarise(
-      EnvCorrelation = mean(unique(cor[!is.na(cor)]), na.rm = TRUE),
+      EnvCorrelation = mean(cor, na.rm = TRUE),
       ValidationCount = sum(!is.na(cor)),
+      MeanRuntimeSec = mean(Runtime_sec, na.rm = TRUE),
       .groups = "drop"
     ) %>%
     mutate(
-      EnvCorrelation = ifelse(is.nan(EnvCorrelation), NA_real_, EnvCorrelation)
+      EnvCorrelation = ifelse(is.nan(EnvCorrelation), NA_real_, EnvCorrelation),
+      MeanRuntimeSec = ifelse(is.nan(MeanRuntimeSec), NA_real_, MeanRuntimeSec)
     ) %>%
     filter(!is.na(EnvCorrelation), ValidationCount > 0)
 
   cv12_env_rep <- cv12_env_fold %>%
-    group_by(ModelNumber, Model, Trait, CV, Rep, Env) %>%
+    group_by(
+      ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+      Description, Trait, CV, Rep, Env
+    ) %>%
     summarise(
       EnvCorrelation = weighted.mean(EnvCorrelation, w = ValidationCount, na.rm = TRUE),
       ValidationCount = sum(ValidationCount, na.rm = TRUE),
+      MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
       .groups = "drop"
     )
 
   cv12_rep_summary <- cv12_env_rep %>%
-    group_by(ModelNumber, Model, Trait, CV, Rep) %>%
+    group_by(
+      ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+      Description, Trait, CV, Rep
+    ) %>%
     summarise(
       WeightedCorrelation = weighted.mean(EnvCorrelation, w = ValidationCount, na.rm = TRUE),
+      MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
       .groups = "drop"
     )
 
   cv12_summary <- cv12_rep_summary %>%
-    group_by(ModelNumber, Model, Trait, CV) %>%
+    group_by(
+      ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+      Description, Trait, CV
+    ) %>%
     summarise(
       MeanCorrelation = mean(WeightedCorrelation, na.rm = TRUE),
       SDCorrelation = sd(WeightedCorrelation, na.rm = TRUE),
       NumberOfRepetitions = n(),
+      MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
       .groups = "drop"
     ) %>%
-    left_join(model_catalog, by = c("ModelNumber", "Model")) %>%
+    mutate(
+      SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation)
+    ) %>%
     arrange(Trait, CV, desc(MeanCorrelation))
 
   write_csv(cv12_summary, file.path(article_dir, "prediction_cv1_cv2_summary.csv"))
@@ -700,12 +728,24 @@ if (is.null(cvloo_summary) && length(cvloo_files) > 0) {
 
     current_data <- read_csv(current_file, show_col_types = FALSE)
 
-    current_data$CV <- parts[1]
-    current_data$Trait <- parts[2]
-    current_data$Env_leave <- paste(parts[3], parts[4], sep = "_")
-    current_data$Model <- parts[5]
-    current_data$ModelNumber <- as.numeric(gsub("M", "", current_data$Model[1]))
-    current_data$Rep <- as.numeric(gsub("rep", "", parts[6]))
+    if (!(".id" %in% names(current_data)) || !("Env" %in% names(current_data)) || !("cor" %in% names(current_data))) {
+      stop(
+        "Unexpected column structure in file: ", file_name,
+        ". Expected columns including .id, Env, and cor in the final prediction outputs."
+      )
+    }
+
+    current_data <- current_data %>%
+      rename(Fold = .id) %>%
+      mutate(
+        Fold = suppressWarnings(as.integer(Fold)),
+        CV = parts[1],
+        Trait = parts[2],
+        Env_leave = paste(parts[3], parts[4], sep = "_"),
+        Model = parts[5],
+        ModelNumber = as.numeric(gsub("M", "", parts[5])),
+        Rep = as.numeric(gsub("rep", "", parts[6]))
+      )
 
     cvloo_list[[i]] <- current_data
   }
@@ -719,27 +759,50 @@ if (is.null(cvloo_summary) && length(cvloo_files) > 0) {
     mutate(Env = as.character(Env), Env_leave = as.character(Env_leave)) %>%
     filter(Env == Env_leave)
 
-  cvloo_file_summary <- cvloo_env_filtered %>%
-    group_by(ModelNumber, Model, Trait, CV, Env_leave, Rep) %>%
+  cvloo_env_fold <- cvloo_env_filtered %>%
+    group_by(
+      ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+      Description, Trait, CV, Env_leave, Rep, Fold, Env
+    ) %>%
     summarise(
-      LOEOCorrelation = mean(unique(cor[!is.na(cor)]), na.rm = TRUE),
+      LOEOCorrelation = mean(cor, na.rm = TRUE),
       ValidationCount = sum(!is.na(cor)),
+      MeanRuntimeSec = mean(Runtime_sec, na.rm = TRUE),
       .groups = "drop"
     ) %>%
     mutate(
-      LOEOCorrelation = ifelse(is.nan(LOEOCorrelation), NA_real_, LOEOCorrelation)
+      LOEOCorrelation = ifelse(is.nan(LOEOCorrelation), NA_real_, LOEOCorrelation),
+      MeanRuntimeSec = ifelse(is.nan(MeanRuntimeSec), NA_real_, MeanRuntimeSec)
     ) %>%
     filter(!is.na(LOEOCorrelation), ValidationCount > 0)
 
-  cvloo_summary <- cvloo_file_summary %>%
-    group_by(ModelNumber, Model, Trait, CV, Env_leave) %>%
+  cvloo_rep_summary <- cvloo_env_fold %>%
+    group_by(
+      ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+      Description, Trait, CV, Env_leave, Rep
+    ) %>%
+    summarise(
+      LOEOCorrelation = weighted.mean(LOEOCorrelation, w = ValidationCount, na.rm = TRUE),
+      ValidationCount = sum(ValidationCount, na.rm = TRUE),
+      MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+      .groups = "drop"
+    )
+
+  cvloo_summary <- cvloo_rep_summary %>%
+    group_by(
+      ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+      Description, Trait, CV, Env_leave
+    ) %>%
     summarise(
       MeanCorrelation = mean(LOEOCorrelation, na.rm = TRUE),
       SDCorrelation = sd(LOEOCorrelation, na.rm = TRUE),
       NumberOfRuns = n(),
+      MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
       .groups = "drop"
     ) %>%
-    left_join(model_catalog, by = c("ModelNumber", "Model")) %>%
+    mutate(
+      SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation)
+    ) %>%
     arrange(Trait, CV, Env_leave, desc(MeanCorrelation))
 
   write_csv(cvloo_summary, file.path(article_dir, "prediction_cv0_cv00_summary.csv"))
