@@ -1,19 +1,19 @@
 ModelID,Model,ETA,Category,Description
-1,M01,Eta01,Single-source + E,E + G + GE
-2,M02,Eta02,Single-source + E,E + P + PE
-3,M03,Eta03,Single-source + E,E + GGK + GGKE
-4,M04,Eta04,Single-source + E,E + PGK + PGKE
-5,M05,Eta05,Single-source + E,E + GAK + GAKE
-6,M06,Eta06,Single-source + E,E + PAK + PAKE
-7,M07,Eta07,Integrated G/P + E,E + G + P + GE + PE
-8,M08,Eta08,Integrated G/P + E,E + GGK + PGK + GGKE + PGKE
-9,M09,Eta09,Integrated G/P + E,E + GAK + PAK + GAKE + PAKE
-10,M10,Eta10,Weather-augmented,E + W + G + GE + GW
-11,M11,Eta11,Weather-augmented,E + W + P + PE + PW
-12,M12,Eta12,Weather-augmented,E + W + G + P + GE + PE + GW + PW
-13,M13,Eta13,Weather-augmented,E + W + GGK + GGKE + GGKW
-14,M14,Eta14,Weather-augmented,E + W + PGK + PGKE + PGKW
-15,M15,Eta15,Weather-augmented,E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
-16,M16,Eta16,Weather-augmented,E + W + GAK + GAKE + GAKW
-17,M17,Eta17,Weather-augmented,E + W + PAK + PAKE + PAKW
-18,M18,Eta18,Weather-augmented,E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW
+1,M01,Eta01,Fonte única + E,E + G + GE
+2,M02,Eta02,Fonte única + E,E + P + PE
+3,M03,Eta03,Fonte única + E,E + GGK + GGKE
+4,M04,Eta04,Fonte única + E,E + PGK + PGKE
+5,M05,Eta05,Fonte única + E,E + GAK + GAKE
+6,M06,Eta06,Fonte única + E,E + PAK + PAKE
+7,M07,Eta07,Integração G/P + E,E + G + P + GE + PE
+8,M08,Eta08,Integração G/P + E,E + GGK + PGK + GGKE + PGKE
+9,M09,Eta09,Integração G/P + E,E + GAK + PAK + GAKE + PAKE
+10,M10,Eta10,Aumentados com clima,E + W + G + GE + GW
+11,M11,Eta11,Aumentados com clima,E + W + P + PE + PW
+12,M12,Eta12,Aumentados com clima,E + W + G + P + GE + PE + GW + PW
+13,M13,Eta13,Aumentados com clima,E + W + GGK + GGKE + GGKW
+14,M14,Eta14,Aumentados com clima,E + W + PGK + PGKE + PGKW
+15,M15,Eta15,Aumentados com clima,E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
+16,M16,Eta16,Aumentados com clima,E + W + GAK + GAKE + GAKW
+17,M17,Eta17,Aumentados com clima,E + W + PAK + PAKE + PAKW
+18,M18,Eta18,Aumentados com clima,E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW
