@@ -29,6 +29,10 @@ Este script executa as análises de predição para o conjunto reduzido de **18 
 - o efeito categórico de ambiente (`E`),
 - e, quando apropriado, o kernel climático (`W`).
 
+Neste fluxo, o kernel climático é usado principalmente nos modelos **M10-M18**. Ele deve ser interpretado como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente.
+
+O componente fenômico (`P`) também deve ser interpretado com cautela. A similaridade baseada em NIR pode capturar estrutura preditiva útil, mas também pode refletir forte resposta fisiológica ao ambiente, e não apenas similaridade biológica estável.
+
 Um modelo que apenas se ajusta bem aos dados existentes (bom *fit*) não é útil; ele precisa ser capaz de **prever dados que nunca viu**. Para simular isso, usamos a Validação Cruzada (CV).
 
 Vamos implementar múltiplos esquemas de CV para simular diferentes desafios do mundo real no melhoramento:
@@ -41,6 +45,8 @@ Vamos implementar múltiplos esquemas de CV para simular diferentes desafios do 
       * *Pergunta:* O teste mais difícil. O modelo pode prever o desempenho de *todos* os genótipos em um *ambiente completamente novo* (um ano ou local que o modelo nunca viu)?
   * **CV00: leave-one-environment-out (testa genótipos em ambientes não observados).**
       * *Semelhante ao CV0*, focado em prever genótipos *dentro* de um ambiente não visto.
+
+As definições conceituais acima seguem o tutorial de referência. Neste arquivo em português, porém, a implementação computacional é apresentada em blocos mais detalhados, para que o leitor consiga acompanhar separadamente a preparação, a execução e a gravação das saídas.
 
 Isso é importante porque a versão final corrigida restaura a lógica do `analysis.Rmd` original, mantendo ao mesmo tempo o catálogo reduzido dos 18 modelos finais usados no repositório atualizado.
 
@@ -374,6 +380,26 @@ length(Eta_list)
 Esta é a parte computacional central do script. Na versão didática em português, esta seção foi dividida em blocos menores para que o leitor consiga acompanhar o que é preparado antes do processamento pesado, o que é executado dentro de cada *worker* e o que é gravado ao final.
 
 Como esta é a etapa computacionalmente mais cara de todo o pipeline, os blocos que realmente executam os jobs completos permanecem com `eval=FALSE` nesta versão em português. Para fins de navegação do site, os arquivos já produzidos pela versão oficial em inglês podem ser carregados silenciosamente quando necessário.
+
+O fluxo de execução dentro da implementação atual é:
+
+1. criar os diretórios de saída usados pela etapa de predição;
+2. definir os traços e recuperar, a partir de `Pheno`, os rótulos de ambiente e pedigree;
+3. iniciar o backend paralelo usado por `foreach`;
+4. iterar sobre cada traço;
+5. para cada repetição, criar os 5 folds de genótipos usados em CV1 e CV2;
+6. para cada fold, ajustar os 18 modelos em paralelo para CV1 e depois para CV2;
+7. em seguida, iterar pelos ambientes deixados de fora e ajustar novamente os 18 modelos para CV0 e CV00;
+8. gravar um arquivo CSV por objeto de resultado usando a convenção de nomes esperada pela etapa de visualização downstream.
+
+De forma mais concreta, a implementação se organiza em quatro frentes analíticas:
+
+- **CV1**: os genótipos atribuídos ao fold corrente são mascarados completamente, o modelo é ajustado e as correlações em nível de ambiente são calculadas para esses genótipos não observados.
+- **CV2**: um subconjunto de células genótipo × ambiente é mascarado dentro do fold corrente, o modelo é ajustado novamente e as correlações são calculadas apenas para essas células mascaradas.
+- **CV0**: um ambiente é deixado de fora por completo, o modelo é reajustado e a correlação é calculada para o ambiente retido para validação.
+- **CV00**: dentro de um ambiente deixado de fora, o modelo foca nos genótipos efetivamente novos naquele ambiente e calcula a correlação preditiva correspondente.
+
+Embora a implementação abaixo esteja dividida em blocos menores, o propósito científico é o mesmo do arquivo em inglês: simular problemas de predição progressivamente mais difíceis e salvar as tabelas de acurácia que serão resumidas depois.
 
 ### 7.1 Preparar as pastas de saída
 
