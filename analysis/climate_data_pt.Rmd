@@ -10,7 +10,7 @@ output:
     toc: true
     toc_depth: 3
     toc_float: true
-    code_download: true
+    code_download: yes
 editor_options:
   chunk_output_type: console
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
@@ -23,71 +23,495 @@ knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  eval = FALSE
+  out.width = "100%"
 )
 ```
 
+## 1. Introdução
 
-# 1. Introdução
+Este tutorial apresenta o fluxo de trabalho usado para obter e processar dados meteorológicos diários para os experimentos com milho conduzidos em College Station, Texas, durante as safras de 2011 e 2012.
 
-Esta é a **versão em português** da etapa de dados climáticos do pipeline.
+O objetivo deste script não é apenas baixar registros meteorológicos diários, mas converter essas séries temporais em um conjunto conciso e biologicamente interpretável de **covariáveis derivadas do clima**. Essas covariáveis resumem as principais condições meteorológicas de cada safra e são usadas posteriormente para construir o **kernel climático (`W`)** no pipeline final de predição.
 
-A versão operacional e executável desta etapa permanece em **`climate_data.Rmd`**. Esta página em português foi criada para navegação e leitura no site, mantendo a mesma lógica conceitual da versão em inglês, mas com **`eval = FALSE`** para evitar nova execução do download e do processamento meteorológico durante a renderização do site.
+No conjunto reduzido de 18 modelos usado no projeto, o kernel climático aparece nos modelos **M10-M18**. Nesses modelos, `W` é usado para testar se a similaridade derivada do clima adiciona informação útil além do efeito categórico de ambiente (`E`) e dos kernels genômico (`G`) e fenômico (`P`). Portanto, `W` deve ser interpretado como uma fonte complementar de informação meteorológica, e **não** como substituto de `E`.
 
-## 2. Finalidade desta etapa
+Em termos práticos, o fluxo tem quatro objetivos:
 
-Esta etapa tem quatro objetivos principais:
+1. recuperar dados meteorológicos diários da base NASA POWER;
+2. organizar os dados brutos em uma tabela reprodutível;
+3. inspecionar visualmente as principais diferenças climáticas entre os anos;
+4. derivar descritores climáticos anuais e diários que depois serão usados na construção do kernel climático.
 
-1. obter dados meteorológicos diários da NASA POWER;
-2. organizar os registros climáticos em uma estrutura reprodutível;
-3. inspecionar visualmente o contraste climático entre os anos de estudo;
-4. derivar covariáveis climáticas anuais e diárias usadas posteriormente na construção do kernel climático `W`.
+**Local de estudo:** College Station, Texas, EUA  
+**Janela da safra:** 1º de maio a 30 de setembro  
+**Anos de estudo:** 2011 e 2012
 
-## 3. Entradas e dependências
+## 2. Ambiente em R
 
-A etapa usa principalmente:
+Antes de iniciar a análise, carregamos os pacotes necessários para obtenção dos dados, manipulação, visualização e montagem de figuras multipainel.
 
-- a API da NASA POWER;
-- os pacotes `nasapower`, `tidyverse`, `lubridate`, `patchwork`, `ggthemes` e `kableExtra`.
+Cada pacote tem um papel claro no fluxo:
 
-## 4. Principais saídas esperadas
+- `nasapower`: conecta o R à base NASA POWER;
+- `tidyverse`: apoia manipulação de dados e gráficos;
+- `lubridate`: simplifica conversão de datas e operações baseadas em calendário;
+- `patchwork`: combina figuras do `ggplot2` em painéis prontos para publicação;
+- `ggthemes`: fornece as escalas do Google Docs usadas para padronizar cores;
+- `kableExtra`: melhora a apresentação de tabelas HTML no tutorial.
 
-Quando a versão em inglês é executada, os arquivos principais gerados em `output/climate_results/` são:
+Também criamos o diretório de saída no início do script para evitar erros ao salvar figuras e tabelas nas etapas seguintes.
 
-- `texas_climate_data_raw.csv`
-- `environmental_covariates.csv`
-- `environmental_covariates_expanded.csv`
-- figuras climáticas em formato `.tiff`
+```{r packages}
+# Descomente se a instalação for necessária
+# install.packages(c("nasapower", "tidyverse", "lubridate", "patchwork", "ggthemes", "kableExtra"))
 
-## 5. Papel no pipeline
+library(nasapower)
+library(tidyverse)
+library(lubridate)
+library(patchwork)
+library(ggthemes)
+library(kableExtra)
 
-Essas saídas são consumidas depois por:
+if (!dir.exists("output")) dir.create("output")
+if (!dir.exists("output/climate_results")) dir.create("output/climate_results", recursive = TRUE)
+```
 
-- `matrizes.Rmd`, que usa as covariáveis climáticas para construir o kernel `ZW`;
-- etapas posteriores de modelagem e interpretação dos resultados.
+## 3. Parâmetros da consulta
 
-## 6. Política desta versão em português
+Nesta seção definimos as entradas básicas da consulta à NASA POWER. Essas entradas determinam **onde**, **quando** e **quais variáveis climáticas** serão recuperadas.
 
-Nesta página:
+As coordenadas geográficas identificam o local experimental. As datas inicial e final definem a janela da safra a ser analisada. O vetor `params` lista as variáveis climáticas diárias necessárias para os resumos posteriores, como precipitação, temperatura, umidade relativa, radiação solar e velocidade do vento.
 
-- os **mesmos caminhos e nomes de saída** da versão em inglês devem ser preservados;
-- a lógica conceitual é a mesma;
-- a execução permanece desativada com **`eval = FALSE`**.
+Essas variáveis foram escolhidas porque permitem derivar descritores com interpretação agronômica direta, como precipitação acumulada, graus-dia, estresse térmico e déficit de pressão de vapor.
 
-Isso evita duplicação de processamento e mantém a versão inglesa como referência operacional única.
+```{r parameters}
+# Coordenadas do local experimental (College Station, TX)
+coords_texas <- c(lon = -96.3344, lat = 30.6282)
 
-## 7. Script canônico em inglês
+# Intervalos da safra
+start_date_2011 <- "2011-05-01"
+end_date_2011   <- "2011-09-30"
 
-Arquivo executável oficial:
+start_date_2012 <- "2012-05-01"
+end_date_2012   <- "2012-09-30"
 
-- `analysis/climate_data.Rmd`
+# Variáveis da NASA POWER
+# PRECTOTCORR      = Precipitação total corrigida (mm/dia)
+# T2M_MAX, T2M_MIN = Temperatura máxima e mínima do ar a 2 m (°C)
+# RH2M             = Umidade relativa a 2 m (%)
+# ALLSKY_SFC_SW_DWN= Radiação solar de onda curta sob todas as condições de céu (MJ m^-2 dia^-1)
+# WS2M             = Velocidade do vento a 2 m (m/s)
+params <- c(
+  "PRECTOTCORR",
+  "T2M_MAX",
+  "T2M_MIN",
+  "RH2M",
+  "ALLSKY_SFC_SW_DWN",
+  "WS2M"
+)
+```
 
-Página correspondente em inglês:
+## 4. Recuperação dos dados na NASA POWER
 
-- `climate_data.html`
+Esta seção realiza o download dos dados climáticos diários da NASA POWER.
 
-## 8. Observação operacional
+Executamos uma consulta para cada safra. Isso mantém o fluxo transparente e facilita confirmar que cada ano experimental foi recuperado corretamente. Após a obtenção, as duas tabelas anuais são reunidas em um único objeto para as etapas seguintes.
 
-Se for necessário rerodar de fato esta etapa, utilize a versão em inglês.  
-A presente página em português existe para documentação, leitura e navegação bilíngue do site.
+Nesta versão em português, os chunks de download foram mantidos como documentação e estão com `eval = FALSE`. Para exibir as tabelas, figuras e resumos desta página, o arquivo reutiliza os dados já gerados pela versão em inglês do pipeline e salvos em `output/climate_results/`.
 
+### 4.1 Baixar os dados diários de cada ano
+
+O código abaixo envia duas requisições independentes ao serviço NASA POWER, uma para 2011 e outra para 2012. Um identificador `year` é adicionado imediatamente após a obtenção para que a origem de cada registro permaneça explícita em todo o fluxo.
+
+```{r get_data, eval=FALSE}
+data_tx_2011 <- get_power(
+  community = "AG",
+  lonlat = coords_texas,
+  pars = params,
+  dates = c(start_date_2011, end_date_2011),
+  temporal_api = "DAILY"
+) %>%
+  mutate(year = 2011)
+
+data_tx_2012 <- get_power(
+  community = "AG",
+  lonlat = coords_texas,
+  pars = params,
+  dates = c(start_date_2012, end_date_2012),
+  temporal_api = "DAILY"
+) %>%
+  mutate(year = 2012)
+```
+
+```{r load_downloaded_data_pt, include=FALSE}
+raw_file <- "output/climate_results/texas_climate_data_raw.csv"
+if (!file.exists(raw_file)) {
+  stop("O arquivo 'output/climate_results/texas_climate_data_raw.csv' não foi encontrado. Execute primeiro a versão em inglês de climate_data.Rmd.")
+}
+texas_climate_data <- read.csv(raw_file, stringsAsFactors = FALSE)
+texas_climate_data$date <- lubridate::ymd(texas_climate_data$date)
+texas_climate_data$year <- factor(texas_climate_data$year, levels = c(2011, 2012))
+```
+
+### 4.2 Reunir, formatar e salvar a base bruta
+
+Depois que as duas tabelas anuais estão disponíveis, elas são unidas em um único conjunto de dados e a coluna de data é convertida para o formato apropriado do R. Essa etapa é essencial porque a data original retorna como string numérica, e as visualizações posteriores dependem de um objeto de data válido.
+
+Na prática, esta versão em português carrega o arquivo bruto já salvo pela versão em inglês (`texas_climate_data_raw.csv`) e reutiliza esse objeto para reproduzir as mesmas tabelas e figuras em português. O chunk abaixo foi mantido apenas para registrar como a base bruta é montada e salva no fluxo oficial.
+
+```{r get_data2, eval=FALSE}
+texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012) %>%
+  mutate(
+    date = ymd(YYYYMMDD),
+    year = factor(year, levels = c(2011, 2012))
+  )
+
+write.csv(
+  texas_climate_data,
+  "output/climate_results/texas_climate_data_raw.csv",
+  row.names = FALSE
+)
+```
+
+```{r daily-preview-table}
+daily_preview_table <- texas_climate_data %>%
+  dplyr::select(date, year, PRECTOTCORR, T2M_MAX, T2M_MIN, RH2M, ALLSKY_SFC_SW_DWN, WS2M) %>%
+  slice(1:10) %>%
+  mutate(
+    PRECTOTCORR = round(PRECTOTCORR, 2),
+    T2M_MAX = round(T2M_MAX, 2),
+    T2M_MIN = round(T2M_MIN, 2),
+    RH2M = round(RH2M, 1),
+    ALLSKY_SFC_SW_DWN = round(ALLSKY_SFC_SW_DWN, 2),
+    WS2M = round(WS2M, 2)
+  ) %>%
+  rename(
+    Data = date,
+    Ano = year,
+    `Precipitação` = PRECTOTCORR,
+    `Tmax` = T2M_MAX,
+    `Tmin` = T2M_MIN,
+    `Umidade relativa` = RH2M,
+    `Radiação solar` = ALLSKY_SFC_SW_DWN,
+    `Velocidade do vento` = WS2M
+  )
+
+knitr::kable(
+  daily_preview_table,
+  align = "c",
+  caption = "Tabela 1. Amostra dos registros meteorológicos diários obtidos da NASA POWER para os ensaios do Texas."
+) %>%
+  kableExtra::kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    position = "center",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+```
+
+## 5. Análise exploratória e geração de figuras
+
+Antes de resumir os dados em covariáveis derivadas do clima, é boa prática inspecionar visualmente as séries diárias. Essa etapa cumpre dois papéis.
+
+Primeiro, ajuda a verificar se os dados baixados são coerentes e livres de problemas estruturais evidentes. Segundo, ajuda a interpretar o contraste climático entre os anos em estudo, o que é importante para a discussão biológica dos experimentos.
+
+### 5.1 Preparar rótulos compartilhados para as figuras
+
+Para manter as figuras consistentes, definimos os rótulos dos meses apenas uma vez. Isso evita misturar formatos diferentes ao longo do script e torna as comparações mais fáceis de ler.
+
+```{r figure_settings}
+month_levels <- 5:9
+month_labels <- c("Mai", "Jun", "Jul", "Ago", "Set")
+
+month_breaks <- as.Date(c(
+  "2011-05-01", "2011-06-01", "2011-07-01", "2011-08-01", "2011-09-01",
+  "2012-05-01", "2012-06-01", "2012-07-01", "2012-08-01", "2012-09-01"
+))
+
+month_break_labels <- c(
+  "Mai", "Jun", "Jul", "Ago", "Set",
+  "Mai", "Jun", "Jul", "Ago", "Set"
+)
+
+daily_data_with_parts <- texas_climate_data %>%
+  mutate(
+    Year = factor(year(date), levels = c(2011, 2012)),
+    Month = factor(month(date), levels = month_levels, labels = month_labels),
+    Day_of_month = factor(mday(date))
+  )
+```
+
+### 5.2 Visão geral da precipitação diária
+
+```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figura 1. Precipitação diária ao longo das safras de milho de 2011 e 2012 em College Station, Texas. As barras representam a precipitação diária corrigida obtida da NASA POWER."}
+p_precip_daily <- ggplot(
+  texas_climate_data,
+  aes(x = date, y = PRECTOTCORR, fill = year)
+) +
+  geom_col(alpha = 0.85, show.legend = FALSE) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Precipitação diária",
+    subtitle = "College Station, Texas, EUA, 2011-2012",
+    x = "Mês",
+    y = expression("Precipitação (" * mm ~ day^{-1} * ")"),
+    caption = "As barras representam a precipitação total diária corrigida obtida da NASA POWER."
+  ) +
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  theme_bw(base_size = 11)
+
+p_precip_daily
+```
+
+### 5.3 Precipitação diária por mês e dia do mês
+
+```{r plot_precipitation_grouped, fig.width=12, fig.height=6.4, fig.align="center", fig.cap="Figura 2. Precipitação diária organizada por dia do mês dentro de cada painel mensal para facilitar a comparação entre anos durante a safra."}
+p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill = Year)) +
+  geom_col(position = position_dodge(width = 0.85), alpha = 0.85, width = 0.8) +
+  facet_wrap(~ Month, scales = "free_x", ncol = 5) +
+  labs(
+    title = "Precipitação diária por mês e ano",
+    subtitle = "Agrupada por dia do mês em cada painel mensal",
+    x = "Dia do mês",
+    y = expression("Precipitação (" * mm ~ day^{-1} * ")"),
+    fill = "Ano",
+    caption = "Esta organização facilita a comparação intraestacional dos padrões de chuva entre anos."
+  ) +
+  scale_x_discrete(breaks = c("1", "5", "10", "15", "20", "25", "30", "31")) +
+  ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  theme_bw(base_size = 11)
+
+p1
+```
+
+### 5.4 Totais mensais de precipitação
+
+```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figura 3. Totais mensais de precipitação durante as safras de milho de 2011 e 2012 em College Station, Texas."}
+monthly_precip <- texas_climate_data %>%
+  mutate(
+    year = factor(year(date), levels = c(2011, 2012)),
+    month = factor(month(date), levels = month_levels, labels = month_labels)
+  ) %>%
+  group_by(year, month) %>%
+  summarise(total_precipitation = sum(PRECTOTCORR, na.rm = TRUE), .groups = "drop")
+
+p2 <- ggplot(monthly_precip, aes(x = month, y = total_precipitation, fill = year)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7, alpha = 0.9) +
+  labs(
+    title = "Totais mensais de precipitação",
+    subtitle = "Comparação entre as safras de 2011 e 2012",
+    x = "Mês",
+    y = "Precipitação total (mm)",
+    fill = "Ano",
+    caption = "As barras representam a precipitação acumulada dentro de cada mês da safra."
+  ) +
+  ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  theme_bw(base_size = 11)
+
+p2
+```
+
+### 5.5 Temperatura diária do ar
+
+```{r plot_temperature, fig.width=10, fig.height=6, fig.align="center", fig.cap="Figura 4. Temperatura diária mínima, média e máxima do ar durante as safras de milho de 2011 e 2012. As linhas tracejadas indicam tendências LOESS usadas apenas para auxiliar a interpretação visual."}
+temperature_data <- texas_climate_data %>%
+  mutate(T2M_MEAN = (T2M_MAX + T2M_MIN) / 2) %>%
+  pivot_longer(
+    cols = c(T2M_MIN, T2M_MEAN, T2M_MAX),
+    names_to = "Temperature_metric",
+    values_to = "Temperature"
+  ) %>%
+  mutate(
+    Temperature_metric = factor(
+      Temperature_metric,
+      levels = c("T2M_MIN", "T2M_MEAN", "T2M_MAX"),
+      labels = c("Mínima", "Média", "Máxima")
+    )
+  )
+
+p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperature_metric)) +
+  geom_line(linewidth = 0.55, alpha = 0.85) +
+  geom_smooth(aes(group = Temperature_metric), method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5, show.legend = FALSE) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Temperatura diária do ar",
+    subtitle = "Valores mínimo, médio e máximo; linhas tracejadas indicam tendências LOESS",
+    x = "Mês",
+    y = expression("Temperatura do ar (" * degree * "C)"),
+    color = "Métrica de temperatura",
+    caption = "As curvas LOESS tracejadas são incluídas apenas para resumir as trajetórias sazonais."
+  ) +
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  scale_color_manual(values = c("Mínima" = "#4285F4", "Média" = "#F4B400", "Máxima" = "#DB4437")) +
+  theme_bw(base_size = 11)
+
+p3
+```
+
+### 5.6 Figura combinada principal
+
+```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 5. Resumo multipainel dos principais contrastes climáticos entre os anos, incluindo precipitação diária por mês, totais mensais de precipitação e perfis diários de temperatura do ar."}
+main_layout <- "
+AA
+BC
+"
+
+combined_plot <- patchwork::wrap_plots(A = p1, B = p2, C = p3, design = main_layout) +
+  patchwork::plot_annotation(
+    tag_levels = "A",
+    title = "Principais contrastes climáticos entre safras"
+  )
+
+print(combined_plot)
+```
+
+### 5.7 Variáveis climáticas diárias adicionais
+
+```{r additional_plots, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 6. Variáveis climáticas diárias adicionais monitoradas durante as safras de milho, incluindo radiação solar, velocidade do vento e umidade relativa."}
+p4 <- ggplot(texas_climate_data, aes(x = date, y = ALLSKY_SFC_SW_DWN, color = "Radiação solar")) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(title = "Radiação solar diária de onda curta", subtitle = "A linha tracejada indica a tendência LOESS", x = "Mês", y = expression("Radiação solar de onda curta (" * MJ ~ m^{-2} ~ day^{-1} * ")"), caption = "Radiação solar diária incidente durante a safra.") +
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) + theme_bw(base_size = 11)
+
+p5 <- ggplot(texas_climate_data, aes(x = date, y = WS2M, color = "Velocidade do vento")) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(title = "Velocidade diária do vento a 2 m", subtitle = "A linha tracejada indica a tendência LOESS", x = "Mês", y = expression("Velocidade do vento (" * m ~ s^{-1} * ")"), caption = "Velocidade diária do vento medida a 2 m acima do solo.") +
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) + theme_bw(base_size = 11)
+
+p6 <- ggplot(texas_climate_data, aes(x = date, y = RH2M, color = "Umidade relativa")) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(title = "Umidade relativa diária a 2 m", subtitle = "A linha tracejada indica a tendência LOESS", x = "Mês", y = "Umidade relativa (%)", caption = "Umidade relativa diária medida a 2 m acima do solo.") +
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) + theme_bw(base_size = 11)
+```
+
+### 5.8 Figura combinada das variáveis adicionais
+
+```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 7. Resumo multipainel de variáveis climáticas adicionais entre anos, incluindo radiação solar, velocidade do vento e umidade relativa."}
+additional_layout <- "
+AB
+CC
+"
+
+combined_additional_plots <- patchwork::wrap_plots(A = p4, B = p5, C = p6, design = additional_layout) +
+  patchwork::plot_annotation(tag_levels = "A", title = "Contrastes climáticos adicionais entre safras")
+
+print(combined_additional_plots)
+```
+
+## 6. Covariáveis derivadas do clima
+
+A próxima etapa transforma os registros climáticos diários em variáveis-resumo anuais. Esta é a transição analítica mais importante do script, porque converte uma série temporal bruta em atributos que podem ser usados nos modelos preditivos posteriores.
+
+### 6.1 Derivar variáveis intermediárias diárias
+
+```{r feature_engineering}
+texas_climate_data <- texas_climate_data %>%
+  mutate(
+    T_base = 10,
+    T_upper = 30,
+    T_eff_min = if_else(T2M_MIN < T_base, T_base, T2M_MIN),
+    T_eff_max = if_else(T2M_MAX > T_upper, T_upper, T2M_MAX),
+    T_avg_eff = (T_eff_min + T_eff_max) / 2,
+    GDD = T_avg_eff - T_base,
+    DTR = T2M_MAX - T2M_MIN,
+    T_AVG_DAILY = (T2M_MAX + T2M_MIN) / 2,
+    SAT_VAP_PRES = 0.6108 * exp((17.27 * T_AVG_DAILY) / (T_AVG_DAILY + 237.3)),
+    ACT_VAP_PRES = SAT_VAP_PRES * (RH2M / 100),
+    VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES
+  )
+
+weather_covariates <- texas_climate_data %>%
+  mutate(year_numeric = as.integer(as.character(year))) %>%
+  group_by(year_numeric) %>%
+  summarise(
+    TMAX_AVG = mean(T2M_MAX, na.rm = TRUE),
+    TMIN_AVG = mean(T2M_MIN, na.rm = TRUE),
+    GDD_CUM = sum(GDD, na.rm = TRUE),
+    HEAT_STRESS_DAYS = sum(T2M_MAX > 35, na.rm = TRUE),
+    PRECTOT = sum(PRECTOTCORR, na.rm = TRUE),
+    DRY_DAYS = sum(PRECTOTCORR == 0, na.rm = TRUE),
+    RH_AVG = mean(RH2M, na.rm = TRUE),
+    WS2M_AVG = mean(WS2M, na.rm = TRUE),
+    RAD_CUM = sum(ALLSKY_SFC_SW_DWN, na.rm = TRUE),
+    T_AVG = mean(T_AVG_DAILY, na.rm = TRUE),
+    DTR_AVG = mean(DTR, na.rm = TRUE),
+    COLD_STRESS_DAYS = sum(T2M_MIN < 10, na.rm = TRUE),
+    RAINY_DAYS = sum(PRECTOTCORR > 0, na.rm = TRUE),
+    PREC_INTENSITY = if_else(RAINY_DAYS > 0, PRECTOT / RAINY_DAYS, 0),
+    LOW_RH_DAYS = sum(RH2M < 30, na.rm = TRUE),
+    VPD_AVG = mean(VPD_DAILY, na.rm = TRUE),
+    VPD_STRESS_DAYS = sum(VPD_DAILY > 1.5, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  rename(year = year_numeric)
+
+ecs_expanded <- texas_climate_data %>%
+  transmute(
+    year = as.integer(as.character(year)), date = date, PRECTOTCORR = PRECTOTCORR,
+    T2M_MAX = T2M_MAX, T2M_MIN = T2M_MIN, RH2M = RH2M,
+    ALLSKY_SFC_SW_DWN = ALLSKY_SFC_SW_DWN, WS2M = WS2M,
+    GDD = GDD, DTR = DTR, T_AVG_DAILY = T_AVG_DAILY,
+    SAT_VAP_PRES = SAT_VAP_PRES, ACT_VAP_PRES = ACT_VAP_PRES, VPD_DAILY = VPD_DAILY
+  ) %>%
+  left_join(weather_covariates, by = "year")
+```
+
+```{r covariate-tables}
+weather_covariates_dictionary <- tibble::tibble(
+  Variable = c("TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS", "PRECTOT", "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM", "T_AVG", "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS", "PREC_INTENSITY", "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"),
+  Unit = c("°C", "°C", "°C day", "days", "mm", "days", "%", "m s^-1", "MJ m^-2", "°C", "°C", "days", "days", "mm day^-1", "days", "kPa", "days"),
+  Description = c(
+    "Temperatura máxima média durante a safra",
+    "Temperatura mínima média durante a safra",
+    "Graus-dia acumulados",
+    "Número de dias de estresse por calor",
+    "Precipitação total durante a safra",
+    "Número de dias secos",
+    "Umidade relativa média",
+    "Velocidade média do vento a 2 m",
+    "Radiação de onda curta acumulada",
+    "Temperatura média",
+    "Amplitude térmica média diária",
+    "Número de dias de estresse por frio",
+    "Número de dias chuvosos",
+    "Intensidade média da chuva em dias chuvosos",
+    "Número de dias de baixa umidade",
+    "Déficit de pressão de vapor médio",
+    "Número de dias com estresse por déficit de pressão de vapor"
+  )
+)
+
+knitr::kable(weather_covariates_dictionary, align = c("l", "c", "l"), caption = "Tabela 2. Covariáveis derivadas do clima usadas para caracterizar as safras e apoiar a construção do kernel climático.") %>%
+  kableExtra::kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed", "responsive"), position = "center", font_size = 12)
+
+weather_covariates_display <- weather_covariates %>% mutate(across(-year, ~ round(.x, 2))) %>% rename(Ano = year)
+knitr::kable(weather_covariates_display, align = c("c", rep("c", ncol(weather_covariates_display) - 1)), caption = "Tabela 3. Covariáveis anuais derivadas do clima obtidas a partir dos dados NASA POWER para as safras de 2011 e 2012.") %>%
+  kableExtra::kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed", "responsive"), position = "center", font_size = 11) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+## 7. Salvar as saídas finais
+
+A última seção armazena explicitamente os arquivos processados gerados pelo tutorial. Salvar as saídas separa a obtenção dos dados da modelagem posterior, tornando o fluxo mais fácil de reproduzir e auditar. Nesta página em português, esse passo permanece ativo porque não é computacionalmente pesado e preserva exatamente os mesmos nomes de saída usados no pipeline oficial em inglês.
+
+```{r save_csv}
+write.csv(weather_covariates, "output/climate_results/environmental_covariates.csv", row.names = FALSE)
+write.csv(ecs_expanded, "output/climate_results/environmental_covariates_expanded.csv", row.names = FALSE)
+cat("Arquivos climáticos salvos com sucesso em 'output/climate_results/'.")
+```
+
+## 8. Observações finais
+
+Este tutorial estabelece um pipeline reprodutível de pré-processamento climático para o estudo. A partir de observações meteorológicas diárias, ele produz um conjunto curado de covariáveis derivadas do clima e figuras prontas para uso em relatório ou manuscrito.
+
+No fluxo mais amplo do projeto, essas saídas não são o objetivo final. Elas são objetos científicos intermediários que apoiam a construção do kernel climático (`W`) usado nos modelos M10-M18.
+
+Também é importante notar que o kernel climático não substitui o efeito categórico de ambiente (`E`). Neste conjunto de dados, a assinatura climática de 2011 é compartilhada por `CS11_WS` e `CS11_WW`, enquanto a assinatura de 2012 é compartilhada por `CS12_WS` e `CS12_WW`. Portanto, `W` captura similaridade meteorológica associada ao ano, enquanto `E` continua representando a distinção categórica entre os quatro macroambientes.
