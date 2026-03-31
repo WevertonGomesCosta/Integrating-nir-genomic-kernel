@@ -1,7 +1,7 @@
 ---
-title: "Análises Preditivas - Tutorial Didático"
+title: "Análises de Predição - Tutorial Didático"
 author:
-  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
@@ -18,87 +18,893 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 **Language / Idioma:** [English](analysis_prediction.html) | [Português](analysis_prediction_pt.html)
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  echo = TRUE,
-  warning = FALSE,
-  message = FALSE,
-  eval = FALSE
+## 1. Introdução
+
+Este arquivo é a **versão didática em português** do script final de predição. O objetivo aqui não é apenas executar as análises, mas também deixar claro **o que cada bloco faz**, **por que cada decisão foi tomada** e **quais arquivos são produzidos para as próximas etapas do pipeline**.
+
+Este script executa as análises de predição para o conjunto reduzido de **18 modelos Bayesianos multi-kernel** usados no estudo. Os modelos combinam:
+
+- kernels genômicos,
+- kernels fenômicos,
+- o efeito categórico de ambiente (`E`),
+- e, quando apropriado, o kernel climático (`W`).
+
+Os modelos são avaliados sob quatro cenários de validação cruzada:
+
+- `CV1`: genótipos não observados;
+- `CV2`: desempenho no conjunto de treinamento, seguindo o **script de referência**;
+- `CV0`: leave-one-environment-out **dentro da estrutura de folds**;
+- `CV00`: genótipos não observados em um cenário leave-one-environment-out, também **dentro da estrutura de folds**.
+
+Isso é importante porque a versão final corrigida restaura a lógica do `analysis.Rmd` original, mantendo ao mesmo tempo o catálogo reduzido dos 18 modelos finais usados no repositório atualizado.
+
+### O que este script grava
+
+Após a execução, o script produz:
+
+- arquivos CSV-resumo de predição em `output/results/`;
+- arquivos auxiliares de `saveAt` e métricas compactas do BGLR em `output/results/bglr_runs/`;
+- uma tabela de diagnóstico em nível de job em `output/tables/`.
+
+### Principais decisões de implementação
+
+- `CV0` e `CV00` são reconstruídos dentro da mesma estrutura `rep × fold` do script de referência;
+- `CV2` segue a lógica original de referência, mesmo que depois o texto do artigo precise ser harmonizado com essa definição;
+- a paralelização é feita no **início do fluxo**, com um job para cada combinação `MODEL × REP × TRAIT`;
+- as saídas são salvas de forma que os próximos scripts do pipeline possam lê-las diretamente.
+
+### Como ler este arquivo tutorial
+
+O arquivo está organizado na mesma ordem em que a análise é realmente executada:
+
+1. carregar matrizes e metadados;
+2. definir configurações de MCMC e de validação cruzada;
+3. definir os 18 modelos;
+4. executar todo o fluxo de validação cruzada em paralelo;
+5. salvar os resultados agregados para `CV1`, `CV2`, `CV0` e `CV00`.
+
+Assim, mesmo que você esteja lendo este arquivo com propósito didático, a ordem das seções espelha a lógica computacional real da análise.
+
+## 2. Pacotes e opções
+
+Aqui limpamos o ambiente, evitamos notação científica na saída impressa e carregamos os pacotes usados para ajuste dos modelos, manipulação dos dados e execução paralela.
+
+```{r setup}
+rm(list = ls())
+options(scipen = 999)
+
+library(BGLR)
+library(dplyr)
+library(readr)
+library(stringr)
+library(foreach)
+library(doParallel)
+library(parallel)
+library(plyr)
+```
+
+## 3. Entradas geradas pelos scripts anteriores
+
+Este script assume que a etapa de construção das matrizes do repositório já foi executada. Portanto, todos os kernels e matrizes de desenho são lidos diretamente de `output/Matrizes/`.
+
+```{r load-inputs}
+Pheno <- readRDS("output/Matrizes/Pheno.rds")
+
+ZG   <- readRDS("output/Matrizes/ZG.rds")
+ZP   <- readRDS("output/Matrizes/ZP.rds")
+ZE   <- readRDS("output/Matrizes/ZE.rds")
+ZW   <- readRDS("output/Matrizes/ZW.rds")
+
+ZGZE <- readRDS("output/Matrizes/ZGZE.rds")
+ZPZE <- readRDS("output/Matrizes/ZPZE.rds")
+ZGZW <- readRDS("output/Matrizes/ZGZW.rds")
+ZPZW <- readRDS("output/Matrizes/ZPZW.rds")
+
+GGK  <- readRDS("output/Matrizes/GGK.rds")
+PGK  <- readRDS("output/Matrizes/PGK.rds")
+GAK  <- readRDS("output/Matrizes/GAK.rds")
+PAK  <- readRDS("output/Matrizes/PAK.rds")
+
+GGKE <- readRDS("output/Matrizes/GGKE.rds")
+PGKE <- readRDS("output/Matrizes/PGKE.rds")
+GAKE <- readRDS("output/Matrizes/GAKE.rds")
+PAKE <- readRDS("output/Matrizes/PAKE.rds")
+
+GGKW <- readRDS("output/Matrizes/GGKW.rds")
+PGKW <- readRDS("output/Matrizes/PGKW.rds")
+GAKW <- readRDS("output/Matrizes/GAKW.rds")
+PAKW <- readRDS("output/Matrizes/PAKW.rds")
+```
+
+## 4. Configurações de MCMC e paralelização
+
+Nesta seção definimos a configuração de MCMC, o número de repetições e folds, os ambientes usados na validação leave-one-environment-out e o número de núcleos usados na execução paralela.
+
+```{r mcmc-settings}
+nIter <- 5000
+burnIn <- 1000
+thin <- 10
+num_rep <- 20
+num_fold <- 5
+
+n_cores <- max(1, parallel::detectCores() - 1)
+
+envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
+traits_to_run <- c("GY", "KW")
+Pedigree <- unique(Pheno$Pedigree)
+n_hybrids <- length(Pedigree)
+
+nIter
+burnIn
+thin
+num_rep
+num_fold
+n_cores
+n_hybrids
+```
+
+## 5. Catálogo de modelos
+
+O catálogo abaixo é o conjunto reduzido final de 18 modelos. Cada modelo recebe um identificador (`M01` a `M18`) e uma descrição curta que depois será propagada para as tabelas de resultados.
+
+```{r model-catalog}
+model_catalog <- data.frame(
+  ModelNumber = 1:18,
+  Model = sprintf("M%02d", 1:18),
+  Description = c(
+    "E + G + GE",
+    "E + P + PE",
+    "E + GGK + GGKE",
+    "E + PGK + PGKE",
+    "E + GAK + GAKE",
+    "E + PAK + PAKE",
+    "E + G + P + GE + PE",
+    "E + GGK + PGK + GGKE + PGKE",
+    "E + GAK + PAK + GAKE + PAKE",
+    "E + W + G + GE + GW",
+    "E + W + P + PE + PW",
+    "E + W + G + P + GE + PE + GW + PW",
+    "E + W + GGK + GGKE + GGKW",
+    "E + W + PGK + PGKE + PGKW",
+    "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    "E + W + GAK + GAKE + GAKW",
+    "E + W + PAK + PAKE + PAKW",
+    "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+  ),
+  stringsAsFactors = FALSE
+)
+
+model_catalog
+```
+
+## 6. Especificação dos modelos
+
+Esta seção define os objetos `ETA` usados pelos 18 modelos finais. Para deixar o material mais fácil de estudar, a lista de modelos agora é dividida em grupos conceituais menores, em vez de ser escrita como um único bloco longo.
+
+### 6.1 Inicializar o objeto `Eta_list`
+
+Começamos criando o contêiner vazio que irá armazenar as 18 especificações de modelos.
+
+```{r eta-list-initialize}
+Eta_list <- list()
+```
+
+### 6.2 Modelos 1 a 6: ambiente mais um bloco principal de kernel
+
+Esses são os modelos mais simples do catálogo. Cada um combina o efeito categórico de ambiente com um kernel principal e sua interação com o ambiente.
+
+```{r eta-list-models-1-6}
+Eta_list[[1]]  <- list(
+  E  = list(X = ZE,   model = "BRR"),
+  G  = list(K = ZG,   model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS")
+)
+
+Eta_list[[2]]  <- list(
+  E  = list(X = ZE,   model = "BRR"),
+  P  = list(K = ZP,   model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS")
+)
+
+Eta_list[[3]]  <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  GGK  = list(K = GGK,  model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS")
+)
+
+Eta_list[[4]]  <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  PGK  = list(K = PGK,  model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS")
+)
+
+Eta_list[[5]]  <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  GAK  = list(K = GAK,  model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS")
+)
+
+Eta_list[[6]]  <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  PAK  = list(K = PAK,  model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS")
 )
 ```
 
+### 6.3 Modelos 7 a 9: informação genômica e fenômica combinadas sem clima
 
-# 1. Introdução
+Este grupo combina dois kernels principais ao mesmo tempo, ainda sem o kernel climático.
 
-Esta é a **versão em português** da etapa de análise de predição do pipeline.
+```{r eta-list-models-7-9}
+Eta_list[[7]]  <- list(
+  E  = list(X = ZE,   model = "BRR"),
+  G  = list(K = ZG,   model = "RKHS"),
+  P  = list(K = ZP,   model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS")
+)
 
-A versão operacional e executável oficial permanece em **`analysis_prediction.Rmd`**. Esta página em português foi criada para navegação, leitura e documentação bilíngue, preservando a lógica conceitual da versão inglesa, mas com **`eval = FALSE`** para impedir nova execução da etapa mais custosa do pipeline durante a renderização do site.
+Eta_list[[8]]  <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  GGK  = list(K = GGK,  model = "RKHS"),
+  PGK  = list(K = PGK,  model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS")
+)
 
-## 2. Finalidade desta etapa
+Eta_list[[9]]  <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  GAK  = list(K = GAK,  model = "RKHS"),
+  PAK  = list(K = PAK,  model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS")
+)
+```
 
-Esta etapa executa as análises preditivas para o conjunto reduzido de **18 modelos Bayesianos multi-kernel** usados no estudo.
+### 6.4 Modelos 10 a 12: clima adicionado às combinações de base
 
-Os quatro cenários de validação são:
+O próximo grupo introduz o kernel climático (`W`) e suas interações com as informações genômica ou fenômica.
 
-- `CV1`: genótipos não observados;
-- `CV2`: desempenho no conjunto de treinamento, seguindo o script de referência;
-- `CV0`: leave-one-environment-out dentro da estrutura de folds;
-- `CV00`: genótipos não observados em um cenário leave-one-environment-out, também dentro da estrutura de folds.
+```{r eta-list-models-10-12}
+Eta_list[[10]] <- list(
+  E  = list(X = ZE,   model = "BRR"),
+  W  = list(K = ZW,   model = "RKHS"),
+  G  = list(K = ZG,   model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  GW = list(K = ZGZW, model = "RKHS")
+)
 
-## 3. Estrutura geral da etapa
+Eta_list[[11]] <- list(
+  E  = list(X = ZE,   model = "BRR"),
+  W  = list(K = ZW,   model = "RKHS"),
+  P  = list(K = ZP,   model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS"),
+  PW = list(K = ZPZW, model = "RKHS")
+)
 
-A versão canônica em inglês segue este fluxo:
+Eta_list[[12]] <- list(
+  E  = list(X = ZE,   model = "BRR"),
+  W  = list(K = ZW,   model = "RKHS"),
+  G  = list(K = ZG,   model = "RKHS"),
+  P  = list(K = ZP,   model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS"),
+  GW = list(K = ZGZW, model = "RKHS"),
+  PW = list(K = ZPZW, model = "RKHS")
+)
+```
 
-1. carregar matrizes e metadados;
-2. definir configurações MCMC e de validação cruzada;
-3. definir o catálogo final dos 18 modelos;
-4. executar a grade completa de jobs em paralelo;
-5. salvar resultados agregados por repetição para `CV1`, `CV2`, `CV0` e `CV00`.
+### 6.5 Modelos 13 a 18: kernels Gaussianos e aditivos combinados com clima
 
-## 4. Saídas principais
+O grupo final contém os modelos com kernels Gaussianos ou aditivos mais o efeito de clima.
 
-Quando a versão em inglês é executada, os principais arquivos são gravados em:
+```{r eta-list-models-13-18}
+Eta_list[[13]] <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  W    = list(K = ZW,   model = "RKHS"),
+  GGK  = list(K = GGK,  model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  GGKW = list(K = GGKW, model = "RKHS")
+)
 
-- `output/results/`
-- `output/results/bglr_runs/`
-- `output/tables/`
+Eta_list[[14]] <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  W    = list(K = ZW,   model = "RKHS"),
+  PGK  = list(K = PGK,  model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS"),
+  PGKW = list(K = PGKW, model = "RKHS")
+)
 
-Exemplos de nomes esperados:
+Eta_list[[15]] <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  W    = list(K = ZW,   model = "RKHS"),
+  GGK  = list(K = GGK,  model = "RKHS"),
+  PGK  = list(K = PGK,  model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS"),
+  GGKW = list(K = GGKW, model = "RKHS"),
+  PGKW = list(K = PGKW, model = "RKHS")
+)
+
+Eta_list[[16]] <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  W    = list(K = ZW,   model = "RKHS"),
+  GAK  = list(K = GAK,  model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  GAKW = list(K = GAKW, model = "RKHS")
+)
+
+Eta_list[[17]] <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  W    = list(K = ZW,   model = "RKHS"),
+  PAK  = list(K = PAK,  model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS"),
+  PAKW = list(K = PAKW, model = "RKHS")
+)
+
+Eta_list[[18]] <- list(
+  E    = list(X = ZE,   model = "BRR"),
+  W    = list(K = ZW,   model = "RKHS"),
+  GAK  = list(K = GAK,  model = "RKHS"),
+  PAK  = list(K = PAK,  model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS"),
+  GAKW = list(K = GAKW, model = "RKHS"),
+  PAKW = list(K = PAKW, model = "RKHS")
+)
+```
+
+### 6.6 Conferir a lista final antes do ajuste
+
+Este último chunk confirma que o número de objetos ETA coincide com o número de linhas do catálogo de modelos.
+
+```{r eta-list-check}
+stopifnot(length(Eta_list) == nrow(model_catalog))
+length(Eta_list)
+```
+
+## 7. Executando as análises de predição em paralelo com foreach
+
+Esta é a parte computacional central do script. Na versão didática em português, esta seção também é dividida em chunks menores para que o leitor possa entender o fluxo passo a passo.
+
+Como esta é a etapa computacionalmente mais cara de todo o pipeline, os blocos que realmente executam os jobs completos permanecem com `eval=FALSE` nesta versão em português. Para fins de navegação do site, os arquivos já produzidos pela versão oficial em inglês podem ser carregados silenciosamente quando necessário.
+
+A lógica de execução continua exatamente a mesma da versão final operacional:
+
+1. preparar as pastas de saída e remover arquivos antigos de predição;
+2. definir o executor compacto do BGLR e a etapa de sumarização por ambiente;
+3. criar a grade completa de jobs (`MODEL × REP × TRAIT`);
+4. inicializar o backend paralelo;
+5. executar todos os folds e todos os cenários de validação dentro de cada job;
+6. agregar os resultados em nível de fold e salvar um CSV por repetição.
+
+### 7.1 Preparar as pastas de saída e remover arquivos antigos de predição
+
+Este primeiro chunk cria os diretórios usados pela etapa de predição e remove as saídas anteriores de predição. Essa limpeza é importante porque o script reescreve todas as tabelas de CV do zero.
+
+```{r prepare-output-folders}
+dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path("output", "results", "bglr_runs"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path("output", "tables"), recursive = TRUE, showWarnings = FALSE)
+```
+
+Nesta versão em português, este chunk foi mantido **não destrutivo**. Ele apenas garante que os diretórios necessários existam, sem remover arquivos já produzidos pela execução oficial em inglês do pipeline.
+
+
+### 7.2 Definir as funções auxiliares usadas durante a execução
+
+Para manter o fluxo legível, a função de execução e a função de sumarização são mostradas em chunks separados.
+
+#### 7.2.1 Função para ajustar um modelo BGLR e salvar métricas compactas
+
+Esta função reproduz a lógica de ajuste da versão operacional final. Ela armazena as métricas essenciais em um arquivo `.rds` e retorna apenas os valores preditos e o tempo de execução de que o restante do pipeline precisa.
+
+```{r helper-run-bglr}
+run_bglr <- function(y2_vector, ETA, nIter, burnIn, thin, save_prefix) {
+  y_t <- as.numeric(y2_vector)
+  dir.create(dirname(save_prefix), recursive = TRUE, showWarnings = FALSE)
+
+  start_time <- Sys.time()
+
+  fit <- BGLR(
+    y = y_t,
+    ETA = ETA,
+    nIter = nIter,
+    burnIn = burnIn,
+    thin = thin,
+    saveAt = save_prefix,
+    verbose = FALSE
+  )
+
+  end_time <- Sys.time()
+  elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+
+  variancias_U <- list()
+  if (!is.null(fit$ETA)) {
+    nomes_efeitos <- names(fit$ETA)
+    if (is.null(nomes_efeitos)) {
+      nomes_efeitos <- paste0("Efeito_", seq_along(fit$ETA))
+    }
+
+    for (j in seq_along(fit$ETA)) {
+      efeito_nome <- nomes_efeitos[j]
+      if (!is.null(fit$ETA[[j]]$varU)) {
+        variancias_U[[efeito_nome]] <- fit$ETA[[j]]$varU
+      }
+    }
+  }
+
+  saida_essencial <- list(
+    yHat_mean = fit$yHat,
+    varE_mean = fit$varE,
+    varB_mean = ifelse(is.null(fit$varB), NA, fit$varB),
+    variances_U_mean = variancias_U,
+    DIC = ifelse(is.null(fit$fit$DIC), NA, fit$fit$DIC),
+    runtime_sec = elapsed
+  )
+
+  saveRDS(saida_essencial, paste0(save_prefix, "_metricas.rds"))
+
+  retorno_foreach <- list(
+    yHat = fit$yHat,
+    runtime_sec = elapsed
+  )
+
+  rm(fit, saida_essencial, variancias_U)
+  gc()
+
+  return(retorno_foreach)
+}
+```
+
+#### 7.2.2 Função para resumir correlações por ambiente
+
+Esta segunda função recebe um data frame com valores observados e preditos e retorna a correlação para cada ambiente.
+
+```{r helper-calc-cor-by-env}
+calc_cor_by_env <- function(df_with_yhat, trait_col) {
+  df_with_yhat %>%
+    dplyr::group_by(Env) %>%
+    dplyr::summarize(
+      cor = cor(.data[[trait_col]], yhat, use = "complete.obs"),
+      .groups = "drop"
+    ) %>%
+    as.data.frame()
+}
+```
+
+### 7.3 Criar a grade completa de jobs paralelos
+
+A etapa de predição é paralelizada no nível de `MODEL × REP × TRAIT`. Essa é a principal decisão de eficiência da versão final porque distribui jobs independentes maiores entre os workers, em vez de paralelizar apenas dentro de um laço de um único modelo.
+
+```{r define-job-grid}
+combos <- expand.grid(
+  MODEL = 1:18,
+  REP = seq_len(num_rep),
+  TRAIT = traits_to_run,
+  stringsAsFactors = FALSE
+)
+```
+
+### 7.4 Inicializar o backend paralelo
+
+Este chunk inicia o cluster, registra os workers para `foreach` e carrega os pacotes que cada worker precisa durante a execução.
+
+```{r start-parallel-backend, eval=FALSE}
+cl <- parallel::makeCluster(n_cores)
+doParallel::registerDoParallel(cl)
+on.exit({
+  try(parallel::stopCluster(cl), silent = TRUE)
+  foreach::registerDoSEQ()
+}, add = TRUE)
+
+parallel::clusterEvalQ(cl, {
+  library(BGLR)
+  library(dplyr)
+  library(plyr)
+  NULL
+})
+
+gc()
+```
+
+### 7.5 Executar todos os jobs em paralelo
+
+O bloco longo de execução original é agora decomposto em estágios menores. O código segue exatamente a mesma lógica computacional, mas o leitor pode inspecionar cada etapa separadamente.
+
+#### 7.5.1 Preparar um job antes de entrar no laço de folds
+
+Esta função cria os objetos específicos de cada job: uma cópia local da tabela fenotípica, listas vazias de resultados, o rótulo do modelo e a alocação de folds por pedigree para a combinação atual `MODEL × REP × TRAIT`.
+
+```{r define-job-initialization}
+initialize_prediction_job <- function(MODEL, rep_num, TRAIT) {
+  model_label <- model_catalog$Model[MODEL]
+  pheno <- data.frame(Pheno)
+
+  CV1_list <- list()
+  CV2_list <- list()
+  CV0_lists <- lapply(envs_leaveout, function(x) list())
+  CV00_lists <- lapply(envs_leaveout, function(x) list())
+  names(CV0_lists) <- envs_leaveout
+  names(CV00_lists) <- envs_leaveout
+
+  set.seed(100000 + MODEL * 100 + rep_num + ifelse(TRAIT == "GY", 0, 50000))
+  obs_per_fold <- ceiling(n_hybrids / num_fold)
+  folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = n_hybrids))
+
+  folds_df <- data.frame(
+    Pedigree = Pedigree,
+    fold = folds,
+    stringsAsFactors = FALSE
+  )
+
+  list(
+    model_label = model_label,
+    pheno = pheno,
+    CV1_list = CV1_list,
+    CV2_list = CV2_list,
+    CV0_lists = CV0_lists,
+    CV00_lists = CV00_lists,
+    folds_df = folds_df
+  )
+}
+```
+
+#### 7.5.2 Executar `CV1` e `CV2` para um fold
+
+Esta função reproduz a lógica do script de referência para o ajuste preditivo base. Ela prepara a máscara de treinamento, ajusta o modelo e retorna as tabelas em nível de fold para `CV1` e `CV2`.
+
+```{r define-cv1-cv2-step}
+run_cv1_cv2_for_fold <- function(fold_num, folds_df, pheno, TRAIT, MODEL, model_label, rep_num) {
+  train_geno <- folds_df$Pedigree[folds_df$fold != fold_num]
+  test_geno <- folds_df$Pedigree[folds_df$fold == fold_num]
+
+  yield <- pheno
+  yield$Y2 <- NA_real_
+  yield$Y2[yield$Pedigree %in% train_geno] <- yield[[TRAIT]][yield$Pedigree %in% train_geno]
+
+  cv12_run_dir <- file.path(
+    "output", "results", "bglr_runs",
+    "CV1_CV2",
+    TRAIT,
+    model_label,
+    paste0("rep", rep_num),
+    paste0("fold", fold_num)
+  )
+  dir.create(cv12_run_dir, recursive = TRUE, showWarnings = FALSE)
+
+  existing_cv12_files <- list.files(cv12_run_dir, full.names = TRUE, all.files = TRUE, no.. = TRUE)
+  if (length(existing_cv12_files) > 0) {
+    unlink(existing_cv12_files, recursive = TRUE, force = TRUE)
+  }
+
+  save_prefix_full <- file.path(
+    cv12_run_dir,
+    paste0("full_", TRAIT, "_", model_label, "_rep", rep_num, "_fold", fold_num, "_")
+  )
+
+  res_full <- run_bglr(
+    yield$Y2,
+    ETA = Eta_list[[MODEL]],
+    nIter = nIter,
+    burnIn = burnIn,
+    thin = thin,
+    save_prefix = save_prefix_full
+  )
+
+  yield$yhat <- res_full$yHat
+  runtime_full <- res_full$runtime_sec
+
+  df_test <- yield[!yield$Pedigree %in% train_geno, ]
+  df_train <- yield[yield$Pedigree %in% train_geno, ]
+
+  tmp1 <- calc_cor_by_env(df_test, TRAIT)
+  tmp2 <- calc_cor_by_env(df_train, TRAIT)
+
+  tmp1$Runtime_sec <- runtime_full
+  tmp2$Runtime_sec <- runtime_full
+
+  list(
+    train_geno = train_geno,
+    test_geno = test_geno,
+    cv1_result = tmp1,
+    cv2_result = tmp2
+  )
+}
+```
+
+#### 7.5.3 Executar `CV0` e `CV00` para um fold e para todos os casos leave-one-environment-out
+
+Esta função mantém a mesma lógica usada no script final corrigido: para cada fold, ela reaproveita `train_geno`, remove um ambiente por vez, ajusta o modelo novamente e armazena os resultados em nível de fold para `CV0` e `CV00`.
+
+```{r define-cv0-cv00-step}
+run_cv0_cv00_for_fold <- function(fold_num, train_geno, pheno, TRAIT, MODEL, model_label, rep_num) {
+  CV0_fold_results <- lapply(envs_leaveout, function(x) NULL)
+  CV00_fold_results <- lapply(envs_leaveout, function(x) NULL)
+
+  for (env_idx in seq_along(envs_leaveout)) {
+    env_name <- envs_leaveout[env_idx]
+
+    yield2 <- pheno
+    yield2$Y2 <- NA_real_
+    yield2$Y2[yield2$Pedigree %in% train_geno] <- yield2[[TRAIT]][yield2$Pedigree %in% train_geno]
+    yield2$Y2[yield2$Env == env_name] <- NA_real_
+
+    cv0_cv00_run_dir <- file.path(
+      "output", "results", "bglr_runs",
+      "CV0_CV00",
+      TRAIT,
+      model_label,
+      paste0("rep", rep_num),
+      paste0("fold", fold_num),
+      env_name
+    )
+    dir.create(cv0_cv00_run_dir, recursive = TRUE, showWarnings = FALSE)
+
+    existing_cv0_cv00_files <- list.files(cv0_cv00_run_dir, full.names = TRUE, all.files = TRUE, no.. = TRUE)
+    if (length(existing_cv0_cv00_files) > 0) {
+      unlink(existing_cv0_cv00_files, recursive = TRUE, force = TRUE)
+    }
+
+    save_prefix_env <- file.path(
+      cv0_cv00_run_dir,
+      paste0(
+        env_name, "_", TRAIT, "_", model_label,
+        "_rep", rep_num, "_fold", fold_num, "_"
+      )
+    )
+
+    res_env <- run_bglr(
+      yield2$Y2,
+      ETA = Eta_list[[MODEL]],
+      nIter = nIter,
+      burnIn = burnIn,
+      thin = thin,
+      save_prefix = save_prefix_env
+    )
+
+    yield2$yhat <- res_env$yHat
+    runtime_env <- res_env$runtime_sec
+
+    df_test2 <- yield2[!yield2$Pedigree %in% train_geno, ]
+    df_train2 <- yield2[yield2$Pedigree %in% train_geno, ]
+
+    tmp00 <- calc_cor_by_env(df_test2, TRAIT)
+    tmp0 <- calc_cor_by_env(df_train2, TRAIT)
+
+    tmp00$Runtime_sec <- runtime_env
+    tmp0$Runtime_sec <- runtime_env
+
+    CV00_fold_results[[env_idx]] <- tmp00
+    CV0_fold_results[[env_idx]] <- tmp0
+  }
+
+  list(
+    cv0_fold_results = CV0_fold_results,
+    cv00_fold_results = CV00_fold_results
+  )
+}
+```
+
+#### 7.5.4 Gravar as saídas agregadas de um job
+
+Depois que todos os folds são processados, esta função agrega as tabelas em nível de fold com `plyr::ldply(...)` e grava os arquivos CSV finais esperados pelas próximas etapas do pipeline.
+
+Para `CV0` e `CV00`, cada arquivo ainda corresponde a **um** ambiente leave-one-out. Como rótulos como `CS11_WS` contêm um sublinhado, o nome do ambiente é temporariamente dividido em duas partes do nome do arquivo e depois escrito de volta no nome final sem mudar seu significado.
+
+```{r define-output-writing-step}
+write_prediction_outputs <- function(CV1_list, CV2_list, CV0_lists, CV00_lists, TRAIT, model_label, rep_num) {
+  CV1out <- plyr::ldply(CV1_list, data.frame)
+  CV2out <- plyr::ldply(CV2_list, data.frame)
+
+  write.csv(
+    CV1out,
+    file = file.path(
+      "output/results",
+      paste0("CV1_", TRAIT, "_", model_label, "_rep", rep_num, ".csv")
+    ),
+    row.names = FALSE
+  )
+
+  write.csv(
+    CV2out,
+    file = file.path(
+      "output/results",
+      paste0("CV2_", TRAIT, "_", model_label, "_rep", rep_num, ".csv")
+    ),
+    row.names = FALSE
+  )
+
+  for (env_idx in seq_along(envs_leaveout)) {
+    env_name <- envs_leaveout[env_idx]
+
+    # Cada arquivo de CV0/CV00 representa um único ambiente leave-one-out.
+    # Rótulos como CS11_WS são divididos por "_" em duas partes do nome do
+    # arquivo, mas ainda assim se referem a um único ambiente quando o arquivo
+    # final é escrito.
+    env_label_part1 <- strsplit(env_name, "_")[[1]][1]
+    env_label_part2 <- strsplit(env_name, "_")[[1]][2]
+
+    CV00out <- plyr::ldply(CV00_lists[[env_idx]], data.frame)
+    CV0out <- plyr::ldply(CV0_lists[[env_idx]], data.frame)
+
+    write.csv(
+      CV00out,
+      file = file.path(
+        "output/results",
+        paste0(
+          "CV00_", TRAIT, "_",
+          env_label_part1, "_", env_label_part2, "_",
+          model_label, "_rep", rep_num, ".csv"
+        )
+      ),
+      row.names = FALSE
+    )
+
+    write.csv(
+      CV0out,
+      file = file.path(
+        "output/results",
+        paste0(
+          "CV0_", TRAIT, "_",
+          env_label_part1, "_", env_label_part2, "_",
+          model_label, "_rep", rep_num, ".csv"
+        )
+      ),
+      row.names = FALSE
+    )
+  }
+}
+```
+
+#### 7.5.5 Executar a grade completa de jobs com `foreach`
+
+Agora a chamada paralela em si fica mais curta e mais fácil de seguir: cada worker inicializa um job, itera pelos cinco folds, atualiza as listas de resultados, grava as saídas agregadas e por fim retorna uma linha compacta de diagnóstico.
+
+```{r run-jobs, eval=FALSE}
+job_diagnostics <- foreach(
+  i = seq_len(nrow(combos)),
+  .combine = rbind,
+  .packages = c("BGLR", "dplyr", "plyr"),
+  .export = c(
+    "Pheno", "Pedigree", "n_hybrids", "num_fold", "num_rep",
+    "envs_leaveout", "traits_to_run", "Eta_list", "model_catalog",
+    "run_bglr", "calc_cor_by_env", "initialize_prediction_job",
+    "run_cv1_cv2_for_fold", "run_cv0_cv00_for_fold",
+    "write_prediction_outputs", "nIter", "burnIn", "thin"
+  )
+) %dopar% {
+  MODEL <- combos$MODEL[i]
+  rep_num <- combos$REP[i]
+  TRAIT <- as.character(combos$TRAIT[i])
+
+  job_state <- initialize_prediction_job(MODEL, rep_num, TRAIT)
+  model_label <- job_state$model_label
+  pheno <- job_state$pheno
+  CV1_list <- job_state$CV1_list
+  CV2_list <- job_state$CV2_list
+  CV0_lists <- job_state$CV0_lists
+  CV00_lists <- job_state$CV00_lists
+  folds_df <- job_state$folds_df
+
+  for (fold_num in seq_len(num_fold)) {
+    cv12_step <- run_cv1_cv2_for_fold(
+      fold_num = fold_num,
+      folds_df = folds_df,
+      pheno = pheno,
+      TRAIT = TRAIT,
+      MODEL = MODEL,
+      model_label = model_label,
+      rep_num = rep_num
+    )
+
+    CV1_list[[length(CV1_list) + 1]] <- cv12_step$cv1_result
+    CV2_list[[length(CV2_list) + 1]] <- cv12_step$cv2_result
+
+    cv0_cv00_step <- run_cv0_cv00_for_fold(
+      fold_num = fold_num,
+      train_geno = cv12_step$train_geno,
+      pheno = pheno,
+      TRAIT = TRAIT,
+      MODEL = MODEL,
+      model_label = model_label,
+      rep_num = rep_num
+    )
+
+    for (env_idx in seq_along(envs_leaveout)) {
+      CV00_lists[[env_idx]][[length(CV00_lists[[env_idx]]) + 1]] <- cv0_cv00_step$cv00_fold_results[[env_idx]]
+      CV0_lists[[env_idx]][[length(CV0_lists[[env_idx]]) + 1]] <- cv0_cv00_step$cv0_fold_results[[env_idx]]
+    }
+  }
+
+  write_prediction_outputs(
+    CV1_list = CV1_list,
+    CV2_list = CV2_list,
+    CV0_lists = CV0_lists,
+    CV00_lists = CV00_lists,
+    TRAIT = TRAIT,
+    model_label = model_label,
+    rep_num = rep_num
+  )
+
+  data.frame(
+    Trait = TRAIT,
+    Model = model_label,
+    Rep = rep_num,
+    Status = "ok",
+    stringsAsFactors = FALSE
+  )
+}
+```
+
+### 7.6 Salvar a tabela de diagnóstico dos jobs
+
+O último chunk desta seção armazena uma tabela compacta mostrando quais jobs foram concluídos. Isso é útil para verificar se todas as combinações de traço, modelo e repetição terminaram corretamente.
+
+```{r load-existing-job-diagnostics, include=FALSE}
+job_diag_path <- file.path("output", "tables", "analysis_prediction_reference_aligned_jobs.csv")
+if (file.exists(job_diag_path)) {
+  job_diagnostics <- read.csv(job_diag_path, stringsAsFactors = FALSE)
+}
+```
+
+```{r preview-job-diagnostics, eval=TRUE}
+if (exists("job_diagnostics") && is.data.frame(job_diagnostics) && nrow(job_diagnostics) > 0) {
+  utils::head(job_diagnostics, 10) |>
+    knitr::kable(
+      caption = "Pré-visualização da tabela de diagnóstico dos jobs já produzida pela versão em inglês.",
+      align = "c"
+    ) |>
+    kableExtra::kable_styling(
+      full_width = FALSE,
+      bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+      position = "center"
+    )
+} else {
+  cat("A tabela de diagnóstico dos jobs ainda não foi encontrada em output/tables/analysis_prediction_reference_aligned_jobs.csv.\n")
+}
+```
+
+```{r save-job-diagnostics}
+if (exists("job_diagnostics") && is.data.frame(job_diagnostics)) {
+  write.csv(
+    job_diagnostics,
+    file.path("output", "tables", "analysis_prediction_reference_aligned_jobs.csv"),
+    row.names = FALSE
+  )
+}
+```
+
+## 8. Nota final
+
+Esta versão corrigida produz saídas-resumo de predição alinhadas às definições de CV do script de referência.
+
+Os nomes dos arquivos CSV em `output/results/` incluem:
+
+- tipo de CV
+- traço
+- rótulo do modelo (`M01` a `M18`)
+- repetição
+- ambiente deixado de fora, quando aplicável
+
+Exemplos:
 
 - `CV1_GY_M05_rep2.csv`
 - `CV2_KW_M12_rep8.csv`
 - `CV0_GY_CS11_WS_M10_rep1.csv`
 - `CV00_KW_CS12_WW_M18_rep1.csv`
 
-## 5. Papel no pipeline
+Os arquivos gerados pelo `BGLR` via `saveAt` são armazenados em subpastas de:
 
-Esta é a etapa central de geração das saídas brutas de predição. Seus resultados são usados diretamente por:
+`output/results/bglr_runs/`
 
-- `visualization.Rmd`
-- `article_results_for_manuscript_final.R`
+organizadas por:
 
-## 6. Política desta versão em português
+- `CV1_CV2` ou `CV0_CV00`
+- traço
+- modelo
+- repetição
+- fold
+- ambiente leave-one-out, quando aplicável
 
-Nesta página:
-
-- os mesmos nomes de saída e a mesma estrutura de arquivos devem ser preservados;
-- a lógica conceitual acompanha exatamente a versão em inglês;
-- a execução permanece desativada com **`eval = FALSE`**.
-
-Isso garante que o site seja bilíngue sem duplicar computação.
-
-## 7. Script canônico em inglês
-
-Arquivo executável oficial:
-
-- `analysis/analysis_prediction.Rmd`
-
-Página correspondente em inglês:
-
-- `analysis_prediction.html`
-
-## 8. Observação operacional
-
-Se for necessário rodar novamente as análises preditivas, use a versão em inglês.  
-A presente página em português existe para documentação, ensino e navegação bilíngue do site.
-
+As saídas de `CV1`, `CV2`, `CV0` e `CV00` são agregadas ao longo dos 5 folds dentro de cada repetição, acompanhando o fluxo do script de referência.

@@ -23,78 +23,805 @@ knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  eval = FALSE
+  fig.align = "center",
+  fig.width = 12,
+  fig.height = 7,
+  dpi = 300
 )
 ```
 
+## 1. Introdução
 
-# 1. Introdução
+Este tutorial resume os **componentes de variância** dos modelos preditivos usados neste estudo. No fluxo atual, este arquivo é usado principalmente para **consolidar e interpretar resultados que já foram previamente estimados**, embora ainda preserve a estrutura de código necessária para ajustar os modelos quando essa etapa precisar ser refeita.
 
-Esta é a **versão em português** da etapa de componentes de variância do pipeline.
+O objetivo é quantificar quanto da variância fenotípica total é atribuída aos efeitos principais e aos termos de interação incluídos em cada modelo. Em termos práticos, este script ajuda a responder perguntas como:
 
-A versão operacional oficial permanece em **`variance_components.Rmd`**. Esta página em português foi criada para navegação e leitura no site, mantendo a mesma lógica conceitual da versão em inglês, porém com **`eval = FALSE`** para evitar rerrodar o ajuste Bayesiano e a consolidação durante a renderização.
+- Quanto da variância está associado ao **efeito categórico de ambiente (E)**?
+- Quanto é capturado pelos **kernels genômicos**?
+- Quanto é capturado pelos **kernels fenômicos/NIRS (P)**?
+- Quanto está associado ao **kernel climático (W)**, usado principalmente nos modelos **M10-M18**?
+- Quão relevantes são os termos de interação como **G × E**, **G × W**, **P × E** e **P × W**?
 
-## 2. Finalidade desta etapa
+Este script está organizado em quatro estágios:
 
-Esta etapa resume os **componentes de variância** dos modelos preditivos usados no estudo.
+1. **Carregar os kernels e os dados fenotípicos** produzidos em `matrizes.Rmd`.
+2. **Definir os 18 modelos de componentes de variância**.
+3. **Ler ou rerodar as saídas do BGLR**, dependendo de os resumos posteriores salvos já existirem.
+4. **Processar e visualizar a decomposição da variância** para produtividade de grãos (GY) e peso de 500 grãos (KW).
 
-Na prática, ela ajuda a responder perguntas como:
+Uma grande proporção de variância associada a uma dada fonte não deve ser interpretada automaticamente como evidência de complementaridade biológica ou de melhor desempenho preditivo. Esse ponto é especialmente importante para **P**, porque a similaridade baseada em NIRS pode refletir forte resposta fisiológica ao ambiente além de qualquer sinal biológico estável, e para **W**, porque o kernel climático complementa, mas não substitui, o efeito categórico de ambiente.
 
-- quanto da variação é atribuída ao efeito categórico de ambiente (`E`)?
-- quanto é capturado pelos kernels genômicos?
-- quanto é capturado pelos kernels fenômicos/NIR?
-- qual é a contribuição do kernel climático (`W`)?
-- qual é a importância das interações `G × E`, `G × W`, `P × E` e `P × W`?
+## 2. Ambiente em R e entradas necessárias
 
-## 3. Estrutura geral da etapa
+Primeiro, carregamos os pacotes usados para manipular os dados, ajustar os modelos Bayesianos e gerar as figuras finais em padrão de artigo.
 
-A etapa é organizada em quatro blocos principais:
+```{r load-packages}
+library(dplyr)
+library(tidyr)
+library(readr)
+library(stringr)
+library(tibble)
+library(ggplot2)
+library(BGLR)
+library(parallel)
+library(doParallel)
+library(foreach)
+library(ggthemes)
+library(scales)
+library(fs)
+library(kableExtra)
+```
 
-1. carregar kernels e dados fenotípicos produzidos por `matrizes.Rmd`;
-2. definir os 18 modelos de componentes de variância;
-3. ler resultados já salvos ou rerrodar o ajuste em `BGLR` quando necessário;
-4. resumir e visualizar a decomposição da variância para `GY` e `KW`.
+### 2.1. Caminhos dos arquivos
 
-## 4. Uso prático no fluxo atual
+Todos os kernels e objetos fenotípicos devem estar disponíveis em `output/Matrizes/`, que é o diretório de saída criado em `matrizes.Rmd`. Os resultados de componentes de variância gerados aqui são armazenados em `output/variance_components/`.
 
-No fluxo atual do projeto, esta etapa é usada principalmente para:
+```{r define-paths}
+kernel_dir <- "output/Matrizes"
+results_dir <- "output/variance_components"
+figure_dir <- file.path(results_dir, "figures")
 
-- **consolidar** resultados já estimados anteriormente;
-- reorganizar os resultados para interpretação;
-- gerar tabelas e figuras de componentes de variância.
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
+```
 
-Ou seja, a página existe menos para ajuste repetido e mais para **síntese reprodutível dos resultados já obtidos**.
+### 2.2. Checagem das entradas
 
-## 5. Principais saídas esperadas
+Antes de ler os arquivos, verificamos se os objetos `.rds` esperados estão presentes na pasta de saídas das matrizes. Isso deixa o tutorial mais robusto porque o script para imediatamente se algum objeto necessário estiver ausente.
 
-A versão em inglês pode gerar ou consolidar em `output/variance_components/` arquivos como:
+```{r input-checks}
+required_files <- c(
+  "ZG.rds", "ZP.rds", "ZE.rds", "ZEZE.rds", "ZW.rds",
+  "ZGZE.rds", "ZPZE.rds", "ZGZW.rds", "ZPZW.rds",
+  "GGK.rds", "PGK.rds", "GAK.rds", "PAK.rds",
+  "GGKE.rds", "PGKE.rds", "GGKW.rds", "PGKW.rds",
+  "GAKE.rds", "PAKE.rds", "GAKW.rds", "PAKW.rds",
+  "Pheno.rds", "Pedigree.rds"
+)
 
-- `model_catalog.csv`
-- `variance_components_all.rds`
-- `variance_components_processed.csv`
-- `variance_components_table_percent.csv`
-- figuras em `output/variance_components/figures/`
+missing_files <- required_files[!file.exists(file.path(kernel_dir, required_files))]
 
-## 6. Política desta versão em português
+if (length(missing_files) > 0) {
+  stop(
+    "Os seguintes arquivos necessários não foram encontrados em output/Matrizes/: ",
+    paste(missing_files, collapse = ", "),
+    ". Execute matrizes.Rmd primeiro."
+  )
+}
+```
 
-Nesta página:
+### 2.3. Rótulos usados nas tabelas e figuras finais
 
-- os mesmos objetos, caminhos e nomes de saída da versão inglesa devem ser preservados;
-- a etapa funciona como espelho didático da estrutura do script canônico;
-- a execução permanece desativada com **`eval = FALSE`**.
+Esses vetores definem como os componentes de variância aparecerão nas saídas finais. Manter esses rótulos visíveis no script principal ajuda o leitor a entender como os nomes internos do modelo são traduzidos para rótulos prontos para artigo.
 
-## 7. Script canônico em inglês
+```{r labels-for-output}
+component_display <- c(
+  E = "Ambiente (E)",
+  G = "Genômico linear (G)",
+  P = "Fenômico linear (P)",
+  W = "Kernel climático (W)",
+  GE = "G × E",
+  PE = "P × E",
+  GW = "G × W",
+  PW = "P × W",
+  GGK = "Genômico Gaussiano (GGK)",
+  PGK = "Fenômico Gaussiano (PGK)",
+  GAK = "Genômico arc-cosine (GAK)",
+  PAK = "Fenômico arc-cosine (PAK)",
+  GGKE = "GGK × E",
+  PGKE = "PGK × E",
+  GAKE = "GAK × E",
+  PAKE = "PAK × E",
+  GGKW = "GGK × W",
+  PGKW = "PGK × W",
+  GAKW = "GAK × W",
+  PAKW = "PAK × W",
+  Residual = "Residual"
+)
 
-Arquivo executável oficial:
+component_order <- c(
+  "Ambiente (E)",
+  "Genômico linear (G)",
+  "Fenômico linear (P)",
+  "Kernel climático (W)",
+  "G × E",
+  "P × E",
+  "G × W",
+  "P × W",
+  "Genômico Gaussiano (GGK)",
+  "Fenômico Gaussiano (PGK)",
+  "Genômico arc-cosine (GAK)",
+  "Fenômico arc-cosine (PAK)",
+  "GGK × E",
+  "PGK × E",
+  "GAK × E",
+  "PAK × E",
+  "GGK × W",
+  "PGK × W",
+  "GAK × W",
+  "PAK × W",
+  "Residual"
+)
+```
 
-- `analysis/variance_components.Rmd`
+## 3. Carregamento dos kernels e objetos fenotípicos
 
-Página correspondente em inglês:
+Esta seção carrega as matrizes geradas em `matrizes.Rmd`. Esses objetos são as entradas centrais da análise de componentes de variância.
 
-- `variance_components.html`
+```{r load-matrices}
+ZG    <- readRDS(file.path(kernel_dir, "ZG.rds"))
+ZP    <- readRDS(file.path(kernel_dir, "ZP.rds"))
+ZE    <- readRDS(file.path(kernel_dir, "ZE.rds"))
+ZEZE  <- readRDS(file.path(kernel_dir, "ZEZE.rds"))
+ZW    <- readRDS(file.path(kernel_dir, "ZW.rds"))
 
-## 8. Observação operacional
+ZGZE  <- readRDS(file.path(kernel_dir, "ZGZE.rds"))
+ZPZE  <- readRDS(file.path(kernel_dir, "ZPZE.rds"))
+ZGZW  <- readRDS(file.path(kernel_dir, "ZGZW.rds"))
+ZPZW  <- readRDS(file.path(kernel_dir, "ZPZW.rds"))
 
-Se for necessário rerrodar a etapa de componentes de variância, use a versão em inglês.  
-A presente página em português existe para documentação e navegação bilíngue do site.
+GGK   <- readRDS(file.path(kernel_dir, "GGK.rds"))
+PGK   <- readRDS(file.path(kernel_dir, "PGK.rds"))
+GAK   <- readRDS(file.path(kernel_dir, "GAK.rds"))
+PAK   <- readRDS(file.path(kernel_dir, "PAK.rds"))
 
+GGKE  <- readRDS(file.path(kernel_dir, "GGKE.rds"))
+PGKE  <- readRDS(file.path(kernel_dir, "PGKE.rds"))
+GGKW  <- readRDS(file.path(kernel_dir, "GGKW.rds"))
+PGKW  <- readRDS(file.path(kernel_dir, "PGKW.rds"))
+
+GAKE  <- readRDS(file.path(kernel_dir, "GAKE.rds"))
+PAKE  <- readRDS(file.path(kernel_dir, "PAKE.rds"))
+GAKW  <- readRDS(file.path(kernel_dir, "GAKW.rds"))
+PAKW  <- readRDS(file.path(kernel_dir, "PAKW.rds"))
+
+Pheno    <- readRDS(file.path(kernel_dir, "Pheno.rds"))
+Pedigree <- readRDS(file.path(kernel_dir, "Pedigree.rds"))
+
+n_obs <- nrow(Pheno)
+cat("Número de observações fenotípicas:", n_obs, "\n")
+cat("Número de pedigrees:", length(Pedigree), "\n")
+```
+
+### 3.1. Diagnósticos de alinhamento
+
+Antes de ajustar os modelos, é importante verificar se os kernels são quadrados e alinhados à mesma ordem de observações usada em `Pheno`. Em um contexto tutorial, essa é uma checagem importante porque muitos erros posteriores são causados por ordens incompatíveis entre linhas e colunas.
+
+```{r kernel-alignment-check}
+reference_ids <- Pheno$ObsID
+
+ZE <- ZE[match(reference_ids, rownames(ZE)), , drop = FALSE]
+
+ZG   <- ZG[reference_ids, reference_ids, drop = FALSE]
+ZP   <- ZP[reference_ids, reference_ids, drop = FALSE]
+ZEZE <- ZEZE[reference_ids, reference_ids, drop = FALSE]
+ZW   <- ZW[reference_ids, reference_ids, drop = FALSE]
+ZGZE <- ZGZE[reference_ids, reference_ids, drop = FALSE]
+ZPZE <- ZPZE[reference_ids, reference_ids, drop = FALSE]
+ZGZW <- ZGZW[reference_ids, reference_ids, drop = FALSE]
+ZPZW <- ZPZW[reference_ids, reference_ids, drop = FALSE]
+GGK  <- GGK[reference_ids, reference_ids, drop = FALSE]
+PGK  <- PGK[reference_ids, reference_ids, drop = FALSE]
+GAK  <- GAK[reference_ids, reference_ids, drop = FALSE]
+PAK  <- PAK[reference_ids, reference_ids, drop = FALSE]
+GGKE <- GGKE[reference_ids, reference_ids, drop = FALSE]
+PGKE <- PGKE[reference_ids, reference_ids, drop = FALSE]
+GGKW <- GGKW[reference_ids, reference_ids, drop = FALSE]
+PGKW <- PGKW[reference_ids, reference_ids, drop = FALSE]
+GAKE <- GAKE[reference_ids, reference_ids, drop = FALSE]
+PAKE <- PAKE[reference_ids, reference_ids, drop = FALSE]
+GAKW <- GAKW[reference_ids, reference_ids, drop = FALSE]
+PAKW <- PAKW[reference_ids, reference_ids, drop = FALSE]
+
+kernel_inventory <- tibble(
+  kernel = c("ZG", "ZP", "ZEZE", "ZW", "GGK", "PGK", "GAK", "PAK"),
+  n_rows = c(nrow(ZG), nrow(ZP), nrow(ZEZE), nrow(ZW), nrow(GGK), nrow(PGK), nrow(GAK), nrow(PAK)),
+  n_cols = c(ncol(ZG), ncol(ZP), ncol(ZEZE), ncol(ZW), ncol(GGK), ncol(PGK), ncol(GAK), ncol(PAK)),
+  is_square = c(
+    nrow(ZG) == ncol(ZG),
+    nrow(ZP) == ncol(ZP),
+    nrow(ZEZE) == ncol(ZEZE),
+    nrow(ZW) == ncol(ZW),
+    nrow(GGK) == ncol(GGK),
+    nrow(PGK) == ncol(PGK),
+    nrow(GAK) == ncol(GAK),
+    nrow(PAK) == ncol(PAK)
+  ),
+  symmetric_names = c(
+    identical(rownames(ZG), colnames(ZG)),
+    identical(rownames(ZP), colnames(ZP)),
+    identical(rownames(ZEZE), colnames(ZEZE)),
+    identical(rownames(ZW), colnames(ZW)),
+    identical(rownames(GGK), colnames(GGK)),
+    identical(rownames(PGK), colnames(PGK)),
+    identical(rownames(GAK), colnames(GAK)),
+    identical(rownames(PAK), colnames(PAK))
+  ),
+  aligned_with_reference = c(
+    identical(rownames(ZG), reference_ids),
+    identical(rownames(ZP), reference_ids),
+    identical(rownames(ZEZE), reference_ids),
+    identical(rownames(ZW), reference_ids),
+    identical(rownames(GGK), reference_ids),
+    identical(rownames(PGK), reference_ids),
+    identical(rownames(GAK), reference_ids),
+    identical(rownames(PAK), reference_ids)
+  )
+)
+
+kernel_inventory %>%
+  dplyr::mutate(
+    n_rows = format(n_rows, big.mark = ","),
+    n_cols = format(n_cols, big.mark = ",")
+  ) %>%
+  knitr::kable(
+    caption = "Resumo diagnóstico dos principais kernels usados na análise de componentes de variância após alinhamento explícito à ordem das observações fenotípicas.",
+    align = "lcccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "260px")
+```
+
+## 4. Definição dos 18 modelos preditivos
+
+Cada modelo é definido como uma lista no formato exigido pelo argumento `ETA` de `BGLR`. O termo de ambiente (`E`) é incluído como uma matriz de efeitos fixos com `model = "BRR"`, enquanto os kernels são ajustados como efeitos aleatórios com `model = "RKHS"`.
+
+```{r define-models}
+models <- list()
+
+models[[1]] <- list(
+  E  = list(X = ZE, model = "BRR"),
+  G  = list(K = ZG, model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS")
+)
+
+models[[2]] <- list(
+  E  = list(X = ZE, model = "BRR"),
+  P  = list(K = ZP, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS")
+)
+
+models[[3]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  GGK  = list(K = GGK, model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS")
+)
+
+models[[4]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  PGK  = list(K = PGK, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS")
+)
+
+models[[5]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  GAK  = list(K = GAK, model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS")
+)
+
+models[[6]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  PAK  = list(K = PAK, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS")
+)
+
+models[[7]] <- list(
+  E  = list(X = ZE, model = "BRR"),
+  G  = list(K = ZG, model = "RKHS"),
+  P  = list(K = ZP, model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS")
+)
+
+models[[8]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  GGK  = list(K = GGK, model = "RKHS"),
+  PGK  = list(K = PGK, model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS")
+)
+
+models[[9]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  GAK  = list(K = GAK, model = "RKHS"),
+  PAK  = list(K = PAK, model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS")
+)
+
+models[[10]] <- list(
+  E  = list(X = ZE, model = "BRR"),
+  W  = list(K = ZW, model = "RKHS"),
+  G  = list(K = ZG, model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  GW = list(K = ZGZW, model = "RKHS")
+)
+
+models[[11]] <- list(
+  E  = list(X = ZE, model = "BRR"),
+  W  = list(K = ZW, model = "RKHS"),
+  P  = list(K = ZP, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS"),
+  PW = list(K = ZPZW, model = "RKHS")
+)
+
+models[[12]] <- list(
+  E  = list(X = ZE, model = "BRR"),
+  W  = list(K = ZW, model = "RKHS"),
+  G  = list(K = ZG, model = "RKHS"),
+  P  = list(K = ZP, model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS"),
+  GW = list(K = ZGZW, model = "RKHS"),
+  PW = list(K = ZPZW, model = "RKHS")
+)
+
+models[[13]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  W    = list(K = ZW, model = "RKHS"),
+  GGK  = list(K = GGK, model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  GGKW = list(K = GGKW, model = "RKHS")
+)
+
+models[[14]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  W    = list(K = ZW, model = "RKHS"),
+  PGK  = list(K = PGK, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS"),
+  PGKW = list(K = PGKW, model = "RKHS")
+)
+
+models[[15]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  W    = list(K = ZW, model = "RKHS"),
+  GGK  = list(K = GGK, model = "RKHS"),
+  PGK  = list(K = PGK, model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS"),
+  GGKW = list(K = GGKW, model = "RKHS"),
+  PGKW = list(K = PGKW, model = "RKHS")
+)
+
+models[[16]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  W    = list(K = ZW, model = "RKHS"),
+  GAK  = list(K = GAK, model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  GAKW = list(K = GAKW, model = "RKHS")
+)
+
+models[[17]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  W    = list(K = ZW, model = "RKHS"),
+  PAK  = list(K = PAK, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS"),
+  PAKW = list(K = PAKW, model = "RKHS")
+)
+
+models[[18]] <- list(
+  E    = list(X = ZE, model = "BRR"),
+  W    = list(K = ZW, model = "RKHS"),
+  GAK  = list(K = GAK, model = "RKHS"),
+  PAK  = list(K = PAK, model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS"),
+  GAKW = list(K = GAKW, model = "RKHS"),
+  PAKW = list(K = PAKW, model = "RKHS")
+)
+
+names(models) <- sprintf("Eta%02d", seq_along(models))
+```
+
+### 4.1. Catálogo de modelos
+
+Esta tabela é útil tanto para verificações internas quanto para vincular os rótulos das figuras à descrição formal de cada modelo.
+
+```{r model-catalog}
+model_info <- tibble(
+  ModelID = 1:18,
+  Model = sprintf("M%02d", 1:18),
+  ETA = names(models),
+  Category = c(
+    rep("Fonte única + E", 6),
+    rep("Integração G/P + E", 3),
+    rep("Aumentados com clima", 9)
+  ),
+  Description = c(
+    "E + G + GE",
+    "E + P + PE",
+    "E + GGK + GGKE",
+    "E + PGK + PGKE",
+    "E + GAK + GAKE",
+    "E + PAK + PAKE",
+    "E + G + P + GE + PE",
+    "E + GGK + PGK + GGKE + PGKE",
+    "E + GAK + PAK + GAKE + PAKE",
+    "E + W + G + GE + GW",
+    "E + W + P + PE + PW",
+    "E + W + G + P + GE + PE + GW + PW",
+    "E + W + GGK + GGKE + GGKW",
+    "E + W + PGK + PGKE + PGKW",
+    "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    "E + W + GAK + GAKE + GAKW",
+    "E + W + PAK + PAKE + PAKW",
+    "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+  )
+)
+
+readr::write_csv(model_info, file.path(results_dir, "model_catalog.csv"))
+
+model_info %>%
+  knitr::kable(
+    caption = "Catálogo dos 18 modelos avaliados na análise de componentes de variância.",
+    align = "cll"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "340px")
+```
+
+## 5. Configurações do MCMC
+
+Esses valores definem o amostrador de Gibbs usado pelo `BGLR`. Ajuste-os aqui se uma cadeia mais longa for necessária para diagnósticos de convergência ou análises de sensibilidade.
+
+```{r mcmc-parameters}
+nIter   <- 10000
+burnIn  <- 1000
+thin    <- 10
+num_rep <- 20
+traits  <- c("GY", "KW")
+```
+
+## 6. Ajuste do BGLR para cada modelo
+
+Este é o passo computacionalmente mais caro. O chunk é mantido com `eval=FALSE` para que o tutorial possa ser renderizado sem rerodar todos os modelos Bayesianos a cada vez. Quando você precisar de componentes de variância atualizados, mude `eval` para `TRUE` e execute o chunk.
+
+```{r parallel-run, eval=FALSE}
+numCores <- parallel::detectCores()
+useCores <- max(1, numCores - 1)
+cl <- parallel::makeCluster(useCores)
+doParallel::registerDoParallel(cl)
+
+combos <- expand.grid(
+  Model = 1:18,
+  REP = 1:num_rep,
+  Trait = traits,
+  stringsAsFactors = FALSE
+)
+
+results_list <- foreach(
+  i = 1:nrow(combos),
+  .packages = c("BGLR", "dplyr", "tibble")
+) %dopar% {
+  Model <- combos$Model[i]
+  rep_num <- combos$REP[i]
+  Trait <- combos$Trait[i]
+
+  pheno <- data.frame(Pheno)
+  y_data <- as.numeric(pheno[[Trait]])
+
+  out_dir <- file.path(results_dir, paste0("rep_", rep_num), sprintf("Eta%02d", Model))
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+  save_prefix <- file.path(out_dir, Trait)
+
+  start_time <- Sys.time()
+  fit <- BGLR(
+    y = y_data,
+    ETA = models[[Model]],
+    nIter = nIter,
+    burnIn = burnIn,
+    thin = thin,
+    saveAt = save_prefix
+  )
+  end_time <- Sys.time()
+
+  variance_samples <- list()
+
+  if (!is.null(fit$ETA)) {
+    effect_names <- names(fit$ETA)
+
+    if (is.null(effect_names)) {
+      effect_names <- paste0("Effect_", seq_along(fit$ETA))
+    }
+
+    for (j in seq_along(fit$ETA)) {
+      parameter_names <- names(fit$ETA[[j]])
+      var_parameter <- parameter_names[grepl("^var", parameter_names)]
+
+      if (length(var_parameter) > 0) {
+        variance_samples[[effect_names[j]]] <- fit$ETA[[j]][[var_parameter[1]]]
+      }
+    }
+  }
+
+  metrics_object <- list(
+    varE_samples = fit$varE,
+    variances_samples = variance_samples,
+    DIC = fit$fit$DIC,
+    runtime_sec = as.numeric(difftime(end_time, start_time, units = "secs"))
+  )
+
+  saveRDS(metrics_object, paste0(save_prefix, "_metrics.rds"))
+
+  result_table <- tibble(
+    Component = "Residual",
+    MeanVar = mean(metrics_object$varE_samples, na.rm = TRUE)
+  )
+
+  if (length(metrics_object$variances_samples) > 0) {
+    for (nm in names(metrics_object$variances_samples)) {
+      result_table <- bind_rows(
+        result_table,
+        tibble(
+          Component = nm,
+          MeanVar = mean(metrics_object$variances_samples[[nm]], na.rm = TRUE)
+        )
+      )
+    }
+  }
+
+  rm(fit)
+  gc()
+
+  result_table %>%
+    mutate(Model = Model, Rep = rep_num, Trait = Trait)
+}
+
+stopCluster(cl)
+
+all_variance <- bind_rows(results_list)
+write_csv(all_variance, file.path(results_dir, "variance_components_raw.csv"))
+saveRDS(all_variance, file.path(results_dir, "variance_components_raw.rds"))
+```
+
+## 7. Consolidação dos resumos posteriores salvos
+
+Na versão atual do fluxo, esta é a seção usada com mais frequência. Em vez de reajustar todos os modelos a cada execução, o script lê os arquivos `_metrics.rds` previamente salvos e os consolida em um único objeto. Isso mantém o tutorial prático e reprodutível, ao mesmo tempo que deixa claro que esta página é principalmente uma **etapa de consolidação de resultados**, a menos que o usuário decida rerodar intencionalmente a etapa completa de ajuste no BGLR.
+
+```{r consolidate-saved-results}
+rds_files <- list.files(
+  path = results_dir,
+  pattern = "_(metrics|metricas)\\.rds$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+
+if (length(rds_files) > 0) {
+  all_tables <- vector("list", length(rds_files))
+
+  for (i in seq_along(rds_files)) {
+    current_file <- normalizePath(rds_files[i], winslash = "/", mustWork = FALSE)
+    path_parts <- str_split(current_file, "/")[[1]]
+
+    rep_part <- path_parts[str_detect(path_parts, "^rep_")][1]
+    eta_part <- path_parts[str_detect(path_parts, "^Eta")][1]
+    file_part <- fs::path_file(current_file)
+
+    rep_value <- as.integer(str_remove(rep_part, "^rep_"))
+    model_value <- as.integer(str_remove(eta_part, "^Eta0*"))
+    trait_value <- str_remove(file_part, "_(metrics|metricas)\\.rds$")
+
+    current_object <- readRDS(current_file)
+
+    current_table <- tibble(
+      Rep = rep_value,
+      Model = model_value,
+      Trait = trait_value,
+      Component = "Residual",
+      MeanVar = mean(current_object$varE_samples, na.rm = TRUE),
+      DIC = current_object$DIC,
+      runtime_sec = current_object$runtime_sec
+    )
+
+    if (length(current_object$variances_samples) > 0) {
+      for (nm in names(current_object$variances_samples)) {
+        current_table <- bind_rows(
+          current_table,
+          tibble(
+            Rep = rep_value,
+            Model = model_value,
+            Trait = trait_value,
+            Component = nm,
+            MeanVar = mean(current_object$variances_samples[[nm]], na.rm = TRUE),
+            DIC = current_object$DIC,
+            runtime_sec = current_object$runtime_sec
+          )
+        )
+      }
+    }
+
+    all_tables[[i]] <- current_table
+  }
+
+  all_variance <- bind_rows(all_tables) %>%
+    arrange(Model, Rep, Trait, Component)
+
+  saveRDS(all_variance, file.path(results_dir, "variance_components_all.rds"))
+}
+```
+
+## 8. Carregamento do objeto consolidado de componentes de variância
+
+Esta seção carrega os resultados consolidados e os prepara para o resumo. Se o arquivo não existir, o script interrompe a execução e instrui o usuário a executar a etapa de ajuste dos modelos primeiro.
+
+```{r load-results, error=TRUE}
+raw_file <- file.path(results_dir, "variance_components_all.rds")
+
+if (!file.exists(raw_file)) {
+  stop(
+    "O arquivo '", raw_file, "' não foi encontrado. ",
+    "Execute primeiro a etapa Bayesiana completa ou mantenha os arquivos _metrics.rds previamente salvos em output/variance_components/."
+  )
+}
+
+all_variance <- readRDS(raw_file)
+
+all_variance <- all_variance %>%
+  mutate(
+    Trait = str_extract(Trait, "GY|KW"),
+    Trait = ifelse(is.na(Trait), Trait, Trait),
+    Model = as.integer(Model)
+  )
+
+cat("Número de linhas no objeto consolidado de variância:", nrow(all_variance), "\n")
+```
+
+## 9. Resumo dos componentes de variância
+
+Agora calculamos a média dos valores posteriores ao longo das repetições para cada modelo, caráter e componente. Em seguida, convertemos os resultados em **percentuais da variância total**, o que torna os modelos diretamente comparáveis.
+
+```{r process-variance-components}
+variance_summary <- all_variance %>%
+  group_by(Model, Trait, Component) %>%
+  summarise(
+    AvgVar = mean(MeanVar, na.rm = TRUE),
+    MeanDIC = mean(DIC, na.rm = TRUE),
+    MeanRuntimeSec = mean(runtime_sec, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(!is.na(AvgVar), AvgVar > 0) %>%
+  group_by(Model, Trait) %>%
+  mutate(
+    TotalVar = sum(AvgVar),
+    Percentage = AvgVar / TotalVar
+  ) %>%
+  ungroup() %>%
+  left_join(model_info, by = c("Model" = "ModelID")) %>%
+  mutate(
+    Model = factor(sprintf("M%02d", Model), levels = sprintf("M%02d", 1:18)),
+    ComponentLabel = dplyr::recode(Component, !!!component_display),
+    ComponentLabel = factor(ComponentLabel, levels = component_order),
+    Trait = factor(Trait, levels = c("GY", "KW"))
+  )
+
+readr::write_csv(variance_summary, file.path(results_dir, "variance_components_processed.csv"))
+```
+
+### 9.1. Tabela resumo em formato amplo
+
+Esta tabela é útil quando você precisa de um resumo numérico compacto para o manuscrito ou para material suplementar.
+
+```{r summary-table}
+variance_table <- variance_summary %>%
+  dplyr::select(Model, Trait, ComponentLabel, Percentage) %>%
+  dplyr::mutate(Percentage = round(100 * Percentage, 2)) %>%
+  tidyr::pivot_wider(names_from = ComponentLabel, values_from = Percentage)
+
+readr::write_csv(variance_table, file.path(results_dir, "variance_components_table_percent.csv"))
+
+head(variance_table, 12) %>%
+  knitr::kable(
+    caption = "Prévia da tabela processada de componentes de variância (percentual da variância total).",
+    align = "lcccccccccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+## 10. Figura para o artigo
+
+A figura abaixo resume a contribuição percentual de cada componente de variância nos 18 modelos para ambos os caracteres. Para manter o eixo x legível, os modelos são exibidos como `M01` a `M18`, e as descrições detalhadas permanecem disponíveis no catálogo de modelos salvo acima.
+
+Essa figura deve ser lida como um resumo estrutural dos modelos ajustados, e não como prova direta de que combinar mais fontes de dados leva automaticamente a maior complementaridade biológica ou melhor desempenho preditivo.
+
+```{r variance-figure, fig.cap="Figura 3. Média posterior do percentual da variância total atribuída a cada componente do modelo ao longo dos 18 modelos preditivos para produtividade de grãos (GY) e peso de 500 grãos (KW). Cada barra empilhada representa um modelo (M01-M18), em média ao longo das repetições, e as cores identificam os componentes de variância incluídos na estrutura do modelo. O kernel climático (W) e seus termos de interação associados aparecem principalmente nos modelos M10-M18. A decomposição de variância deve ser interpretada como descrição da estrutura do modelo, e não automaticamente como evidência de maior complementaridade biológica entre fontes de informação.", fig.height=10, fig.width=13}
+trait_labels <- c(
+  GY = "A. Produtividade de grãos (GY)",
+  KW = "B. Peso de 500 grãos (KW)"
+)
+
+variance_plot <- variance_summary %>%
+  ggplot(aes(x = Model, y = Percentage, fill = ComponentLabel)) +
+  geom_col(color = "white", linewidth = 0.15, width = 0.82) +
+  facet_wrap(~ Trait, ncol = 1, labeller = as_labeller(trait_labels)) +
+  ggthemes::scale_fill_gdocs(name = "Componente de variância", drop = FALSE) +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  labs(
+    x = "Identificação do modelo",
+    y = "Proporção da variância total"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 13, hjust = 0.5),
+    strip.text = element_text(face = "bold", size = 11),
+    axis.title = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+    axis.text.y = element_text(size = 9),
+    legend.position = "right",
+    legend.box = "vertical",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 8),
+    legend.key.height = unit(0.45, "cm"),
+    legend.key.width = unit(0.55, "cm"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  guides(fill = guide_legend(ncol = 2, byrow = TRUE))
+
+print(variance_plot)
+
+ggsave(
+  filename = file.path(figure_dir, "variance_components_article.tiff"),
+  plot = variance_plot,
+  width = 14,
+  height = 10,
+  dpi = 300,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = file.path(figure_dir, "variance_components_article.pdf"),
+  plot = variance_plot,
+  width = 14,
+  height = 10,
+  bg = "white"
+)
+```
+
+## 11. Guia de interpretação
+
+Esta seção final esclarece como a figura deve ser interpretada.
+
+- Um grande segmento de **Ambiente (E)** indica que o efeito categórico de macroambiente domina a partição da variância.
+- Grandes termos genômicos como **G**, **GGK** ou **GAK** indicam que a similaridade genômica captura uma parcela importante da variabilidade do caráter.
+- Grandes termos fenômicos como **P**, **PGK** ou **PAK** indicam maior contribuição da similaridade derivada de NIRS, mas esses termos devem ser interpretados com cautela porque NIRS também pode refletir forte resposta fisiológica ao ambiente.
+- Grandes termos relacionados ao clima como **W**, **G × W** ou **P × W** indicam que covariáveis derivadas do clima explicam estrutura adicional. Esses termos aparecem principalmente nos modelos **M10-M18** e devem ser interpretados como complementares ao efeito categórico de ambiente, e não como substitutos de **E**.
+- Um grande segmento de **Residual** indica que fontes importantes de variabilidade permanecem não explicadas pelo modelo ajustado.
+
+No contexto deste artigo, essas decomposições de variância complementam as análises preditivas ao mostrar **quais fontes de informação contribuem para a estrutura dos modelos**. Entretanto, uma grande parcela de variância de um componente não deve ser lida automaticamente como evidência de maior complementaridade biológica ou de melhor habilidade preditiva.

@@ -117,8 +117,6 @@ Esta seção realiza o download dos dados climáticos diários da NASA POWER.
 
 Executamos uma consulta para cada safra. Isso mantém o fluxo transparente e facilita confirmar que cada ano experimental foi recuperado corretamente. Após a obtenção, as duas tabelas anuais são reunidas em um único objeto para as etapas seguintes.
 
-Nesta versão em português, os chunks de download foram mantidos como documentação e estão com `eval = FALSE`. Para exibir as tabelas, figuras e resumos desta página, o arquivo reutiliza os dados já gerados pela versão em inglês do pipeline e salvos em `output/climate_results/`.
-
 ### 4.1 Baixar os dados diários de cada ano
 
 O código abaixo envia duas requisições independentes ao serviço NASA POWER, uma para 2011 e outra para 2012. Um identificador `year` é adicionado imediatamente após a obtenção para que a origem de cada registro permaneça explícita em todo o fluxo.
@@ -157,7 +155,7 @@ texas_climate_data$year <- factor(texas_climate_data$year, levels = c(2011, 2012
 
 Depois que as duas tabelas anuais estão disponíveis, elas são unidas em um único conjunto de dados e a coluna de data é convertida para o formato apropriado do R. Essa etapa é essencial porque a data original retorna como string numérica, e as visualizações posteriores dependem de um objeto de data válido.
 
-Na prática, esta versão em português carrega o arquivo bruto já salvo pela versão em inglês (`texas_climate_data_raw.csv`) e reutiliza esse objeto para reproduzir as mesmas tabelas e figuras em português. O chunk abaixo foi mantido apenas para registrar como a base bruta é montada e salva no fluxo oficial.
+Também salvamos o conjunto bruto diário como CSV. Isso é importante para reprodutibilidade, porque preserva a versão exata dos dados usados na análise.
 
 ```{r get_data2, eval=FALSE}
 texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012) %>%
@@ -500,7 +498,7 @@ knitr::kable(weather_covariates_display, align = c("c", rep("c", ncol(weather_co
 
 ## 7. Salvar as saídas finais
 
-A última seção armazena explicitamente os arquivos processados gerados pelo tutorial. Salvar as saídas separa a obtenção dos dados da modelagem posterior, tornando o fluxo mais fácil de reproduzir e auditar. Nesta página em português, esse passo permanece ativo porque não é computacionalmente pesado e preserva exatamente os mesmos nomes de saída usados no pipeline oficial em inglês.
+A última seção armazena explicitamente os arquivos processados gerados pelo tutorial. Salvar as saídas separa a obtenção dos dados da modelagem posterior, tornando o fluxo mais fácil de reproduzir e auditar.
 
 ```{r save_csv}
 write.csv(weather_covariates, "output/climate_results/environmental_covariates.csv", row.names = FALSE)
