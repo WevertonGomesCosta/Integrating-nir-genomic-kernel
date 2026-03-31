@@ -1,5 +1,5 @@
 ---
-title: "Prediction Analyses"
+title: "Prediction analyses - didactic tutorial"
 author:
   - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
@@ -35,7 +35,7 @@ The phenomic component (`P`) should also be interpreted with caution. NIR-based 
 
 A model that only fits the observed data well is not enough; it must be able to **predict data it has never seen**. To simulate that, we use Cross-Validation (CV).
 
-Following the reference script, we implement multiple CV schemes to simulate different real-world challenges in breeding:
+This script implements multiple CV schemes to simulate different real-world challenges in breeding:
 
 - **CV1: genotype-based validation (tests unobserved genotypes).**
     - *Question:* Can the model predict the performance of a genotype (hybrid) that is *completely new*, and that was not present in *any* training environment?
@@ -46,9 +46,7 @@ Following the reference script, we implement multiple CV schemes to simulate dif
 - **CV00: leave-one-environment-out (tests genotypes in unobserved environments).**
     - *Similar to CV0*, but focused on predicting genotypes *within* a held-out environment.
 
-The conceptual definitions above follow the reference tutorial. In this English file, however, the computational implementation is still shown in its compact monolithic format, so the remaining sections document the same ideas using the current structure of this script.
-
-The remaining sections show how these validation schemes are operationalized in the prediction workflow, how the jobs are distributed in parallel, and how the outputs are written for the downstream visualization step.
+The remaining sections show how these validation schemes are operationalized in the prediction workflow, how the jobs are distributed in parallel, and how the outputs are written for the downstream visualization step in `visualization.Rmd` and `visualization.html`.
 
 ## 2. Packages and options
 
@@ -96,13 +94,13 @@ GAKW <- readRDS("output/Matrizes/GAKW.rds")
 PAKW <- readRDS("output/Matrizes/PAKW.rds")
 ```
 
-The current `matrizes.Rmd` saves the observation-level matrices using the following names:
+The current `matrizes.Rmd` and `matrizes.html` save the observation-level matrices using the following names:
 
 - `ZE` for the categorical environment design matrix
 - `ZGZE` and `ZPZE` for genomic-by-environment and phenomic-by-environment interactions
 - `ZGZW` and `ZPZW` for genomic-by-weather and phenomic-by-weather interactions
 
-For that reason, this prediction script reads those matrices directly instead of the older names used in previous versions of the project.
+For that reason, this prediction script reads those matrices directly from the files produced by `matrizes.Rmd`.
 
 ## 4. MCMC and parallel settings
 
@@ -266,7 +264,7 @@ Eta_list[[18]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
 
 ## 7. Running prediction analyses in parallel with foreach
 
-This is the computational core of the script. In the reference tutorial, this stage is decomposed into smaller helpers and execution blocks. In this English file, the same workflow is still presented in a single compact chunk, so the explanation below follows the logic of the current code exactly as it is written.
+This is the computational core of the script. The workflow is presented here in a single compact chunk, so the explanation below follows the current implementation exactly as it is written.
 
 Because this is the most computationally expensive step of the pipeline, the chunk remains with `eval = FALSE` in the tutorial version.
 
@@ -288,7 +286,7 @@ More specifically, the chunk is organized around four internal stages:
 - **CV0**: one environment is left out entirely, the model is refitted, and correlation is computed for the held-out environment.
 - **CV00**: within a held-out environment, the model focuses on genotypes that are effectively new in that environment and computes the corresponding predictive correlation.
 
-Although the implementation below is compact, the scientific purpose is the same as in the reference file: simulate progressively harder prediction problems and save the resulting accuracy tables for the downstream summaries.
+Although the implementation below is compact, its scientific purpose is to simulate progressively harder prediction problems and save the resulting accuracy tables consumed later by `visualization.Rmd` and `visualization.html`.
 
 ```{r run-predictions, eval=FALSE}
 dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
@@ -699,7 +697,7 @@ for (trait_name in traits_to_run) {
 
 ## 8. Final note
 
-This script produces the raw prediction outputs. The summaries, weighted averages, final tables, and final figures for the manuscript are generated in `visualization.Rmd`.
+This script produces the raw prediction outputs. The summaries, weighted averages, final tables, and final figures for the manuscript are generated in `visualization.Rmd` and `visualization.html`.
 
 The current output structure is fully standardized to the new pipeline.
 
