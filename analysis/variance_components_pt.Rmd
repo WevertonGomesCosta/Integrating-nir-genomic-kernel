@@ -450,9 +450,9 @@ model_info <- tibble(
   Model = sprintf("M%02d", 1:18),
   ETA = names(models),
   Category = c(
-    rep("Single-source + E", 6),
-    rep("Integrated G/P + E", 3),
-    rep("Weather-augmented", 9)
+    rep("Fonte única + E", 6),
+    rep("Integrado G/P + E", 3),
+    rep("Enriquecido com clima", 9)
   ),
   Description = c(
     "E + G + GE",

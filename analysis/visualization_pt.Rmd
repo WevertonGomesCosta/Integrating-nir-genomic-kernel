@@ -26,7 +26,7 @@ Em linha com a interpretação analítica atual do repositório, o **kernel clim
 O fluxo é organizado em quatro tarefas práticas:
 
 1. localizar e ler os arquivos CSV de predição;
-2. interpretar os nomes dos arquivos e recuperar trait, modelo, repetição e a informação de leave-one-environment-out;
+2. interpretar os nomes dos arquivos e recuperar traço, modelo, repetição e a informação de leave-one-environment-out;
 3. resumir os resultados para `CV1`, `CV2`, `CV0` e `CV00`;
 4. exportar tabelas limpas e figuras para a próxima etapa orientada ao manuscrito.
 
@@ -192,64 +192,120 @@ cvloo_top3 <- readr::read_csv(
   show_col_types = FALSE
 )
 
-translate_visual_labels <- function(df) {
-  if ("Pathway" %in% names(df)) {
-    df$Pathway <- dplyr::recode(
-      df$Pathway,
+model_catalog <- model_catalog %>%
+  dplyr::mutate(
+    Pathway = dplyr::recode(
+      Pathway,
       "Genomic pathway" = "Via genômica",
       "Phenomic pathway" = "Via fenômica",
       "Combined G + P pathway" = "Via combinada G + P"
-    )
-  }
-  if ("KernelFamily" %in% names(df)) {
-    df$KernelFamily <- dplyr::recode(
-      df$KernelFamily,
+    ),
+    KernelFamily = dplyr::recode(
+      KernelFamily,
       "Gaussian" = "Gaussiano"
     )
-  }
-  if ("WeatherStatus" %in% names(df)) {
-    df$WeatherStatus <- dplyr::recode(
-      df$WeatherStatus,
-      "Sem W" = "Sem W",
-      "Com W" = "Com W"
+  )
+
+cv12_summary <- cv12_summary %>%
+  dplyr::mutate(
+    Pathway = dplyr::recode(
+      Pathway,
+      "Genomic pathway" = "Via genômica",
+      "Phenomic pathway" = "Via fenômica",
+      "Combined G + P pathway" = "Via combinada G + P"
+    ),
+    KernelFamily = dplyr::recode(
+      KernelFamily,
+      "Gaussian" = "Gaussiano"
+    ),
+    WeatherStatus = dplyr::recode(
+      WeatherStatus,
+      "Without W" = "Sem W",
+      "With W" = "Com W"
+    ),
+    Group = dplyr::recode(
+      Group,
+      "Genomic baseline" = "Base genômica",
+      "Phenomic baseline" = "Base fenômica",
+      "Combined baseline" = "Base combinada",
+      "Weather single-source" = "Clima fonte única",
+      "Weather combined" = "Clima combinado"
+    ),
+    Description = dplyr::recode(
+      Description,
+      "Genomic linear + E" = "Genômico linear + E",
+      "Genomic linear + W" = "Genômico linear + W",
+      "Genomic Gaussian + E" = "Genômico Gaussiano + E",
+      "Genomic Gaussian + W" = "Genômico Gaussiano + W",
+      "Genomic arc-cosine + E" = "Genômico arc-cosine + E",
+      "Genomic arc-cosine + W" = "Genômico arc-cosine + W",
+      "Phenomic linear + E" = "Fenômico linear + E",
+      "Phenomic linear + W" = "Fenômico linear + W",
+      "Phenomic Gaussian + E" = "Fenômico Gaussiano + E",
+      "Phenomic Gaussian + W" = "Fenômico Gaussiano + W",
+      "Phenomic arc-cosine + E" = "Fenômico arc-cosine + E",
+      "Phenomic arc-cosine + W" = "Fenômico arc-cosine + W",
+      "Combined linear + E" = "Combinado linear + E",
+      "Combined linear + W" = "Combinado linear + W",
+      "Combined Gaussian + E" = "Combinado Gaussiano + E",
+      "Combined Gaussian + W" = "Combinado Gaussiano + W",
+      "Combined arc-cosine + E" = "Combinado arc-cosine + E",
+      "Combined arc-cosine + W" = "Combinado arc-cosine + W"
     )
-  }
-  if ("Group" %in% names(df)) {
-    df$Group <- dplyr::recode(
-      df$Group,
-      "Base genômica" = "Base genômica",
-      "Base fenômica" = "Base fenômica",
-      "Base combinada" = "Base combinada",
-      "Clima fonte única" = "Clima fonte única",
-      "Clima combinado" = "Clima combinado"
+  )
+
+cvloo_summary <- cvloo_summary %>%
+  dplyr::mutate(
+    Pathway = dplyr::recode(
+      Pathway,
+      "Genomic pathway" = "Via genômica",
+      "Phenomic pathway" = "Via fenômica",
+      "Combined G + P pathway" = "Via combinada G + P"
+    ),
+    KernelFamily = dplyr::recode(
+      KernelFamily,
+      "Gaussian" = "Gaussiano"
+    ),
+    WeatherStatus = dplyr::recode(
+      WeatherStatus,
+      "Without W" = "Sem W",
+      "With W" = "Com W"
+    ),
+    Group = dplyr::recode(
+      Group,
+      "Genomic baseline" = "Base genômica",
+      "Phenomic baseline" = "Base fenômica",
+      "Combined baseline" = "Base combinada",
+      "Weather single-source" = "Clima fonte única",
+      "Weather combined" = "Clima combinado"
+    ),
+    Description = dplyr::recode(
+      Description,
+      "Genomic linear + E" = "Genômico linear + E",
+      "Genomic linear + W" = "Genômico linear + W",
+      "Genomic Gaussian + E" = "Genômico Gaussiano + E",
+      "Genomic Gaussian + W" = "Genômico Gaussiano + W",
+      "Genomic arc-cosine + E" = "Genômico arc-cosine + E",
+      "Genomic arc-cosine + W" = "Genômico arc-cosine + W",
+      "Phenomic linear + E" = "Fenômico linear + E",
+      "Phenomic linear + W" = "Fenômico linear + W",
+      "Phenomic Gaussian + E" = "Fenômico Gaussiano + E",
+      "Phenomic Gaussian + W" = "Fenômico Gaussiano + W",
+      "Phenomic arc-cosine + E" = "Fenômico arc-cosine + E",
+      "Phenomic arc-cosine + W" = "Fenômico arc-cosine + W",
+      "Combined linear + E" = "Combinado linear + E",
+      "Combined linear + W" = "Combinado linear + W",
+      "Combined Gaussian + E" = "Combinado Gaussiano + E",
+      "Combined Gaussian + W" = "Combinado Gaussiano + W",
+      "Combined arc-cosine + E" = "Combinado arc-cosine + E",
+      "Combined arc-cosine + W" = "Combinado arc-cosine + W"
     )
-  }
-  if ("Description" %in% names(df)) {
-    df$Description <- dplyr::recode(
-      df$Description,
-      "Genômico linear + E" = "Genômico linear + E",
-      "Genômico linear + W" = "Genômico linear + W",
-      "Genômico Gaussiano + E" = "Genômico Gaussiano + E",
-      "Genômico Gaussiano + W" = "Genômico Gaussiano + W",
-      "Genômico arc-cosine + E" = "Genômico arc-cosine + E",
-      "Genômico arc-cosine + W" = "Genômico arc-cosine + W",
-      "Fenômico linear + E" = "Fenômico linear + E",
-      "Fenômico linear + W" = "Fenômico linear + W",
-      "Fenômico Gaussiano + E" = "Fenômico Gaussiano + E",
-      "Fenômico Gaussiano + W" = "Fenômico Gaussiano + W",
-      "Fenômico arc-cosine + E" = "Fenômico arc-cosine + E",
-      "Fenômico arc-cosine + W" = "Fenômico arc-cosine + W",
-      "Combinado linear + E" = "Combinado linear + E",
-      "Combinado linear + W" = "Combinado linear + W",
-      "Combinado Gaussiano + E" = "Combinado Gaussiano + E",
-      "Combinado Gaussiano + W" = "Combinado Gaussiano + W",
-      "Combinado arc-cosine + E" = "Combinado arc-cosine + E",
-      "Combinado arc-cosine + W" = "Combinado arc-cosine + W"
-    )
-  }
-  if ("Comparison" %in% names(df)) {
-    df$Comparison <- dplyr::recode(
-      df$Comparison,
+  )
+
+cv12_w_effect <- cv12_w_effect %>%
+  dplyr::mutate(
+    Comparison = dplyr::recode(
+      Comparison,
       "Genomic linear" = "Genômico linear",
       "Genomic Gaussian" = "Genômico Gaussiano",
       "Genomic arc-cosine" = "Genômico arc-cosine",
@@ -260,22 +316,100 @@ translate_visual_labels <- function(df) {
       "Combined Gaussian" = "Combinado Gaussiano",
       "Combined arc-cosine" = "Combinado arc-cosine"
     )
-  }
-  df
-}
+  )
 
-model_catalog <- translate_visual_labels(model_catalog)
-cv12_summary <- translate_visual_labels(cv12_summary)
-cvloo_summary <- translate_visual_labels(cvloo_summary)
-cv12_w_effect <- translate_visual_labels(cv12_w_effect)
-cvloo_w_effect <- translate_visual_labels(cvloo_w_effect)
-cv12_kernel_family_compare <- translate_visual_labels(cv12_kernel_family_compare)
-cvloo_kernel_family_compare <- translate_visual_labels(cvloo_kernel_family_compare)
-cv12_table_display <- translate_visual_labels(cv12_table_display)
-cvloo_table_display <- translate_visual_labels(cvloo_table_display)
-cv12_top3 <- translate_visual_labels(cv12_top3)
-cvloo_top3 <- translate_visual_labels(cvloo_top3)
-```
+cvloo_w_effect <- cvloo_w_effect %>%
+  dplyr::mutate(
+    Comparison = dplyr::recode(
+      Comparison,
+      "Genomic linear" = "Genômico linear",
+      "Genomic Gaussian" = "Genômico Gaussiano",
+      "Genomic arc-cosine" = "Genômico arc-cosine",
+      "Phenomic linear" = "Fenômico linear",
+      "Phenomic Gaussian" = "Fenômico Gaussiano",
+      "Phenomic arc-cosine" = "Fenômico arc-cosine",
+      "Combined linear" = "Combinado linear",
+      "Combined Gaussian" = "Combinado Gaussiano",
+      "Combined arc-cosine" = "Combinado arc-cosine"
+    )
+  )
+
+cv12_kernel_family_compare <- cv12_kernel_family_compare %>%
+  dplyr::mutate(
+    Pathway = dplyr::recode(
+      Pathway,
+      "Genomic pathway" = "Via genômica",
+      "Phenomic pathway" = "Via fenômica",
+      "Combined G + P pathway" = "Via combinada G + P"
+    ),
+    KernelFamily = dplyr::recode(
+      KernelFamily,
+      "Gaussian" = "Gaussiano"
+    ),
+    WeatherStatus = dplyr::recode(
+      WeatherStatus,
+      "Without W" = "Sem W",
+      "With W" = "Com W"
+    )
+  )
+
+cvloo_kernel_family_compare <- cvloo_kernel_family_compare %>%
+  dplyr::mutate(
+    Pathway = dplyr::recode(
+      Pathway,
+      "Genomic pathway" = "Via genômica",
+      "Phenomic pathway" = "Via fenômica",
+      "Combined G + P pathway" = "Via combinada G + P"
+    ),
+    KernelFamily = dplyr::recode(
+      KernelFamily,
+      "Gaussian" = "Gaussiano"
+    ),
+    WeatherStatus = dplyr::recode(
+      WeatherStatus,
+      "Without W" = "Sem W",
+      "With W" = "Com W"
+    )
+  )
+
+cv12_table_display <- cv12_table_display %>%
+  dplyr::mutate(
+    Pathway = dplyr::recode(
+      Pathway,
+      "Genomic pathway" = "Via genômica",
+      "Phenomic pathway" = "Via fenômica",
+      "Combined G + P pathway" = "Via combinada G + P"
+    ),
+    KernelFamily = dplyr::recode(
+      KernelFamily,
+      "Gaussian" = "Gaussiano"
+    ),
+    WeatherStatus = dplyr::recode(
+      WeatherStatus,
+      "Without W" = "Sem W",
+      "With W" = "Com W"
+    )
+  )
+
+cvloo_table_display <- cvloo_table_display %>%
+  dplyr::mutate(
+    Pathway = dplyr::recode(
+      Pathway,
+      "Genomic pathway" = "Via genômica",
+      "Phenomic pathway" = "Via fenômica",
+      "Combined G + P pathway" = "Via combinada G + P"
+    ),
+    KernelFamily = dplyr::recode(
+      KernelFamily,
+      "Gaussian" = "Gaussiano"
+    ),
+    WeatherStatus = dplyr::recode(
+      WeatherStatus,
+      "Without W" = "Sem W",
+      "With W" = "Com W"
+    )
+  )
+
 
 ## 5. Localizar os arquivos de predição
 
@@ -637,7 +771,7 @@ Os dois chunks seguintes exibem os três modelos com melhor desempenho em cada e
 
 ```{r table-cv12-top3}
 cv12_top3 %>%
-  knitr::kable( caption = "Top 3 modelos para cada trait e esquema de validação em CV1 e CV2.",
+  knitr::kable( caption = "Top 3 modelos para cada traço e esquema de validação em CV1 e CV2.",
     align = "llccc" ) %>%
   kableExtra::kable_styling( bootstrap_options = c("striped", "hover", "condensed", "responsive"),
    full_width = FALSE,
@@ -646,7 +780,7 @@ cv12_top3 %>%
 
 ```{r table-cvloo-top3}
 cvloo_top3 %>%
-  knitr::kable( caption = "Top 3 modelos para cada trait, esquema de validação e ambiente deixado de fora em CV0 e CV00.",
+  knitr::kable( caption = "Top 3 modelos para cada traço, esquema de validação e ambiente deixado de fora em CV0 e CV00.",
     align = "lllccc" ) %>%
   kableExtra::kable_styling( bootstrap_options = c("striped", "hover", "condensed", "responsive"),
    full_width = FALSE,

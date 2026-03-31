@@ -1059,7 +1059,7 @@ for (i in seq_len(nrow(kernel_plot_info))) {
       mid = "white",
       high = "#B2182B",
       midpoint = median(current_df$Value, na.rm = TRUE),
-      name = "Kernel value"
+      name = "Valor do kernel"
     ) +
     coord_fixed() +
     labs(
