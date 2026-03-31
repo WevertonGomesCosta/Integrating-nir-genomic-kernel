@@ -1,0 +1,93 @@
+---
+title: "Tutorial: Aquisição e Processamento de Dados Climáticos (NASA POWER)"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+**Language / Idioma:** [English](climate_data.html) | [Português](climate_data_pt.html)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  eval = FALSE
+)
+```
+
+
+# 1. Introdução
+
+Esta é a **versão em português** da etapa de dados climáticos do pipeline.
+
+A versão operacional e executável desta etapa permanece em **`climate_data.Rmd`**. Esta página em português foi criada para navegação e leitura no site, mantendo a mesma lógica conceitual da versão em inglês, mas com **`eval = FALSE`** para evitar nova execução do download e do processamento meteorológico durante a renderização do site.
+
+## 2. Finalidade desta etapa
+
+Esta etapa tem quatro objetivos principais:
+
+1. obter dados meteorológicos diários da NASA POWER;
+2. organizar os registros climáticos em uma estrutura reprodutível;
+3. inspecionar visualmente o contraste climático entre os anos de estudo;
+4. derivar covariáveis climáticas anuais e diárias usadas posteriormente na construção do kernel climático `W`.
+
+## 3. Entradas e dependências
+
+A etapa usa principalmente:
+
+- a API da NASA POWER;
+- os pacotes `nasapower`, `tidyverse`, `lubridate`, `patchwork`, `ggthemes` e `kableExtra`.
+
+## 4. Principais saídas esperadas
+
+Quando a versão em inglês é executada, os arquivos principais gerados em `output/climate_results/` são:
+
+- `texas_climate_data_raw.csv`
+- `environmental_covariates.csv`
+- `environmental_covariates_expanded.csv`
+- figuras climáticas em formato `.tiff`
+
+## 5. Papel no pipeline
+
+Essas saídas são consumidas depois por:
+
+- `matrizes.Rmd`, que usa as covariáveis climáticas para construir o kernel `ZW`;
+- etapas posteriores de modelagem e interpretação dos resultados.
+
+## 6. Política desta versão em português
+
+Nesta página:
+
+- os **mesmos caminhos e nomes de saída** da versão em inglês devem ser preservados;
+- a lógica conceitual é a mesma;
+- a execução permanece desativada com **`eval = FALSE`**.
+
+Isso evita duplicação de processamento e mantém a versão inglesa como referência operacional única.
+
+## 7. Script canônico em inglês
+
+Arquivo executável oficial:
+
+- `analysis/climate_data.Rmd`
+
+Página correspondente em inglês:
+
+- `climate_data.html`
+
+## 8. Observação operacional
+
+Se for necessário rerodar de fato esta etapa, utilize a versão em inglês.  
+A presente página em português existe para documentação, leitura e navegação bilíngue do site.
+

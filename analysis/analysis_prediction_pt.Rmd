@@ -1,0 +1,104 @@
+---
+title: "Análises Preditivas - Tutorial Didático"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+**Language / Idioma:** [English](analysis_prediction.html) | [Português](analysis_prediction_pt.html)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  eval = FALSE
+)
+```
+
+
+# 1. Introdução
+
+Esta é a **versão em português** da etapa de análise de predição do pipeline.
+
+A versão operacional e executável oficial permanece em **`analysis_prediction.Rmd`**. Esta página em português foi criada para navegação, leitura e documentação bilíngue, preservando a lógica conceitual da versão inglesa, mas com **`eval = FALSE`** para impedir nova execução da etapa mais custosa do pipeline durante a renderização do site.
+
+## 2. Finalidade desta etapa
+
+Esta etapa executa as análises preditivas para o conjunto reduzido de **18 modelos Bayesianos multi-kernel** usados no estudo.
+
+Os quatro cenários de validação são:
+
+- `CV1`: genótipos não observados;
+- `CV2`: desempenho no conjunto de treinamento, seguindo o script de referência;
+- `CV0`: leave-one-environment-out dentro da estrutura de folds;
+- `CV00`: genótipos não observados em um cenário leave-one-environment-out, também dentro da estrutura de folds.
+
+## 3. Estrutura geral da etapa
+
+A versão canônica em inglês segue este fluxo:
+
+1. carregar matrizes e metadados;
+2. definir configurações MCMC e de validação cruzada;
+3. definir o catálogo final dos 18 modelos;
+4. executar a grade completa de jobs em paralelo;
+5. salvar resultados agregados por repetição para `CV1`, `CV2`, `CV0` e `CV00`.
+
+## 4. Saídas principais
+
+Quando a versão em inglês é executada, os principais arquivos são gravados em:
+
+- `output/results/`
+- `output/results/bglr_runs/`
+- `output/tables/`
+
+Exemplos de nomes esperados:
+
+- `CV1_GY_M05_rep2.csv`
+- `CV2_KW_M12_rep8.csv`
+- `CV0_GY_CS11_WS_M10_rep1.csv`
+- `CV00_KW_CS12_WW_M18_rep1.csv`
+
+## 5. Papel no pipeline
+
+Esta é a etapa central de geração das saídas brutas de predição. Seus resultados são usados diretamente por:
+
+- `visualization.Rmd`
+- `article_results_for_manuscript_final.R`
+
+## 6. Política desta versão em português
+
+Nesta página:
+
+- os mesmos nomes de saída e a mesma estrutura de arquivos devem ser preservados;
+- a lógica conceitual acompanha exatamente a versão em inglês;
+- a execução permanece desativada com **`eval = FALSE`**.
+
+Isso garante que o site seja bilíngue sem duplicar computação.
+
+## 7. Script canônico em inglês
+
+Arquivo executável oficial:
+
+- `analysis/analysis_prediction.Rmd`
+
+Página correspondente em inglês:
+
+- `analysis_prediction.html`
+
+## 8. Observação operacional
+
+Se for necessário rodar novamente as análises preditivas, use a versão em inglês.  
+A presente página em português existe para documentação, ensino e navegação bilíngue do site.
+

@@ -1,0 +1,100 @@
+---
+title: "Resumos e Figuras de Predição - Tutorial Didático"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+**Language / Idioma:** [English](visualization.html) | [Português](visualization_pt.html)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  eval = FALSE
+)
+```
+
+
+# 1. Introdução
+
+Esta é a **versão em português** da etapa de visualização e consolidação dos resultados de predição.
+
+A versão operacional oficial permanece em **`visualization.Rmd`**. Esta página em português foi criada para navegação e leitura no site e segue a política final de **`eval = FALSE`**, mantendo a execução real centralizada na versão inglesa.
+
+## 2. Finalidade desta etapa
+
+Esta etapa lê os arquivos brutos de predição gerados por `analysis_prediction.Rmd`, reorganiza as informações e produz:
+
+- tabelas consolidadas para `CV1` e `CV2`;
+- tabelas consolidadas para `CV0` e `CV00`;
+- comparações entre modelos com e sem `W`;
+- comparações entre famílias de kernel;
+- figuras finais usadas no manuscrito.
+
+## 3. Entradas esperadas
+
+A etapa usa como entrada principal os CSVs gerados em:
+
+- `output/results/`
+
+Esses arquivos já vêm agregados por repetição e usam a coluna `.id` para armazenar o identificador de fold.
+
+## 4. Saídas principais
+
+A versão em inglês grava arquivos em:
+
+- `output/tables/`
+- `output/figures/`
+
+Exemplos importantes:
+
+- `prediction_cv1_cv2_summary.csv`
+- `prediction_cv0_cv00_summary.csv`
+- `prediction_cv1_cv2_top3.csv`
+- `prediction_cv0_cv00_top3.csv`
+- `prediction_cv1_cv2.tiff`
+- `prediction_cv0_cv00.tiff`
+
+## 5. Papel no pipeline
+
+Esta etapa faz a ponte entre:
+
+- a geração bruta das predições em `analysis_prediction.Rmd`;
+- a interpretação final em `article_results_for_manuscript_final.R`.
+
+## 6. Política desta versão em português
+
+Nesta página:
+
+- os mesmos caminhos, nomes de tabelas e nomes de figuras devem ser preservados;
+- a lógica conceitual acompanha a versão em inglês;
+- a execução permanece desativada com **`eval = FALSE`** para manter uma política uniforme nas páginas analíticas em português.
+
+## 7. Script canônico em inglês
+
+Arquivo executável oficial:
+
+- `analysis/visualization.Rmd`
+
+Página correspondente em inglês:
+
+- `visualization.html`
+
+## 8. Observação operacional
+
+Se for necessário consolidar novamente os resultados ou regenerar as figuras finais, use a versão em inglês.  
+A presente página em português existe para documentação e navegação bilíngue do site.
+

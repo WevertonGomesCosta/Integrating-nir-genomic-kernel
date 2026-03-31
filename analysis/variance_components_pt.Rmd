@@ -1,0 +1,100 @@
+---
+title: "Componentes de Variância"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+**Language / Idioma:** [English](variance_components.html) | [Português](variance_components_pt.html)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  eval = FALSE
+)
+```
+
+
+# 1. Introdução
+
+Esta é a **versão em português** da etapa de componentes de variância do pipeline.
+
+A versão operacional oficial permanece em **`variance_components.Rmd`**. Esta página em português foi criada para navegação e leitura no site, mantendo a mesma lógica conceitual da versão em inglês, porém com **`eval = FALSE`** para evitar rerrodar o ajuste Bayesiano e a consolidação durante a renderização.
+
+## 2. Finalidade desta etapa
+
+Esta etapa resume os **componentes de variância** dos modelos preditivos usados no estudo.
+
+Na prática, ela ajuda a responder perguntas como:
+
+- quanto da variação é atribuída ao efeito categórico de ambiente (`E`)?
+- quanto é capturado pelos kernels genômicos?
+- quanto é capturado pelos kernels fenômicos/NIR?
+- qual é a contribuição do kernel climático (`W`)?
+- qual é a importância das interações `G × E`, `G × W`, `P × E` e `P × W`?
+
+## 3. Estrutura geral da etapa
+
+A etapa é organizada em quatro blocos principais:
+
+1. carregar kernels e dados fenotípicos produzidos por `matrizes.Rmd`;
+2. definir os 18 modelos de componentes de variância;
+3. ler resultados já salvos ou rerrodar o ajuste em `BGLR` quando necessário;
+4. resumir e visualizar a decomposição da variância para `GY` e `KW`.
+
+## 4. Uso prático no fluxo atual
+
+No fluxo atual do projeto, esta etapa é usada principalmente para:
+
+- **consolidar** resultados já estimados anteriormente;
+- reorganizar os resultados para interpretação;
+- gerar tabelas e figuras de componentes de variância.
+
+Ou seja, a página existe menos para ajuste repetido e mais para **síntese reprodutível dos resultados já obtidos**.
+
+## 5. Principais saídas esperadas
+
+A versão em inglês pode gerar ou consolidar em `output/variance_components/` arquivos como:
+
+- `model_catalog.csv`
+- `variance_components_all.rds`
+- `variance_components_processed.csv`
+- `variance_components_table_percent.csv`
+- figuras em `output/variance_components/figures/`
+
+## 6. Política desta versão em português
+
+Nesta página:
+
+- os mesmos objetos, caminhos e nomes de saída da versão inglesa devem ser preservados;
+- a etapa funciona como espelho didático da estrutura do script canônico;
+- a execução permanece desativada com **`eval = FALSE`**.
+
+## 7. Script canônico em inglês
+
+Arquivo executável oficial:
+
+- `analysis/variance_components.Rmd`
+
+Página correspondente em inglês:
+
+- `variance_components.html`
+
+## 8. Observação operacional
+
+Se for necessário rerrodar a etapa de componentes de variância, use a versão em inglês.  
+A presente página em português existe para documentação e navegação bilíngue do site.
+

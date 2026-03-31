@@ -1,0 +1,128 @@
+---
+title: "Construção de Kernels Genômicos, Fenômicos, Ambientais, Climáticos e de Interação"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+**Language / Idioma:** [English](matrizes.html) | [Português](matrizes_pt.html)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  eval = FALSE
+)
+```
+
+
+# 1. Introdução
+
+Esta é a **versão em português** da etapa de construção de matrizes e kernels do pipeline.
+
+A versão executável oficial permanece em **`matrizes.Rmd`**. Esta página em português foi criada para navegação e leitura no site, preservando o mesmo papel conceitual da versão em inglês, mas com **`eval = FALSE`** para impedir a reconstrução dos objetos centrais do pipeline durante a renderização do site.
+
+## 2. Finalidade desta etapa
+
+Esta etapa harmoniza e integra as diferentes fontes de dados do projeto para construir os objetos matemáticos usados nas análises posteriores.
+
+As quatro camadas principais integradas são:
+
+1. dados fenotípicos (`Pheno`);
+2. marcadores genômicos (`Geno`);
+3. espectros NIR (`NIR`);
+4. covariáveis derivadas do clima (`W`).
+
+## 3. Principais objetos produzidos
+
+A versão em inglês produz, entre outros, os seguintes objetos em `output/Matrizes/`:
+
+### Kernels lineares
+- `ZG`
+- `ZP`
+- `ZE`
+- `ZEZE`
+- `ZW`
+
+### Interações
+- `ZGZE`
+- `ZPZE`
+- `ZGZW`
+- `ZPZW`
+
+### Kernels não lineares Gaussianos
+- `GGK`
+- `PGK`
+- `GGKE`
+- `PGKE`
+- `GGKW`
+- `PGKW`
+
+### Kernels não lineares arc-cosine
+- `GAK`
+- `PAK`
+- `GAKE`
+- `PAKE`
+- `GAKW`
+- `PAKW`
+
+### Objetos auxiliares
+- `Pheno`
+- `Pedigree`
+
+## 4. Papel no pipeline
+
+Esta é uma etapa estrutural do projeto. Os objetos gerados aqui são usados por:
+
+- `variance_components.Rmd`
+- `analysis_prediction.Rmd`
+- `article_results_for_manuscript_final.R`
+
+Sem essas matrizes alinhadas, as etapas posteriores de variância, predição e resumo final não funcionam corretamente.
+
+## 5. Ênfase metodológica
+
+O ponto técnico mais importante desta etapa é garantir que todos os kernels sejam construídos na **mesma ordem de observações**, para que a interpretação e a modelagem posterior sejam válidas.
+
+Também é aqui que a distinção entre:
+
+- `E` como efeito categórico de ambiente;
+- `W` como kernel derivado do clima
+
+fica explicitamente codificada no pipeline.
+
+## 6. Política desta versão em português
+
+Nesta página:
+
+- os **mesmos caminhos, nomes de objetos e nomes de saída** da versão inglesa devem ser preservados;
+- a versão serve como espelho didático da estrutura da etapa;
+- a execução permanece desativada com **`eval = FALSE`**.
+
+## 7. Script canônico em inglês
+
+Arquivo executável oficial:
+
+- `analysis/matrizes.Rmd`
+
+Página correspondente em inglês:
+
+- `matrizes.html`
+
+## 8. Observação operacional
+
+Se for necessário reconstruir os kernels e matrizes do projeto, execute a versão em inglês.  
+A presente página em português existe para documentação e navegação bilíngue.
+
