@@ -292,7 +292,7 @@ Embora a implementação abaixo seja compacta, seu propósito científico é sim
 dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path("output", "results", "bglr_runs"), recursive = TRUE, showWarnings = FALSE)
 
-traços_to_run <- c("GY", "KW")
+traits_to_run <- c("GY", "KW")
 env_levels <- unique(Pheno$Env)
 pedigrees <- unique(Pheno$Pedigree)
 
@@ -308,12 +308,12 @@ parallel::clusterEvalQ(cl, {
   NULL
 })
 
-for (traço_name in traços_to_run) {
+for (trait_name in traits_to_run) {
 
-  y_full <- Pheno[[traço_name]]
+  y_full <- Pheno[[trait_name]]
 
   # ---------------------------------------------
-  # CV1 e CV2: 5 folds x 20 repetições
+  # CV1 and CV2: 5 folds x 20 repetitions
   # ---------------------------------------------
   set.seed(123)
 
@@ -326,7 +326,7 @@ for (traço_name in traços_to_run) {
 
       pedigrees_in_fold <- fold_map$Pedigree[fold_map$Fold == fold]
 
-      # CV1: genótipos não testados
+      # CV1: untested genotypes
       y_cv1 <- y_full
       y_cv1[Pheno$Pedigree %in% pedigrees_in_fold] <- NA
 
@@ -334,14 +334,14 @@ for (traço_name in traços_to_run) {
         m = 1:18,
         .packages = c("BGLR"),
         .export = c("Pheno", "Eta_list", "model_catalog", "y_cv1", "y_full", "env_levels",
-                    "pedigrees_in_fold", "nIter", "burnIn", "thin", "traço_name", "rep_id", "fold")
+                    "pedigrees_in_fold", "nIter", "burnIn", "thin", "trait_name", "rep_id", "fold")
       ) %dopar% {
         model_label <- model_catalog$Model[m]
 
         run_dir <- file.path(
           "output", "results", "bglr_runs",
           "CV1",
-          traço_name,
+          trait_name,
           model_label,
           paste0("rep", rep_id),
           paste0("fold", fold)
@@ -356,7 +356,7 @@ for (traço_name in traços_to_run) {
 
         save_prefix <- file.path(
           run_dir,
-          paste0("CV1_", traço_name, "_", model_label, "_rep", rep_id, "_fold", fold, "_")
+          paste0("CV1_", trait_name, "_", model_label, "_rep", rep_id, "_fold", fold, "_")
         )
 
         fit_cv1 <- BGLR(
@@ -405,7 +405,7 @@ for (traço_name in traços_to_run) {
           out_cv1,
           file = paste0(
             "output/results/CV1_",
-            traço_name,
+            trait_name,
             "_", model_label,
             "_rep", rep_id,
             "_fold", fold,
@@ -415,7 +415,7 @@ for (traço_name in traços_to_run) {
         )
       }
 
-      # CV2: genótipos parcialmente observados
+      # CV2: partially observed genotypes
       y_cv2 <- y_full
 
       for (ped_now in pedigrees_in_fold) {
@@ -433,14 +433,14 @@ for (traço_name in traços_to_run) {
         m = 1:18,
         .packages = c("BGLR"),
         .export = c("Pheno", "Eta_list", "model_catalog", "y_cv2", "y_full", "env_levels",
-                    "nIter", "burnIn", "thin", "traço_name", "rep_id", "fold")
+                    "nIter", "burnIn", "thin", "trait_name", "rep_id", "fold")
       ) %dopar% {
         model_label <- model_catalog$Model[m]
 
         run_dir <- file.path(
           "output", "results", "bglr_runs",
           "CV2",
-          traço_name,
+          trait_name,
           model_label,
           paste0("rep", rep_id),
           paste0("fold", fold)
@@ -455,7 +455,7 @@ for (traço_name in traços_to_run) {
 
         save_prefix <- file.path(
           run_dir,
-          paste0("CV2_", traço_name, "_", model_label, "_rep", rep_id, "_fold", fold, "_")
+          paste0("CV2_", trait_name, "_", model_label, "_rep", rep_id, "_fold", fold, "_")
         )
 
         fit_cv2 <- BGLR(
@@ -507,7 +507,7 @@ for (traço_name in traços_to_run) {
           out_cv2,
           file = paste0(
             "output/results/CV2_",
-            traço_name,
+            trait_name,
             "_", model_label,
             "_rep", rep_id,
             "_fold", fold,
@@ -520,13 +520,13 @@ for (traço_name in traços_to_run) {
   }
 
   # ---------------------------------------------
-  # CV0 e CV00: LOEO
+  # CV0 and CV00: LOEO
   # ---------------------------------------------
   for (env_leave in env_levels) {
 
     env_parts <- strsplit(env_leave, "_")[[1]]
 
-    # CV0: ambiente não testado
+    # CV0: untested environment
     y_cv0 <- y_full
     idx_env_leave <- which(Pheno$Env == env_leave)
     y_cv0[idx_env_leave] <- NA
@@ -535,14 +535,14 @@ for (traço_name in traços_to_run) {
       m = 1:18,
       .packages = c("BGLR"),
       .export = c("Pheno", "Eta_list", "model_catalog", "y_cv0", "y_full", "idx_env_leave",
-                  "nIter", "burnIn", "thin", "traço_name", "env_leave")
+                  "nIter", "burnIn", "thin", "trait_name", "env_leave")
     ) %dopar% {
       model_label <- model_catalog$Model[m]
 
       run_dir <- file.path(
         "output", "results", "bglr_runs",
         "CV0",
-        traço_name,
+        trait_name,
         model_label,
         "rep1",
         "fold1",
@@ -558,7 +558,7 @@ for (traço_name in traços_to_run) {
 
       save_prefix <- file.path(
         run_dir,
-        paste0("CV0_", traço_name, "_", model_label, "_rep1_fold1_", env_leave, "_")
+        paste0("CV0_", trait_name, "_", model_label, "_rep1_fold1_", env_leave, "_")
       )
 
       fit_cv0 <- BGLR(
@@ -596,7 +596,7 @@ for (traço_name in traços_to_run) {
         out_cv0,
         file = paste0(
           "output/results/CV0_",
-          traço_name,
+          trait_name,
           "_", env_parts[1], "_", env_parts[2],
           "_", model_label,
           "_rep1_fold1.csv"
@@ -605,7 +605,7 @@ for (traço_name in traços_to_run) {
       )
     }
 
-    # CV00: genótipos não testados em um ambiente não testado
+    # CV00: untested genotypes in an untested environment
     pedigrees_test <- unique(Pheno$Pedigree[Pheno$Env == env_leave])
     pedigrees_train <- unique(Pheno$Pedigree[Pheno$Env != env_leave])
     pedigrees_new <- setdiff(pedigrees_test, pedigrees_train)
@@ -621,14 +621,14 @@ for (traço_name in traços_to_run) {
         m = 1:18,
         .packages = c("BGLR"),
         .export = c("Pheno", "Eta_list", "model_catalog", "y_cv00", "y_full", "idx_cv00",
-                    "nIter", "burnIn", "thin", "traço_name", "env_leave")
+                    "nIter", "burnIn", "thin", "trait_name", "env_leave")
       ) %dopar% {
         model_label <- model_catalog$Model[m]
 
         run_dir <- file.path(
           "output", "results", "bglr_runs",
           "CV00",
-          traço_name,
+          trait_name,
           model_label,
           "rep1",
           "fold1",
@@ -644,7 +644,7 @@ for (traço_name in traços_to_run) {
 
         save_prefix <- file.path(
           run_dir,
-          paste0("CV00_", traço_name, "_", model_label, "_rep1_fold1_", env_leave, "_")
+          paste0("CV00_", trait_name, "_", model_label, "_rep1_fold1_", env_leave, "_")
         )
 
         fit_cv00 <- BGLR(
@@ -682,7 +682,7 @@ for (traço_name in traços_to_run) {
           out_cv00,
           file = paste0(
             "output/results/CV00_",
-            traço_name,
+            trait_name,
             "_", env_parts[1], "_", env_parts[2],
             "_", model_label,
             "_rep1_fold1.csv"
