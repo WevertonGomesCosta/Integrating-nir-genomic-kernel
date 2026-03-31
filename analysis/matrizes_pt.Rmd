@@ -90,7 +90,7 @@ Esta seção lê as entradas brutas usadas no pipeline de construção dos kerne
 
 O arquivo `NIR.csv` contém identificadores, ambientes, caracteres fenotípicos e as bandas espectrais usadas depois para construir o kernel fenômico.
 
-```{r load-nir-data}
+```{r load-nir-data, eval=FALSE}
 NIR <- fread("data/NIR.csv") %>% as.data.frame()
 
 head(NIR[, 1:7])
@@ -101,7 +101,7 @@ unique(NIR$Env)
 
 O arquivo genotípico contém uma linha por genótipo e uma coluna por marcador. A primeira coluna (`taxa`) é o identificador do genótipo usado para alinhar a informação genômica e fenotípica.
 
-```{r load-genotypic-data}
+```{r load-genotypic-data, eval=FALSE}
 Geno <- fread("data/GAPIT.Genotype.Numerical.txt") %>% as.data.frame()
 
 head(Geno[, 1:5])
@@ -113,7 +113,7 @@ Os scripts de modelagem posteriores exigem uma tabela fenotípica limpa contendo
 
 Também criamos um **identificador de observação** (`ObsID`) combinando ambiente e genótipo. Isso é útil porque o mesmo genótipo pode aparecer em mais de um ambiente, e rótulos únicos de observação melhoram muito a rastreabilidade e as checagens de alinhamento.
 
-```{r build-pheno-table}
+```{r build-pheno-table, eval=FALSE}
 Pheno <- NIR %>%
   dplyr::select(Pedigree, Env, GY, KW) %>%
   arrange(Env, Pedigree) %>%
@@ -126,7 +126,7 @@ head(Pheno)
 
 Esta é uma etapa crítica de validação. O arquivo genômico e o arquivo NIR/fenotípico devem se referir aos mesmos genótipos. Se os IDs não forem harmonizados antes da construção das matrizes, todo kernel posterior ficará desalinhado.
 
-```{r harmonize-genotypes}
+```{r harmonize-genotypes, eval=FALSE}
 Pedigree <- intersect(Geno$taxa, NIR$Pedigree)
 
 NIR <- NIR[NIR$Pedigree %in% Pedigree, ] %>%
@@ -156,7 +156,7 @@ O estudo possui quatro ambientes:
 
 A construção dos kernels usa depois blocos específicos por ambiente. Por isso, separamos as observações NIR em quatro data frames específicos de ambiente preservando os identificadores de observação.
 
-```{r split-by-environment}
+```{r split-by-environment, eval=FALSE}
 a <- NIR %>% filter(Env == "CS11_WS") %>% arrange(Pedigree)
 b <- NIR %>% filter(Env == "CS11_WW") %>% arrange(Pedigree)
 c <- NIR %>% filter(Env == "CS12_WS") %>% arrange(Pedigree)
@@ -171,7 +171,7 @@ rownames(d) <- d$ObsID
 
 Este objeto é informativo para checagens de dados balanceados e para interpretar a sobreposição entre ensaios.
 
-```{r shared-genotypes-all-envs}
+```{r shared-genotypes-all-envs, eval=FALSE}
 Pedigree_communs <- Reduce(
   intersect,
   list(Geno$taxa, a$Pedigree, b$Pedigree, c$Pedigree, d$Pedigree)
@@ -194,7 +194,7 @@ As etapas práticas são:
 4. Empilhar as matrizes específicas de ambiente na mesma ordem usada pela tabela de observações.
 5. Calcular o kernel linear pelo produto cruzado da matriz padronizada de marcadores.
 
-```{r build-zg}
+```{r build-zg, eval=FALSE}
 Geno <- Geno[order(Geno$taxa), ]
 rownames(Geno) <- Geno$taxa
 Geno <- Geno[, -1, drop = FALSE]
@@ -225,7 +225,7 @@ O kernel fenômico usa as bandas espectrais NIR. A mesma lógica em blocos é us
 
 Esse kernel é útil porque resume a similaridade espectral entre observações. Ao mesmo tempo, deve ser interpretado com cautela. Os espectros NIR podem refletir respostas fisiológicas fortes às condições de campo, de modo que o kernel fenômico pode capturar parte do sinal ambiental além de informação relacionada ao genótipo.
 
-```{r build-zp}
+```{r build-zp, eval=FALSE}
 # Identify spectral variables defensively: keep only numeric columns and remove
 # metadata/trait columns that should not enter the phenomic kernel.
 metadata_cols <- c("Pedigree", "Env", "GY", "KW", "ObsID")
@@ -272,7 +272,7 @@ A representação ambiental mais simples trata cada ambiente como um fator categ
 
 Esse kernel atribui similaridade ambiental completa a observações do mesmo ambiente e similaridade zero a observações de ambientes diferentes. Nos modelos finais, `ZEZE` representa o **efeito categórico de ambiente**. Ele não é o mesmo que o kernel climático. Em termos práticos, `ZEZE` mantém a distinção entre os quatro macroambientes, enquanto `ZW` descreve depois a similaridade entre observações com base em covariáveis meteorológicas.
 
-```{r build-ze}
+```{r build-ze, eval=FALSE}
 Pheno <- Pheno %>% arrange(match(ObsID, rownames(ZG)))
 
 ZE <- model.matrix(~ as.factor(Pheno$Env) - 1)
@@ -305,7 +305,7 @@ No pipeline reduzido final, `ZW` é usado principalmente nos modelos `M10`-`M18`
 
 ### 9.1 Carregar os arquivos climáticos
 
-```{r load-climate-files}
+```{r load-climate-files, eval=FALSE}
 annual_ec_file <- "output/climate_results/environmental_covariates.csv"
 expanded_ec_file <- "output/climate_results/environmental_covariates_expanded.csv"
 
@@ -372,7 +372,7 @@ ECs_expanded <- ECs_expanded %>%
 
 O objetivo desta etapa é colocar variáveis ambientais heterogêneas em escala comparável antes da construção do kernel.
 
-```{r standardize-climate-data}
+```{r standardize-climate-data, eval=FALSE}
 annual_scaled <- ECs_annual %>%
   dplyr::select(all_of(annual_cols)) %>%
   scale(center = TRUE, scale = TRUE) %>%
@@ -393,7 +393,7 @@ daily_scaled <- ECs_expanded %>%
 
 Para cada ano, transformamos as trajetórias diárias de clima em uma única assinatura larga por linha. Isso dá a cada ano um vetor reprodutível que representa seu perfil climático intrassazonal.
 
-```{r create-year-signatures}
+```{r create-year-signatures, eval=FALSE}
 daily_signature_2011 <- daily_scaled %>%
   filter(year == 2011) %>%
   dplyr::select(date, all_of(daily_cols)) %>%
@@ -422,7 +422,7 @@ annual_signature_2012 <- annual_scaled %>%
 
 Cada observação herda a assinatura climática do ano associado ao seu ambiente. Os ambientes de 2011 recebem as assinaturas diárias e anuais de 2011; os ambientes de 2012 recebem as assinaturas de 2012. Blocos específicos de outro ano são preenchidos com `NA` e depois substituídos por zero, para que a matriz final possa ser usada em um produto cruzado.
 
-```{r build-w}
+```{r build-w, eval=FALSE}
 ids_a <- a$ObsID
 ids_b <- b$ObsID
 ids_c <- c$ObsID
@@ -523,6 +523,35 @@ print(paste("ZW and ZG aligned:", identical(rownames(ZW), rownames(ZG))))
 print(paste("ZW and ZP aligned:", identical(rownames(ZW), rownames(ZP))))
 ```
 
+```{r load-generated-matrices, include=FALSE}
+required_matrix_objects <- c(
+  "ZE", "ZEZE", "ZG", "ZP", "ZGZE", "ZPZE", "ZW", "ZGZW", "ZPZW",
+  "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",
+  "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW",
+  "Pheno", "Pedigree", "Pedigree_communs", "Geno.all", "NIR.all", "W"
+)
+
+missing_matrix_files <- required_matrix_objects[
+  !file.exists(file.path("output/Matrizes", paste0(required_matrix_objects, ".rds")))
+]
+
+if (length(missing_matrix_files) > 0) {
+  stop(
+    "Arquivos não encontrados em 'output/Matrizes/'. Execute primeiro matrizes.Rmd para gerar os objetos finais usados por esta versão em português: ",
+    paste(missing_matrix_files, collapse = ", ")
+  )
+}
+
+for (obj_name in required_matrix_objects) {
+  assign(
+    obj_name,
+    readRDS(file.path("output/Matrizes", paste0(obj_name, ".rds"))),
+    envir = .GlobalEnv
+  )
+}
+```
+
+
 ## 10. Verificar dimensões e alinhamento dos kernels
 
 Antes de construir interações e kernels não lineares, resumimos os principais kernels lineares. Essa tabela é útil tanto para controle de qualidade quanto para fins didáticos.
@@ -604,7 +633,7 @@ Mesmo que `ZW` não apareça no mapa de calor integrado, ele continua sendo um o
 
 Os kernels de interação são obtidos pelo produto de Hadamard (multiplicação elemento a elemento). Essa operação restringe a similaridade genômica ou fenômica ao contexto ambiental representado por `ZEZE` ou `ZW`.
 
-```{r build-interactions}
+```{r build-interactions, eval=FALSE}
 ZGZE <- ZG * ZEZE
 ZPZE <- ZP * ZEZE
 ZGZW <- ZG * ZW
@@ -658,7 +687,7 @@ margh.fun <- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
 
 Primeiro calculamos distâncias genômicas entre genótipos únicos e depois as projetamos no espaço das observações.
 
-```{r ggk}
+```{r ggk, eval=FALSE}
 DG <- (as.matrix(dist(Geno)))^2
 q05G <- quantile(DG, 0.05)
 
@@ -687,10 +716,10 @@ solG <- optim(
   upper = c(6, 30)
 )
 ```
-```{r ggk-read-solution, include=FALSE}
+```{r ggk-read-solution, include=FALSE, eval=FALSE}
 solG <- readRDS("output/Matrizes/solG.RDS")
 ```
-```{r ggk-final}
+```{r ggk-final, eval=FALSE}
 hG <- solG$par[1]
 
 GGK <- exp(-hG * DG_proj / q05G)
@@ -707,7 +736,7 @@ O kernel Gaussiano fenômico usa distâncias euclidianas derivadas da matriz NIR
 
 Como no kernel Gaussiano genômico, a etapa de otimização no pipeline atual usa **GY como caráter de referência**, e o kernel Gaussiano fenômico resultante é então reutilizado tanto para GY quanto para KW.
 
-```{r pgk}
+```{r pgk, eval=FALSE}
 DP <- (as.matrix(dist(NIR.all)))^2
 q05P <- quantile(DP, 0.05)
 
@@ -736,10 +765,10 @@ solP <- optim(
   upper = c(6, 30)
 )
 ```
-```{r pgk-read-solution, include=FALSE}
+```{r pgk-read-solution, include=FALSE, eval=FALSE}
 solP <- readRDS("output/Matrizes/solP.RDS")
 ```
-```{r pgk-final}
+```{r pgk-final, eval=FALSE}
 hP <- solP$par[1]
 
 PGK <- exp(-hP * DP_proj / q05P)
@@ -752,7 +781,7 @@ PGK[1:5, 1:5]
 
 ### 12.4 Kernels de interação Gaussianos
 
-```{r interactions-gk}
+```{r interactions-gk, eval=FALSE}
 GGKE <- GGK * ZEZE
 PGKE <- PGK * ZEZE
 GGKW <- GGK * ZW
@@ -844,7 +873,7 @@ AK.fun <- function(AK1, nl) {
 
 Os kernels arc-cosine seguem a mesma regra prática adotada para os kernels Gaussianos. No pipeline atual, o número de camadas ocultas é selecionado **uma vez usando GY como caráter de referência**, e o kernel resultante é então reutilizado em ambas as análises de caráter.
 
-```{r gak}
+```{r gak, eval=FALSE}
 GAK1 <- AK1.fun(Geno)
 dim(GAK1)
 GAK1[1:5, 1:5]
@@ -876,7 +905,7 @@ GAK[1:5, 1:5]
 
 O kernel arc-cosine fenômico também é calibrado **uma vez usando GY como caráter de referência**, e o kernel final é reutilizado para GY e KW nos modelos posteriores.
 
-```{r pak}
+```{r pak, eval=FALSE}
 PAK1 <- AK1.fun(NIR.all)
 dim(PAK1)
 PAK1[1:5, 1:5]
@@ -908,7 +937,7 @@ PAK[1:5, 1:5]
 ```
 ### 13.4 Kernels de interação arc-cosine
 
-```{r interaction-ak}
+```{r interaction-ak, eval=FALSE}
 GAKE <- GAK * ZEZE
 PAKE <- PAK * ZEZE
 GAKW <- GAK * ZW
@@ -1071,7 +1100,7 @@ Os objetos de kernel criados neste tutorial são computacionalmente caros para r
 
 Esta última seção também é escrita de forma direta: listamos quais objetos serão salvos, escrevemos tudo em disco, exportamos as tabelas diagnósticas, removemos os objetos temporários restantes e então recarregamos as matrizes salvas.
 
-```{r save-and-clean, message=FALSE}
+```{r save-and-clean, message=FALSE, eval=FALSE}
 keep_names <- c(
   "ZE", "ZEZE", "ZG", "ZP", "ZGZE", "ZPZE", "ZW", "ZGZW", "ZPZW",
   "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",

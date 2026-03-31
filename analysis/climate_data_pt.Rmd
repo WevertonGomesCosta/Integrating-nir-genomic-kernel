@@ -121,7 +121,7 @@ Executamos uma consulta para cada safra. Isso mantém o fluxo transparente e fac
 
 O código abaixo envia duas requisições independentes ao serviço NASA POWER, uma para 2011 e outra para 2012. Um identificador `year` é adicionado imediatamente após a obtenção para que a origem de cada registro permaneça explícita ao longo de todo o fluxo.
 
-```{r get_data}
+```{r get_data, eval=FALSE}
 data_tx_2011 <- get_power(
   community = "AG",
   lonlat = coords_texas,
@@ -147,7 +147,7 @@ Depois que as duas tabelas anuais estão disponíveis, nós as reunimos em um ú
 
 Também salvamos o conjunto bruto diário como arquivo CSV. Isso é importante para reprodutibilidade porque preserva a versão exata dos dados recuperados usada na análise.
 
-```{r get_data2}
+```{r get_data2, eval=FALSE}
 texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012) %>%
   mutate(
     date = ymd(YYYYMMDD),
@@ -194,6 +194,59 @@ write.csv(
   "output/climate_results/texas_climate_data_raw.csv",
   row.names = FALSE
 )
+```
+
+Nesta versão em português, o download e a gravação da base bruta permanecem documentados no chunk acima, mas a renderização do arquivo depende da execução prévia de `climate_data.Rmd`. Para evitar novo processamento do mesmo download, carregamos silenciosamente o arquivo `texas_climate_data_raw.csv` já salvo pela versão em inglês e reconstruímos a tabela de pré-visualização a partir dele.
+
+```{r load_downloaded_data, include=FALSE}
+raw_climate_path <- "output/climate_results/texas_climate_data_raw.csv"
+
+if (!file.exists(raw_climate_path)) {
+  stop("Arquivo não encontrado: 'output/climate_results/texas_climate_data_raw.csv'. Execute primeiro climate_data.Rmd para gerar a base bruta usada por esta versão em português.")
+}
+
+texas_climate_data <- readr::read_csv(raw_climate_path, show_col_types = FALSE) %>%
+  mutate(
+    date = ymd(date),
+    year = factor(year, levels = c(2011, 2012))
+  )
+
+daily_preview_table <- texas_climate_data %>%
+  select(date, year, PRECTOTCORR, T2M_MAX, T2M_MIN, RH2M, ALLSKY_SFC_SW_DWN, WS2M) %>%
+  slice(1:10) %>%
+  mutate(
+    PRECTOTCORR = round(PRECTOTCORR, 2),
+    T2M_MAX = round(T2M_MAX, 2),
+    T2M_MIN = round(T2M_MIN, 2),
+    RH2M = round(RH2M, 1),
+    ALLSKY_SFC_SW_DWN = round(ALLSKY_SFC_SW_DWN, 2),
+    WS2M = round(WS2M, 2)
+  ) %>%
+  rename(
+    Data = date,
+    Ano = year,
+    `Precipitação` = PRECTOTCORR,
+    `Tmax` = T2M_MAX,
+    `Tmin` = T2M_MIN,
+    `Umidade relativa` = RH2M,
+    `Radiação solar` = ALLSKY_SFC_SW_DWN,
+    `Velocidade do vento` = WS2M
+  )
+```
+
+```{r daily_preview_table_pt}
+knitr::kable(
+  daily_preview_table,
+  align = "c",
+  caption = "Tabela 1. Exemplo de registros meteorológicos diários recuperados da NASA POWER para os ensaios no Texas."
+) %>%
+  kableExtra::kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    position = "center",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
 ## 5. Análise exploratória e geração de figuras
@@ -658,7 +711,7 @@ Algumas covariáveis derivadas do clima dependem de quantidades que não são fo
 
 Essas variáveis intermediárias são calculadas dia a dia e depois resumidas no nível anual na próxima subseção.
 
-```{r feature_engineering}
+```{r feature_engineering, eval=FALSE}
 texas_climate_data <- texas_climate_data %>%
   mutate(
     T_base = 10,
@@ -795,6 +848,87 @@ knitr::kable(
   kableExtra::scroll_box(width = "100%", height = "320px")
 ```
 
+Na versão em português, o chunk acima é mantido como documentação completa da engenharia de atributos, mas a renderização reutiliza os arquivos finais já produzidos por `climate_data.Rmd`. Assim, evitamos recalcular e regravar os mesmos resumos anuais e a tabela expandida.
+
+```{r load_engineered_climate_outputs, include=FALSE}
+weather_covariates_path <- "output/climate_results/environmental_covariates.csv"
+ecs_expanded_path <- "output/climate_results/environmental_covariates_expanded.csv"
+
+if (!file.exists(weather_covariates_path) || !file.exists(ecs_expanded_path)) {
+  stop("Arquivos finais de clima não encontrados em 'output/climate_results/'. Execute primeiro climate_data.Rmd para gerar as covariáveis climáticas usadas por esta versão em português.")
+}
+
+weather_covariates <- readr::read_csv(weather_covariates_path, show_col_types = FALSE)
+ecs_expanded <- readr::read_csv(ecs_expanded_path, show_col_types = FALSE)
+
+weather_covariates_dictionary <- tibble::tibble(
+  Variable = c(
+    "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS", "PRECTOT",
+    "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM", "T_AVG",
+    "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS", "PREC_INTENSITY",
+    "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"
+  ),
+  Unit = c(
+    "°C", "°C", "°C day", "days", "mm",
+    "days", "%", "m s^-1", "MJ m^-2", "°C",
+    "°C", "days", "days", "mm day^-1",
+    "days", "kPa", "days"
+  ),
+  Description = c(
+    "Temperatura máxima média durante a safra",
+    "Temperatura mínima média durante a safra",
+    "Graus-dia acumulados",
+    "Número de dias com estresse térmico",
+    "Precipitação total durante a safra",
+    "Número de dias secos",
+    "Umidade relativa média",
+    "Velocidade média do vento a 2 m",
+    "Radiação de onda curta acumulada",
+    "Temperatura média",
+    "Amplitude térmica diária média",
+    "Número de dias com estresse por frio",
+    "Número de dias chuvosos",
+    "Intensidade média de chuva em dias chuvosos",
+    "Número de dias com baixa umidade",
+    "Déficit de pressão de vapor médio",
+    "Número de dias com estresse por déficit de pressão de vapor"
+  )
+)
+
+weather_covariates_display <- weather_covariates %>%
+  mutate(across(-year, ~ round(.x, 2))) %>%
+  rename(Ano = year)
+```
+
+```{r climate_covariate_tables_pt}
+knitr::kable(
+  weather_covariates_dictionary,
+  align = c("l", "c", "l"),
+  caption = "Tabela 2. Covariáveis derivadas do clima usadas para caracterizar as safras e apoiar a construção do kernel climático."
+) %>%
+  kableExtra::kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    position = "center",
+    font_size = 12
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+
+knitr::kable(
+  weather_covariates_display,
+  align = c("c", rep("c", ncol(weather_covariates_display) - 1)),
+  caption = "Tabela 3. Covariáveis anuais derivadas do clima obtidas dos dados NASA POWER para as safras de 2011 e 2012."
+) %>%
+  kableExtra::kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    position = "center",
+    font_size = 11
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
 ### 6.2 Interpretação das covariáveis derivadas do clima resultantes
 
 A tabela final contém uma linha por ano e vários descritores climáticos.
@@ -823,7 +957,9 @@ Três arquivos são exportados:
 
 Os dois últimos arquivos mantêm seus nomes históricos para compatibilidade com os scripts posteriores, embora agora representem covariáveis derivadas do clima.
 
-```{r save_csv}
+Nesta versão em português, o chunk de gravação final permanece apenas como documentação do fluxo operacional. Os arquivos já devem ter sido gerados anteriormente pela versão em inglês e são reutilizados aqui por meio dos chunks ocultos de carregamento.
+
+```{r save_csv, eval=FALSE}
 write.csv(
   weather_covariates,
   "output/climate_results/environmental_covariates.csv",

@@ -18,6 +18,8 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 **Language / Idioma:** [English](variance_components.html) | [Português](variance_components_pt.html)
 
+> **Nota operacional:** Nesta versão em português, a etapa pesada de ajuste Bayesiano permanece documentada, mas a renderização depende dos arquivos já gerados pela execução em inglês. Os chunks de carregamento ficam ocultos e a leitura dos resultados consolidados é feita a partir de `output/variance_components/`.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -169,7 +171,7 @@ component_order[component_order == "PAKW × W"] <- "PAK × W"
 
 Esta seção carrega as matrizes geradas em `matrizes.Rmd`. Esses objetos são as entradas centrais da análise de componentes de variância.
 
-```{r load-matrices}
+```{r load-matrices, include=FALSE}
 ZG    <- readRDS(file.path(kernel_dir, "ZG.rds"))
 ZP    <- readRDS(file.path(kernel_dir, "ZP.rds"))
 ZE    <- readRDS(file.path(kernel_dir, "ZE.rds"))
@@ -607,7 +609,7 @@ saveRDS(all_variance, file.path(results_dir, "variance_components_raw.rds"))
 
 Na versão atual do fluxo, esta é a seção usada com mais frequência. Em vez de reajustar todos os modelos a cada execução, o script lê os arquivos `_metrics.rds` previamente salvos e os consolida em um único objeto. Isso mantém o tutorial prático e reprodutível, ao mesmo tempo que deixa claro que esta página é principalmente uma **etapa de consolidação de resultados**, a menos que o usuário decida rerodar intencionalmente a etapa completa de ajuste no BGLR.
 
-```{r consolidate-saved-results}
+```{r consolidate-saved-results, eval=FALSE}
 rds_files <- list.files(
   path = results_dir,
   pattern = "_(metrics|metricas)\\.rds$",
@@ -673,7 +675,7 @@ if (length(rds_files) > 0) {
 
 Esta seção carrega os resultados consolidados e os prepara para o resumo. Se o arquivo não existir, o script interrompe a execução e instrui o usuário a executar a etapa de ajuste dos modelos primeiro.
 
-```{r load-results, error=TRUE}
+```{r load-results, include=FALSE}
 raw_file <- file.path(results_dir, "variance_components_all.rds")
 
 if (!file.exists(raw_file)) {

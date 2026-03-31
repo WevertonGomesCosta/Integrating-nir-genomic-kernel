@@ -18,6 +18,8 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 **Language / Idioma:** [English](analysis_prediction.html) | [Português](analysis_prediction_pt.html)
 
+> **Nota operacional:** Nesta versão em português, a etapa pesada de predição permanece documentada, mas a renderização depende dos objetos já gerados nas etapas anteriores do pipeline e não reroda os ajustes Bayesianos completos. Os chunks de carregamento podem ficar ocultos e o ajuste completo só deve ser executado na versão em inglês quando for necessário atualizar os resultados.
+
 ## 1. Introdução
 
 Este tutorial realiza as análises de predição para o conjunto reduzido de 18 modelos Bayesianos multi-kernel usados no estudo.
@@ -65,7 +67,7 @@ library(parallel)
 
 ## 3. Entradas geradas pelos scripts anteriores
 
-```{r load-inputs}
+```{r load-inputs, include=FALSE}
 Pheno <- readRDS("output/Matrizes/Pheno.rds")
 
 ZG   <- readRDS("output/Matrizes/ZG.rds")
