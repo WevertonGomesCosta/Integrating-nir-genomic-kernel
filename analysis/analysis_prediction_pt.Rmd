@@ -29,12 +29,18 @@ Este script executa as análises de predição para o conjunto reduzido de **18 
 - o efeito categórico de ambiente (`E`),
 - e, quando apropriado, o kernel climático (`W`).
 
-Os modelos são avaliados sob quatro cenários de validação cruzada:
+Um modelo que apenas se ajusta bem aos dados existentes (bom *fit*) não é útil; ele precisa ser capaz de **prever dados que nunca viu**. Para simular isso, usamos a Validação Cruzada (CV).
 
-- `CV1`: genótipos não observados;
-- `CV2`: desempenho no conjunto de treinamento, seguindo o **script de referência**;
-- `CV0`: leave-one-environment-out **dentro da estrutura de folds**;
-- `CV00`: genótipos não observados em um cenário leave-one-environment-out, também **dentro da estrutura de folds**.
+Vamos implementar múltiplos esquemas de CV para simular diferentes desafios do mundo real no melhoramento:
+
+  * **CV1: validação por genótipo (testa genótipos não observados).**
+      * *Pergunta:* O modelo pode prever o desempenho de um genótipo (híbrido) *completamente novo*, que não estava em *nenhum* ambiente de treinamento?
+  * **CV2: validação por célula (testa combinações genótipo × ambiente parcialmente observadas).**
+      * *Pergunta:* O modelo pode prever o desempenho de um genótipo *conhecido* em um ambiente *novo* para ele (assumindo que o genótipo foi visto em outros ambientes e o ambiente foi visto com outros genótipos)?
+  * **CV0: leave-one-environment-out (testa ambientes inteiros não observados).**
+      * *Pergunta:* O teste mais difícil. O modelo pode prever o desempenho de *todos* os genótipos em um *ambiente completamente novo* (um ano ou local que o modelo nunca viu)?
+  * **CV00: leave-one-environment-out (testa genótipos em ambientes não observados).**
+      * *Semelhante ao CV0*, focado em prever genótipos *dentro* de um ambiente não visto.
 
 Isso é importante porque a versão final corrigida restaura a lógica do `analysis.Rmd` original, mantendo ao mesmo tempo o catálogo reduzido dos 18 modelos finais usados no repositório atualizado.
 
@@ -365,22 +371,13 @@ length(Eta_list)
 
 ## 7. Executando as análises de predição em paralelo com foreach
 
-Esta é a parte computacional central do script. Na versão didática em português, esta seção também é dividida em chunks menores para que o leitor possa entender o fluxo passo a passo.
+Esta é a parte computacional central do script. Na versão didática em português, esta seção foi dividida em blocos menores para que o leitor consiga acompanhar o que é preparado antes do processamento pesado, o que é executado dentro de cada *worker* e o que é gravado ao final.
 
 Como esta é a etapa computacionalmente mais cara de todo o pipeline, os blocos que realmente executam os jobs completos permanecem com `eval=FALSE` nesta versão em português. Para fins de navegação do site, os arquivos já produzidos pela versão oficial em inglês podem ser carregados silenciosamente quando necessário.
 
-A lógica de execução continua exatamente a mesma da versão final operacional:
+### 7.1 Preparar as pastas de saída
 
-1. preparar as pastas de saída e remover arquivos antigos de predição;
-2. definir o executor compacto do BGLR e a etapa de sumarização por ambiente;
-3. criar a grade completa de jobs (`MODEL × REP × TRAIT`);
-4. inicializar o backend paralelo;
-5. executar todos os folds e todos os cenários de validação dentro de cada job;
-6. agregar os resultados em nível de fold e salvar um CSV por repetição.
-
-### 7.1 Preparar as pastas de saída e remover arquivos antigos de predição
-
-Este primeiro chunk cria os diretórios usados pela etapa de predição e remove as saídas anteriores de predição. Essa limpeza é importante porque o script reescreve todas as tabelas de CV do zero.
+Este bloco prepara os diretórios que serão usados nas saídas da etapa de predição. Na lógica do script de referência, essa preparação vem antes do *loop* paralelo porque os resultados de cada *worker* precisam ser gravados de forma organizada.
 
 ```{r prepare-output-folders}
 dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
@@ -393,7 +390,16 @@ Nesta versão em português, este chunk foi mantido **não destrutivo**. Ele ape
 
 ### 7.2 Definir as funções auxiliares usadas durante a execução
 
-Para manter o fluxo legível, a função de execução e a função de sumarização são mostradas em chunks separados.
+Este bloco prepara as "ferramentas" que usaremos dentro do nosso *loop* de processamento paralelo.
+
+  * **`envs_leaveout`**: Define os ambientes específicos que serão usados para os cenários de teste CV0 e CV00 (onde deixamos um ambiente inteiro de fora).
+  * **`run_bglr`**: Esta é uma função "wrapper" (empacotadora) personalizada e **altamente otimizada**. A função `BGLR` padrão retorna objetos muito pesados. Para evitar sobrecarregar a memória em um *loop* paralelo, nossa `run_bglr` faz o seguinte:
+    1.  Roda o `BGLR`.
+    2.  Salva os arquivos de log do MCMC (via `saveAt`).
+    3.  Extrai *apenas* as métricas essenciais (predições `yHat`, variâncias médias) e as salva em um único arquivo `.rds` leve (`_metricas.rds`).
+    4.  Limpa o objeto `fit` pesado da memória (`rm(fit); gc()`).
+    5.  Retorna *apenas* o `yHat` (predições) e o tempo de execução para o *loop* principal.
+  * **`calc_cor_by_env`**: Uma função auxiliar simples que usaremos *após* a execução principal, para agregar os resultados e calcular a acurácia (correlação) dentro de cada ambiente.
 
 #### 7.2.1 Função para ajustar um modelo BGLR e salvar métricas compactas
 
@@ -510,7 +516,18 @@ gc()
 
 ### 7.5 Executar todos os jobs em paralelo
 
-O bloco longo de execução original é agora decomposto em estágios menores. O código segue exatamente a mesma lógica computacional, mas o leitor pode inspecionar cada etapa separadamente.
+**Dentro de cada iteração paralela (para cada núcleo):**
+
+1.  **Identificar o Trabalho**: O *worker* identifica qual `MODEL`, `rep_num` e `TRAIT` ele deve processar.
+2.  **Criar Folds (CV1/CV2)**: O *worker* cria os 5 *folds* (partições) para os genótipos. `train_geno` e `test_geno` são definidos.
+3.  **Loop Interno (por Fold)**: O *worker* então itera através de cada um dos 5 *folds*.
+      * **Mascarar Dados (CV1/CV2)**: Ele cria `yield$Y2`. Este vetor é uma cópia dos fenótipos onde todas as observações dos genótipos em `test_geno` são definidas como `NA`.
+      * **Ajustar Modelo (CV1/CV2)**: O `BGLR` é chamado usando `yield$Y2` como resposta. O `BGLR` irá "preencher" (prever) os valores `NA`.
+      * **Coletar Resultados (CV1/CV2)**: As predições (`yhat`) são extraídas. `df_test` contém as predições para os genótipos de validação (que eram `NA`). `df_train` contém as predições para os genótipos de treinamento. A acurácia (correlação) é calculada para ambos e armazenada em `CV1_list` e `CV2_list`.
+      * **Mascarar Dados (CV0/CV00)**: Um segundo conjunto de máscaras é criado (`yield2$Y2`). Ele é semelhante ao primeiro, mas *também* define como `NA` todas as observações de um ambiente específico.
+      * **Ajustar Modelo (CV0/CV00)**: O `BGLR` é executado novamente com esta nova máscara.
+      * **Coletar Resultados (CV0/CV00)**: A acurácia é calculada e armazenada em `CV0_lists` e `CV00_lists`.
+4.  **Salvar Resultados**: Após o *loop* de 5 *folds* terminar, o *worker* agrega os resultados e os salva em um arquivo `.csv` único para aquele `MODEL`, `REP` e `TRAIT`.
 
 #### 7.5.1 Preparar um job antes de entrar no laço de folds
 
