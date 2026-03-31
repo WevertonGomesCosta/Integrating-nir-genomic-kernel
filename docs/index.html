@@ -11,7 +11,7 @@
 
 <meta name="author" content="Costa, W. G." />
 
-<meta name="date" content="2026-03-30" />
+<meta name="date" content="2026-03-31" />
 
 <title>Home</title>
 
@@ -347,20 +347,80 @@ div.tocify {
         <li>
   <a href="index.html">Home</a>
 </li>
-<li>
-  <a href="climate_data.html">Climate data</a>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Climate data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="climate_data.html">Climate data — English</a>
+    </li>
+    <li>
+      <a href="climate_data_pt.html">Dados Climáticos — Português</a>
+    </li>
+  </ul>
 </li>
-<li>
-  <a href="matrizes.html">Matrices</a>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Matrices
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="matrizes.html">Matrices — English</a>
+    </li>
+    <li>
+      <a href="matrizes_pt.html">Matrizes — Português</a>
+    </li>
+  </ul>
 </li>
-<li>
-  <a href="variance_components.html">Variance components</a>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Variance components
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="variance_components.html">Variance components — English</a>
+    </li>
+    <li>
+      <a href="variance_components_pt.html">Componentes de variância — Português</a>
+    </li>
+  </ul>
 </li>
-<li>
-  <a href="analysis_prediction.html">Prediction</a>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Prediction
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="analysis_prediction.html">Prediction — English</a>
+    </li>
+    <li>
+      <a href="analysis_prediction_pt.html">Predição — Português</a>
+    </li>
+  </ul>
 </li>
-<li>
-  <a href="visualization.html">Visualization</a>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Visualization
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="visualization.html">Visualization — English</a>
+    </li>
+    <li>
+      <a href="visualization_pt.html">Visualização — Português</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="about.html">About</a>
@@ -396,7 +456,7 @@ div.tocify {
 <h1 class="title toc-ignore">Home</h1>
 <h4 class="author">Costa, W. G.<a href="#fn1" class="footnote-ref"
 id="fnref1"><sup>1</sup></a></h4>
-<h4 class="date">2026-03-30</h4>
+<h4 class="date">2026-03-31</h4>
 
 </div>
 
@@ -404,7 +464,7 @@ id="fnref1"><sup>1</sup></a></h4>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+workflowr <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -415,8 +475,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> </a>
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -425,13 +485,13 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-03-30
+<strong>Last updated:</strong> 2026-03-31
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -455,21 +515,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has staged changes. To know which version of the
-R Markdown file created these results, you’ll want to first commit it to
-the Git repo. If you’re still working on the analysis, you can ignore
-this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -560,15 +617,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree6d2bc1290e58de77b6d6990a7dd4e7f308cd345btargetblank6d2bc12a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree0f4ed874cda6dbcd0b7bd53d169c31df587a2faftargetblank0f4ed87a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/6d2bc1290e58de77b6d6990a7dd4e7f308cd345b" target="_blank">6d2bc12</a>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/0f4ed874cda6dbcd0b7bd53d169c31df587a2faf" target="_blank">0f4ed87</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree6d2bc1290e58de77b6d6990a7dd4e7f308cd345btargetblank6d2bc12a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree0f4ed874cda6dbcd0b7bd53d169c31df587a2faftargetblank0f4ed87a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -578,7 +635,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/6d2bc1290e58de77b6d6990a7dd4e7f308cd345b" target="_blank">6d2bc12</a>.
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/0f4ed874cda6dbcd0b7bd53d169c31df587a2faf" target="_blank">0f4ed87</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -595,6 +652,7 @@ were generated:
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
+    Ignored:    Integrating-nir-genomic-kernel.zip
     Ignored:    analysis/analysis.Rmd
     Ignored:    data/Article_documents/
     Ignored:    data/Maize-NIRS-GBS-main/
@@ -606,7 +664,7 @@ Ignored files:
     Ignored:    output/climate_results/combined_additional_climate_plots.tiff
     Ignored:    output/climate_results/combined_climate_plot.tiff
     Ignored:    output/cv-schemes.tiff
-    Ignored:    output/variance_components/figures/
+    Ignored:    output/variance_components/figures/variance_components_article.tiff
     Ignored:    output/variance_components/rep_1/Eta01/GYETA_E_varB.dat
     Ignored:    output/variance_components/rep_1/Eta01/GYETA_GE_varU.dat
     Ignored:    output/variance_components/rep_1/Eta01/GYETA_G_varU.dat
@@ -5528,12 +5586,6 @@ Ignored files:
     Ignored:    output/variance_components/rep_9/Eta18/KWmu.dat
     Ignored:    output/variance_components/rep_9/Eta18/KWvarE.dat
 
-Staged changes:
-    Modified:   README.md
-    Modified:   analysis/about.Rmd
-    Modified:   analysis/index.Rmd
-    Modified:   analysis/license.Rmd
-
 </code></pre>
 <p>
 Note that any generated files, e.g. HTML, png, CSS, etc., are not
@@ -5576,6 +5628,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/f51386fec22640da77eab522935ae15d2cbc0133/analysis/index.Rmd" target="_blank">f51386f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-03-30
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/f51386fec22640da77eab522935ae15d2cbc0133/docs/index.html" target="_blank">f51386f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-03-30
+</td>
+<td>
+update
+</td>
+</tr>
 <tr>
 <td>
 Rmd
