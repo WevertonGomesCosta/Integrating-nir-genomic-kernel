@@ -101,8 +101,8 @@ required_files <- c(
   "GGK.rds", "PGK.rds", "GAK.rds", "PAK.rds",
   "GGKE.rds", "PGKE.rds", "GGKW.rds", "PGKW.rds",
   "GAKE.rds", "PAKE.rds", "GAKW.rds", "PAKW.rds",
-  "Pheno.rds", "Pedigree.rds", "kernel_inventory_linear.csv",
-  "kernel_inventory_nonlinear.csv"
+  "Pheno.rds", "Pedigree.rds", "Geno.all.rds", "NIR.all.rds", "W.rds",
+  "kernel_inventory_linear.csv", "kernel_inventory_nonlinear.csv"
 )
 
 missing_files <- required_files[!file.exists(file.path(kernel_dir, required_files))]
@@ -142,6 +142,9 @@ PAKW  <- readRDS(file.path(kernel_dir, "PAKW.rds"))
 
 Pheno <- readRDS(file.path(kernel_dir, "Pheno.rds"))
 Pedigree <- readRDS(file.path(kernel_dir, "Pedigree.rds"))
+Geno.all <- readRDS(file.path(kernel_dir, "Geno.all.rds"))
+NIR.all <- readRDS(file.path(kernel_dir, "NIR.all.rds"))
+W <- readRDS(file.path(kernel_dir, "W.rds"))
 
 kernel_inventory_linear <- read.csv(file.path(kernel_dir, "kernel_inventory_linear.csv"), stringsAsFactors = FALSE)
 kernel_inventory_nonlinear <- read.csv(file.path(kernel_dir, "kernel_inventory_nonlinear.csv"), stringsAsFactors = FALSE)
@@ -157,14 +160,14 @@ Esta seção lê as entradas brutas usadas no pipeline de construção dos kerne
 
 O arquivo `NIR.csv` contém identificadores, ambientes, caracteres fenotípicos e as bandas espectrais usadas depois para construir o kernel fenômico.
 
-```{r load-nir-data, eval=FALSE}
+```{r load-nir-data}
 NIR <- fread("data/NIR.csv") %>% as.data.frame()
 
 head(NIR[, 1:7])
 unique(NIR$Env)
 ```
 
-```{r load-nir-data-display}
+```{r load-nir-data-display, eval=FALSE}
 NIR_preview <- read.csv("data/NIR.csv", stringsAsFactors = FALSE)
 head(NIR_preview[, 1:min(7, ncol(NIR_preview))])
 unique(NIR_preview$Env)
@@ -174,13 +177,13 @@ unique(NIR_preview$Env)
 
 O arquivo genotípico contém uma linha por genótipo e uma coluna por marcador. A primeira coluna (`taxa`) é o identificador do genótipo usado para alinhar a informação genômica e fenotípica.
 
-```{r load-genotypic-data, eval=FALSE}
+```{r load-genotypic-data}
 Geno <- fread("data/GAPIT.Genotype.Numerical.txt") %>% as.data.frame()
 
 head(Geno[, 1:5])
 ```
 
-```{r load-genotypic-data-display}
+```{r load-genotypic-data-display, eval=FALSE}
 Geno_preview <- data.table::fread("data/GAPIT.Genotype.Numerical.txt") %>% as.data.frame()
 head(Geno_preview[, 1:min(5, ncol(Geno_preview))])
 ```
@@ -191,7 +194,7 @@ Os scripts de modelagem posteriores exigem uma tabela fenotípica limpa contendo
 
 Também criamos um **identificador de observação** (`ObsID`) combinando ambiente e genótipo. Isso é útil porque o mesmo genótipo pode aparecer em mais de um ambiente, e rótulos únicos de observação melhoram muito a rastreabilidade e as checagens de alinhamento.
 
-```{r build-pheno-table, eval=FALSE}
+```{r build-pheno-table}
 Pheno <- NIR %>%
   dplyr::select(Pedigree, Env, GY, KW) %>%
   arrange(Env, Pedigree) %>%
@@ -200,7 +203,7 @@ Pheno <- NIR %>%
 head(Pheno)
 ```
 
-```{r build-pheno-table-display}
+```{r build-pheno-table-display, eval=FALSE}
 head(Pheno)
 ```
 
@@ -208,7 +211,7 @@ head(Pheno)
 
 Esta é uma etapa crítica de validação. O arquivo genômico e o arquivo NIR/fenotípico devem se referir aos mesmos genótipos. Se os IDs não forem harmonizados antes da construção das matrizes, todo kernel posterior ficará desalinhado.
 
-```{r harmonize-genotypes, eval=FALSE}
+```{r harmonize-genotypes}
 Pedigree <- intersect(Geno$taxa, NIR$Pedigree)
 
 NIR <- NIR[NIR$Pedigree %in% Pedigree, ] %>%
@@ -227,7 +230,7 @@ cat("Genótipos compartilhados em Geno:", nrow(Geno), "\n")
 cat("Genótipos compartilhados em Pheno:", length(unique(Pheno$Pedigree)), "\n")
 ```
 
-```{r harmonize-genotypes-display}
+```{r harmonize-genotypes-display, eval=FALSE}
 cat("Genótipos compartilhados em Pheno:", length(unique(Pheno$Pedigree)), "\n")
 cat("Número de pedigrees salvos:", length(Pedigree), "\n")
 ```
@@ -243,7 +246,7 @@ O estudo possui quatro ambientes:
 
 A construção dos kernels usa depois blocos específicos por ambiente. Por isso, separamos as observações NIR em quatro data frames específicos de ambiente preservando os identificadores de observação.
 
-```{r split-by-environment, eval=FALSE}
+```{r split-by-environment}
 a <- NIR %>% filter(Env == "CS11_WS") %>% arrange(Pedigree)
 b <- NIR %>% filter(Env == "CS11_WW") %>% arrange(Pedigree)
 c <- NIR %>% filter(Env == "CS12_WS") %>% arrange(Pedigree)
@@ -259,7 +262,7 @@ rownames(d) <- d$ObsID
 
 Este objeto é informativo para checagens de dados balanceados e para interpretar a sobreposição entre ensaios.
 
-```{r shared-genotypes-all-envs, eval=FALSE}
+```{r shared-genotypes-all-envs}
 Pedigree_communs <- Reduce(
   intersect,
   list(Geno$taxa, a$Pedigree, b$Pedigree, c$Pedigree, d$Pedigree)
@@ -268,7 +271,7 @@ Pedigree_communs <- Reduce(
 length(Pedigree_communs)
 ```
 
-```{r shared-genotypes-all-envs-display, results='asis'}
+```{r shared-genotypes-all-envs-display, eval=FALSE, results='asis'}
 cat("O objeto `Pedigree_communs` é reconstruído na execução completa em inglês. Nesta página, ele é mantido apenas como bloco documental.\n")
 ```
 
@@ -374,7 +377,7 @@ A representação ambiental mais simples trata cada ambiente como um fator categ
 
 Esse kernel atribui similaridade ambiental completa a observações do mesmo ambiente e similaridade zero a observações de ambientes diferentes. Nos modelos finais, `ZEZE` representa o **efeito categórico de ambiente**. Ele não é o mesmo que o kernel climático. Em termos práticos, `ZEZE` mantém a distinção entre os quatro macroambientes, enquanto `ZW` descreve depois a similaridade entre observações com base em covariáveis meteorológicas.
 
-```{r build-ze, eval=FALSE}
+```{r build-ze}
 Pheno <- Pheno %>% arrange(match(ObsID, rownames(ZG)))
 
 ZE <- model.matrix(~ as.factor(Pheno$Env) - 1)
@@ -391,7 +394,7 @@ cat("Dimensões de ZEZE :", dim(ZEZE), "\n")
 ZEZE[1:5, 1:5]
 ```
 
-```{r build-ze-display}
+```{r build-ze-display, eval=FALSE}
 cat("Dimensões de ZE   :", dim(ZE), "\n")
 cat("Dimensões de ZEZE :", dim(ZEZE), "\n")
 ZEZE[1:5, 1:5]
@@ -413,7 +416,7 @@ No pipeline reduzido final, `ZW` é usado principalmente nos modelos `M10`-`M18`
 
 ### 9.1 Carregar os arquivos climáticos
 
-```{r load-climate-files, eval=FALSE}
+```{r load-climate-files}
 annual_ec_file <- "output/climate_results/environmental_covariates.csv"
 expanded_ec_file <- "output/climate_results/environmental_covariates_expanded.csv"
 
@@ -478,7 +481,7 @@ ECs_expanded <- ECs_expanded %>%
 
 O objetivo desta etapa é colocar variáveis ambientais heterogêneas em escala comparável antes da construção do kernel.
 
-```{r standardize-climate-data, eval=FALSE}
+```{r standardize-climate-data}
 annual_scaled <- ECs_annual %>%
   dplyr::select(all_of(annual_cols)) %>%
   scale(center = TRUE, scale = TRUE) %>%
@@ -500,7 +503,7 @@ daily_scaled <- ECs_expanded %>%
 
 Para cada ano, transformamos as trajetórias diárias de clima em uma única assinatura larga por linha. Isso dá a cada ano um vetor reprodutível que representa seu perfil climático intrassazonal.
 
-```{r create-year-signatures, eval=FALSE}
+```{r create-year-signatures}
 daily_signature_2011 <- daily_scaled %>%
   filter(year == 2011) %>%
   dplyr::select(date, all_of(daily_cols)) %>%
@@ -661,7 +664,7 @@ kernel_inventory_linear %>%
 
 Inspecionamos o mesmo pedigree entre matrizes para verificar se a ordem empilhada das observações permanece coerente.
 
-```{r spot-check, eval=FALSE}
+```{r spot-check}
 Geno.all[str_detect(rownames(Geno.all), "A188"), 1:5]
 W[str_detect(rownames(W), "A188"), 1:5]
 NIR.all[str_detect(rownames(NIR.all), "A188"), 1:5]
@@ -693,7 +696,7 @@ Mesmo que `ZW` não apareça no mapa de calor integrado, ele continua sendo um o
 
 Os kernels de interação são obtidos pelo produto de Hadamard (multiplicação elemento a elemento). Essa operação restringe a similaridade genômica ou fenômica ao contexto ambiental representado por `ZEZE` ou `ZW`.
 
-```{r build-interactions, eval=FALSE}
+```{r build-interactions}
 ZGZE <- ZG * ZEZE
 ZPZE <- ZP * ZEZE
 ZGZW <- ZG * ZW
@@ -708,7 +711,7 @@ saveRDS(ZGZE, "output/Matrizes/ZGZE.rds")
 saveRDS(ZPZE, "output/Matrizes/ZPZE.rds")
 ```
 
-```{r build-interactions-display}
+```{r build-interactions-display, eval=FALSE}
 ZGZE[1:5, 1:5]
 ZPZE[1:5, 1:5]
 ZGZW[1:5, 1:5]
@@ -723,7 +726,7 @@ Os kernels lineares acima capturam similaridade aditiva. Para explorar relaçõe
 
 A função a seguir é mantida porque faz parte da própria estimação do kernel Gaussiano. Nós a usamos para otimizar o parâmetro de banda maximizando a verossimilhança marginal.
 
-```{r gk-functions, eval=FALSE}
+```{r gk-functions}
 margh.fun <- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
                       nuh = NULL, Sch = NULL, prior = NULL) {
   h <- theta[1]
@@ -880,7 +883,7 @@ Neste tutorial mantemos explicitamente as funções matemáticas abaixo porque e
 
 ### 13.1 Funções matemáticas centrais para os kernels arc-cosine
 
-```{r ak-functions, eval=FALSE}
+```{r ak-functions}
 AK1.fun <- function(X) {
   cosalfa <- cor(t(X))
   cosalfa[cosalfa > 1] <- 1
@@ -1080,7 +1083,7 @@ A mesma ordem de clustering é então aplicada às linhas e colunas da matriz. I
 
 Como essas matrizes são quadradas, cada mapa de calor é exibido com `coord_fixed()` e exportado com `width = height` para que a razão visual corresponda à estrutura matemática da matriz.
 
-```{r kernel-diagnostic-figure-square, eval=FALSE, fig.width=8, fig.height=8}
+```{r kernel-diagnostic-figure-square, fig.width=8, fig.height=8}
 kernel_plot_info <- data.frame(
   KernelName = c("ZG", "GGK", "GAK", "ZP", "PGK", "PAK"),
   KernelLabel = c(
@@ -1165,7 +1168,7 @@ for (i in seq_len(nrow(kernel_plot_info))) {
 }
 ```
 
-```{r kernel-diagnostic-figure-display, echo=FALSE, results='asis'}
+```{r kernel-diagnostic-figure-display, eval=FALSE, echo=FALSE, results='asis'}
 fig_files <- c(
   "ZG_ordered_heatmap.tiff",
   "GGK_ordered_heatmap.tiff",
