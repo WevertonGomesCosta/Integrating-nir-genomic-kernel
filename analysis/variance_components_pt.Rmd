@@ -117,18 +117,18 @@ Esses vetores definem como os componentes de variância aparecerão nas saídas 
 
 ```{r labels-for-output}
 component_display <- c(
-  E = "Environment (E)",
-  G = "Genomic linear (G)",
-  P = "Phenomic linear (P)",
-  W = "Weather kernel (W)",
+  E = "Ambiente (E)",
+  G = "Genômico linear (G)",
+  P = "Fenômico linear (P)",
+  W = "Kernel climático (W)",
   GE = "G × E",
   PE = "P × E",
   GW = "G × W",
   PW = "P × W",
-  GGK = "Genomic Gaussian (GGK)",
-  PGK = "Phenomic Gaussian (PGK)",
-  GAK = "Genomic arc-cosine (GAK)",
-  PAK = "Phenomic arc-cosine (PAK)",
+  GGK = "Genômico Gaussiano (GGK)",
+  PGK = "Fenômico Gaussiano (PGK)",
+  GAK = "Genômico arc-cosine (GAK)",
+  PAK = "Fenômico arc-cosine (PAK)",
   GGKE = "GGK × E",
   PGKE = "PGK × E",
   GAKE = "GAK × E",
@@ -141,18 +141,18 @@ component_display <- c(
 )
 
 component_order <- c(
-  "Environment (E)",
-  "Genomic linear (G)",
-  "Phenomic linear (P)",
-  "Weather kernel (W)",
+  "Ambiente (E)",
+  "Genômico linear (G)",
+  "Fenômico linear (P)",
+  "Kernel climático (W)",
   "G × E",
   "P × E",
   "G × W",
   "P × W",
-  "Genomic Gaussian (GGK)",
-  "Phenomic Gaussian (PGK)",
-  "Genomic arc-cosine (GAK)",
-  "Phenomic arc-cosine (PAK)",
+  "Genômico Gaussiano (GGK)",
+  "Fenômico Gaussiano (PGK)",
+  "Genômico arc-cosine (GAK)",
+  "Fenômico arc-cosine (PAK)",
   "GGK × E",
   "PGK × E",
   "GAK × E",
@@ -278,7 +278,7 @@ kernel_inventory %>%
     n_cols = format(n_cols, big.mark = ",")
   ) %>%
   knitr::kable(
-    caption = "Diagnostic summary of the main kernels used in the variance-component analysis after explicit alignment to the phenotypic observation order.",
+    caption = "Resumo diagnóstico dos principais kernels usados na análise de componentes de variância após alinhamento explícito à ordem das observações fenotípicas.",
     align = "lcccccc"
   ) %>%
   kableExtra::kable_styling(
@@ -480,7 +480,7 @@ readr::write_csv(model_info, file.path(results_dir, "model_catalog.csv"))
 
 model_info %>%
   knitr::kable(
-    caption = "Catalog of the 18 models evaluated in the variance-component analysis.",
+    caption = "Catálogo dos 18 modelos avaliados na análise de componentes de variância.",
     align = "cll"
   ) %>%
   kableExtra::kable_styling(
@@ -742,7 +742,7 @@ readr::write_csv(variance_table, file.path(results_dir, "variance_components_tab
 
 head(variance_table, 12) %>%
   knitr::kable(
-    caption = "Preview of the processed variance-component table (percent of total variance).",
+    caption = "Pré-visualização da tabela processada de componentes de variância (percentual da variância total).",
     align = "lcccccccccccc"
   ) %>%
   kableExtra::kable_styling(
@@ -759,24 +759,24 @@ A figura abaixo resume a contribuição percentual de cada componente de variân
 
 Essa figura deve ser lida como um resumo estrutural dos modelos ajustados, e não como prova direta de que combinar mais fontes de dados leva automaticamente a maior complementaridade biológica ou melhor desempenho preditivo.
 
-```{r variance-figure, fig.cap="Figure 3. Posterior mean percentage of total variance attributed to each model component across the 18 predictive models for grain yield (GY) and kernel weight (KW). Each stacked bar represents one model (M01-M18), averaged across repetitions, and colors identify the variance components included in the model structure. The weather kernel (W) and its associated interaction terms appear mainly in models M10-M18. Variance decomposition should be interpreted as a description of model structure and not automatically as evidence of stronger biological complementarity among information sources.", fig.height=10, fig.width=13}
+```{r variance-figure, fig.cap="Figura 3. Percentual médio posterior da variância total atribuído a cada componente do modelo nos 18 modelos preditivos para produtividade de grãos (GY) e peso de grãos (KW). Cada barra empilhada representa um modelo (M01-M18), com média ao longo das repetições, e as cores identificam os componentes de variância incluídos na estrutura do modelo. O kernel climático (W) e seus termos de interação associados aparecem principalmente nos modelos M10-M18. A decomposição da variância deve ser interpretada como uma descrição da estrutura do modelo, e não automaticamente como evidência de maior complementaridade biológica entre as fontes de informação.", fig.height=10, fig.width=13}
 trait_labels <- c(
-  GY = "A. Grain yield (GY)",
-  KW = "B. Kernel weight (KW)"
+  GY = "A. Produtividade de grãos (GY)",
+  KW = "B. Peso de grãos (KW)"
 )
 
 variance_plot <- variance_summary %>%
   ggplot(aes(x = Model, y = Percentage, fill = ComponentLabel)) +
   geom_col(color = "white", linewidth = 0.15, width = 0.82) +
   facet_wrap(~ Trait, ncol = 1, labeller = as_labeller(trait_labels)) +
-  ggthemes::scale_fill_gdocs(name = "Variance component", drop = FALSE) +
+  ggthemes::scale_fill_gdocs(name = "Componente de variância", drop = FALSE) +
   scale_y_continuous(
     labels = scales::percent_format(accuracy = 1),
     expand = expansion(mult = c(0, 0.02))
   ) +
   labs(
-    x = "Model ID",
-    y = "Proportion of total variance"
+    x = "Identificador do modelo",
+    y = "Proporção da variância total"
   ) +
   theme_minimal(base_size = 11) +
   theme(

@@ -179,7 +179,7 @@ daily_preview_table <- texas_climate_data %>%
 knitr::kable(
   daily_preview_table,
   align = "c",
-  caption = "Table 1. Sample of daily weather records retrieved from NASA POWER for the Texas trials."
+  caption = "Tabela 1. Exemplo de registros meteorológicos diários recuperados da NASA POWER para os ensaios no Texas."
 ) %>%
   kableExtra::kable_styling(
     full_width = FALSE,
@@ -292,7 +292,7 @@ daily_data_with_parts <- texas_climate_data %>%
 
 Esta primeira figura fornece uma visão direta da chuva diária ao longo do tempo. Ela é útil para identificar períodos secos, concentração de chuvas e diferenças amplas entre os dois anos.
 
-```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figure 1. Daily precipitation across the 2011 and 2012 maize growing seasons in College Station, Texas. Bars represent corrected daily precipitation obtained from NASA POWER."}
+```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figura 1. Precipitação diária ao longo das safras de milho de 2011 e 2012 em College Station, Texas. As barras representam a precipitação diária corrigida obtida da NASA POWER."}
 p_precip_daily <- ggplot(
   texas_climate_data,
   aes(x = date, y = PRECTOTCORR, fill = year)
@@ -300,11 +300,11 @@ p_precip_daily <- ggplot(
   geom_col(alpha = 0.85, show.legend = FALSE) +
   facet_wrap(~ year, scales = "free_x") +
   labs(
-    title = "Daily precipitation",
-    subtitle = "College Station, Texas, USA, 2011-2012",
-    x = "Month",
+    title = "Precipitação diária",
+    subtitle = "College Station, Texas, EUA, 2011-2012",
+    x = "Mês",
     y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
-    caption = "Bars represent corrected total daily precipitation obtained from NASA POWER."
+    caption = "As barras representam a precipitação total diária corrigida obtida da NASA POWER."
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
@@ -340,17 +340,17 @@ A figura seguinte reorganiza a mesma informação de chuva de uma forma que faci
 
 Esse layout é especialmente útil quando o objetivo é verificar se uma safra foi sistematicamente mais seca ou mais chuvosa em períodos específicos do desenvolvimento da cultura.
 
-```{r plot_precipitation_grouped, fig.width=12, fig.height=6.4, fig.align="center", fig.cap="Figure 2. Daily precipitation arranged by day of month within each month to facilitate between-year comparison during the crop season."}
+```{r plot_precipitation_grouped, fig.width=12, fig.height=6.4, fig.align="center", fig.cap="Figura 2. Precipitação diária organizada por dia do mês dentro de cada mês para facilitar a comparação entre anos durante a safra."}
 p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill = Year)) +
   geom_col(position = position_dodge(width = 0.85), alpha = 0.85, width = 0.8) +
   facet_wrap(~ Month, scales = "free_x", ncol = 5) +
   labs(
-    title = "Daily precipitation by month and year",
-    subtitle = "Grouped by day of month within each monthly panel",
-    x = "Day of month",
+    title = "Precipitação diária por mês e ano",
+    subtitle = "Agrupada por dia do mês dentro de cada painel mensal",
+    x = "Dia do mês",
     y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
-    fill = "Year",
-    caption = "This arrangement facilitates within-season comparison of rainfall patterns between years."
+    fill = "Ano",
+    caption = "Essa organização facilita a comparação, dentro da safra, dos padrões de chuva entre os anos."
   ) +
   scale_x_discrete(breaks = c("1", "5", "10", "15", "20", "25", "30", "31")) +
   ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
@@ -384,7 +384,7 @@ p1
 
 A precipitação diária é informativa, mas os totais mensais fornecem um resumo sazonal mais simples. Esta figura agrega a série diária e permite uma comparação mais limpa da entrada cumulativa de água entre anos e meses.
 
-```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figure 3. Monthly precipitation totals during the maize growing seasons of 2011 and 2012 in College Station, Texas."}
+```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figura 3. Totais mensais de precipitação durante as safras de milho de 2011 e 2012 em College Station, Texas."}
 monthly_precip <- texas_climate_data %>%
   mutate(
     year = factor(year(date), levels = c(2011, 2012)),
@@ -396,12 +396,12 @@ monthly_precip <- texas_climate_data %>%
 p2 <- ggplot(monthly_precip, aes(x = month, y = total_precipitation, fill = year)) +
   geom_col(position = position_dodge(width = 0.8), width = 0.7, alpha = 0.9) +
   labs(
-    title = "Monthly precipitation totals",
-    subtitle = "Growing season comparison between 2011 and 2012",
-    x = "Month",
-    y = "Total precipitation (mm)",
-    fill = "Year",
-    caption = "Bars represent cumulative precipitation within each month of the crop season."
+    title = "Totais mensais de precipitação",
+    subtitle = "Comparação entre as safras de 2011 e 2012",
+    x = "Mês",
+    y = "Precipitação total (mm)",
+    fill = "Ano",
+    caption = "As barras representam a precipitação acumulada dentro de cada mês da safra."
   ) +
   ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
   theme_bw(base_size = 11) +
@@ -436,7 +436,7 @@ A temperatura é outro descritor central do ambiente de cultivo. Nesta figura, c
 
 As linhas suavizadas tracejadas não substituem os dados originais. Seu papel é apenas ajudar a visualizar as tendências sazonais gerais para cada métrica de temperatura.
 
-```{r plot_temperature, fig.width=10, fig.height=6, fig.align="center", fig.cap="Figure 4. Daily minimum, mean, and maximum air temperature during the 2011 and 2012 maize growing seasons. Dashed lines indicate LOESS trends used only to aid visual interpretation."}
+```{r plot_temperature, fig.width=10, fig.height=6, fig.align="center", fig.cap="Figura 4. Temperatura mínima, média e máxima diária do ar durante as safras de milho de 2011 e 2012. As linhas tracejadas indicam tendências LOESS usadas apenas para auxiliar a interpretação visual."}
 temperature_data <- texas_climate_data %>%
   mutate(T2M_MEAN = (T2M_MAX + T2M_MIN) / 2) %>%
   pivot_longer(
@@ -448,7 +448,7 @@ temperature_data <- texas_climate_data %>%
     Temperature_metric = factor(
       Temperature_metric,
       levels = c("T2M_MIN", "T2M_MEAN", "T2M_MAX"),
-      labels = c("Minimum", "Mean", "Maximum")
+      labels = c("Mínima", "Média", "Máxima")
     )
   )
 
@@ -465,12 +465,12 @@ p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperatur
   ) +
   facet_wrap(~ year, scales = "free_x") +
   labs(
-    title = "Daily air temperature",
-    subtitle = "Minimum, mean, and maximum values; dashed lines indicate LOESS trends",
-    x = "Month",
+    title = "Temperatura diária do ar",
+    subtitle = "Valores mínimos, médios e máximos; linhas tracejadas indicam tendências LOESS",
+    x = "Mês",
     y = expression("Air temperature (" * degree * "C)"),
-    color = "Temperature metric",
-    caption = "Dashed LOESS curves are included only to summarize seasonal trajectories for each temperature metric."
+    color = "Métrica de temperatura",
+    caption = "As curvas LOESS tracejadas são incluídas apenas para resumir as trajetórias sazonais de cada métrica de temperatura."
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   scale_color_manual(values = c("Minimum" = "#4285F4", "Mean" = "#F4B400", "Maximum" = "#DB4437"), limits = c("Minimum", "Mean", "Maximum"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
@@ -506,7 +506,7 @@ Depois de criar os gráficos principais de precipitação e temperatura, nós os
 
 A figura também é exportada como um arquivo TIFF de alta resolução, que é uma exigência comum para submissão a periódicos.
 
-```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 5. Multi-panel summary of the main climatic contrasts between years, including daily precipitation by month, monthly precipitation totals, and daily air temperature profiles."}
+```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 5. Resumo em múltiplos painéis dos principais contrastes climáticos entre os anos, incluindo precipitação diária por mês, totais mensais de precipitação e perfis diários de temperatura do ar."}
 main_layout <- "
 AA
 BC
@@ -543,23 +543,23 @@ ggsave(
 
 Além de precipitação e temperatura, o script também examina radiação solar, velocidade do vento e umidade relativa. Essas variáveis são importantes porque ajudam a descrever demanda evaporativa, secura atmosférica e disponibilidade de energia ao longo do ciclo da cultura.
 
-```{r additional_plots, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 6. Additional daily climatic variables monitored during the maize growing seasons, including solar radiation, wind speed, and relative humidity."}
+```{r additional_plots, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 6. Variáveis climáticas diárias adicionais monitoradas durante as safras de milho, incluindo radiação solar, velocidade do vento e umidade relativa."}
 p4 <- ggplot(
   texas_climate_data,
-  aes(x = date, y = ALLSKY_SFC_SW_DWN, color = "Solar radiation")
+  aes(x = date, y = ALLSKY_SFC_SW_DWN, color = "Radiação solar")
 ) +
   geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
   geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
   facet_wrap(~ year, scales = "free_x") +
   labs(
-    title = "Daily shortwave solar radiation",
-    subtitle = "Dashed line indicates the LOESS trend",
-    x = "Month",
+    title = "Radiação solar de ondas curtas diária",
+    subtitle = "A linha tracejada indica a tendência LOESS",
+    x = "Mês",
     y = expression("Shortwave solar radiation (" * MJ ~ m^{-2} ~ day^{-1} * ")"),
-    caption = "Daily incoming shortwave radiation during the crop season."
+    caption = "Radiação solar de ondas curtas incidente diariamente durante a safra."
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
-  ggthemes::scale_color_gdocs(limits = "Solar radiation", guide = "none") +
+  ggthemes::scale_color_gdocs(limits = "Radiação solar", guide = "none") +
   theme_bw(base_size = 11) +
   theme(
     panel.grid.minor = element_blank(),
@@ -585,20 +585,20 @@ p4 <- ggplot(
 
 p5 <- ggplot(
   texas_climate_data,
-  aes(x = date, y = WS2M, color = "Wind speed")
+  aes(x = date, y = WS2M, color = "Velocidade do vento")
 ) +
   geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
   geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
   facet_wrap(~ year, scales = "free_x") +
   labs(
-    title = "Daily wind speed at 2 m",
-    subtitle = "Dashed line indicates the LOESS trend",
-    x = "Month",
+    title = "Velocidade diária do vento a 2 m",
+    subtitle = "A linha tracejada indica a tendência LOESS",
+    x = "Mês",
     y = expression("Wind speed (" * m ~ s^{-1} * ")"),
-    caption = "Daily wind speed measured at 2 m above ground level."
+    caption = "Velocidade diária do vento medida a 2 m acima do solo."
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
-  ggthemes::scale_color_gdocs(limits = "Wind speed", guide = "none") +
+  ggthemes::scale_color_gdocs(limits = "Velocidade do vento", guide = "none") +
   theme_bw(base_size = 11) +
   theme(
     panel.grid.minor = element_blank(),
@@ -624,20 +624,20 @@ p5 <- ggplot(
 
 p6 <- ggplot(
   texas_climate_data,
-  aes(x = date, y = RH2M, color = "Relative humidity")
+  aes(x = date, y = RH2M, color = "Umidade relativa")
 ) +
   geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
   geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
   facet_wrap(~ year, scales = "free_x") +
   labs(
-    title = "Daily relative humidity at 2 m",
-    subtitle = "Dashed line indicates the LOESS trend",
-    x = "Month",
-    y = "Relative humidity (%)",
-    caption = "Daily relative humidity measured at 2 m above ground level."
+    title = "Umidade relativa diária a 2 m",
+    subtitle = "A linha tracejada indica a tendência LOESS",
+    x = "Mês",
+    y = "Umidade relativa (%)",
+    caption = "Umidade relativa diária medida a 2 m acima do solo."
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
-  ggthemes::scale_color_gdocs(limits = "Relative humidity", guide = "none") +
+  ggthemes::scale_color_gdocs(limits = "Umidade relativa", guide = "none") +
   theme_bw(base_size = 11) +
   theme(
     panel.grid.minor = element_blank(),
@@ -666,7 +666,7 @@ p6 <- ggplot(
 
 Como na subseção anterior, combinamos os gráficos individuais em uma única figura. O layout foi construído com `patchwork::wrap_plots()`, o que evita o erro de composição gerado quando os operadores do patchwork não são reconhecidos corretamente durante a renderização.
 
-```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 7. Multi-panel summary of additional climatic variables across years, including shortwave solar radiation, wind speed, and relative humidity."}
+```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 7. Resumo em múltiplos painéis das variáveis climáticas adicionais entre os anos, incluindo radiação solar de ondas curtas, velocidade do vento e umidade relativa."}
 additional_layout <- "
 AB
 CC
@@ -819,7 +819,7 @@ weather_covariates_dictionary <- tibble::tibble(
 knitr::kable(
   weather_covariates_dictionary,
   align = c("l", "c", "l"),
-  caption = "Table 2. Weather-derived covariates used to characterize the growing seasons and to support the construction of the weather kernel."
+  caption = "Tabela 2. Covariáveis derivadas do clima usadas para caracterizar as safras e apoiar a construção do kernel climático."
 ) %>%
   kableExtra::kable_styling(
     full_width = FALSE,
@@ -836,7 +836,7 @@ weather_covariates_display <- weather_covariates %>%
 knitr::kable(
   weather_covariates_display,
   align = c("c", rep("c", ncol(weather_covariates_display) - 1)),
-  caption = "Table 3. Annual weather-derived covariates derived from NASA POWER data for the 2011 and 2012 growing seasons."
+  caption = "Tabela 3. Covariáveis anuais derivadas do clima obtidas dos dados NASA POWER para as safras de 2011 e 2012."
 ) %>%
   kableExtra::kable_styling(
     full_width = FALSE,
