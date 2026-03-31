@@ -52,6 +52,8 @@ As seções restantes mostram como esses esquemas de validação são operaciona
 
 ## 2. Pacotes e opções
 
+Este primeiro chunk prepara a sessão de R para o restante do tutorial. Ele remove objetos deixados por execuções anteriores, desativa a notação científica nas saídas impressas e carrega os pacotes usados para ajuste dos modelos, manipulação dos dados e processamento paralelo. Começar com uma configuração limpa e explícita torna as etapas seguintes mais fáceis de interpretar e reproduzir.
+
 ```{r setup}
 rm(list = ls())
 options(scipen = 999)
@@ -66,6 +68,8 @@ library(parallel)
 ```
 
 ## 3. Entradas geradas pelos scripts anteriores
+
+Este chunk lê as matrizes e os kernels finais produzidos anteriormente por `matrizes.Rmd`. O objetivo é explicitar quais objetos entram na etapa de predição e preservar uma conexão transparente entre a harmonização dos dados e a modelagem preditiva. Ler esses objetos diretamente do disco também ajuda a manter o fluxo reproduzível, porque os mesmos artefatos salvos podem ser reutilizados em diferentes execuções.
 
 ```{r load-inputs, include=FALSE}
 Pheno <- readRDS("output/Matrizes/Pheno.rds")
@@ -106,6 +110,8 @@ Por essa razão, este script de predição lê essas matrizes diretamente dos ar
 
 ## 4. Configurações de MCMC e paralelização
 
+Este chunk define o orçamento computacional das análises de predição. Os parâmetros de MCMC controlam o comprimento da amostragem Bayesiana, enquanto o número de repetições e de núcleos disponíveis determina quanto do fluxo pode ser distribuído em paralelo. Na prática, esses valores afetam tanto o tempo de execução quanto a estabilidade dos resumos posteriores gerados pelos modelos.
+
 ```{r mcmc-settings}
 nIter <- 10000
 burnIn <- 1000
@@ -122,6 +128,8 @@ n_cores
 ```
 
 ## 5. Catálogo de modelos
+
+Este chunk cria um catálogo compacto dos 18 modelos usados no pipeline atual. Cada modelo recebe um rótulo estável (`M01` a `M18`) e uma descrição curta, que depois são reutilizados em nomes de arquivos, tabelas de resultados e resumos posteriores. Manter esse mapeamento explícito é importante porque o restante do tutorial se refere repetidamente a esses identificadores.
 
 ```{r model-catalog}
 model_catalog <- data.frame(
@@ -154,6 +162,8 @@ model_catalog
 ```
 
 ## 6. Especificação dos modelos
+
+Este chunk traduz o catálogo de modelos para os objetos `ETA` esperados por `BGLR`. Cada entrada define quais matrizes de efeito fixo ou quais kernels entram em um determinado modelo, permitindo que o script passe de uma descrição conceitual como `E + G + GE` para uma especificação computacional concreta. Embora o bloco seja longo, ele é propositalmente escrito de forma explícita para que o leitor veja exatamente como cada modelo é montado.
 
 ```{r eta-list}
 Eta_list <- list()
@@ -289,6 +299,8 @@ Mais especificamente, o chunk é organizado em torno de quatro estágios interno
 - **CV00**: dentro de um ambiente deixado de fora, o modelo se concentra em genótipos que são efetivamente novos nesse ambiente e calcula a correlação preditiva correspondente.
 
 Embora a implementação abaixo seja compacta, seu propósito científico é simular problemas de predição progressivamente mais difíceis e salvar as tabelas de acurácia resultantes consumidas depois por `visualization.Rmd` e `visualization.html`.
+
+Antes do bloco completo de execução, vale notar que este chunk permanece com `eval=FALSE` porque é a parte mais cara computacionalmente de todo o fluxo. Seu papel no tutorial é didático: ele mostra exatamente como os jobs são organizados, como cada cenário de validação é implementado e como as saídas são gravadas, enquanto a execução pesada propriamente dita pode ser feita separadamente quando necessário.
 
 ```{r run-predictions, eval=FALSE}
 dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
