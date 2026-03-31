@@ -8,7 +8,7 @@
 
 ## Project scope
 
-This repository contains the analytical pipeline, tutorial scripts, and project website for evaluating whether genomic, phenomic, and weather-derived information improve prediction for maize grain yield and kernel weight in multi-environment field trials.
+This repository contains the analytical pipeline, tutorial scripts, and project website for evaluating whether genomic, phenomic, and weather-derived information improve prediction for maize grain yield and 500-kernel weight (KW) in multi-environment field trials.
 
 The project integrates three main information sources:
 
@@ -76,8 +76,8 @@ The current visualization workflow was designed to support direct comparison of:
 - models without `W` vs models with `W`
 - single-source vs combined `G + P` pathways
 
-### 6. `article_results_for_manuscript_final.R`
-Collects the main numerical outputs generated across the pipeline and writes manuscript-oriented summary tables and a compact report for downstream interpretation, revision, and reviewer responses.
+### 6. Final manuscript-oriented summaries
+Collects the main numerical outputs generated across the pipeline and produces manuscript-oriented summary outputs for downstream interpretation, revision, and reviewer responses.
 
 ## Reduced model set
 
@@ -143,7 +143,7 @@ A clean run of the current workflow should follow this order:
 4. clean `output/results/` if old prediction files exist
 5. `analysis_prediction.Rmd`
 6. `visualization.Rmd`
-7. `article_results_for_manuscript_final.R`
+7. final manuscript-oriented summaries
 
 ## Important operational note
 
@@ -231,8 +231,8 @@ O fluxo atual de visualização foi desenhado para apoiar comparações diretas 
 - modelos sem `W` e com `W`
 - vias de fonte única versus vias combinadas `G + P`
 
-### 6. `article_results_for_manuscript_final.R`
-Coleta as principais saídas numéricas geradas ao longo do pipeline e escreve tabelas orientadas ao manuscrito e um relatório compacto para interpretação, revisão e respostas a pareceristas.
+### 6. Resumos finais orientados ao manuscrito
+Reúne as principais saídas numéricas geradas ao longo do pipeline e produz saídas-resumo orientadas ao manuscrito para interpretação, revisão e respostas a pareceristas.
 
 ## Conjunto reduzido de modelos
 
@@ -298,7 +298,7 @@ Uma execução limpa do fluxo atual deve seguir esta ordem:
 4. limpar `output/results/` se existirem arquivos antigos de predição
 5. `analysis_prediction.Rmd`
 6. `visualization.Rmd`
-7. `article_results_for_manuscript_final.R`
+7. resumos finais orientados ao manuscrito
 
 ## Nota operacional importante
 

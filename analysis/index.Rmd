@@ -37,7 +37,7 @@ In this website, the term **weather** is used when referring to meteorological c
 The workflow is divided into the following main steps:
 
 1. weather data acquisition and processing
-2. construction of genomic, phenomic, environment, and weather kernels
+2. construction of genomic and phenomic kernels, the categorical environment matrix, and the weather kernel
 3. estimation of variance components for the reduced set of 18 models
 4. prediction analyses under four cross-validation scenarios
 5. consolidation of final figures and summary tables
@@ -83,7 +83,7 @@ Neste site, o termo **weather** é usado quando a referência é às covariávei
 O fluxo de trabalho é dividido nas seguintes etapas principais:
 
 1. obtenção e processamento de dados climáticos
-2. construção de kernels genômicos, fenômicos, ambientais e climáticos
+2. construção de kernels genômicos e fenômicos, da matriz categórica de ambiente e do kernel climático
 3. estimação de componentes de variância para o conjunto reduzido de 18 modelos
 4. análises preditivas sob quatro cenários de validação cruzada
 5. consolidação das figuras finais e das tabelas-resumo
