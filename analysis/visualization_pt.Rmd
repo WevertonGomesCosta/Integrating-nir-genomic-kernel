@@ -1,100 +1,967 @@
 ---
-title: "Resumos e Figuras de Predição - Tutorial Didático"
-author:
-  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
-date: "`r Sys.Date()`"
-site: workflowr::wflow_site
-url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+title: "Resumos e figuras de predição - Tutorial didático"
 output:
   workflowr::wflow_html:
     toc: true
-    toc_depth: 3
     toc_float: true
-    code_download: true
-editor_options:
-  chunk_output_type: console
-github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
 **Language / Idioma:** [English](visualization.html) | [Português](visualization_pt.html)
 
-```{r setup, include=FALSE}
+Este arquivo é a **versão didática** do script final de visualização.
+
+Sua função é ler as saídas de predição geradas por `analysis_prediction.Rmd`, reorganizá-las em tabelas-resumo tidy e depois construir as figuras e os displays compactos usados no fluxo downstream do manuscrito.
+
+O fluxo atual de predição salva **resultados agregados por repetição** em `output/results/`:
+
+- `CV1_<trait>_<model>_rep<rep>.csv`
+- `CV2_<trait>_<model>_rep<rep>.csv`
+- `CV0_<trait>_<env1>_<env2>_<model>_rep<rep>.csv`
+- `CV00_<trait>_<env1>_<env2>_<model>_rep<rep>.csv`
+
+Cada CSV já contém as correlações em nível de ambiente acumuladas ao longo dos folds dentro da repetição. Portanto, este script **não** espera nomes de arquivo com `fold` no nome, e **não** espera colunas brutas em nível de observação, como `ObsID`, `observed` e `predicted`.
+
+### O que este script faz
+
+O fluxo é dividido em quatro tarefas práticas:
+
+1. localizar e ler os arquivos CSV de predição;
+2. interpretar os nomes dos arquivos e recuperar trait, modelo, repetição e a informação do leave-one-environment-out;
+3. resumir os resultados para `CV1`, `CV2`, `CV0` e `CV00`;
+4. exportar tabelas limpas e figuras para a próxima etapa do manuscrito.
+
+Esta versão didática mantém a mesma lógica do arquivo operacional final, mas apresenta o código de forma mais guiada para estudo e manutenção.
+
+## 1. Configuração
+
+Começamos definindo as opções padrão dos chunks para o relatório renderizado. O objetivo é tornar código, tabelas e figuras legíveis quando o tutorial é renderizado em HTML.
+
+```{r setup}
 knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  eval = FALSE
+  fig.width = 13,
+  fig.height = 8,
+  out.width = "100%"
 )
 ```
 
+## 2. Carregar pacotes e localizar as pastas do projeto
 
-# 1. Introdução
+Esta seção carrega os pacotes usados para manipulação de dados, construção de figuras e formatação de tabelas. Ela também verifica se o script está sendo executado a partir da raiz do projeto ou da pasta `analysis/` e padroniza os caminhos de saída.
 
-Esta é a **versão em português** da etapa de visualização e consolidação dos resultados de predição.
+```{r packages-and-paths}
+rm(list = ls())
+options(scipen = 999)
 
-A versão operacional oficial permanece em **`visualization.Rmd`**. Esta página em português foi criada para navegação e leitura no site e segue a política final de **`eval = FALSE`**, mantendo a execução real centralizada na versão inglesa.
+packages_needed <- c(
+  "dplyr", "tidyr", "readr", "tibble", "ggplot2",
+  "ggthemes", "knitr", "kableExtra", "stringr"
+)
 
-## 2. Finalidade desta etapa
+packages_missing <- packages_needed[!(packages_needed %in% installed.packages()[, "Package"])]
+if (length(packages_missing) > 0) {
+  install.packages(packages_missing)
+}
 
-Esta etapa lê os arquivos brutos de predição gerados por `analysis_prediction.Rmd`, reorganiza as informações e produz:
+library(dplyr)
+library(tidyr)
+library(readr)
+library(tibble)
+library(ggplot2)
+library(ggthemes)
+library(knitr)
+library(kableExtra)
+library(stringr)
 
-- tabelas consolidadas para `CV1` e `CV2`;
-- tabelas consolidadas para `CV0` e `CV00`;
-- comparações entre modelos com e sem `W`;
-- comparações entre famílias de kernel;
-- figuras finais usadas no manuscrito.
+project_root <- getwd()
 
-## 3. Entradas esperadas
+if (!dir.exists(file.path(project_root, "output")) &&
+    dir.exists(file.path(project_root, "..", "output"))) {
+  project_root <- normalizePath(file.path(project_root, ".."))
+}
 
-A etapa usa como entrada principal os CSVs gerados em:
+if (!dir.exists(file.path(project_root, "output"))) {
+  stop("Não foi possível localizar a pasta 'output/'. Execute este script a partir da raiz do projeto ou de analysis/.")
+}
 
-- `output/results/`
+results_dir <- file.path(project_root, "output", "results")
+figures_dir <- file.path(project_root, "output", "figures")
+tables_dir <- file.path(project_root, "output", "tables")
 
-Esses arquivos já vêm agregados por repetição e usam a coluna `.id` para armazenar o identificador de fold.
+dir.create(figures_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
+```
 
-## 4. Saídas principais
+## 3. Catálogo de modelos usado no pipeline reduzido
 
-A versão em inglês grava arquivos em:
+A etapa de visualização usa o mesmo catálogo reduzido de 18 modelos adotado no script final de predição. Aqui o catálogo é reorganizado para enfatizar via analítica, família de kernel e presença ou ausência da informação climática.
 
-- `output/tables/`
-- `output/figures/`
+```{r model-catalog}
+model_catalog <- tibble(
+  ModelNumber = c(1, 10, 3, 13, 5, 16,
+                  2, 11, 4, 14, 6, 17,
+                  7, 12, 8, 15, 9, 18),
+  Model = sprintf("M%02d", c(1, 10, 3, 13, 5, 16,
+                             2, 11, 4, 14, 6, 17,
+                             7, 12, 8, 15, 9, 18)),
+  Pathway = c(
+    rep("Via genômica", 6),
+    rep("Via fenômica", 6),
+    rep("Via combinada G + P", 6)
+  ),
+  KernelFamily = c(
+    "Linear", "Linear",
+    "Gaussiano", "Gaussiano",
+    "Arc-cosine", "Arc-cosine",
+    "Linear", "Linear",
+    "Gaussiano", "Gaussiano",
+    "Arc-cosine", "Arc-cosine",
+    "Linear", "Linear",
+    "Gaussiano", "Gaussiano",
+    "Arc-cosine", "Arc-cosine"
+  ),
+  WeatherStatus = c(
+    "Sem W", "Com W",
+    "Sem W", "Com W",
+    "Sem W", "Com W",
+    "Sem W", "Com W",
+    "Sem W", "Com W",
+    "Sem W", "Com W",
+    "Sem W", "Com W",
+    "Sem W", "Com W",
+    "Sem W", "Com W"
+  ),
+  Group = c(
+    "Base genômica",
+    "Clima fonte única",
+    "Base genômica",
+    "Clima fonte única",
+    "Base genômica",
+    "Clima fonte única",
+    "Base fenômica",
+    "Clima fonte única",
+    "Base fenômica",
+    "Clima fonte única",
+    "Base fenômica",
+    "Clima fonte única",
+    "Base combinada",
+    "Clima combinado",
+    "Base combinada",
+    "Clima combinado",
+    "Base combinada",
+    "Clima combinado"
+  ),
+  Description = c(
+    "Genômico linear + E",
+    "Genômico linear + W",
+    "Genômico Gaussiano + E",
+    "Genômico Gaussiano + W",
+    "Genômico arc-cosine + E",
+    "Genômico arc-cosine + W",
+    "Fenômico linear + E",
+    "Fenômico linear + W",
+    "Fenômico Gaussiano + E",
+    "Fenômico Gaussiano + W",
+    "Fenômico arc-cosine + E",
+    "Fenômico arc-cosine + W",
+    "Combinado linear + E",
+    "Combinado linear + W",
+    "Combinado Gaussiano + E",
+    "Combinado Gaussiano + W",
+    "Combinado arc-cosine + E",
+    "Combinado arc-cosine + W"
+  ),
+  ShortDescription = c(
+    "G + E",
+    "G + W",
+    "GGK + E",
+    "GGK + W",
+    "GAK + E",
+    "GAK + W",
+    "P + E",
+    "P + W",
+    "PGK + E",
+    "PGK + W",
+    "PAK + E",
+    "PAK + W",
+    "G+P + E",
+    "G+P + W",
+    "GGK+PGK + E",
+    "GGK+PGK + W",
+    "GAK+PAK + E",
+    "GAK+PAK + W"
+  )
+)
 
-Exemplos importantes:
+model_catalog
+```
 
-- `prediction_cv1_cv2_summary.csv`
-- `prediction_cv0_cv00_summary.csv`
-- `prediction_cv1_cv2_top3.csv`
-- `prediction_cv0_cv00_top3.csv`
-- `prediction_cv1_cv2.tiff`
-- `prediction_cv0_cv00.tiff`
+## 4. Pares de comparação usados para contrastes com e sem W
 
-## 5. Papel no pipeline
+Esses pares são usados mais adiante para quantificar o ganho ou a perda associados à adição da informação climática (`W`) dentro da mesma via e família de kernel.
 
-Esta etapa faz a ponte entre:
+```{r comparison-pairs}
+comparison_pairs <- tibble(
+  Comparison = c(
+    "Genômico linear",
+    "Genômico Gaussiano",
+    "Genômico arc-cosine",
+    "Fenômico linear",
+    "Fenômico Gaussiano",
+    "Fenômico arc-cosine",
+    "Combinado linear",
+    "Combinado Gaussiano",
+    "Combinado arc-cosine"
+  ),
+  WithoutW = c("M01", "M03", "M05", "M02", "M04", "M06", "M07", "M08", "M09"),
+  WithW = c("M10", "M13", "M16", "M11", "M14", "M17", "M12", "M15", "M18")
+)
 
-- a geração bruta das predições em `analysis_prediction.Rmd`;
-- a interpretação final em `article_results_for_manuscript_final.R`.
+comparison_pairs
+```
 
-## 6. Política desta versão em português
+## 5. Localizar os arquivos de predição
 
-Nesta página:
+Antes de ler qualquer dado, o script varre `output/results/` e separa os arquivos em dois grupos: `CV1/CV2` e `CV0/CV00`.
 
-- os mesmos caminhos, nomes de tabelas e nomes de figuras devem ser preservados;
-- a lógica conceitual acompanha a versão em inglês;
-- a execução permanece desativada com **`eval = FALSE`** para manter uma política uniforme nas páginas analíticas em português.
+```{r locate-files}
+all_result_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE)
+all_result_names <- basename(all_result_files)
 
-## 7. Script canônico em inglês
+cv12_files <- all_result_files[grepl("^CV1_|^CV2_", all_result_names)]
+cvloo_files <- all_result_files[grepl("^CV0_|^CV00_", all_result_names)]
 
-Arquivo executável oficial:
+cat("Número de arquivos CV1/CV2:", length(cv12_files), "\n")
+cat("Número de arquivos CV0/CV00:", length(cvloo_files), "\n")
 
-- `analysis/visualization.Rmd`
+if (length(cv12_files) == 0 && length(cvloo_files) == 0) {
+  stop("Nenhum arquivo CSV de predição foi encontrado em output/results/. Execute analysis_prediction primeiro.")
+}
+```
 
-Página correspondente em inglês:
+## 6. Ler os arquivos CV1 e CV2 gerados pelo script final de predição
 
-- `visualization.html`
+Nesta etapa, cada nome de arquivo é interpretado para recuperar o esquema de validação, trait, modelo e repetição. A informação de fold não está mais no nome do arquivo; ela é recuperada da coluna `.id` armazenada dentro de cada CSV.
 
-## 8. Observação operacional
+```{r read-cv12}
+cv12_list <- vector("list", length(cv12_files))
 
-Se for necessário consolidar novamente os resultados ou regenerar as figuras finais, use a versão em inglês.  
-A presente página em português existe para documentação e navegação bilíngue do site.
+for (i in seq_along(cv12_files)) {
+  current_file <- cv12_files[i]
+  file_name <- basename(current_file)
+  file_name <- sub("\\.csv$", "", file_name)
+  parts <- strsplit(file_name, "_")[[1]]
 
+  if (length(parts) != 4) {
+    stop(
+      "Nome de arquivo inesperado para CV1/CV2: ", file_name,
+      ". Esperado: CV1_<trait>_<model>_rep<rep>.csv ou CV2_<trait>_<model>_rep<rep>.csv"
+    )
+  }
+
+  current_cv <- parts[1]
+  current_trait <- parts[2]
+  current_model_label <- parts[3]
+  current_model_number <- as.numeric(gsub("M", "", current_model_label))
+  current_rep <- as.numeric(gsub("rep", "", parts[4]))
+
+  current_data <- readr::read_csv(current_file, show_col_types = FALSE)
+
+  if (!( ".id" %in% names(current_data)) || !( "Env" %in% names(current_data)) || !( "cor" %in% names(current_data))) {
+    stop(
+      "Estrutura de colunas inesperada no arquivo: ", file_name,
+      ". O script final de predição deve exportar colunas incluindo .id, Env e cor."
+    )
+  }
+
+  current_data <- current_data %>%
+    rename(Fold = .id) %>%
+    mutate(
+      Fold = suppressWarnings(as.integer(Fold)),
+      CV = current_cv,
+      Trait = current_trait,
+      ModelNumber = current_model_number,
+      Model = current_model_label,
+      Rep = current_rep
+    )
+
+  cv12_list[[i]] <- current_data
+}
+
+cv12_raw <- bind_rows(cv12_list) %>%
+  left_join(model_catalog, by = c("ModelNumber", "Model"))
+
+readr::write_csv(cv12_raw, file.path(tables_dir, "prediction_cv1_cv2_raw.csv"))
+```
+
+## 7. Ler os arquivos CV0 e CV00 gerados pelo script final de predição
+
+A lógica é análoga à etapa anterior, mas agora o nome do arquivo também carrega o rótulo do ambiente deixado de fora. Como os nomes de ambiente contêm underscore (por exemplo, `CS11_WS`), o parser lê esse rótulo como duas partes e depois o recompõe em um único valor de `Env_leave`.
+
+```{r read-cvloo}
+cvloo_list <- vector("list", length(cvloo_files))
+
+for (i in seq_along(cvloo_files)) {
+  current_file <- cvloo_files[i]
+  file_name <- basename(current_file)
+  file_name <- sub("\\.csv$", "", file_name)
+  parts <- strsplit(file_name, "_")[[1]]
+
+  if (length(parts) != 6) {
+    stop(
+      "Nome de arquivo inesperado para CV0/CV00: ", file_name,
+      ". Esperado: CV0_<trait>_<env_part1>_<env_part2>_<model>_rep<rep>.csv ou CV00_<trait>_<env_part1>_<env_part2>_<model>_rep<rep>.csv, em que <env_part1>_<env_part2> forma um único rótulo de ambiente como CS11_WS."
+    )
+  }
+
+  current_cv <- parts[1]
+  current_trait <- parts[2]
+  current_env_part1 <- parts[3]
+  current_env_part2 <- parts[4]
+  current_env_leave <- paste(current_env_part1, current_env_part2, sep = "_")
+  current_model_label <- parts[5]
+  current_model_number <- as.numeric(gsub("M", "", current_model_label))
+  current_rep <- as.numeric(gsub("rep", "", parts[6]))
+
+  current_data <- readr::read_csv(current_file, show_col_types = FALSE)
+
+  if (!( ".id" %in% names(current_data)) || !( "Env" %in% names(current_data)) || !( "cor" %in% names(current_data))) {
+    stop(
+      "Estrutura de colunas inesperada no arquivo: ", file_name,
+      ". O script final de predição deve exportar colunas incluindo .id, Env e cor."
+    )
+  }
+
+  current_data <- current_data %>%
+    rename(Fold = .id) %>%
+    mutate(
+      Fold = suppressWarnings(as.integer(Fold)),
+      CV = current_cv,
+      Trait = current_trait,
+      Env_leave = current_env_leave,
+      ModelNumber = current_model_number,
+      Model = current_model_label,
+      Rep = current_rep
+    )
+
+  cvloo_list[[i]] <- current_data
+}
+
+cvloo_raw <- bind_rows(cvloo_list) %>%
+  left_join(model_catalog, by = c("ModelNumber", "Model"))
+
+readr::write_csv(cvloo_raw, file.path(tables_dir, "prediction_cv0_cv00_raw.csv"))
+readr::write_csv(model_catalog, file.path(tables_dir, "prediction_model_catalog.csv"))
+```
+
+## 8. Resumir CV1 e CV2
+
+O resumo é construído progressivamente:
+
+1. primeiro por ambiente e fold;
+2. depois por ambiente dentro de cada repetição;
+3. depois por repetição;
+4. e finalmente por médias e desvios-padrão em nível de modelo ao longo das repetições.
+
+### 8.1 Resumir CV1 e CV2 por ambiente e fold
+
+Este primeiro resumo mantém o nível analítico mais detalhado usado posteriormente no script: cada ambiente dentro de cada fold de cada repetição.
+
+```{r summarize-cv12-env-fold}
+cv12_env_fold <- cv12_raw %>%
+  group_by(
+    ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+    Description, ShortDescription, Trait, CV, Rep, Fold, Env
+  ) %>%
+  summarise(
+    EnvCorrelation = mean(cor, na.rm = TRUE),
+    ValidationCount = sum(!is.na(cor)),
+    MeanRuntimeSec = mean(Runtime_sec, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    EnvCorrelation = ifelse(is.nan(EnvCorrelation), NA_real_, EnvCorrelation),
+    MeanRuntimeSec = ifelse(is.nan(MeanRuntimeSec), NA_real_, MeanRuntimeSec)
+  ) %>%
+  filter(!is.na(EnvCorrelation), ValidationCount > 0)
+```
+
+### 8.2 Resumir CV1 e CV2 por ambiente dentro da repetição
+
+Agora o script combina todos os folds da mesma repetição para cada ambiente usando as contagens de validação como pesos.
+
+```{r summarize-cv12-env-rep}
+cv12_env_rep <- cv12_env_fold %>%
+  group_by(
+    ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+    Description, ShortDescription, Trait, CV, Rep, Env
+  ) %>%
+  summarise(
+    EnvCorrelation = weighted.mean(EnvCorrelation, w = ValidationCount, na.rm = TRUE),
+    ValidationCount = sum(ValidationCount, na.rm = TRUE),
+    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+### 8.3 Resumir CV1 e CV2 por repetição
+
+Esta etapa colapsa a informação em nível de ambiente em uma correlação ponderada por repetição.
+
+```{r summarize-cv12-rep}
+cv12_rep_summary <- cv12_env_rep %>%
+  group_by(
+    ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+    Description, ShortDescription, Trait, CV, Rep
+  ) %>%
+  summarise(
+    WeightedCorrelation = weighted.mean(EnvCorrelation, w = ValidationCount, na.rm = TRUE),
+    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+### 8.4 Construir a tabela final de resumo de CV1 e CV2
+
+A tabela final reporta a correlação média e seu desvio-padrão entre repetições para cada modelo.
+
+```{r summarize-cv12-final}
+cv12_summary <- cv12_rep_summary %>%
+  group_by(
+    ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+    Description, ShortDescription, Trait, CV
+  ) %>%
+  summarise(
+    MeanCorrelation = mean(WeightedCorrelation, na.rm = TRUE),
+    SDCorrelation = sd(WeightedCorrelation, na.rm = TRUE),
+    NumberOfRepetitions = n(),
+    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation)
+  )
+```
+
+### 8.5 Exportar as tabelas-resumo de CV1 e CV2
+
+Esses arquivos são reutilizados mais adiante no script do manuscrito e também servem como checkpoints intermediários de depuração.
+
+```{r export-cv12-summaries}
+readr::write_csv(cv12_env_fold, file.path(tables_dir, "prediction_cv1_cv2_by_rep_fold_env.csv"))
+readr::write_csv(cv12_env_rep, file.path(tables_dir, "prediction_cv1_cv2_by_rep_env.csv"))
+readr::write_csv(cv12_rep_summary, file.path(tables_dir, "prediction_cv1_cv2_by_rep.csv"))
+readr::write_csv(cv12_summary, file.path(tables_dir, "prediction_cv1_cv2_summary.csv"))
+```
+
+## 9. Resumir CV0 e CV00
+
+Para `CV0` e `CV00`, o script mantém apenas as linhas em que o ambiente nos dados coincide com o ambiente deixado de fora. Isso garante que a correlação reportada realmente se refira ao alvo do leave-one-environment-out.
+
+### 9.1 Manter apenas as linhas do ambiente leave-one-environment-out
+
+Este filtro é conceitualmente importante porque os arquivos brutos podem conter linhas de múltiplos ambientes, mas o resultado reportado deve corresponder apenas ao ambiente-alvo mascarado durante a predição.
+
+```{r filter-cvloo-target-env}
+cvloo_env_filtered <- cvloo_raw %>%
+  mutate(
+    Env = as.character(Env),
+    Env_leave = as.character(Env_leave)
+  ) %>%
+  filter(Env == Env_leave)
+```
+
+### 9.2 Resumir CV0 e CV00 por ambiente e fold
+
+Neste nível, o script ainda mantém cada fold separado antes de combinar as repetições.
+
+```{r summarize-cvloo-env-fold}
+cvloo_env_fold <- cvloo_env_filtered %>%
+  group_by(
+    ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+    Description, ShortDescription, Trait, CV, Env_leave, Rep, Fold, Env
+  ) %>%
+  summarise(
+    LOEOCorrelation = mean(cor, na.rm = TRUE),
+    ValidationCount = sum(!is.na(cor)),
+    MeanRuntimeSec = mean(Runtime_sec, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    LOEOCorrelation = ifelse(is.nan(LOEOCorrelation), NA_real_, LOEOCorrelation),
+    MeanRuntimeSec = ifelse(is.nan(MeanRuntimeSec), NA_real_, MeanRuntimeSec)
+  ) %>%
+  filter(!is.na(LOEOCorrelation), ValidationCount > 0)
+```
+
+### 9.3 Resumir CV0 e CV00 por repetição
+
+Agora os resultados em nível de fold são combinados dentro de cada repetição usando as contagens de validação como pesos.
+
+```{r summarize-cvloo-rep}
+cvloo_rep_summary <- cvloo_env_fold %>%
+  group_by(
+    ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+    Description, ShortDescription, Trait, CV, Env_leave, Rep
+  ) %>%
+  summarise(
+    LOEOCorrelation = weighted.mean(LOEOCorrelation, w = ValidationCount, na.rm = TRUE),
+    ValidationCount = sum(ValidationCount, na.rm = TRUE),
+    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+### 9.4 Construir a tabela final de resumo de CV0 e CV00
+
+Esta tabela é a principal fonte para os resumos leave-one-environment-out usados adiante no manuscrito e nas figuras.
+
+```{r summarize-cvloo-final}
+cvloo_summary <- cvloo_rep_summary %>%
+  group_by(
+    ModelNumber, Model, Group, Pathway, KernelFamily, WeatherStatus,
+    Description, ShortDescription, Trait, CV, Env_leave
+  ) %>%
+  summarise(
+    MeanCorrelation = mean(LOEOCorrelation, na.rm = TRUE),
+    SDCorrelation = sd(LOEOCorrelation, na.rm = TRUE),
+    NumberOfRuns = n(),
+    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation)
+  )
+```
+
+### 9.5 Exportar as tabelas-resumo de CV0 e CV00
+
+Esses arquivos espelham as exportações de CV1/CV2, mas agora para os cenários leave-one-environment-out.
+
+```{r export-cvloo-summaries}
+readr::write_csv(cvloo_env_fold, file.path(tables_dir, "prediction_cv0_cv00_by_rep_fold_env.csv"))
+readr::write_csv(cvloo_rep_summary, file.path(tables_dir, "prediction_cv0_cv00_by_run.csv"))
+readr::write_csv(cvloo_summary, file.path(tables_dir, "prediction_cv0_cv00_summary.csv"))
+```
+
+## 10. Tabelas de comparação
+
+Esta seção deriva tabelas analíticas secundárias, especialmente o contraste entre modelos com e sem `W` e a comparação entre famílias de kernel dentro de cada via.
+
+### 10.1 Comparar modelos com e sem W para CV1 e CV2
+
+Os pares de comparação foram definidos anteriormente no script. Aqui a tabela-resumo é ligada duas vezes: uma para o modelo sem informação climática e outra para o modelo correspondente com informação climática.
+
+```{r comparison-cv12-w-effect}
+cv12_w_effect <- comparison_pairs %>%
+  left_join(
+    cv12_summary %>%
+      select(Trait, CV, Model, MeanCorrelation, SDCorrelation),
+    by = c("WithoutW" = "Model")
+  ) %>%
+  rename(
+    MeanWithoutW = MeanCorrelation,
+    SDWithoutW = SDCorrelation
+  ) %>%
+  left_join(
+    cv12_summary %>%
+      select(Trait, CV, Model, MeanCorrelation, SDCorrelation),
+    by = c("WithW" = "Model", "Trait", "CV")
+  ) %>%
+  rename(
+    MeanWithW = MeanCorrelation,
+    SDWithW = SDCorrelation
+  ) %>%
+  mutate(
+    DeltaWithW = MeanWithW - MeanWithoutW
+  ) %>%
+  arrange(Trait, CV, Comparison)
+```
+
+### 10.2 Comparar modelos com e sem W para CV0 e CV00
+
+A ideia analítica é a mesma, mas agora condicionada ao ambiente deixado de fora.
+
+```{r comparison-cvloo-w-effect}
+cvloo_w_effect <- comparison_pairs %>%
+  left_join(
+    cvloo_summary %>%
+      select(Trait, CV, Env_leave, Model, MeanCorrelation, SDCorrelation),
+    by = c("WithoutW" = "Model")
+  ) %>%
+  rename(
+    MeanWithoutW = MeanCorrelation,
+    SDWithoutW = SDCorrelation
+  ) %>%
+  left_join(
+    cvloo_summary %>%
+      select(Trait, CV, Env_leave, Model, MeanCorrelation, SDCorrelation),
+    by = c("WithW" = "Model", "Trait", "CV", "Env_leave")
+  ) %>%
+  rename(
+    MeanWithW = MeanCorrelation,
+    SDWithW = SDCorrelation
+  ) %>%
+  mutate(
+    DeltaWithW = MeanWithW - MeanWithoutW
+  ) %>%
+  arrange(Trait, CV, Env_leave, Comparison)
+```
+
+### 10.3 Comparar famílias de kernel para CV1 e CV2
+
+Esta tabela coloca lado a lado os kernels linear, Gaussiano e arc-cosine dentro de cada via e configuração de clima.
+
+```{r comparison-cv12-kernel-family}
+cv12_kernel_family_compare <- cv12_summary %>%
+  select(Trait, CV, Pathway, WeatherStatus, KernelFamily, MeanCorrelation) %>%
+  mutate(
+    KernelFamily = recode(KernelFamily, "Gaussiano" = "Gaussian")
+  ) %>%
+  pivot_wider(names_from = KernelFamily, values_from = MeanCorrelation) %>%
+  mutate(
+    Delta_Gaussian_vs_Linear = Gaussian - Linear,
+    Delta_ArcCos_vs_Linear = `Arc-cosine` - Linear,
+    Delta_ArcCos_vs_Gaussian = `Arc-cosine` - Gaussian
+  ) %>%
+  arrange(Trait, CV, Pathway, WeatherStatus)
+```
+
+### 10.4 Comparar famílias de kernel para CV0 e CV00
+
+A mesma comparação entre famílias de kernel é repetida aqui para cada ambiente leave-one-environment-out.
+
+```{r comparison-cvloo-kernel-family}
+cvloo_kernel_family_compare <- cvloo_summary %>%
+  select(Trait, CV, Env_leave, Pathway, WeatherStatus, KernelFamily, MeanCorrelation) %>%
+  mutate(
+    KernelFamily = recode(KernelFamily, "Gaussiano" = "Gaussian")
+  ) %>%
+  pivot_wider(names_from = KernelFamily, values_from = MeanCorrelation) %>%
+  mutate(
+    Delta_Gaussian_vs_Linear = Gaussian - Linear,
+    Delta_ArcCos_vs_Linear = `Arc-cosine` - Linear,
+    Delta_ArcCos_vs_Gaussian = `Arc-cosine` - Gaussian
+  ) %>%
+  arrange(Trait, CV, Env_leave, Pathway, WeatherStatus)
+```
+
+### 10.5 Exportar as tabelas de comparação
+
+Essas saídas são reutilizadas diretamente na redação do manuscrito e na interpretação dos resultados.
+
+```{r export-comparison-tables}
+readr::write_csv(cv12_w_effect, file.path(tables_dir, "prediction_cv1_cv2_w_effect_pairs.csv"))
+readr::write_csv(cvloo_w_effect, file.path(tables_dir, "prediction_cv0_cv00_w_effect_pairs.csv"))
+readr::write_csv(cv12_kernel_family_compare, file.path(tables_dir, "prediction_cv1_cv2_kernel_family_compare.csv"))
+readr::write_csv(cvloo_kernel_family_compare, file.path(tables_dir, "prediction_cv0_cv00_kernel_family_compare.csv"))
+```
+
+## 11. Tabelas compactas de display
+
+Esses objetos são versões simplificadas dos resumos completos. Eles são úteis para tabelas do manuscrito, material suplementar e inspeção rápida dos melhores modelos.
+
+### 11.1 Construir a tabela compacta de CV1 e CV2
+
+Esta tabela mantém as principais colunas-resumo, mas arredonda os campos numéricos para facilitar a leitura.
+
+```{r compact-cv12-table}
+cv12_table_display <- cv12_summary %>%
+  arrange(Trait, CV, Pathway, KernelFamily, WeatherStatus) %>%
+  mutate(
+    MeanCorrelation = round(MeanCorrelation, 3),
+    SDCorrelation = round(SDCorrelation, 3),
+    MeanRuntimeSec = round(MeanRuntimeSec, 2)
+  ) %>%
+  select(
+    Trait, CV, Pathway, KernelFamily, WeatherStatus,
+    ShortDescription, MeanCorrelation, SDCorrelation,
+    NumberOfRepetitions, MeanRuntimeSec
+  )
+```
+
+### 11.2 Construir a tabela compacta de CV0 e CV00
+
+A tabela compacta leave-one-environment-out mantém a coluna do ambiente porque ela faz parte da interpretação.
+
+```{r compact-cvloo-table}
+cvloo_table_display <- cvloo_summary %>%
+  arrange(Trait, CV, Env_leave, Pathway, KernelFamily, WeatherStatus) %>%
+  mutate(
+    MeanCorrelation = round(MeanCorrelation, 3),
+    SDCorrelation = round(SDCorrelation, 3),
+    MeanRuntimeSec = round(MeanRuntimeSec, 2)
+  ) %>%
+  select(
+    Trait, CV, Env_leave, Pathway, KernelFamily, WeatherStatus,
+    ShortDescription, MeanCorrelation, SDCorrelation,
+    NumberOfRuns, MeanRuntimeSec
+  )
+```
+
+### 11.3 Construir os objetos Top-3 para CV1 e CV2
+
+Esses objetos são exibidos na seção seguinte e também exportados para uso downstream.
+
+```{r build-cv12-top3}
+cv12_top3 <- cv12_summary %>%
+  group_by(Trait, CV) %>%
+  slice_max(order_by = MeanCorrelation, n = 3, with_ties = FALSE) %>%
+  ungroup() %>%
+  mutate(
+    MeanCorrelation = round(MeanCorrelation, 3),
+    SDCorrelation = round(SDCorrelation, 3)
+  ) %>%
+  select(Trait, CV, ShortDescription, MeanCorrelation, SDCorrelation)
+```
+
+### 11.4 Construir os objetos Top-3 para CV0 e CV00
+
+As tabelas Top-3 leave-one-environment-out são estratificadas por ambiente-alvo.
+
+```{r build-cvloo-top3}
+cvloo_top3 <- cvloo_summary %>%
+  group_by(Trait, CV, Env_leave) %>%
+  slice_max(order_by = MeanCorrelation, n = 3, with_ties = FALSE) %>%
+  ungroup() %>%
+  mutate(
+    MeanCorrelation = round(MeanCorrelation, 3),
+    SDCorrelation = round(SDCorrelation, 3)
+  ) %>%
+  select(Trait, CV, Env_leave, ShortDescription, MeanCorrelation, SDCorrelation)
+```
+
+### 11.5 Exportar as tabelas compactas e Top-3
+
+Todas as tabelas orientadas a display são escritas em disco aqui para que scripts posteriores possam reutilizá-las diretamente.
+
+```{r export-compact-and-top3}
+readr::write_csv(cv12_table_display, file.path(tables_dir, "prediction_cv1_cv2_display_table.csv"))
+readr::write_csv(cvloo_table_display, file.path(tables_dir, "prediction_cv0_cv00_display_table.csv"))
+readr::write_csv(cv12_top3, file.path(tables_dir, "prediction_cv1_cv2_top3.csv"))
+readr::write_csv(cvloo_top3, file.path(tables_dir, "prediction_cv0_cv00_top3.csv"))
+```
+
+## 12. Tabelas Top-3
+
+Os dois chunks seguintes exibem os três modelos com melhor desempenho em cada esquema de validação.
+
+```{r table-cv12-top3}
+cv12_top3 %>%
+  knitr::kable(
+    caption = "Top 3 modelos para cada trait e esquema de validação em CV1 e CV2.",
+    align = "llccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  )
+```
+
+```{r table-cvloo-top3}
+cvloo_top3 %>%
+  knitr::kable(
+    caption = "Top 3 modelos para cada trait, esquema de validação e ambiente-alvo em CV0 e CV00.",
+    align = "lllccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  )
+```
+
+## 13. Tabelas do efeito de W
+
+Essas tabelas apresentam as comparações pareadas entre modelos com e sem informação climática.
+
+```{r table-cv12-w-effect}
+cv12_w_effect %>%
+  mutate(
+    MeanWithoutW = round(MeanWithoutW, 3),
+    MeanWithW = round(MeanWithW, 3),
+    DeltaWithW = round(DeltaWithW, 3)
+  ) %>%
+  knitr::kable(
+    caption = "Comparação pareada de modelos sem e com o kernel climático (W) em CV1 e CV2.",
+    align = "lllccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+```{r table-cvloo-w-effect}
+cvloo_w_effect %>%
+  mutate(
+    MeanWithoutW = round(MeanWithoutW, 3),
+    MeanWithW = round(MeanWithW, 3),
+    DeltaWithW = round(DeltaWithW, 3)
+  ) %>%
+  knitr::kable(
+    caption = "Comparação pareada de modelos sem e com o kernel climático (W) em CV0 e CV00.",
+    align = "llllccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+## 14. Tabelas de comparação entre famílias de kernel
+
+```{r table-cv12-kernel-family}
+cv12_kernel_family_compare %>%
+  mutate(
+    Linear = round(Linear, 3),
+    Gaussian = round(Gaussian, 3),
+    `Arc-cosine` = round(`Arc-cosine`, 3),
+    Delta_Gaussian_vs_Linear = round(Delta_Gaussian_vs_Linear, 3),
+    Delta_ArcCos_vs_Linear = round(Delta_ArcCos_vs_Linear, 3),
+    Delta_ArcCos_vs_Gaussian = round(Delta_ArcCos_vs_Gaussian, 3)
+  ) %>%
+  knitr::kable(
+    caption = "Comparação entre famílias de kernel dentro de cada via analítica em CV1 e CV2.",
+    align = "llllcccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+```{r table-cvloo-kernel-family}
+cvloo_kernel_family_compare %>%
+  mutate(
+    Linear = round(Linear, 3),
+    Gaussian = round(Gaussian, 3),
+    `Arc-cosine` = round(`Arc-cosine`, 3),
+    Delta_Gaussian_vs_Linear = round(Delta_Gaussian_vs_Linear, 3),
+    Delta_ArcCos_vs_Linear = round(Delta_ArcCos_vs_Linear, 3),
+    Delta_ArcCos_vs_Gaussian = round(Delta_ArcCos_vs_Gaussian, 3)
+  ) %>%
+  knitr::kable(
+    caption = "Comparação entre famílias de kernel dentro de cada via analítica em CV0 e CV00.",
+    align = "lllllcccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+## 15. Figuras
+
+```{r figure-cv12}
+cv12_plot_data <- cv12_summary %>%
+  mutate(
+    ShortDescription = factor(ShortDescription, levels = model_catalog$ShortDescription)
+  )
+
+lower_limit_cv12 <- min(cv12_plot_data$MeanCorrelation - cv12_plot_data$SDCorrelation, na.rm = TRUE)
+upper_limit_cv12 <- max(cv12_plot_data$MeanCorrelation + cv12_plot_data$SDCorrelation, na.rm = TRUE)
+
+p_cv12 <- ggplot(cv12_plot_data, aes(x = ShortDescription, y = MeanCorrelation, fill = Group)) +
+  geom_col(width = 0.75, color = "grey30") +
+  geom_errorbar(
+    aes(
+      ymin = MeanCorrelation - SDCorrelation,
+      ymax = MeanCorrelation + SDCorrelation
+    ),
+    width = 0.20,
+    linewidth = 0.35
+  ) +
+  facet_grid(Trait ~ CV) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  coord_cartesian(ylim = c(lower_limit_cv12 - 0.03, upper_limit_cv12 + 0.03)) +
+  scale_x_discrete(name = "Descrição do modelo") +
+  scale_y_continuous(name = "Correlação preditiva") +
+  ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    strip.text = element_text(face = "bold", size = 10),
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 7),
+    axis.text.y = element_text(size = 9),
+    axis.title = element_text(size = 10),
+    legend.position = "top",
+    legend.title = element_text(size = 9),
+    legend.text = element_text(size = 8)
+  ) +
+  labs(title = "Capacidade preditiva em CV1 e CV2")
+
+p_cv12
+
+ggsave(file.path(figures_dir, "prediction_cv1_cv2.tiff"), plot = p_cv12, width = 14, height = 8, dpi = 300, bg = "white")
+ggsave(file.path(figures_dir, "prediction_cv1_cv2.pdf"), plot = p_cv12, width = 14, height = 8, bg = "white")
+```
+
+```{r figure-cvloo}
+cvloo_plot_data <- cvloo_summary %>%
+  mutate(
+    ShortDescription = factor(ShortDescription, levels = model_catalog$ShortDescription),
+    Env_leave = factor(Env_leave, levels = c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW"))
+  )
+
+lower_limit_cvloo <- min(cvloo_plot_data$MeanCorrelation - cvloo_plot_data$SDCorrelation, na.rm = TRUE)
+upper_limit_cvloo <- max(cvloo_plot_data$MeanCorrelation + cvloo_plot_data$SDCorrelation, na.rm = TRUE)
+
+p_cvloo <- ggplot(cvloo_plot_data, aes(x = ShortDescription, y = MeanCorrelation, fill = Group)) +
+  geom_col(width = 0.75, color = "grey30") +
+  geom_errorbar(
+    aes(
+      ymin = MeanCorrelation - SDCorrelation,
+      ymax = MeanCorrelation + SDCorrelation
+    ),
+    width = 0.20,
+    linewidth = 0.35,
+    na.rm = TRUE
+  ) +
+  facet_grid(Env_leave ~ Trait + CV) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  coord_cartesian(ylim = c(lower_limit_cvloo - 0.03, upper_limit_cvloo + 0.03)) +
+  scale_x_discrete(name = "Descrição do modelo") +
+  scale_y_continuous(name = "Correlação preditiva") +
+  ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    strip.text = element_text(face = "bold", size = 9),
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6),
+    axis.text.y = element_text(size = 8),
+    axis.title = element_text(size = 10),
+    legend.position = "top",
+    legend.title = element_text(size = 9),
+    legend.text = element_text(size = 8)
+  ) +
+  labs(title = "Capacidade preditiva em CV0 e CV00")
+
+p_cvloo
+
+ggsave(file.path(figures_dir, "prediction_cv0_cv00.tiff"), plot = p_cvloo, width = 16, height = 12, dpi = 300, bg = "white")
+ggsave(file.path(figures_dir, "prediction_cv0_cv00.pdf"), plot = p_cvloo, width = 16, height = 12, bg = "white")
+```
+
+## 16. Notas finais
+
+Esta versão tutorializada está alinhada ao fluxo final de predição.
+
+Ela espera os arquivos exportados por `analysis_prediction.Rmd`, nos quais:
+
+- cada arquivo já está agregado dentro da repetição;
+- a informação de fold aparece na coluna interna `.id`;
+- `CV0` e `CV00` ainda exigem o filtro `Env == Env_leave` para os resumos do ambiente deixado de fora.
+
+Depois de executar este arquivo, a próxima etapa no repositório é rodar o script orientado ao manuscrito que consome as tabelas-resumo gravadas em `output/tables/`.

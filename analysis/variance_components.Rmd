@@ -28,6 +28,8 @@ knitr::opts_chunk$set(
 )
 ```
 
+**Language / Idioma:** [English](variance_components.html) | [Português](variance_components_pt.html)
+
 ## 1. Introduction
 
 This tutorial summarizes **variance components** for the predictive models used in this study. In the current workflow, this file is used mainly to **consolidate and interpret results that were already estimated previously**, although it still keeps the code structure needed to fit the models when that step must be rerun.
