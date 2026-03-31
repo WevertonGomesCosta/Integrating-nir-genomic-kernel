@@ -6,20 +6,48 @@ navbar:
   left:
     - text: "Home"
       href: index.html
+
     - text: "Climate data"
-      href: climate_data.html
+      menu:
+        - text: "Climate data — English"
+          href: climate_data.html
+        - text: "Dados Climáticos — Português"
+          href: climate_data_pt.html
+
     - text: "Matrices"
-      href: matrizes.html
+      menu:
+        - text: "Matrices — English"
+          href: matrizes.html
+        - text: "Matrizes — Português"
+          href: matrizes_pt.html
+
     - text: "Variance components"
-      href: variance_components.html
+      menu:
+        - text: "Variance components — English"
+          href: variance_components.html
+        - text: "Componentes de variância — Português"
+          href: variance_components_pt.html
+
     - text: "Prediction"
-      href: analysis_prediction.html
+      menu:
+        - text: "Prediction — English"
+          href: analysis_prediction.html
+        - text: "Predição — Português"
+          href: analysis_prediction_pt.html
+
     - text: "Visualization"
-      href: visualization.html
+      menu:
+        - text: "Visualization — English"
+          href: visualization.html
+        - text: "Visualização — Português"
+          href: visualization_pt.html
+
     - text: "About"
       href: about.html
+
     - text: "License"
       href: license.html
+
   right:
     - icon: fa-github
       text: "Source code"
