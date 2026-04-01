@@ -30,10 +30,14 @@ navbar:
 
     - text: "Prediction"
       menu:
-        - text: "Prediction — English"
+        - text: "Part I: setup, models and CV design — English"
           href: analysis_prediction.html
-        - text: "Predição — Português"
+        - text: "Parte I: setup, modelos e desenho de CV — Português"
           href: analysis_prediction_pt.html
+        - text: "Part II: run prediction and outputs — English"
+          href: analysis_prediction_run_outputs.html
+        - text: "Parte II: execução da predição e saídas — Português"
+          href: analysis_prediction_run_outputs_pt.html
 
     - text: "Visualization"
       menu:
