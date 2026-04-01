@@ -20,8 +20,6 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 > **Nota operacional:** Nesta versão em português, a etapa pesada de ajuste Bayesiano permanece documentada, mas a renderização depende dos arquivos já gerados pela execução em inglês. Os chunks de carregamento ficam ocultos e a leitura dos resultados consolidados é feita a partir de `output/variance_components/`.
 
-Este chunk define as opções de renderização do documento para que tabelas, código e figuras sejam exibidos de forma consistente no tutorial.
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -59,8 +57,6 @@ Uma grande proporção de variância associada a uma dada fonte não deve ser in
 
 Primeiro, carregamos os pacotes usados para manipular os dados, ajustar os modelos Bayesianos e gerar as figuras finais em padrão de artigo.
 
-Este chunk carrega os pacotes necessários para ler artefatos salvos, reorganizar resultados, construir figuras e, quando necessário, executar a etapa pesada de estimação.
-
 ```{r load-packages}
 library(dplyr)
 library(tidyr)
@@ -81,8 +77,6 @@ library(fs)
 
 Todos os kernels e objetos fenotípicos devem estar disponíveis em `output/Matrizes/`, que é o diretório de saída criado em `matrizes.Rmd`. Os resultados de componentes de variância gerados aqui são armazenados em `output/variance_components/`.
 
-Este chunk define os diretórios do projeto usados para localizar matrizes, armazenar saídas e organizar os arquivos de componentes de variância.
-
 ```{r define-paths}
 kernel_dir <- "output/Matrizes"
 results_dir <- "output/variance_components"
@@ -95,8 +89,6 @@ dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
 ### 2.2. Checagem das entradas
 
 Antes de ler os arquivos, verificamos se os objetos `.rds` esperados estão presentes na pasta de saídas das matrizes. Isso deixa o tutorial mais robusto porque o script para imediatamente se algum objeto necessário estiver ausente.
-
-Este chunk verifica se os arquivos e diretórios obrigatórios existem antes da definição dos modelos ou do processamento dos resultados.
 
 ```{r input-checks}
 required_files <- c(
@@ -122,8 +114,6 @@ if (length(missing_files) > 0) {
 ### 2.3. Rótulos usados nas tabelas e figuras finais
 
 Esses vetores definem como os componentes de variância aparecerão nas saídas finais. Manter esses rótulos visíveis no script principal ajuda o leitor a entender como os nomes internos do modelo são traduzidos para rótulos prontos para artigo.
-
-Este chunk define os rótulos e convenções de nome usados mais adiante em tabelas, arquivos e figuras.
 
 ```{r labels-for-output}
 component_display <- c(
@@ -181,8 +171,6 @@ component_order[component_order == "PAKW × W"] <- "PAK × W"
 
 Esta seção carrega as matrizes geradas em `matrizes.Rmd`. Esses objetos são as entradas centrais da análise de componentes de variância.
 
-Este chunk lê as matrizes e kernels gerados no módulo anterior para que os modelos de componentes de variância usem as mesmas entradas alinhadas da etapa preditiva.
-
 ```{r load-matrices, include=FALSE}
 ZG    <- readRDS(file.path(kernel_dir, "ZG.rds"))
 ZP    <- readRDS(file.path(kernel_dir, "ZP.rds"))
@@ -221,8 +209,6 @@ cat("Number of pedigrees:", length(Pedigree), "\n")
 ### 3.1. Diagnósticos de alinhamento
 
 Antes de ajustar os modelos, é importante verificar se os kernels são quadrados e alinhados à mesma ordem de observações usada em `Pheno`. Em um contexto tutorial, essa é uma checagem importante porque muitos erros posteriores são causados por ordens incompatíveis entre linhas e colunas.
-
-Este chunk verifica se os kernels carregados são compatíveis em dimensão e ordenação antes de serem combinados nos modelos Bayesianos.
 
 ```{r kernel-alignment-check}
 reference_ids <- Pheno$ObsID
@@ -306,8 +292,6 @@ kernel_inventory %>%
 ## 4. Definição dos 18 modelos preditivos
 
 Cada modelo é definido como uma lista no formato exigido pelo argumento `ETA` de `BGLR`. O termo de ambiente (`E`) é incluído como uma matriz de efeitos fixos com `model = "BRR"`, enquanto os kernels são ajustados como efeitos aleatórios com `model = "RKHS"`.
-
-Este chunk define os 18 modelos Bayesianos multi-kernel reduzidos no formato exigido pela etapa de componentes de variância.
 
 ```{r define-models}
 models <- list()
@@ -460,14 +444,12 @@ names(models) <- sprintf("Eta%02d", seq_along(models))
 
 Esta tabela é útil tanto para verificações internas quanto para vincular os rótulos das figuras à descrição formal de cada modelo.
 
-Este chunk constrói o catálogo compacto dos modelos, ligando cada identificador à sua categoria e ao respectivo rótulo descritivo.
-
 ```{r model-catalog}
 model_info <- tibble(
   ModelID = 1:18,
   Model = sprintf("M%02d", 1:18),
   ETA = names(models),
-  Category = c(
+  Categoria = c(
     rep("Fonte única + E", 6),
     rep("Integrado G/P + E", 3),
     rep("Enriquecido com clima", 9)
@@ -513,8 +495,6 @@ model_info %>%
 
 Esses valores definem o amostrador de Gibbs usado pelo `BGLR`. Ajuste-os aqui se uma cadeia mais longa for necessária para diagnósticos de convergência ou análises de sensibilidade.
 
-Este chunk define os parâmetros de MCMC e os controles de execução que regulam a etapa de estimação quando o processamento pesado está ativado.
-
 ```{r mcmc-parameters}
 nIter   <- 10000
 burnIn  <- 1000
@@ -526,8 +506,6 @@ traits  <- c("GY", "KW")
 ## 6. Ajuste do BGLR para cada modelo
 
 Este é o passo computacionalmente mais caro. O chunk é mantido com `eval=FALSE` para que o tutorial possa ser renderizado sem rerodar todos os modelos Bayesianos a cada vez. Quando você precisar de componentes de variância atualizados, mude `eval` para `TRUE` e execute o chunk.
-
-Este chunk contém a etapa computacionalmente cara de estimação paralela, responsável por ajustar os modelos e salvar as saídas posteriores.
 
 ```{r parallel-run, eval=FALSE}
 numCores <- parallel::detectCores()
@@ -631,8 +609,6 @@ saveRDS(all_variance, file.path(results_dir, "variance_components_raw.rds"))
 
 Na versão atual do fluxo, esta é a seção usada com mais frequência. Em vez de reajustar todos os modelos a cada execução, o script lê os arquivos `_metrics.rds` previamente salvos e os consolida em um único objeto. Isso mantém o tutorial prático e reprodutível, ao mesmo tempo que deixa claro que esta página é principalmente uma **etapa de consolidação de resultados**, a menos que o usuário decida rerodar intencionalmente a etapa completa de ajuste no BGLR.
 
-Este chunk consolida as saídas salvas pela etapa de estimação em uma estrutura única, mais fácil de processar depois.
-
 ```{r consolidate-saved-results, eval=FALSE}
 rds_files <- list.files(
   path = results_dir,
@@ -699,8 +675,6 @@ if (length(rds_files) > 0) {
 
 Esta seção carrega os resultados consolidados e os prepara para o resumo. Se o arquivo não existir, o script interrompe a execução e instrui o usuário a executar a etapa de ajuste dos modelos primeiro.
 
-Este chunk carrega os resultados consolidados já produzidos, permitindo resumir e visualizar a etapa sem repetir a estimação cara.
-
 ```{r load-results, include=FALSE}
 raw_file <- file.path(results_dir, "variance_components_all.rds")
 
@@ -726,8 +700,6 @@ cat("Number of rows in consolidated variance object:", nrow(all_variance), "\n")
 ## 9. Resumo dos componentes de variância
 
 Agora calculamos a média dos valores posteriores ao longo das repetições para cada modelo, caráter e componente. Em seguida, convertemos os resultados em **percentuais da variância total**, o que torna os modelos diretamente comparáveis.
-
-Este chunk reorganiza e anota os resultados carregados para que as médias posteriores possam ser comparadas entre traços, modelos e categorias de componentes.
 
 ```{r process-variance-components}
 variance_summary <- all_variance %>%
@@ -760,8 +732,6 @@ readr::write_csv(variance_summary, file.path(results_dir, "variance_components_p
 
 Esta tabela é útil quando você precisa de um resumo numérico compacto para o manuscrito ou para material suplementar.
 
-Este chunk constrói a tabela-resumo principal usada para inspecionar a contribuição relativa de cada componente de variância nos modelos.
-
 ```{r summary-table}
 variance_table <- variance_summary %>%
   dplyr::select(Model, Trait, ComponentLabel, Percentage) %>%
@@ -788,8 +758,6 @@ head(variance_table, 12) %>%
 A figura abaixo resume a contribuição percentual de cada componente de variância nos 18 modelos para ambos os caracteres. Para manter o eixo x legível, os modelos são exibidos como `M01` a `M18`, e as descrições detalhadas permanecem disponíveis no catálogo de modelos salvo acima.
 
 Essa figura deve ser lida como um resumo estrutural dos modelos ajustados, e não como prova direta de que combinar mais fontes de dados leva automaticamente a maior complementaridade biológica ou melhor desempenho preditivo.
-
-Este chunk produz a figura final de componentes de variância, transformando a tabela processada em um resumo visual compacto.
 
 ```{r variance-figure, fig.cap="Figura 3. Percentual médio posterior da variância total atribuído a cada componente do modelo nos 18 modelos preditivos para produtividade de grãos (GY) e peso de grãos (KW). Cada barra empilhada representa um modelo (M01-M18), com média ao longo das repetições, e as cores identificam os componentes de variância incluídos na estrutura do modelo. O kernel climático (W) e seus termos de interação associados aparecem principalmente nos modelos M10-M18. A decomposição da variância deve ser interpretada como uma descrição da estrutura do modelo, e não automaticamente como evidência de maior complementaridade biológica entre as fontes de informação.", fig.height=10, fig.width=13}
 trait_labels <- c(
