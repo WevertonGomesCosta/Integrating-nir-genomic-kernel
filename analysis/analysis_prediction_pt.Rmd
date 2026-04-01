@@ -1,5 +1,5 @@
 ---
-title: "Análises de predição - tutorial didático"
+title: "Análises de predição - Parte I: setup, modelos e desenho de CV"
 author:
   - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
@@ -20,35 +20,19 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 > **Nota operacional:** Nesta versão em português, a etapa pesada de predição permanece documentada, mas a renderização depende dos objetos já gerados nas etapas anteriores do pipeline e não reroda os ajustes Bayesianos completos. Os chunks de carregamento podem ficar ocultos e o ajuste completo só deve ser executado na versão em inglês quando for necessário atualizar os resultados.
 
+**Navegação do módulo / Module navigation:** [Parte II: execução da predição e saídas](analysis_prediction_run_outputs_pt.html)
+
 ## 1. Introdução
 
-Este tutorial realiza as análises de predição para o conjunto reduzido de 18 modelos Bayesianos multi-kernel usados no estudo.
+Este arquivo é o primeiro submódulo didático da etapa de predição. O objetivo aqui é preparar o leitor antes da etapa de execução computacionalmente mais cara.
 
-O script combina:
+Neste submódulo, o foco está em três perguntas:
 
-- kernels genômicos,
-- kernels fenômicos,
-- o efeito categórico de ambiente (`E`),
-- e o kernel climático (`W`).
+1. quais objetos entram na etapa de predição;
+2. quais modelos reduzidos são comparados;
+3. como os cenários de validação cruzada são definidos conceitualmente.
 
-Neste fluxo, o kernel climático é usado principalmente nos modelos **M10-M18**. Ele deve ser interpretado como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente.
-
-O componente fenômico (`P`) também deve ser interpretado com cautela. A similaridade baseada em NIR pode capturar estrutura preditiva útil, mas também pode refletir forte resposta fisiológica ao ambiente em vez de apenas similaridade biológica estável.
-
-Um modelo que apenas se ajusta bem aos dados observados não é suficiente; ele precisa ser capaz de **prever dados que nunca viu**. Para simular isso, usamos Validação Cruzada (CV).
-
-Este script implementa múltiplos esquemas de CV para simular diferentes desafios do mundo real no melhoramento:
-
-- **CV1: validação por genótipo (testa genótipos não observados).**
-    - *Pergunta:* O modelo consegue prever o desempenho de um genótipo (híbrido) *completamente novo*, que não estava presente em *nenhum* ambiente de treinamento?
-- **CV2: validação por célula (testa combinações genótipo × ambiente parcialmente observadas).**
-    - *Pergunta:* O modelo consegue prever o desempenho de um genótipo *conhecido* em um ambiente que é *novo para esse genótipo* (assumindo que o genótipo foi observado em outros ambientes e que o ambiente foi observado com outros genótipos)?
-- **CV0: leave-one-environment-out (testa ambientes inteiramente não observados).**
-    - *Pergunta:* O teste mais difícil. O modelo consegue prever o desempenho de *todos* os genótipos em um *ambiente completamente novo* (um ano ou local que o modelo nunca viu)?
-- **CV00: leave-one-environment-out (testa genótipos em ambientes não observados).**
-    - *Semelhante ao CV0*, mas focado em prever genótipos *dentro* de um ambiente deixado de fora.
-
-As seções restantes mostram como esses esquemas de validação são operacionalizados no fluxo de predição, como os jobs são distribuídos em paralelo e como as saídas são gravadas para a etapa de visualização a jusante em `visualization.Rmd` e `visualization.html`.
+Ao separar setup, especificação dos modelos e desenho do CV da etapa de execução, o tutorial fica mais fácil de acompanhar e manter.
 
 ## Entradas, saídas e próxima etapa
 
@@ -67,6 +51,8 @@ As seções restantes mostram como esses esquemas de validação são operaciona
 
 ## 2. Pacotes e opções
 
+Este chunk reinicia a sessão de R para uma execução limpa, evita notação científica nas saídas impressas e carrega os pacotes que serão usados depois em modelagem Bayesiana, manipulação de dados e execução paralela.
+
 ```{r setup}
 rm(list = ls())
 options(scipen = 999)
@@ -81,6 +67,8 @@ library(parallel)
 ```
 
 ## 3. Entradas geradas pelos scripts anteriores
+
+Este chunk lê todas as matrizes e kernels produzidos na etapa anterior de harmonização para que as análises preditivas partam dos artefatos já salvos, em vez de reconstruí-los.
 
 ```{r load-inputs, include=FALSE}
 Pheno <- readRDS("output/Matrizes/Pheno.rds")
@@ -113,13 +101,15 @@ PAKW <- readRDS("output/Matrizes/PAKW.rds")
 
 Os arquivos atuais `matrizes.Rmd` e `matrizes.html` salvam as matrizes em nível de observação usando os seguintes nomes:
 
-- `ZE` para a matriz de desenho categórica de ambiente
-- `ZGZE` e `ZPZE` para interações genômico-por-ambiente e fenômico-por-ambiente
-- `ZGZW` e `ZPZW` para interações genômico-por-clima e fenômico-por-clima
+- `ZE` para a matriz de desenho categórica de ambiente;
+- `ZGZE` e `ZPZE` para interações genômico-por-ambiente e fenômico-por-ambiente;
+- `ZGZW` e `ZPZW` para interações genômico-por-clima e fenômico-por-clima.
 
-Por essa razão, este script de predição lê essas matrizes diretamente dos arquivos produzidos por `matrizes.Rmd`.
+Por essa razão, este submódulo de predição lê essas matrizes diretamente dos arquivos produzidos por `matrizes.Rmd`.
 
-## 4. Configurações de MCMC e paralelização
+## 4. Configurações gerais e do MCMC
+
+Este chunk define a configuração do MCMC, o número de repetições e o número de núcleos disponíveis, porque esses valores controlam tanto o custo computacional quanto a estabilidade posterior.
 
 ```{r mcmc-settings}
 nIter <- 10000
@@ -137,6 +127,8 @@ n_cores
 ```
 
 ## 5. Catálogo de modelos
+
+Este chunk cria o catálogo dos 18 modelos reduzidos usados ao longo da etapa de predição, ligando cada identificador à respectiva especificação biológica e de kernel.
 
 ```{r model-catalog}
 model_catalog <- data.frame(
@@ -170,9 +162,21 @@ model_catalog
 
 ## 6. Especificação dos modelos
 
-```{r eta-list}
-Eta_list <- list()
+Os próximos blocos traduzem cada modelo conceitual para uma especificação concreta de `ETA` no BGLR. Para deixar o tutorial mais legível, a lista de modelos foi dividida em grupos menores.
 
+### 6.1 Inicializar o contêiner ETA
+
+Este chunk cria a lista vazia que irá armazenar as 18 especificações dos modelos.
+
+```{r eta-list-initialize}
+Eta_list <- list()
+```
+
+### 6.2 Modelos 1 a 6: vias de fonte única com `E`
+
+Esses são os modelos mais simples do catálogo reduzido. Cada um combina o efeito categórico de ambiente com um kernel principal e sua contraparte de interação.
+
+```{r eta-list-models-1-6}
 Eta_list[[1]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = ZG,   model = "RKHS"),
                        list(K = ZGZE, model = "RKHS"))
@@ -196,7 +200,13 @@ Eta_list[[5]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
 Eta_list[[6]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = PAK,  model = "RKHS"),
                        list(K = PAKE, model = "RKHS"))
+```
 
+### 6.3 Modelos 7 a 9: vias integradas genômicas e fenômicas sem `W`
+
+Este grupo combina duas fontes principais de informação ao mesmo tempo, ainda sem o kernel climático.
+
+```{r eta-list-models-7-9}
 Eta_list[[7]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = ZG,   model = "RKHS"),
                        list(K = ZP,   model = "RKHS"),
@@ -214,7 +224,13 @@ Eta_list[[9]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = PAK,  model = "RKHS"),
                        list(K = GAKE, model = "RKHS"),
                        list(K = PAKE, model = "RKHS"))
+```
 
+### 6.4 Modelos 10 a 12: vias lineares enriquecidas com clima
+
+Este grupo introduz o kernel climático e suas interações com as estruturas lineares genômicas ou fenômicas.
+
+```{r eta-list-models-10-12}
 Eta_list[[10]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = ZW,   model = "RKHS"),
                        list(K = ZG,   model = "RKHS"),
@@ -235,7 +251,13 @@ Eta_list[[12]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = ZPZE, model = "RKHS"),
                        list(K = ZGZW, model = "RKHS"),
                        list(K = ZPZW, model = "RKHS"))
+```
 
+### 6.5 Modelos 13 a 18: vias não lineares enriquecidas com clima
+
+O grupo final reúne kernels Gaussianos e arc-cosine enriquecidos com informação derivada do clima.
+
+```{r eta-list-models-13-18}
 Eta_list[[13]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = ZW,   model = "RKHS"),
                        list(K = GGK,  model = "RKHS"),
@@ -279,7 +301,111 @@ Eta_list[[18]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = PAKW, model = "RKHS"))
 ```
 
+### 6.6 Checagem final de integridade da lista ETA
+
+Este chunk final confirma que o número de objetos ETA coincide com o número de linhas do catálogo de modelos.
+
+```{r eta-list-check}
+stopifnot(length(Eta_list) == nrow(model_catalog))
+length(Eta_list)
+```
+
+## 7. Desenho dos cenários de validação cruzada
+
+Os próximos blocos ainda não executam a etapa cara de predição. Em vez disso, documentam a lógica de desenho dos quatro esquemas de validação usados mais adiante no submódulo de execução.
+
+### 7.1 Tabela-resumo dos cenários de validação
+
+Este chunk cria uma tabela compacta mostrando o que é mascarado e qual pergunta científica cada cenário tenta responder.
+
+```{r cv-scenarios-table}
+cv_scenarios <- data.frame(
+  CV = c("CV1", "CV2", "CV0", "CV00"),
+  WhatIsMasked = c(
+    "Genótipos inteiros",
+    "Células selecionadas de genótipo × ambiente",
+    "Um ambiente por vez",
+    "Genótipos dentro de um ambiente deixado de fora"
+  ),
+  MainQuestion = c(
+    "O modelo consegue prever genótipos completamente novos?",
+    "O modelo consegue prever um genótipo conhecido em um ambiente novo para esse genótipo?",
+    "O modelo consegue prever todos os genótipos em um ambiente completamente novo?",
+    "O modelo consegue prever novos genótipos dentro de um ambiente completamente novo?"
+  ),
+  stringsAsFactors = FALSE
+)
+
+cv_scenarios
+```
+
+### 7.2 Lógica operacional de CV1 e CV2
+
+Este chunk resume a lógica de CV1 e CV2, destacando a diferença entre genótipos totalmente não observados e células genótipo-por-ambiente parcialmente não observadas.
+
+```{r cv1-cv2-design}
+cv12_design <- data.frame(
+  Scenario = c("CV1", "CV2"),
+  TrainingSet = c(
+    "Todas as observações, exceto aquelas dos genótipos deixados de fora",
+    "Todas as observações, exceto as células mascaradas selecionadas"
+  ),
+  EvaluationTarget = c(
+    "Predições para genótipos não observados",
+    "Predições para células mascaradas de genótipo × ambiente"
+  ),
+  stringsAsFactors = FALSE
+)
+
+cv12_design
+```
+
+### 7.3 Lógica operacional de CV0 e CV00
+
+Este chunk resume a lógica de CV0 e CV00, destacando o papel do ambiente deixado de fora nos cenários de predição mais difíceis.
+
+```{r cv0-cv00-design}
+cvloo_design <- data.frame(
+  Scenario = c("CV0", "CV00"),
+  TrainingSet = c(
+    "Todas as observações, exceto aquelas do ambiente deixado de fora",
+    "Todas as observações, exceto os genótipos-alvo dentro do ambiente deixado de fora"
+  ),
+  EvaluationTarget = c(
+    "Predições para todos os genótipos no ambiente deixado de fora",
+    "Predições para novos genótipos no ambiente deixado de fora"
+  ),
+  stringsAsFactors = FALSE
+)
+
+cvloo_design
+```
+
+### 7.4 Padrões de nome de arquivo esperados nas etapas posteriores
+
+Este chunk registra a convenção de nomes usada mais adiante pela etapa de execução e por `visualization.Rmd`, para que o leitor consiga ligar as saídas computacionais aos resumos nas etapas posteriores.
+
+```{r filename-patterns}
+prediction_file_patterns <- data.frame(
+  Scenario = c("CV1", "CV2", "CV0", "CV00"),
+  ExampleFile = c(
+    "CV1_GY_M05_rep2_fold5.csv",
+    "CV2_KW_M12_rep8_fold3.csv",
+    "CV0_GY_CS11_WS_M10_rep1_fold1.csv",
+    "CV00_KW_CS12_WW_M18_rep1_fold1.csv"
+  ),
+  stringsAsFactors = FALSE
+)
+
+prediction_file_patterns
+```
+
+## 8. Transição para o submódulo de execução
+
+Neste ponto, o tutorial já definiu as entradas, o conjunto reduzido de modelos e a lógica conceitual dos esquemas de validação. O próximo submódulo, `analysis_prediction_run_outputs_pt.Rmd`, concentra a etapa de execução computacionalmente mais cara e a organização dos arquivos de saída.
+
 ## Navegação entre etapas
 
 **Etapa anterior:** [Componentes de variância](variance_components_pt.html)  
 **Próxima etapa:** [Predição — Parte II](analysis_prediction_run_outputs_pt.html)
+
