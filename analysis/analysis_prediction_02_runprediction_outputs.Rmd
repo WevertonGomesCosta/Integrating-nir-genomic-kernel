@@ -1,0 +1,686 @@
+---
+title: "Prediction analyses - run prediction and outputs"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+**Language / Idioma:** [English](analysis_prediction_02_runprediction_outputs.html) | [Português](analysis_prediction_02_runprediction_outputs_pt.html)
+
+**Module navigation / Navegação do módulo:** [Main page](analysis_prediction.html) | [Part 1: setup, models and CV design](analysis_prediction_01_setup_models_cv.html)
+
+## 1. Introduction
+
+This second submodule concentrates the operational part of the prediction workflow. The goal here is to document how the prediction jobs are organized, where the outputs are written, and how those outputs are prepared for the downstream summaries consumed later by `visualization.Rmd` and `visualization.html`.
+
+The workflow is intentionally divided into two layers:
+
+- a **heavy execution layer**, which fits the 18 models under `CV1`, `CV2`, `CV0`, and `CV00`;
+- a **light output-review layer**, which inventories the files already written by the prediction stage and summarizes their structure.
+
+In the tutorial version, the heavy execution chunks remain disabled. This keeps the document readable and avoids rerunning computationally expensive model fitting during rendering.
+
+## 2. Packages and project paths
+
+This chunk loads only the packages required for the light review of prediction outputs and standardizes the paths used later in the file. The objective is to make the document robust whether it is rendered from the project root or from the `analysis/` folder.
+
+```{r setup}
+rm(list = ls())
+options(scipen = 999)
+
+library(readr)
+library(dplyr)
+library(stringr)
+library(knitr)
+
+project_root <- getwd()
+
+if (!dir.exists(file.path(project_root, "output")) &&
+    dir.exists(file.path(project_root, "..", "output"))) {
+  project_root <- normalizePath(file.path(project_root, ".."))
+}
+
+if (!dir.exists(file.path(project_root, "output"))) {
+  stop("Could not find the folder 'output/'. Render this file from the project root or from analysis/.")
+}
+
+results_dir <- file.path(project_root, "output", "results")
+bglr_runs_dir <- file.path(results_dir, "bglr_runs")
+analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction")
+
+dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
+```
+
+## 3. Prepare the output folders used by the prediction workflow
+
+This chunk shows the first operational step of the prediction stage: creating the folders where the raw CSV files and the auxiliary `BGLR` artifacts are stored. Because these folders are part of the heavy execution layer, the chunk remains disabled in the tutorial.
+
+```{r prepare-output-folders, eval=FALSE}
+dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path("output", "results", "bglr_runs"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path("output", "tables", "analysis_prediction"), recursive = TRUE, showWarnings = FALSE)
+```
+
+## 4. Define the objects that control the run
+
+This chunk defines the traits, environment labels, and pedigree labels that control the loops used later in the execution. It is kept disabled here because it belongs to the same heavy execution layer and depends on the matrices and phenotypic table prepared earlier in the pipeline.
+
+```{r define-run-objects, eval=FALSE}
+traits_to_run <- c("GY", "KW")
+env_levels <- unique(Pheno$Env)
+pedigrees <- unique(Pheno$Pedigree)
+```
+
+## 5. Start the parallel backend
+
+This chunk documents the parallel backend used by `foreach`. The cluster is started, registered, and configured so that each worker can fit models independently. The chunk remains disabled in the tutorial because it is part of the expensive execution stage.
+
+```{r start-parallel-backend, eval=FALSE}
+cl <- parallel::makeCluster(n_cores)
+doParallel::registerDoParallel(cl)
+
+on.exit({
+  try(parallel::stopCluster(cl), silent = TRUE)
+  foreach::registerDoSEQ()
+}, add = TRUE)
+
+parallel::clusterEvalQ(cl, {
+  library(BGLR)
+  NULL
+})
+```
+
+## 6. Run prediction analyses for CV1 and CV2
+
+This chunk contains the operational block used for `CV1` and `CV2`. It creates genotype folds, masks the appropriate observations, fits the 18 models in parallel, and stores one CSV per result object. The chunk is disabled because it is the computational core of the prediction pipeline.
+
+```{r run-predictions-cv12, eval=FALSE}
+for (trait_name in traits_to_run) {
+
+  y_full <- Pheno[[trait_name]]
+
+  set.seed(123)
+
+  for (rep_id in 1:num_rep) {
+
+    fold_id <- sample(rep(1:5, length.out = length(pedigrees)))
+    fold_map <- data.frame(Pedigree = pedigrees, Fold = fold_id, stringsAsFactors = FALSE)
+
+    for (fold in 1:5) {
+
+      pedigrees_in_fold <- fold_map$Pedigree[fold_map$Fold == fold]
+
+      # CV1
+      y_cv1 <- y_full
+      y_cv1[Pheno$Pedigree %in% pedigrees_in_fold] <- NA
+
+      cv1_results <- foreach(
+        m = 1:18,
+        .packages = c("BGLR"),
+        .export = c("Pheno", "Eta_list", "model_catalog", "y_cv1", "y_full", "env_levels",
+                    "pedigrees_in_fold", "nIter", "burnIn", "thin", "trait_name", "rep_id", "fold")
+      ) %dopar% {
+        model_label <- model_catalog$Model[m]
+
+        run_dir <- file.path(
+          "output", "results", "bglr_runs",
+          "CV1", trait_name, model_label,
+          paste0("rep", rep_id),
+          paste0("fold", fold)
+        )
+
+        dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+
+        existing_files <- list.files(run_dir, full.names = TRUE, all.files = TRUE, no.. = TRUE)
+        if (length(existing_files) > 0) {
+          unlink(existing_files, recursive = TRUE, force = TRUE)
+        }
+
+        save_prefix <- file.path(
+          run_dir,
+          paste0("CV1_", trait_name, "_", model_label, "_rep", rep_id, "_fold", fold, "_")
+        )
+
+        fit_cv1 <- BGLR(
+          y = y_cv1,
+          ETA = Eta_list[[m]],
+          nIter = nIter,
+          burnIn = burnIn,
+          thin = thin,
+          saveAt = save_prefix,
+          verbose = FALSE
+        )
+
+        pred_cv1 <- fit_cv1$yHat
+
+        out_cv1 <- data.frame(
+          ObsID = Pheno$ObsID,
+          Pedigree = Pheno$Pedigree,
+          Env = Pheno$Env,
+          observed = y_full,
+          predicted = pred_cv1,
+          cor = NA_real_,
+          stringsAsFactors = FALSE
+        )
+
+        for (env_now in env_levels) {
+          idx_env <- which(out_cv1$Env == env_now & out_cv1$Pedigree %in% pedigrees_in_fold)
+
+          if (length(idx_env) > 1) {
+            out_cv1$cor[idx_env] <- cor(
+              out_cv1$observed[idx_env],
+              out_cv1$predicted[idx_env],
+              use = "complete.obs"
+            )
+          }
+        }
+
+        list(model_number = m, model_label = model_label, result_table = out_cv1)
+      }
+
+      for (k in seq_along(cv1_results)) {
+        model_label <- cv1_results[[k]]$model_label
+        out_cv1 <- cv1_results[[k]]$result_table
+
+        write.csv(
+          out_cv1,
+          file = paste0(
+            "output/results/CV1_",
+            trait_name,
+            "_", model_label,
+            "_rep", rep_id,
+            "_fold", fold,
+            ".csv"
+          ),
+          row.names = FALSE
+        )
+      }
+
+      # CV2
+      y_cv2 <- y_full
+
+      for (ped_now in pedigrees_in_fold) {
+        idx_ped <- which(Pheno$Pedigree == ped_now)
+        envs_ped <- unique(Pheno$Env[idx_ped])
+
+        if (length(envs_ped) > 1) {
+          env_to_mask <- sample(envs_ped, size = floor(length(envs_ped) / 2))
+          idx_mask <- which(Pheno$Pedigree == ped_now & Pheno$Env %in% env_to_mask)
+          y_cv2[idx_mask] <- NA
+        }
+      }
+
+      cv2_results <- foreach(
+        m = 1:18,
+        .packages = c("BGLR"),
+        .export = c("Pheno", "Eta_list", "model_catalog", "y_cv2", "y_full", "env_levels",
+                    "nIter", "burnIn", "thin", "trait_name", "rep_id", "fold")
+      ) %dopar% {
+        model_label <- model_catalog$Model[m]
+
+        run_dir <- file.path(
+          "output", "results", "bglr_runs",
+          "CV2", trait_name, model_label,
+          paste0("rep", rep_id),
+          paste0("fold", fold)
+        )
+
+        dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+
+        existing_files <- list.files(run_dir, full.names = TRUE, all.files = TRUE, no.. = TRUE)
+        if (length(existing_files) > 0) {
+          unlink(existing_files, recursive = TRUE, force = TRUE)
+        }
+
+        save_prefix <- file.path(
+          run_dir,
+          paste0("CV2_", trait_name, "_", model_label, "_rep", rep_id, "_fold", fold, "_")
+        )
+
+        fit_cv2 <- BGLR(
+          y = y_cv2,
+          ETA = Eta_list[[m]],
+          nIter = nIter,
+          burnIn = burnIn,
+          thin = thin,
+          saveAt = save_prefix,
+          verbose = FALSE
+        )
+
+        pred_cv2 <- fit_cv2$yHat
+
+        out_cv2 <- data.frame(
+          ObsID = Pheno$ObsID,
+          Pedigree = Pheno$Pedigree,
+          Env = Pheno$Env,
+          observed = y_full,
+          predicted = pred_cv2,
+          cor = NA_real_,
+          stringsAsFactors = FALSE
+        )
+
+        idx_na <- which(is.na(y_cv2))
+
+        for (env_now in env_levels) {
+          idx_env <- which(out_cv2$Env == env_now)
+          idx_eval <- intersect(idx_env, idx_na)
+
+          if (length(idx_eval) > 1) {
+            out_cv2$cor[idx_eval] <- cor(
+              out_cv2$observed[idx_eval],
+              out_cv2$predicted[idx_eval],
+              use = "complete.obs"
+            )
+          }
+        }
+
+        list(model_number = m, model_label = model_label, result_table = out_cv2)
+      }
+
+      for (k in seq_along(cv2_results)) {
+        model_label <- cv2_results[[k]]$model_label
+        out_cv2 <- cv2_results[[k]]$result_table
+
+        write.csv(
+          out_cv2,
+          file = paste0(
+            "output/results/CV2_",
+            trait_name,
+            "_", model_label,
+            "_rep", rep_id,
+            "_fold", fold,
+            ".csv"
+          ),
+          row.names = FALSE
+        )
+      }
+    }
+  }
+}
+```
+
+## 7. Run prediction analyses for CV0 and CV00
+
+This chunk documents the operational block for the leave-one-environment-out scenarios. The logic is similar to the previous chunk, but now the masking strategy is defined at the environment level. The chunk remains disabled in the tutorial version.
+
+```{r run-predictions-cv0-cv00, eval=FALSE}
+for (trait_name in traits_to_run) {
+
+  y_full <- Pheno[[trait_name]]
+
+  for (env_leave in env_levels) {
+
+    env_parts <- strsplit(env_leave, "_")[[1]]
+
+    # CV0
+    y_cv0 <- y_full
+    idx_env_leave <- which(Pheno$Env == env_leave)
+    y_cv0[idx_env_leave] <- NA
+
+    cv0_results <- foreach(
+      m = 1:18,
+      .packages = c("BGLR"),
+      .export = c("Pheno", "Eta_list", "model_catalog", "y_cv0", "y_full", "idx_env_leave",
+                  "nIter", "burnIn", "thin", "trait_name", "env_leave")
+    ) %dopar% {
+      model_label <- model_catalog$Model[m]
+
+      run_dir <- file.path(
+        "output", "results", "bglr_runs",
+        "CV0", trait_name, model_label,
+        "rep1", "fold1", env_leave
+      )
+
+      dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+
+      existing_files <- list.files(run_dir, full.names = TRUE, all.files = TRUE, no.. = TRUE)
+      if (length(existing_files) > 0) {
+        unlink(existing_files, recursive = TRUE, force = TRUE)
+      }
+
+      save_prefix <- file.path(
+        run_dir,
+        paste0("CV0_", trait_name, "_", model_label, "_rep1_fold1_", env_leave, "_")
+      )
+
+      fit_cv0 <- BGLR(
+        y = y_cv0,
+        ETA = Eta_list[[m]],
+        nIter = nIter,
+        burnIn = burnIn,
+        thin = thin,
+        saveAt = save_prefix,
+        verbose = FALSE
+      )
+
+      pred_cv0 <- fit_cv0$yHat
+      cor_cv0 <- cor(y_full[idx_env_leave], pred_cv0[idx_env_leave], use = "complete.obs")
+
+      out_cv0 <- data.frame(
+        ObsID = Pheno$ObsID[idx_env_leave],
+        Pedigree = Pheno$Pedigree[idx_env_leave],
+        Env = Pheno$Env[idx_env_leave],
+        observed = y_full[idx_env_leave],
+        predicted = pred_cv0[idx_env_leave],
+        cor = cor_cv0,
+        stringsAsFactors = FALSE
+      )
+
+      list(model_number = m, model_label = model_label, result_table = out_cv0)
+    }
+
+    for (k in seq_along(cv0_results)) {
+      model_label <- cv0_results[[k]]$model_label
+      out_cv0 <- cv0_results[[k]]$result_table
+
+      write.csv(
+        out_cv0,
+        file = paste0(
+          "output/results/CV0_",
+          trait_name,
+          "_", env_parts[1], "_", env_parts[2],
+          "_", model_label,
+          "_rep1_fold1.csv"
+        ),
+        row.names = FALSE
+      )
+    }
+
+    # CV00
+    pedigrees_test <- unique(Pheno$Pedigree[Pheno$Env == env_leave])
+    pedigrees_train <- unique(Pheno$Pedigree[Pheno$Env != env_leave])
+    pedigrees_new <- setdiff(pedigrees_test, pedigrees_train)
+
+    idx_cv00 <- which(Pheno$Env == env_leave & Pheno$Pedigree %in% pedigrees_new)
+
+    if (length(idx_cv00) > 1) {
+
+      y_cv00 <- y_full
+      y_cv00[idx_cv00] <- NA
+
+      cv00_results <- foreach(
+        m = 1:18,
+        .packages = c("BGLR"),
+        .export = c("Pheno", "Eta_list", "model_catalog", "y_cv00", "y_full", "idx_cv00",
+                    "nIter", "burnIn", "thin", "trait_name", "env_leave")
+      ) %dopar% {
+        model_label <- model_catalog$Model[m]
+
+        run_dir <- file.path(
+          "output", "results", "bglr_runs",
+          "CV00", trait_name, model_label,
+          "rep1", "fold1", env_leave
+        )
+
+        dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+
+        existing_files <- list.files(run_dir, full.names = TRUE, all.files = TRUE, no.. = TRUE)
+        if (length(existing_files) > 0) {
+          unlink(existing_files, recursive = TRUE, force = TRUE)
+        }
+
+        save_prefix <- file.path(
+          run_dir,
+          paste0("CV00_", trait_name, "_", model_label, "_rep1_fold1_", env_leave, "_")
+        )
+
+        fit_cv00 <- BGLR(
+          y = y_cv00,
+          ETA = Eta_list[[m]],
+          nIter = nIter,
+          burnIn = burnIn,
+          thin = thin,
+          saveAt = save_prefix,
+          verbose = FALSE
+        )
+
+        pred_cv00 <- fit_cv00$yHat
+        cor_cv00 <- cor(y_full[idx_cv00], pred_cv00[idx_cv00], use = "complete.obs")
+
+        out_cv00 <- data.frame(
+          ObsID = Pheno$ObsID[idx_cv00],
+          Pedigree = Pheno$Pedigree[idx_cv00],
+          Env = Pheno$Env[idx_cv00],
+          observed = y_full[idx_cv00],
+          predicted = pred_cv00[idx_cv00],
+          cor = cor_cv00,
+          stringsAsFactors = FALSE
+        )
+
+        list(model_number = m, model_label = model_label, result_table = out_cv00)
+      }
+
+      for (k in seq_along(cv00_results)) {
+        model_label <- cv00_results[[k]]$model_label
+        out_cv00 <- cv00_results[[k]]$result_table
+
+        write.csv(
+          out_cv00,
+          file = paste0(
+            "output/results/CV00_",
+            trait_name,
+            "_", env_parts[1], "_", env_parts[2],
+            "_", model_label,
+            "_rep1_fold1.csv"
+          ),
+          row.names = FALSE
+        )
+      }
+    }
+  }
+}
+```
+
+## 8. Inventory of the prediction output files
+
+This chunk creates lightweight inventory tables that summarize the CSV files already produced by the prediction stage. These inventories are useful for auditing the step, checking naming consistency, and feeding the Portuguese tutorial version without rerunning the heavy loops.
+
+```{r prediction-output-inventory}
+prediction_files <- character(0)
+
+if (dir.exists(results_dir)) {
+  prediction_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE)
+}
+
+inventory_cv12 <- data.frame()
+inventory_cvloo <- data.frame()
+
+if (length(prediction_files) > 0) {
+  for (current_file in prediction_files) {
+    current_name <- basename(current_file)
+    current_name_no_ext <- sub("\\.csv$", "", current_name)
+    current_parts <- strsplit(current_name_no_ext, "_")[[1]]
+
+    if (length(current_parts) == 5 && current_parts[1] %in% c("CV1", "CV2")) {
+      inventory_cv12 <- bind_rows(
+        inventory_cv12,
+        data.frame(
+          file_name = current_name,
+          CV = current_parts[1],
+          Trait = current_parts[2],
+          Model = current_parts[3],
+          Rep = current_parts[4],
+          Fold = current_parts[5],
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+
+    if (length(current_parts) == 6 && current_parts[1] %in% c("CV0", "CV00")) {
+      inventory_cvloo <- bind_rows(
+        inventory_cvloo,
+        data.frame(
+          file_name = current_name,
+          CV = current_parts[1],
+          Trait = current_parts[2],
+          Env_leave = paste(current_parts[3], current_parts[4], sep = "_"),
+          Model = current_parts[5],
+          RepFold = current_parts[6],
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+  }
+}
+
+write_csv(inventory_cv12, file.path(analysis_tables_dir, "analysis_prediction_inventory_cv12.csv"))
+write_csv(inventory_cvloo, file.path(analysis_tables_dir, "analysis_prediction_inventory_cvloo.csv"))
+
+if (nrow(inventory_cv12) > 0) {
+  knitr::kable(
+    head(inventory_cv12, 10),
+    caption = "Preview of the inventory of CV1 and CV2 prediction files.",
+    align = "c"
+  )
+} else {
+  cat("No CV1 or CV2 prediction CSV files were found in output/results/.\n")
+}
+```
+
+## 9. Counts of files by validation scheme and trait
+
+This chunk summarizes the number of prediction files already available by validation scenario and by trait. The objective is to provide a quick operational check before moving to `visualization.Rmd`.
+
+```{r prediction-output-counts}
+counts_by_cv <- data.frame()
+counts_by_trait <- data.frame()
+
+if (nrow(inventory_cv12) > 0 || nrow(inventory_cvloo) > 0) {
+  combined_inventory <- bind_rows(
+    inventory_cv12 %>% mutate(Env_leave = NA_character_),
+    inventory_cvloo %>% mutate(Fold = NA_character_)
+  )
+
+  counts_by_cv <- combined_inventory %>%
+    count(CV, name = "n_files") %>%
+    arrange(CV)
+
+  counts_by_trait <- combined_inventory %>%
+    count(CV, Trait, name = "n_files") %>%
+    arrange(CV, Trait)
+}
+
+write_csv(counts_by_cv, file.path(analysis_tables_dir, "analysis_prediction_counts_by_cv.csv"))
+write_csv(counts_by_trait, file.path(analysis_tables_dir, "analysis_prediction_counts_by_trait.csv"))
+
+if (nrow(counts_by_cv) > 0) {
+  knitr::kable(
+    counts_by_cv,
+    caption = "Number of prediction files by validation scheme.",
+    align = "cc"
+  )
+} else {
+  cat("Prediction counts by validation scheme are not available yet.\n")
+}
+```
+
+## 10. Examples of the output naming pattern
+
+This chunk organizes a few concrete examples of file names and their meaning. It is a compact operational reference that helps connect the prediction step to the downstream summaries.
+
+```{r prediction-output-examples}
+output_examples <- data.frame()
+
+if (nrow(inventory_cv12) > 0) {
+  output_examples <- bind_rows(
+    output_examples,
+    inventory_cv12 %>%
+      mutate(ExampleType = "CV1/CV2") %>%
+      select(ExampleType, everything()) %>%
+      head(5)
+  )
+}
+
+if (nrow(inventory_cvloo) > 0) {
+  output_examples <- bind_rows(
+    output_examples,
+    inventory_cvloo %>%
+      mutate(ExampleType = "CV0/CV00") %>%
+      select(ExampleType, everything()) %>%
+      head(5)
+  )
+}
+
+write_csv(output_examples, file.path(analysis_tables_dir, "analysis_prediction_output_examples.csv"))
+
+if (nrow(output_examples) > 0) {
+  knitr::kable(
+    output_examples,
+    caption = "Examples of file names produced by the prediction workflow.",
+    align = "c"
+  )
+} else {
+  cat("No prediction output examples are available yet.\n")
+}
+```
+
+## 11. Summary of the auxiliary `BGLR` run folders
+
+This chunk summarizes the directory structure created by `saveAt` under `output/results/bglr_runs/`. These folders are important because they store the auxiliary outputs of each fitted model, separated by validation scenario, trait, model, and fold or held-out environment.
+
+```{r bglr-run-folder-summary}
+bglr_inventory <- data.frame()
+
+if (dir.exists(bglr_runs_dir)) {
+  bglr_files <- list.files(bglr_runs_dir, recursive = TRUE, full.names = TRUE)
+
+  if (length(bglr_files) > 0) {
+    for (current_file in bglr_files) {
+      relative_path <- gsub(
+        paste0("^", normalizePath(bglr_runs_dir, winslash = "/"), "/?"),
+        "",
+        normalizePath(current_file, winslash = "/")
+      )
+
+      path_parts <- strsplit(relative_path, "/")[[1]]
+
+      current_cv <- ifelse(length(path_parts) >= 1, path_parts[1], NA)
+      current_trait <- ifelse(length(path_parts) >= 2, path_parts[2], NA)
+      current_model <- ifelse(length(path_parts) >= 3, path_parts[3], NA)
+
+      bglr_inventory <- bind_rows(
+        bglr_inventory,
+        data.frame(
+          relative_path = relative_path,
+          CV = current_cv,
+          Trait = current_trait,
+          Model = current_model,
+          file_name = basename(current_file),
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+  }
+}
+
+write_csv(bglr_inventory, file.path(analysis_tables_dir, "analysis_prediction_bglr_run_inventory.csv"))
+
+if (nrow(bglr_inventory) > 0) {
+  bglr_summary <- bglr_inventory %>%
+    count(CV, Trait, Model, name = "n_files") %>%
+    arrange(CV, Trait, Model)
+
+  knitr::kable(
+    head(bglr_summary, 12),
+    caption = "Preview of the auxiliary BGLR run folders.",
+    align = "c"
+  )
+} else {
+  cat("No auxiliary BGLR run files were found in output/results/bglr_runs/.\n")
+}
+```
+
+## 12. Final note
+
+This submodule closes the prediction stage by documenting both the heavy execution blocks and the structure of the files that feed the next step of the pipeline. The downstream summaries, weighted averages, manuscript-ready tables, and final figures are generated later by `visualization.Rmd` and `visualization.html`.
