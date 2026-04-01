@@ -90,7 +90,7 @@ Os arquivos atuais `matrizes.Rmd` e `matrizes.html` salvam as matrizes em nível
 
 Por essa razão, este submódulo de predição lê essas matrizes diretamente dos arquivos produzidos por `matrizes.Rmd`.
 
-## 4. Configurações de MCMC e gerais
+## 4. Configurações gerais e do MCMC
 
 Este chunk define a configuração do MCMC, o número de repetições e o número de núcleos disponíveis, porque esses valores controlam tanto o custo computacional quanto a estabilidade posterior.
 
@@ -364,9 +364,9 @@ cvloo_design <- data.frame(
 cvloo_design
 ```
 
-### 7.4 Padrões de nome de arquivo esperados a jusante
+### 7.4 Padrões de nome de arquivo esperados nas etapas posteriores
 
-Este chunk registra a convenção de nomes usada mais adiante pela etapa de execução e por `visualization.Rmd`, para que o leitor consiga ligar as saídas computacionais aos resumos a jusante.
+Este chunk registra a convenção de nomes usada mais adiante pela etapa de execução e por `visualization.Rmd`, para que o leitor consiga ligar as saídas computacionais aos resumos nas etapas posteriores.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(
