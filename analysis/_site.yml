@@ -8,43 +8,23 @@ navbar:
       href: index.html
 
     - text: "Climate data"
-      menu:
-        - text: "Climate data — English"
-          href: climate_data.html
-        - text: "Dados Climáticos — Português"
-          href: climate_data_pt.html
+      href: climate_data.html
 
     - text: "Matrices"
-      menu:
-        - text: "Matrices — English"
-          href: matrizes.html
-        - text: "Matrizes — Português"
-          href: matrizes_pt.html
+      href: matrizes.html
 
     - text: "Variance components"
-      menu:
-        - text: "Variance components — English"
-          href: variance_components.html
-        - text: "Componentes de variância — Português"
-          href: variance_components_pt.html
+      href: variance_components.html
 
     - text: "Prediction"
       menu:
-        - text: "Part I: setup, models and CV design — English"
+        - text: "Part I: setup, models and CV design"
           href: analysis_prediction.html
-        - text: "Parte I: setup, modelos e desenho de CV — Português"
-          href: analysis_prediction_pt.html
-        - text: "Part II: run prediction and outputs — English"
+        - text: "Part II: run prediction and outputs"
           href: analysis_prediction_run_outputs.html
-        - text: "Parte II: execução da predição e saídas — Português"
-          href: analysis_prediction_run_outputs_pt.html
 
     - text: "Visualization"
-      menu:
-        - text: "Visualization — English"
-          href: visualization.html
-        - text: "Visualização — Português"
-          href: visualization_pt.html
+      href: visualization.html
 
     - text: "About"
       href: about.html
