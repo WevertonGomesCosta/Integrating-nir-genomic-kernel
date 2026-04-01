@@ -1,5 +1,5 @@
 ---
-title: "Análises de predição - tutorial didático"
+title: "Análises de predição I - setup, modelos e desenho de CV"
 author:
   - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
@@ -18,41 +18,23 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 **Language / Idioma:** [English](analysis_prediction.html) | [Português](analysis_prediction_pt.html)
 
-> **Nota operacional:** Nesta versão em português, a etapa pesada de predição permanece documentada, mas a renderização depende dos objetos já gerados nas etapas anteriores do pipeline e não reroda os ajustes Bayesianos completos. Os chunks de carregamento podem ficar ocultos e o ajuste completo só deve ser executado na versão em inglês quando for necessário atualizar os resultados.
+**Navegação do módulo / Module navigation:** [Parte II: execução da predição e saídas](analysis_prediction_run_outputs_pt.html)
 
 ## 1. Introdução
 
-Este tutorial realiza as análises de predição para o conjunto reduzido de 18 modelos Bayesianos multi-kernel usados no estudo.
+Este arquivo é o primeiro submódulo didático da etapa de predição. O objetivo aqui é preparar o leitor antes da etapa de execução computacionalmente mais cara.
 
-O script combina:
+Neste submódulo, o foco está em três perguntas:
 
-- kernels genômicos,
-- kernels fenômicos,
-- o efeito categórico de ambiente (`E`),
-- e o kernel climático (`W`).
+1. quais objetos entram na etapa de predição;
+2. quais modelos reduzidos são comparados;
+3. como os cenários de validação cruzada são definidos conceitualmente.
 
-Neste fluxo, o kernel climático é usado principalmente nos modelos **M10-M18**. Ele deve ser interpretado como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente.
-
-O componente fenômico (`P`) também deve ser interpretado com cautela. A similaridade baseada em NIR pode capturar estrutura preditiva útil, mas também pode refletir forte resposta fisiológica ao ambiente em vez de apenas similaridade biológica estável.
-
-Um modelo que apenas se ajusta bem aos dados observados não é suficiente; ele precisa ser capaz de **prever dados que nunca viu**. Para simular isso, usamos Validação Cruzada (CV).
-
-Este script implementa múltiplos esquemas de CV para simular diferentes desafios do mundo real no melhoramento:
-
-- **CV1: validação por genótipo (testa genótipos não observados).**
-    - *Pergunta:* O modelo consegue prever o desempenho de um genótipo (híbrido) *completamente novo*, que não estava presente em *nenhum* ambiente de treinamento?
-- **CV2: validação por célula (testa combinações genótipo × ambiente parcialmente observadas).**
-    - *Pergunta:* O modelo consegue prever o desempenho de um genótipo *conhecido* em um ambiente que é *novo para esse genótipo* (assumindo que o genótipo foi observado em outros ambientes e que o ambiente foi observado com outros genótipos)?
-- **CV0: leave-one-environment-out (testa ambientes inteiramente não observados).**
-    - *Pergunta:* O teste mais difícil. O modelo consegue prever o desempenho de *todos* os genótipos em um *ambiente completamente novo* (um ano ou local que o modelo nunca viu)?
-- **CV00: leave-one-environment-out (testa genótipos em ambientes não observados).**
-    - *Semelhante ao CV0*, mas focado em prever genótipos *dentro* de um ambiente deixado de fora.
-
-As seções restantes mostram como esses esquemas de validação são operacionalizados no fluxo de predição, como os jobs são distribuídos em paralelo e como as saídas são gravadas para a etapa de visualização a jusante em `visualization.Rmd` e `visualization.html`.
+Ao separar setup, especificação dos modelos e desenho do CV da etapa de execução, o tutorial fica mais fácil de acompanhar e manter.
 
 ## 2. Pacotes e opções
 
-Este chunk reinicia a sessão de R para uma execução limpa, evita notação científica nas saídas impressas e carrega os pacotes que serão usados em modelagem Bayesiana, manipulação de dados e execução paralela.
+Este chunk reinicia a sessão de R para uma execução limpa, evita notação científica nas saídas impressas e carrega os pacotes que serão usados depois em modelagem Bayesiana, manipulação de dados e execução paralela.
 
 ```{r setup}
 rm(list = ls())
@@ -102,13 +84,13 @@ PAKW <- readRDS("output/Matrizes/PAKW.rds")
 
 Os arquivos atuais `matrizes.Rmd` e `matrizes.html` salvam as matrizes em nível de observação usando os seguintes nomes:
 
-- `ZE` para a matriz de desenho categórica de ambiente
-- `ZGZE` e `ZPZE` para interações genômico-por-ambiente e fenômico-por-ambiente
-- `ZGZW` e `ZPZW` para interações genômico-por-clima e fenômico-por-clima
+- `ZE` para a matriz de desenho categórica de ambiente;
+- `ZGZE` e `ZPZE` para interações genômico-por-ambiente e fenômico-por-ambiente;
+- `ZGZW` e `ZPZW` para interações genômico-por-clima e fenômico-por-clima.
 
-Por essa razão, este script de predição lê essas matrizes diretamente dos arquivos produzidos por `matrizes.Rmd`.
+Por essa razão, este submódulo de predição lê essas matrizes diretamente dos arquivos produzidos por `matrizes.Rmd`.
 
-## 4. Configurações de MCMC e paralelização
+## 4. Configurações gerais e do MCMC
 
 Este chunk define a configuração do MCMC, o número de repetições e o número de núcleos disponíveis, porque esses valores controlam tanto o custo computacional quanto a estabilidade posterior.
 
@@ -129,7 +111,7 @@ n_cores
 
 ## 5. Catálogo de modelos
 
-Este chunk cria o catálogo dos 18 modelos reduzidos usados na etapa de predição, ligando cada identificador à respectiva especificação biológica e de kernel.
+Este chunk cria o catálogo dos 18 modelos reduzidos usados ao longo da etapa de predição, ligando cada identificador à respectiva especificação biológica e de kernel.
 
 ```{r model-catalog}
 model_catalog <- data.frame(
@@ -163,11 +145,21 @@ model_catalog
 
 ## 6. Especificação dos modelos
 
-Este chunk traduz cada modelo conceitual para uma especificação concreta de `ETA` no BGLR, explicitando quais matrizes ou kernels entram em cada combinação.
+Os próximos blocos traduzem cada modelo conceitual para uma especificação concreta de `ETA` no BGLR. Para deixar o tutorial mais legível, a lista de modelos foi dividida em grupos menores.
 
-```{r eta-list}
+### 6.1 Inicializar o contêiner ETA
+
+Este chunk cria a lista vazia que irá armazenar as 18 especificações dos modelos.
+
+```{r eta-list-initialize}
 Eta_list <- list()
+```
 
+### 6.2 Modelos 1 a 6: vias de fonte única com `E`
+
+Esses são os modelos mais simples do catálogo reduzido. Cada um combina o efeito categórico de ambiente com um kernel principal e sua contraparte de interação.
+
+```{r eta-list-models-1-6}
 Eta_list[[1]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = ZG,   model = "RKHS"),
                        list(K = ZGZE, model = "RKHS"))
@@ -191,7 +183,13 @@ Eta_list[[5]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
 Eta_list[[6]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = PAK,  model = "RKHS"),
                        list(K = PAKE, model = "RKHS"))
+```
 
+### 6.3 Modelos 7 a 9: vias integradas genômicas e fenômicas sem `W`
+
+Este grupo combina duas fontes principais de informação ao mesmo tempo, ainda sem o kernel climático.
+
+```{r eta-list-models-7-9}
 Eta_list[[7]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = ZG,   model = "RKHS"),
                        list(K = ZP,   model = "RKHS"),
@@ -209,7 +207,13 @@ Eta_list[[9]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = PAK,  model = "RKHS"),
                        list(K = GAKE, model = "RKHS"),
                        list(K = PAKE, model = "RKHS"))
+```
 
+### 6.4 Modelos 10 a 12: vias lineares enriquecidas com clima
+
+Este grupo introduz o kernel climático e suas interações com as estruturas lineares genômicas ou fenômicas.
+
+```{r eta-list-models-10-12}
 Eta_list[[10]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = ZW,   model = "RKHS"),
                        list(K = ZG,   model = "RKHS"),
@@ -230,7 +234,13 @@ Eta_list[[12]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = ZPZE, model = "RKHS"),
                        list(K = ZGZW, model = "RKHS"),
                        list(K = ZPZW, model = "RKHS"))
+```
 
+### 6.5 Modelos 13 a 18: vias não lineares enriquecidas com clima
+
+O grupo final reúne kernels Gaussianos e arc-cosine enriquecidos com informação derivada do clima.
+
+```{r eta-list-models-13-18}
 Eta_list[[13]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = ZW,   model = "RKHS"),
                        list(K = GGK,  model = "RKHS"),
@@ -274,471 +284,105 @@ Eta_list[[18]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
                        list(K = PAKW, model = "RKHS"))
 ```
 
-## 7. Executando as análises de predição em paralelo com foreach
+### 6.6 Checagem final de integridade da lista ETA
 
-Este é o núcleo computacional do script. O fluxo é apresentado aqui em um único chunk compacto, então a explicação abaixo segue a implementação atual exatamente como ela está escrita.
+Este chunk final confirma que o número de objetos ETA coincide com o número de linhas do catálogo de modelos.
 
-Como esta é a etapa computacionalmente mais cara do pipeline, o chunk permanece com `eval = FALSE` na versão tutorial.
-
-O fluxo de execução dentro do chunk atual é:
-
-1. criar as pastas de saída usadas pela etapa de predição;
-2. definir os traços e recuperar os rótulos de ambiente e pedigree a partir de `Pheno`;
-3. iniciar o backend paralelo usado por `foreach`;
-4. iterar sobre cada traço;
-5. para cada repetição, criar os 5 folds de genótipos usados em CV1 e CV2;
-6. para cada fold, ajustar os 18 modelos em paralelo para CV1 e depois para CV2;
-7. depois disso, iterar pelos ambientes deixados de fora e ajustar os 18 modelos novamente para CV0 e CV00;
-8. gravar um arquivo CSV por objeto de resultado usando a convenção de nomes esperada pela etapa de visualização a jusante.
-
-Mais especificamente, o chunk é organizado em torno de quatro estágios internos:
-
-- **CV1**: os genótipos atribuídos ao fold atual são mascarados completamente, o modelo é ajustado e as correlações em nível de ambiente são calculadas para esses genótipos não testados.
-- **CV2**: um subconjunto de células genótipo × ambiente é mascarado dentro do fold atual, o modelo é ajustado novamente e as correlações são calculadas apenas para as células mascaradas.
-- **CV0**: um ambiente é deixado inteiramente de fora, o modelo é reajustado e a correlação é computada para o ambiente deixado de fora.
-- **CV00**: dentro de um ambiente deixado de fora, o modelo se concentra em genótipos que são efetivamente novos nesse ambiente e calcula a correlação preditiva correspondente.
-
-Embora a implementação abaixo seja compacta, seu propósito científico é simular problemas de predição progressivamente mais difíceis e salvar as tabelas de acurácia resultantes consumidas depois por `visualization.Rmd` e `visualization.html`.
-
-Este chunk reúne o fluxo completo de predição para CV1, CV2, CV0 e CV00, incluindo organização dos jobs paralelos, ajuste dos modelos e gravação dos arquivos que alimentam os resumos posteriores.
-
-```{r run-predictions, eval=FALSE}
-dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
-dir.create(file.path("output", "results", "bglr_runs"), recursive = TRUE, showWarnings = FALSE)
-
-traits_to_run <- c("GY", "KW")
-env_levels <- unique(Pheno$Env)
-pedigrees <- unique(Pheno$Pedigree)
-
-cl <- parallel::makeCluster(n_cores)
-doParallel::registerDoParallel(cl)
-on.exit({
-  try(parallel::stopCluster(cl), silent = TRUE)
-  foreach::registerDoSEQ()
-}, add = TRUE)
-
-parallel::clusterEvalQ(cl, {
-  library(BGLR)
-  NULL
-})
-
-for (trait_name in traits_to_run) {
-
-  y_full <- Pheno[[trait_name]]
-
-  # ---------------------------------------------
-  # CV1 and CV2: 5 folds x 20 repetitions
-  # ---------------------------------------------
-  set.seed(123)
-
-  for (rep_id in 1:num_rep) {
-
-    fold_id <- sample(rep(1:5, length.out = length(pedigrees)))
-    fold_map <- data.frame(Pedigree = pedigrees, Fold = fold_id, stringsAsFactors = FALSE)
-
-    for (fold in 1:5) {
-
-      pedigrees_in_fold <- fold_map$Pedigree[fold_map$Fold == fold]
-
-      # CV1: untested genotypes
-      y_cv1 <- y_full
-      y_cv1[Pheno$Pedigree %in% pedigrees_in_fold] <- NA
-
-      cv1_results <- foreach(
-        m = 1:18,
-        .packages = c("BGLR"),
-        .export = c("Pheno", "Eta_list", "model_catalog", "y_cv1", "y_full", "env_levels",
-                    "pedigrees_in_fold", "nIter", "burnIn", "thin", "trait_name", "rep_id", "fold")
-      ) %dopar% {
-        model_label <- model_catalog$Model[m]
-
-        run_dir <- file.path(
-          "output", "results", "bglr_runs",
-          "CV1",
-          trait_name,
-          model_label,
-          paste0("rep", rep_id),
-          paste0("fold", fold)
-        )
-
-        dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
-
-        existing_files <- list.files(run_dir, full.names = TRUE, all.files = TRUE, no.. = TRUE)
-        if (length(existing_files) > 0) {
-          unlink(existing_files, recursive = TRUE, force = TRUE)
-        }
-
-        save_prefix <- file.path(
-          run_dir,
-          paste0("CV1_", trait_name, "_", model_label, "_rep", rep_id, "_fold", fold, "_")
-        )
-
-        fit_cv1 <- BGLR(
-          y = y_cv1,
-          ETA = Eta_list[[m]],
-          nIter = nIter,
-          burnIn = burnIn,
-          thin = thin,
-          saveAt = save_prefix,
-          verbose = FALSE
-        )
-
-        pred_cv1 <- fit_cv1$yHat
-
-        out_cv1 <- data.frame(
-          ObsID = Pheno$ObsID,
-          Pedigree = Pheno$Pedigree,
-          Env = Pheno$Env,
-          observed = y_full,
-          predicted = pred_cv1,
-          cor = NA_real_,
-          stringsAsFactors = FALSE
-        )
-
-        for (env_now in env_levels) {
-          idx_env <- which(out_cv1$Env == env_now & out_cv1$Pedigree %in% pedigrees_in_fold)
-
-          if (length(idx_env) > 1) {
-            out_cv1$cor[idx_env] <- cor(
-              out_cv1$observed[idx_env],
-              out_cv1$predicted[idx_env],
-              use = "complete.obs"
-            )
-          }
-        }
-
-        list(model_number = m, model_label = model_label, result_table = out_cv1)
-      }
-
-      for (k in seq_along(cv1_results)) {
-        m <- cv1_results[[k]]$model_number
-        model_label <- cv1_results[[k]]$model_label
-        out_cv1 <- cv1_results[[k]]$result_table
-
-        write.csv(
-          out_cv1,
-          file = paste0(
-            "output/results/CV1_",
-            trait_name,
-            "_", model_label,
-            "_rep", rep_id,
-            "_fold", fold,
-            ".csv"
-          ),
-          row.names = FALSE
-        )
-      }
-
-      # CV2: partially observed genotypes
-      y_cv2 <- y_full
-
-      for (ped_now in pedigrees_in_fold) {
-        idx_ped <- which(Pheno$Pedigree == ped_now)
-        envs_ped <- unique(Pheno$Env[idx_ped])
-
-        if (length(envs_ped) > 1) {
-          env_to_mask <- sample(envs_ped, size = floor(length(envs_ped) / 2))
-          idx_mask <- which(Pheno$Pedigree == ped_now & Pheno$Env %in% env_to_mask)
-          y_cv2[idx_mask] <- NA
-        }
-      }
-
-      cv2_results <- foreach(
-        m = 1:18,
-        .packages = c("BGLR"),
-        .export = c("Pheno", "Eta_list", "model_catalog", "y_cv2", "y_full", "env_levels",
-                    "nIter", "burnIn", "thin", "trait_name", "rep_id", "fold")
-      ) %dopar% {
-        model_label <- model_catalog$Model[m]
-
-        run_dir <- file.path(
-          "output", "results", "bglr_runs",
-          "CV2",
-          trait_name,
-          model_label,
-          paste0("rep", rep_id),
-          paste0("fold", fold)
-        )
-
-        dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
-
-        existing_files <- list.files(run_dir, full.names = TRUE, all.files = TRUE, no.. = TRUE)
-        if (length(existing_files) > 0) {
-          unlink(existing_files, recursive = TRUE, force = TRUE)
-        }
-
-        save_prefix <- file.path(
-          run_dir,
-          paste0("CV2_", trait_name, "_", model_label, "_rep", rep_id, "_fold", fold, "_")
-        )
-
-        fit_cv2 <- BGLR(
-          y = y_cv2,
-          ETA = Eta_list[[m]],
-          nIter = nIter,
-          burnIn = burnIn,
-          thin = thin,
-          saveAt = save_prefix,
-          verbose = FALSE
-        )
-
-        pred_cv2 <- fit_cv2$yHat
-
-        out_cv2 <- data.frame(
-          ObsID = Pheno$ObsID,
-          Pedigree = Pheno$Pedigree,
-          Env = Pheno$Env,
-          observed = y_full,
-          predicted = pred_cv2,
-          cor = NA_real_,
-          stringsAsFactors = FALSE
-        )
-
-        idx_na <- which(is.na(y_cv2))
-
-        for (env_now in env_levels) {
-          idx_env <- which(out_cv2$Env == env_now)
-          idx_eval <- intersect(idx_env, idx_na)
-
-          if (length(idx_eval) > 1) {
-            out_cv2$cor[idx_eval] <- cor(
-              out_cv2$observed[idx_eval],
-              out_cv2$predicted[idx_eval],
-              use = "complete.obs"
-            )
-          }
-        }
-
-        list(model_number = m, model_label = model_label, result_table = out_cv2)
-      }
-
-      for (k in seq_along(cv2_results)) {
-        m <- cv2_results[[k]]$model_number
-        model_label <- cv2_results[[k]]$model_label
-        out_cv2 <- cv2_results[[k]]$result_table
-
-        write.csv(
-          out_cv2,
-          file = paste0(
-            "output/results/CV2_",
-            trait_name,
-            "_", model_label,
-            "_rep", rep_id,
-            "_fold", fold,
-            ".csv"
-          ),
-          row.names = FALSE
-        )
-      }
-    }
-  }
-
-  # ---------------------------------------------
-  # CV0 and CV00: LOEO
-  # ---------------------------------------------
-  for (env_leave in env_levels) {
-
-    env_parts <- strsplit(env_leave, "_")[[1]]
-
-    # CV0: untested environment
-    y_cv0 <- y_full
-    idx_env_leave <- which(Pheno$Env == env_leave)
-    y_cv0[idx_env_leave] <- NA
-
-    cv0_results <- foreach(
-      m = 1:18,
-      .packages = c("BGLR"),
-      .export = c("Pheno", "Eta_list", "model_catalog", "y_cv0", "y_full", "idx_env_leave",
-                  "nIter", "burnIn", "thin", "trait_name", "env_leave")
-    ) %dopar% {
-      model_label <- model_catalog$Model[m]
-
-      run_dir <- file.path(
-        "output", "results", "bglr_runs",
-        "CV0",
-        trait_name,
-        model_label,
-        "rep1",
-        "fold1",
-        env_leave
-      )
-
-      dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
-
-      existing_files <- list.files(run_dir, full.names = TRUE, all.files = TRUE, no.. = TRUE)
-      if (length(existing_files) > 0) {
-        unlink(existing_files, recursive = TRUE, force = TRUE)
-      }
-
-      save_prefix <- file.path(
-        run_dir,
-        paste0("CV0_", trait_name, "_", model_label, "_rep1_fold1_", env_leave, "_")
-      )
-
-      fit_cv0 <- BGLR(
-        y = y_cv0,
-        ETA = Eta_list[[m]],
-        nIter = nIter,
-        burnIn = burnIn,
-        thin = thin,
-        saveAt = save_prefix,
-        verbose = FALSE
-      )
-
-      pred_cv0 <- fit_cv0$yHat
-      cor_cv0 <- cor(y_full[idx_env_leave], pred_cv0[idx_env_leave], use = "complete.obs")
-
-      out_cv0 <- data.frame(
-        ObsID = Pheno$ObsID[idx_env_leave],
-        Pedigree = Pheno$Pedigree[idx_env_leave],
-        Env = Pheno$Env[idx_env_leave],
-        observed = y_full[idx_env_leave],
-        predicted = pred_cv0[idx_env_leave],
-        cor = cor_cv0,
-        stringsAsFactors = FALSE
-      )
-
-      list(model_number = m, model_label = model_label, result_table = out_cv0)
-    }
-
-    for (k in seq_along(cv0_results)) {
-      m <- cv0_results[[k]]$model_number
-      model_label <- cv0_results[[k]]$model_label
-      out_cv0 <- cv0_results[[k]]$result_table
-
-      write.csv(
-        out_cv0,
-        file = paste0(
-          "output/results/CV0_",
-          trait_name,
-          "_", env_parts[1], "_", env_parts[2],
-          "_", model_label,
-          "_rep1_fold1.csv"
-        ),
-        row.names = FALSE
-      )
-    }
-
-    # CV00: untested genotypes in an untested environment
-    pedigrees_test <- unique(Pheno$Pedigree[Pheno$Env == env_leave])
-    pedigrees_train <- unique(Pheno$Pedigree[Pheno$Env != env_leave])
-    pedigrees_new <- setdiff(pedigrees_test, pedigrees_train)
-
-    idx_cv00 <- which(Pheno$Env == env_leave & Pheno$Pedigree %in% pedigrees_new)
-
-    if (length(idx_cv00) > 1) {
-
-      y_cv00 <- y_full
-      y_cv00[idx_cv00] <- NA
-
-      cv00_results <- foreach(
-        m = 1:18,
-        .packages = c("BGLR"),
-        .export = c("Pheno", "Eta_list", "model_catalog", "y_cv00", "y_full", "idx_cv00",
-                    "nIter", "burnIn", "thin", "trait_name", "env_leave")
-      ) %dopar% {
-        model_label <- model_catalog$Model[m]
-
-        run_dir <- file.path(
-          "output", "results", "bglr_runs",
-          "CV00",
-          trait_name,
-          model_label,
-          "rep1",
-          "fold1",
-          env_leave
-        )
-
-        dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
-
-        existing_files <- list.files(run_dir, full.names = TRUE, all.files = TRUE, no.. = TRUE)
-        if (length(existing_files) > 0) {
-          unlink(existing_files, recursive = TRUE, force = TRUE)
-        }
-
-        save_prefix <- file.path(
-          run_dir,
-          paste0("CV00_", trait_name, "_", model_label, "_rep1_fold1_", env_leave, "_")
-        )
-
-        fit_cv00 <- BGLR(
-          y = y_cv00,
-          ETA = Eta_list[[m]],
-          nIter = nIter,
-          burnIn = burnIn,
-          thin = thin,
-          saveAt = save_prefix,
-          verbose = FALSE
-        )
-
-        pred_cv00 <- fit_cv00$yHat
-        cor_cv00 <- cor(y_full[idx_cv00], pred_cv00[idx_cv00], use = "complete.obs")
-
-        out_cv00 <- data.frame(
-          ObsID = Pheno$ObsID[idx_cv00],
-          Pedigree = Pheno$Pedigree[idx_cv00],
-          Env = Pheno$Env[idx_cv00],
-          observed = y_full[idx_cv00],
-          predicted = pred_cv00[idx_cv00],
-          cor = cor_cv00,
-          stringsAsFactors = FALSE
-        )
-
-        list(model_number = m, model_label = model_label, result_table = out_cv00)
-      }
-
-      for (k in seq_along(cv00_results)) {
-        m <- cv00_results[[k]]$model_number
-        model_label <- cv00_results[[k]]$model_label
-        out_cv00 <- cv00_results[[k]]$result_table
-
-        write.csv(
-          out_cv00,
-          file = paste0(
-            "output/results/CV00_",
-            trait_name,
-            "_", env_parts[1], "_", env_parts[2],
-            "_", model_label,
-            "_rep1_fold1.csv"
-          ),
-          row.names = FALSE
-        )
-      }
-    }
-  }
-}
+```{r eta-list-check}
+stopifnot(length(Eta_list) == nrow(model_catalog))
+length(Eta_list)
 ```
 
-## 8. Nota final
+## 7. Desenho dos cenários de validação cruzada
 
-Este script produz as saídas brutas de predição. Os resumos, as médias ponderadas, as tabelas finais e as figuras finais para o manuscrito são gerados em `visualization.Rmd` e `visualization.html`.
+Os próximos blocos ainda não executam a etapa cara de predição. Em vez disso, documentam a lógica de desenho dos quatro esquemas de validação usados mais adiante no submódulo de execução.
 
-A estrutura atual de saída está totalmente padronizada para o novo pipeline.
+### 7.1 Tabela-resumo dos cenários de validação
 
-Os nomes dos arquivos CSV em `output/results/` agora incluem apenas:
+Este chunk cria uma tabela compacta mostrando o que é mascarado e qual pergunta científica cada cenário tenta responder.
 
-- tipo de CV
-- traço
-- rótulo do modelo (`M01` a `M18`)
-- repetição
-- fold
+```{r cv-scenarios-table}
+cv_scenarios <- data.frame(
+  CV = c("CV1", "CV2", "CV0", "CV00"),
+  WhatIsMasked = c(
+    "Genótipos inteiros",
+    "Células selecionadas de genótipo × ambiente",
+    "Um ambiente por vez",
+    "Genótipos dentro de um ambiente deixado de fora"
+  ),
+  MainQuestion = c(
+    "O modelo consegue prever genótipos completamente novos?",
+    "O modelo consegue prever um genótipo conhecido em um ambiente novo para esse genótipo?",
+    "O modelo consegue prever todos os genótipos em um ambiente completamente novo?",
+    "O modelo consegue prever novos genótipos dentro de um ambiente completamente novo?"
+  ),
+  stringsAsFactors = FALSE
+)
 
-Examples:
+cv_scenarios
+```
 
-- `CV1_GY_M05_rep2_fold5.csv`
-- `CV2_KW_M12_rep8_fold3.csv`
-- `CV0_GY_CS11_WS_M10_rep1_fold1.csv`
-- `CV00_KW_CS12_WW_M18_rep1_fold1.csv`
+### 7.2 Lógica operacional de CV1 e CV2
 
-Os arquivos auxiliares gerados por `BGLR` por meio de `saveAt` são armazenados em subpastas de:
+Este chunk resume a lógica de CV1 e CV2, destacando a diferença entre genótipos totalmente não observados e células genótipo-por-ambiente parcialmente não observadas.
 
-`output/results/bglr_runs/`
+```{r cv1-cv2-design}
+cv12_design <- data.frame(
+  Scenario = c("CV1", "CV2"),
+  TrainingSet = c(
+    "Todas as observações, exceto aquelas dos genótipos deixados de fora",
+    "Todas as observações, exceto as células mascaradas selecionadas"
+  ),
+  EvaluationTarget = c(
+    "Predições para genótipos não observados",
+    "Predições para células mascaradas de genótipo × ambiente"
+  ),
+  stringsAsFactors = FALSE
+)
 
-organizadas por:
+cv12_design
+```
 
-- tipo de CV
-- traço
-- model
-- repetição
-- fold
-- ambiente deixado de fora quando aplicável
+### 7.3 Lógica operacional de CV0 e CV00
+
+Este chunk resume a lógica de CV0 e CV00, destacando o papel do ambiente deixado de fora nos cenários de predição mais difíceis.
+
+```{r cv0-cv00-design}
+cvloo_design <- data.frame(
+  Scenario = c("CV0", "CV00"),
+  TrainingSet = c(
+    "Todas as observações, exceto aquelas do ambiente deixado de fora",
+    "Todas as observações, exceto os genótipos-alvo dentro do ambiente deixado de fora"
+  ),
+  EvaluationTarget = c(
+    "Predições para todos os genótipos no ambiente deixado de fora",
+    "Predições para novos genótipos no ambiente deixado de fora"
+  ),
+  stringsAsFactors = FALSE
+)
+
+cvloo_design
+```
+
+### 7.4 Padrões de nome de arquivo esperados nas etapas posteriores
+
+Este chunk registra a convenção de nomes usada mais adiante pela etapa de execução e por `visualization.Rmd`, para que o leitor consiga ligar as saídas computacionais aos resumos nas etapas posteriores.
+
+```{r filename-patterns}
+prediction_file_patterns <- data.frame(
+  Scenario = c("CV1", "CV2", "CV0", "CV00"),
+  ExampleFile = c(
+    "CV1_GY_M05_rep2_fold5.csv",
+    "CV2_KW_M12_rep8_fold3.csv",
+    "CV0_GY_CS11_WS_M10_rep1_fold1.csv",
+    "CV00_KW_CS12_WW_M18_rep1_fold1.csv"
+  ),
+  stringsAsFactors = FALSE
+)
+
+prediction_file_patterns
+```
+
+## 8. Transição para o submódulo de execução
+
+Neste ponto, o tutorial já definiu as entradas, o conjunto reduzido de modelos e a lógica conceitual dos esquemas de validação. O próximo submódulo, `analysis_prediction_run_outputs_pt.Rmd`, concentra a etapa de execução computacionalmente mais cara e a organização dos arquivos de saída.

@@ -1,7 +1,7 @@
 ---
-title: "Prediction analyses - run prediction and outputs"
+title: "Análises de predição - execução e saídas"
 author:
-  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
@@ -16,24 +16,26 @@ editor_options:
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-**Language / Idioma:** [English](analysis_prediction_02_runprediction_outputs.html) | [Português](analysis_prediction_02_runprediction_outputs_pt.html)
+**Language / Idioma:** [English](analysis_prediction_run_outputs.html) | [Português](analysis_prediction_run_outputs_pt.html)
 
-**Module navigation / Navegação do módulo:** [Main page](analysis_prediction.html) | [Part 1: setup, models and CV design](analysis_prediction_01_setup_models_cv.html)
+**Navegação do módulo / Module navigation:** [Parte I: setup, modelos e desenho de CV](analysis_prediction_pt.html)
 
-## 1. Introduction
+> **Nota operacional:** Nesta versão em português, a etapa pesada de predição permanece documentada, mas a renderização depende das saídas já geradas pela versão em inglês. Os blocos de execução custosa ficam desativados e as tabelas leves são carregadas a partir de `output/tables/analysis_prediction/`.
 
-This second submodule concentrates the operational part of the prediction workflow. The goal here is to document how the prediction jobs are organized, where the outputs are written, and how those outputs are prepared for the downstream summaries consumed later by `visualization.Rmd` and `visualization.html`.
+## 1. Introdução
 
-The workflow is intentionally divided into two layers:
+Este segundo submódulo concentra a parte operacional da etapa de predição. O objetivo aqui é documentar como os jobs são organizados, onde as saídas são gravadas e como essas saídas são preparadas para os resumos consumidos mais adiante por `visualization.Rmd` e `visualization.html`.
 
-- a **heavy execution layer**, which fits the 18 models under `CV1`, `CV2`, `CV0`, and `CV00`;
-- a **light output-review layer**, which inventories the files already written by the prediction stage and summarizes their structure.
+O fluxo é dividido em duas camadas:
 
-In the tutorial version, the heavy execution chunks remain disabled. This keeps the document readable and avoids rerunning computationally expensive model fitting during rendering.
+- uma **camada de execução pesada**, que ajusta os 18 modelos em `CV1`, `CV2`, `CV0` e `CV00`;
+- uma **camada leve de revisão das saídas**, que inventaria os arquivos já produzidos e resume sua estrutura.
 
-## 2. Packages and project paths
+Na versão em português, a camada pesada continua documentada, mas não é rerodada durante a renderização.
 
-This chunk loads only the packages required for the light review of prediction outputs and standardizes the paths used later in the file. The objective is to make the document robust whether it is rendered from the project root or from the `analysis/` folder.
+## 2. Pacotes e caminhos do projeto
+
+Este chunk carrega apenas os pacotes necessários para a revisão leve das saídas de predição e padroniza os caminhos usados adiante no arquivo. O objetivo é tornar o documento robusto quando renderizado tanto a partir da raiz do projeto quanto da pasta `analysis/`.
 
 ```{r setup}
 rm(list = ls())
@@ -52,7 +54,7 @@ if (!dir.exists(file.path(project_root, "output")) &&
 }
 
 if (!dir.exists(file.path(project_root, "output"))) {
-  stop("Could not find the folder 'output/'. Render this file from the project root or from analysis/.")
+  stop("Não foi possível localizar a pasta 'output/'. Renderize este arquivo a partir da raiz do projeto ou de analysis/.")
 }
 
 results_dir <- file.path(project_root, "output", "results")
@@ -62,9 +64,9 @@ analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_pre
 dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
 ```
 
-## 3. Prepare the output folders used by the prediction workflow
+## 3. Preparar as pastas de saída usadas pelo fluxo de predição
 
-This chunk shows the first operational step of the prediction stage: creating the folders where the raw CSV files and the auxiliary `BGLR` artifacts are stored. Because these folders are part of the heavy execution layer, the chunk remains disabled in the tutorial.
+Este chunk mostra o primeiro passo operacional da etapa de predição: criar as pastas onde os CSVs brutos e os artefatos auxiliares do `BGLR` são salvos. Como esse bloco pertence à camada pesada de execução, ele permanece desativado no tutorial em português.
 
 ```{r prepare-output-folders, eval=FALSE}
 dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
@@ -72,9 +74,9 @@ dir.create(file.path("output", "results", "bglr_runs"), recursive = TRUE, showWa
 dir.create(file.path("output", "tables", "analysis_prediction"), recursive = TRUE, showWarnings = FALSE)
 ```
 
-## 4. Define the objects that control the run
+## 4. Definir os objetos que controlam a execução
 
-This chunk defines the traits, environment labels, and pedigree labels that control the loops used later in the execution. It is kept disabled here because it belongs to the same heavy execution layer and depends on the matrices and phenotypic table prepared earlier in the pipeline.
+Este chunk define os traços, os ambientes e os pedigrees usados pelos laços de execução. Ele permanece desativado porque pertence à camada pesada e depende diretamente dos objetos preparados nas etapas anteriores do pipeline.
 
 ```{r define-run-objects, eval=FALSE}
 traits_to_run <- c("GY", "KW")
@@ -82,9 +84,9 @@ env_levels <- unique(Pheno$Env)
 pedigrees <- unique(Pheno$Pedigree)
 ```
 
-## 5. Start the parallel backend
+## 5. Iniciar o backend paralelo
 
-This chunk documents the parallel backend used by `foreach`. The cluster is started, registered, and configured so that each worker can fit models independently. The chunk remains disabled in the tutorial because it is part of the expensive execution stage.
+Este chunk documenta o backend paralelo usado por `foreach`. O cluster é iniciado, registrado e configurado para que cada worker possa ajustar modelos de forma independente. No tutorial em português, esse bloco permanece desativado.
 
 ```{r start-parallel-backend, eval=FALSE}
 cl <- parallel::makeCluster(n_cores)
@@ -101,9 +103,9 @@ parallel::clusterEvalQ(cl, {
 })
 ```
 
-## 6. Run prediction analyses for CV1 and CV2
+## 6. Executar as análises preditivas para CV1 e CV2
 
-This chunk contains the operational block used for `CV1` and `CV2`. It creates genotype folds, masks the appropriate observations, fits the 18 models in parallel, and stores one CSV per result object. The chunk is disabled because it is the computational core of the prediction pipeline.
+Este chunk contém o bloco operacional usado para `CV1` e `CV2`. Ele cria os folds de genótipos, mascara as observações apropriadas, ajusta os 18 modelos em paralelo e grava um CSV por objeto de resultado. O bloco permanece desativado porque é o núcleo computacional da etapa de predição.
 
 ```{r run-predictions-cv12, eval=FALSE}
 for (trait_name in traits_to_run) {
@@ -310,9 +312,9 @@ for (trait_name in traits_to_run) {
 }
 ```
 
-## 7. Run prediction analyses for CV0 and CV00
+## 7. Executar as análises preditivas para CV0 e CV00
 
-This chunk documents the operational block for the leave-one-environment-out scenarios. The logic is similar to the previous chunk, but now the masking strategy is defined at the environment level. The chunk remains disabled in the tutorial version.
+Este chunk documenta o bloco operacional dos cenários leave-one-environment-out. A lógica é parecida com a do chunk anterior, mas agora a estratégia de mascaramento é definida no nível do ambiente. O bloco continua desativado na versão tutorial em português.
 
 ```{r run-predictions-cv0-cv00, eval=FALSE}
 for (trait_name in traits_to_run) {
@@ -482,11 +484,44 @@ for (trait_name in traits_to_run) {
 }
 ```
 
-## 8. Inventory of the prediction output files
+## 8. Carregar silenciosamente os metadados já gerados pela versão em inglês
 
-This chunk creates lightweight inventory tables that summarize the CSV files already produced by the prediction stage. These inventories are useful for auditing the step, checking naming consistency, and feeding the Portuguese tutorial version without rerunning the heavy loops.
+Este chunk carrega, de forma oculta, os metadados leves produzidos pela versão em inglês. Dessa forma, a versão em português consegue exibir tabelas e exemplos sem rerodar a execução pesada nem reconstruir do zero o inventário de arquivos.
 
-```{r prediction-output-inventory}
+```{r load-generated-output-metadata, include=FALSE}
+inventory_cv12_file <- file.path(analysis_tables_dir, "analysis_prediction_inventory_cv12.csv")
+inventory_cvloo_file <- file.path(analysis_tables_dir, "analysis_prediction_inventory_cvloo.csv")
+counts_by_cv_file <- file.path(analysis_tables_dir, "analysis_prediction_counts_by_cv.csv")
+counts_by_trait_file <- file.path(analysis_tables_dir, "analysis_prediction_counts_by_trait.csv")
+output_examples_file <- file.path(analysis_tables_dir, "analysis_prediction_output_examples.csv")
+bglr_inventory_file <- file.path(analysis_tables_dir, "analysis_prediction_bglr_run_inventory.csv")
+
+required_files <- c(
+  inventory_cv12_file,
+  inventory_cvloo_file,
+  counts_by_cv_file,
+  counts_by_trait_file,
+  output_examples_file,
+  bglr_inventory_file
+)
+
+if (!all(file.exists(required_files))) {
+  stop("Os metadados de saída de analysis_prediction ainda não foram encontrados. Gere primeiro os arquivos correspondentes na versão em inglês deste submódulo.")
+}
+
+inventory_cv12 <- read_csv(inventory_cv12_file, show_col_types = FALSE)
+inventory_cvloo <- read_csv(inventory_cvloo_file, show_col_types = FALSE)
+counts_by_cv <- read_csv(counts_by_cv_file, show_col_types = FALSE)
+counts_by_trait <- read_csv(counts_by_trait_file, show_col_types = FALSE)
+output_examples <- read_csv(output_examples_file, show_col_types = FALSE)
+bglr_inventory <- read_csv(bglr_inventory_file, show_col_types = FALSE)
+```
+
+## 9. Inventário dos arquivos de saída da predição
+
+Na versão em inglês, este chunk cria as tabelas leves que resumem os arquivos de predição já produzidos. Na versão em português, ele permanece documentado, mas não é rerodado; em vez disso, os dados são carregados silenciosamente a partir dos metadados gerados pelo EN.
+
+```{r prediction-output-inventory, eval=FALSE}
 prediction_files <- character(0)
 
 if (dir.exists(results_dir)) {
@@ -536,23 +571,27 @@ if (length(prediction_files) > 0) {
 
 write_csv(inventory_cv12, file.path(analysis_tables_dir, "analysis_prediction_inventory_cv12.csv"))
 write_csv(inventory_cvloo, file.path(analysis_tables_dir, "analysis_prediction_inventory_cvloo.csv"))
+```
 
+Este chunk exibe uma prévia curta do inventário já gerado pela versão em inglês, o que ajuda o tutorial em português a permanecer funcional sem repetir o mesmo trabalho.
+
+```{r show-prediction-output-inventory}
 if (nrow(inventory_cv12) > 0) {
   knitr::kable(
     head(inventory_cv12, 10),
-    caption = "Preview of the inventory of CV1 and CV2 prediction files.",
+    caption = "Pré-visualização do inventário dos arquivos de predição de CV1 e CV2.",
     align = "c"
   )
 } else {
-  cat("No CV1 or CV2 prediction CSV files were found in output/results/.\n")
+  cat("Os arquivos de inventário de CV1 e CV2 ainda não estão disponíveis.\n")
 }
 ```
 
-## 9. Counts of files by validation scheme and trait
+## 10. Contagens de arquivos por esquema de validação e por traço
 
-This chunk summarizes the number of prediction files already available by validation scenario and by trait. The objective is to provide a quick operational check before moving to `visualization.Rmd`.
+Na versão em inglês, este chunk resume o número de arquivos já disponíveis por cenário de validação e por traço. Na versão em português, ele continua documentado, mas os resultados são carregados a partir dos metadados gerados pelo EN.
 
-```{r prediction-output-counts}
+```{r prediction-output-counts, eval=FALSE}
 counts_by_cv <- data.frame()
 counts_by_trait <- data.frame()
 
@@ -573,23 +612,27 @@ if (nrow(inventory_cv12) > 0 || nrow(inventory_cvloo) > 0) {
 
 write_csv(counts_by_cv, file.path(analysis_tables_dir, "analysis_prediction_counts_by_cv.csv"))
 write_csv(counts_by_trait, file.path(analysis_tables_dir, "analysis_prediction_counts_by_trait.csv"))
+```
 
+Este chunk exibe as contagens já produzidas pela versão em inglês e serve como uma checagem operacional rápida antes da etapa posterior de visualização.
+
+```{r show-prediction-output-counts}
 if (nrow(counts_by_cv) > 0) {
   knitr::kable(
     counts_by_cv,
-    caption = "Number of prediction files by validation scheme.",
+    caption = "Número de arquivos de predição por esquema de validação.",
     align = "cc"
   )
 } else {
-  cat("Prediction counts by validation scheme are not available yet.\n")
+  cat("As contagens dos arquivos de predição por esquema de validação ainda não estão disponíveis.\n")
 }
 ```
 
-## 10. Examples of the output naming pattern
+## 11. Exemplos do padrão de nomes de saída
 
-This chunk organizes a few concrete examples of file names and their meaning. It is a compact operational reference that helps connect the prediction step to the downstream summaries.
+Na versão em inglês, este chunk organiza alguns exemplos concretos de nomes de arquivos e seu significado. Na versão em português, os exemplos são carregados diretamente dos metadados já produzidos pelo EN.
 
-```{r prediction-output-examples}
+```{r prediction-output-examples, eval=FALSE}
 output_examples <- data.frame()
 
 if (nrow(inventory_cv12) > 0) {
@@ -613,23 +656,27 @@ if (nrow(inventory_cvloo) > 0) {
 }
 
 write_csv(output_examples, file.path(analysis_tables_dir, "analysis_prediction_output_examples.csv"))
+```
 
+Este chunk mostra os exemplos já gerados pela versão em inglês, o que torna mais fácil inspecionar em português a convenção de nomes dos arquivos sem repetir a etapa de inventário.
+
+```{r show-prediction-output-examples}
 if (nrow(output_examples) > 0) {
   knitr::kable(
     output_examples,
-    caption = "Examples of file names produced by the prediction workflow.",
+    caption = "Exemplos de nomes de arquivos produzidos pelo fluxo de predição.",
     align = "c"
   )
 } else {
-  cat("No prediction output examples are available yet.\n")
+  cat("Os exemplos de arquivos de saída ainda não estão disponíveis.\n")
 }
 ```
 
-## 11. Summary of the auxiliary `BGLR` run folders
+## 12. Resumo das pastas auxiliares do `BGLR`
 
-This chunk summarizes the directory structure created by `saveAt` under `output/results/bglr_runs/`. These folders are important because they store the auxiliary outputs of each fitted model, separated by validation scenario, trait, model, and fold or held-out environment.
+Na versão em inglês, este chunk resume a estrutura de diretórios criada por `saveAt` em `output/results/bglr_runs/`. Na versão em português, ele permanece documentado, mas a tabela exibida é carregada a partir dos metadados gerados anteriormente pelo EN.
 
-```{r bglr-run-folder-summary}
+```{r bglr-run-folder-summary, eval=FALSE}
 bglr_inventory <- data.frame()
 
 if (dir.exists(bglr_runs_dir)) {
@@ -665,7 +712,11 @@ if (dir.exists(bglr_runs_dir)) {
 }
 
 write_csv(bglr_inventory, file.path(analysis_tables_dir, "analysis_prediction_bglr_run_inventory.csv"))
+```
 
+Este chunk exibe uma prévia compacta das pastas auxiliares já registradas pela versão em inglês. O objetivo é ajudar o leitor a inspecionar a organização das saídas de `saveAt` sem reescanear a árvore de diretórios.
+
+```{r show-bglr-run-folder-summary}
 if (nrow(bglr_inventory) > 0) {
   bglr_summary <- bglr_inventory %>%
     count(CV, Trait, Model, name = "n_files") %>%
@@ -673,14 +724,14 @@ if (nrow(bglr_inventory) > 0) {
 
   knitr::kable(
     head(bglr_summary, 12),
-    caption = "Preview of the auxiliary BGLR run folders.",
+    caption = "Pré-visualização das pastas auxiliares de execução do BGLR.",
     align = "c"
   )
 } else {
-  cat("No auxiliary BGLR run files were found in output/results/bglr_runs/.\n")
+  cat("As informações sobre as pastas auxiliares do BGLR ainda não estão disponíveis.\n")
 }
 ```
 
-## 12. Final note
+## 13. Nota final
 
-This submodule closes the prediction stage by documenting both the heavy execution blocks and the structure of the files that feed the next step of the pipeline. The downstream summaries, weighted averages, manuscript-ready tables, and final figures are generated later by `visualization.Rmd` and `visualization.html`.
+Este submódulo fecha a etapa de predição ao documentar tanto os blocos de execução pesada quanto a estrutura dos arquivos que alimentam a próxima etapa do pipeline. Os resumos a jusante, as médias ponderadas, as tabelas finais do manuscrito e as figuras são gerados depois por `visualization.Rmd` e `visualization.html`.
