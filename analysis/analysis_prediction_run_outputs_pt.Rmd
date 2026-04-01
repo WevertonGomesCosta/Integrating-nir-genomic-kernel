@@ -33,6 +33,20 @@ O fluxo é dividido em duas camadas:
 
 Na versão em português, a camada pesada continua documentada, mas não é rerodada durante a renderização.
 
+## Entradas, saídas e próxima etapa
+
+**Entradas desta etapa**
+- os modelos e configurações definidos em `analysis_prediction.Rmd`
+- a estrutura observacional alinhada e os kernels necessários para os jobs de predição
+
+**Saídas desta etapa**
+- arquivos de predição gravados em `output/results/`
+- pastas auxiliares de execução do `BGLR`
+- tabelas leves de metadados gravadas em `output/tables/analysis_prediction/`
+
+**Próxima etapa**
+- `visualization.Rmd` lê as saídas organizadas aqui para construir as tabelas-resumo finais e as figuras comparativas.
+
 ## 2. Pacotes e caminhos do projeto
 
 Este chunk carrega apenas os pacotes necessários para a revisão leve das saídas de predição e padroniza os caminhos usados adiante no arquivo. O objetivo é tornar o documento robusto quando renderizado tanto a partir da raiz do projeto quanto da pasta `analysis/`.
@@ -734,4 +748,9 @@ if (nrow(bglr_inventory) > 0) {
 
 ## 13. Nota final
 
-Este submódulo fecha a etapa de predição ao documentar tanto os blocos de execução pesada quanto a estrutura dos arquivos que alimentam a próxima etapa do pipeline. Os resumos a jusante, as médias ponderadas, as tabelas finais do manuscrito e as figuras são gerados depois por `visualization.Rmd` e `visualization.html`.
+Este submódulo fecha a etapa de predição ao documentar tanto os blocos de execução pesada quanto a estrutura dos arquivos que alimentam a próxima etapa do pipeline. Os resumos nas etapas posteriores, as médias ponderadas, as tabelas finais do manuscrito e as figuras são gerados depois por `visualization.Rmd` e `visualization.html`.
+
+## Navegação entre etapas
+
+**Etapa anterior:** [Predição — Parte I](analysis_prediction_pt.html)  
+**Próxima etapa:** [Visualização](visualization_pt.html)

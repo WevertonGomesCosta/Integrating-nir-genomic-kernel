@@ -36,6 +36,22 @@ To make interpretation easier, the models are ordered to help answer three pract
 2. does adding the weather kernel (`W`) improve predictive ability?
 3. does combining genomic and phenomic information improve predictive ability?
 
+## Inputs, outputs and next step
+
+**Inputs of this step**
+- raw prediction outputs written by `analysis_prediction_run_outputs.Rmd`
+- light prediction metadata tables generated in the previous stage
+
+**Outputs of this step**
+- final summary tables
+- model rankings
+- W-effect comparisons
+- kernel-family comparisons
+- final figures for downstream interpretation
+
+**Next step**
+- the outputs generated here feed the manuscript-oriented summaries and the final interpretation of the project results.
+
 ## 1. Setup
 
 We start by defining the default chunk options for the rendered report. The goal is to keep code, tables, and figures readable when the tutorial is rendered in HTML.
@@ -688,3 +704,10 @@ This tutorialized version is aligned with the current prediction workflow based 
 - `CV0` and `CV00` still require the `Env == Env_leave` filter for the held-out-environment summaries.
 
 After running this file, the next repository step is to run the manuscript-oriented script that consumes the summary tables written to `output/tables/`.
+
+## Stage navigation
+
+**Previous stage:** [Prediction — Part II](analysis_prediction_run_outputs.html)  
+**Next reference in the site:** [Home](index.html)
+
+Outside the site menu, the next analytical step is to generate manuscript-oriented summaries and review tables from the outputs created here.

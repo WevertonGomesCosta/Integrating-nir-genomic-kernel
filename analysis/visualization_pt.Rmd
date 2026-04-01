@@ -36,6 +36,22 @@ Para facilitar a interpretação, os modelos são ordenados para ajudar a respon
 2. adicionar o kernel climático (`W`) melhora a capacidade preditiva?
 3. combinar informação genômica e fenômica melhora a capacidade preditiva?
 
+## Entradas, saídas e próxima etapa
+
+**Entradas desta etapa**
+- saídas brutas de predição gravadas por `analysis_prediction_run_outputs.Rmd`
+- tabelas leves de metadados da predição geradas na etapa anterior
+
+**Saídas desta etapa**
+- tabelas-resumo finais
+- rankings dos modelos
+- comparações do efeito de `W`
+- comparações entre famílias de kernel
+- figuras finais para interpretação posterior
+
+**Próxima etapa**
+- as saídas geradas aqui alimentam os resumos orientados ao manuscrito e a interpretação final dos resultados do projeto.
+
 ## 1. Configuração
 
 Começamos definindo as opções padrão dos chunks para o relatório renderizado. O objetivo é manter código, tabelas e figuras legíveis quando o tutorial é renderizado em HTML.
@@ -984,3 +1000,10 @@ Esta versão didática está alinhada ao fluxo atual de predição baseado em `a
 - `CV0` e `CV00` ainda exigem o filtro `Env == Env_leave` para os resumos do ambiente deixado de fora.
 
 Depois de executar este arquivo, a próxima etapa no repositório é rodar o script orientado ao manuscrito que consome as tabelas-resumo gravadas em `output/tables/`.
+
+## Navegação entre etapas
+
+**Etapa anterior:** [Predição — Parte II](analysis_prediction_run_outputs_pt.html)  
+**Próxima referência no site:** [Home](index.html)
+
+Fora do menu do site, a próxima etapa analítica é gerar os resumos orientados ao manuscrito e as tabelas de revisão a partir das saídas criadas aqui.

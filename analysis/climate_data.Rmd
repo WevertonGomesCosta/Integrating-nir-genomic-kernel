@@ -48,6 +48,20 @@ In practical terms, the workflow has four goals:
 **Growing season window:** May 1 to September 30  
 **Study years:** 2011 and 2012
 
+## Inputs, outputs and next step
+
+**Inputs of this step**
+- location and time information required to query NASA POWER
+- internal settings used to aggregate, summarize, and visualize climate variables
+
+**Outputs of this step**
+- annual weather covariates
+- expanded daily weather table
+- climate figures used for exploratory inspection
+
+**Next step**
+- `matrizes.Rmd` uses the climate-derived outputs generated here to align environmental information with the observational structure and build the weather kernel (`W`).
+
 ## 2. R environment
 
 Before starting the analysis, we load the packages required for data retrieval, data manipulation, visualization, and multi-panel figure assembly.
@@ -876,3 +890,8 @@ This tutorial establishes a reproducible weather preprocessing pipeline for the 
 In the broader workflow of the project, these outputs are not the final goal. They are intermediate scientific objects that support the construction of the weather kernel (`W`) used in models M10-M18.
 
 It is also important to note that the weather kernel does not replace the categorical environment effect (`E`). In this dataset, the 2011 weather signature is shared by CS11_WS and CS11_WW, and the 2012 weather signature is shared by CS12_WS and CS12_WW. Therefore, `W` captures year-specific meteorological similarity, whereas `E` still represents the categorical distinction among the four macro-environments.
+
+## Stage navigation
+
+**Previous stage:** [Home](index.html)  
+**Next stage:** [Matrices](matrizes.html)

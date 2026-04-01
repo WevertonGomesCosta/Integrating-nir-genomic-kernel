@@ -48,6 +48,20 @@ Em termos práticos, o fluxo tem quatro objetivos:
 **Janela da safra:** 1º de maio a 30 de setembro  
 **Anos de estudo:** 2011 e 2012
 
+## Entradas, saídas e próxima etapa
+
+**Entradas desta etapa**
+- informações de local e tempo necessárias para consultar a NASA POWER
+- configurações internas usadas para agregar, resumir e visualizar as variáveis climáticas
+
+**Saídas desta etapa**
+- covariáveis climáticas anuais
+- tabela climática diária expandida
+- figuras climáticas usadas para inspeção exploratória
+
+**Próxima etapa**
+- `matrizes.Rmd` usa as saídas derivadas do clima geradas aqui para alinhar a informação ambiental com a estrutura observacional e construir o kernel climático (`W`).
+
 ## 2. Ambiente em R
 
 Antes de iniciar a análise, carregamos os pacotes necessários para obtenção dos dados, manipulação, visualização e montagem de figuras multipainel.
@@ -1020,3 +1034,8 @@ Este tutorial estabelece um pipeline reprodutível de pré-processamento climát
 No fluxo mais amplo do projeto, essas saídas não são o objetivo final. Elas são objetos científicos intermediários que apoiam a construção do kernel climático (`W`) usado nos modelos M10-M18.
 
 Também é importante observar que o kernel climático não substitui o efeito categórico de ambiente (`E`). Neste conjunto de dados, a assinatura climática de 2011 é compartilhada por `CS11_WS` e `CS11_WW`, e a assinatura climática de 2012 é compartilhada por `CS12_WS` e `CS12_WW`. Portanto, `W` captura similaridade meteorológica específica do ano, enquanto `E` continua representando a distinção categórica entre os quatro macroambientes.
+
+## Navegação entre etapas
+
+**Etapa anterior:** [Home](index.html)  
+**Próxima etapa:** [Matrizes](matrizes_pt.html)

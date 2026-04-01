@@ -31,6 +31,20 @@ The workflow is intentionally divided into two layers:
 
 In the tutorial version, the heavy execution chunks remain disabled. This keeps the document readable and avoids rerunning computationally expensive model fitting during rendering.
 
+## Inputs, outputs and next step
+
+**Inputs of this step**
+- the models and settings defined in `analysis_prediction.Rmd`
+- the aligned observational structure and kernels required for the prediction jobs
+
+**Outputs of this step**
+- prediction files written to `output/results/`
+- auxiliary `BGLR` run folders
+- light metadata tables stored in `output/tables/analysis_prediction/`
+
+**Next step**
+- `visualization.Rmd` reads the outputs organized here to build the final summary tables and comparative figures.
+
 ## 2. Packages and project paths
 
 This chunk loads only the packages required for the light review of prediction outputs and standardizes the paths used later in the file. The objective is to make the document robust whether it is rendered from the project root or from the `analysis/` folder.
@@ -684,3 +698,8 @@ if (nrow(bglr_inventory) > 0) {
 ## 12. Final note
 
 This submodule closes the prediction stage by documenting both the heavy execution blocks and the structure of the files that feed the next step of the pipeline. The downstream summaries, weighted averages, manuscript-ready tables, and final figures are generated later by `visualization.Rmd` and `visualization.html`.
+
+## Stage navigation
+
+**Previous stage:** [Prediction — Part I](analysis_prediction.html)  
+**Next stage:** [Visualization](visualization.html)

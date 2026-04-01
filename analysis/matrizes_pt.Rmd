@@ -51,6 +51,21 @@ No conjunto reduzido final de 18 modelos, o kernel climático (`ZW`) e seus term
 
 Um objetivo prático central deste tutorial é garantir que todas as matrizes sejam construídas na **mesma ordem de observações**. Se os kernels não estiverem perfeitamente alinhados, as análises preditivas posteriores se tornam inválidas.
 
+## Entradas, saídas e próxima etapa
+
+**Entradas desta etapa**
+- dados fenotípicos, genômicos e fenômicos
+- covariáveis derivadas do clima produzidas por `climate_data.Rmd`
+
+**Saídas desta etapa**
+- objetos observacionais alinhados
+- estruturas de desenho ambiental e climático
+- kernels lineares e não lineares
+- kernels de interação usados nas etapas seguintes
+
+**Próxima etapa**
+- os objetos gerados aqui são consumidos diretamente por `variance_components.Rmd` e `analysis_prediction.Rmd`.
+
 ## 2. Ambiente em R e dependências
 
 Primeiro carregamos os pacotes necessários para manipulação de dados, construção de kernels, visualização e gerenciamento de memória.
@@ -1245,3 +1260,8 @@ Do ponto de vista do fluxo científico, este script exerce um papel estrutural n
 - e documenta como as relações lineares e não lineares foram codificadas.
 
 Na etapa seguinte do projeto, esses kernels tornam-se as entradas dos modelos de predição genômica comparados no artigo.
+
+## Navegação entre etapas
+
+**Etapa anterior:** [Dados climáticos](climate_data_pt.html)  
+**Próxima etapa:** [Componentes de variância](variance_components_pt.html)

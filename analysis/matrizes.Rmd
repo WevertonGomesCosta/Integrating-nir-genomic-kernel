@@ -52,6 +52,21 @@ In the reduced set of 18 final models, the weather kernel (`ZW`) and its interac
 
 A key practical objective of this tutorial is to guarantee that all matrices are constructed in the **same observation order**. If the kernels are not perfectly aligned, the downstream prediction analyses become invalid.
 
+## Inputs, outputs and next step
+
+**Inputs of this step**
+- phenotypic, genomic, and phenomic data
+- climate-derived covariates produced by `climate_data.Rmd`
+
+**Outputs of this step**
+- aligned observational objects
+- environment and weather design structures
+- linear and nonlinear kernels
+- interaction kernels used later in the pipeline
+
+**Next step**
+- the objects generated here are consumed directly by `variance_components.Rmd` and `analysis_prediction.Rmd`.
+
 ## 2. R environment and dependencies
 
 We first load the packages required for data handling, kernel construction, visualization, and memory management.
@@ -1231,3 +1246,8 @@ From a scientific workflow perspective, this script plays a structural role in t
 - and it documents how the linear and nonlinear relationships were encoded.
 
 In the next stage of the project, these kernels become the inputs for the genomic prediction models compared in the article.
+
+## Stage navigation
+
+**Previous stage:** [Climate data](climate_data.html)  
+**Next stage:** [Variance components](variance_components.html)

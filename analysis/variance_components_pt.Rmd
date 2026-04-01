@@ -53,6 +53,20 @@ Este script está organizado em quatro estágios:
 
 Uma grande proporção de variância associada a uma dada fonte não deve ser interpretada automaticamente como evidência de complementaridade biológica ou de melhor desempenho preditivo. Esse ponto é especialmente importante para **P**, porque a similaridade baseada em NIRS pode refletir forte resposta fisiológica ao ambiente além de qualquer sinal biológico estável, e para **W**, porque o kernel climático complementa, mas não substitui, o efeito categórico de ambiente.
 
+## Entradas, saídas e próxima etapa
+
+**Entradas desta etapa**
+- matrizes e kernels gerados em `matrizes.Rmd`
+- o catálogo reduzido de 18 modelos usado no projeto
+
+**Saídas desta etapa**
+- resultados brutos de componentes de variância
+- resumos processados de componentes de variância
+- tabelas percentuais e figuras diagnósticas
+
+**Próxima etapa**
+- esta etapa complementa a interpretação estrutural dos modelos e deve ser lida em conjunto com os resultados preditivos gerados depois em `analysis_prediction.Rmd`.
+
 ## 2. Ambiente em R e entradas necessárias
 
 Primeiro, carregamos os pacotes usados para manipular os dados, ajustar os modelos Bayesianos e gerar as figuras finais em padrão de artigo.
@@ -828,3 +842,8 @@ Esta seção final esclarece como a figura deve ser interpretada.
 - Um grande segmento de **Residual** indica que fontes importantes de variabilidade permanecem não explicadas pelo modelo ajustado.
 
 No contexto deste artigo, essas decomposições de variância complementam as análises preditivas ao mostrar **quais fontes de informação contribuem para a estrutura dos modelos**. Entretanto, uma grande parcela de variância de um componente não deve ser lida automaticamente como evidência de maior complementaridade biológica ou de melhor habilidade preditiva.
+
+## Navegação entre etapas
+
+**Etapa anterior:** [Matrizes](matrizes_pt.html)  
+**Próxima etapa:** [Predição — Parte I](analysis_prediction_pt.html)
