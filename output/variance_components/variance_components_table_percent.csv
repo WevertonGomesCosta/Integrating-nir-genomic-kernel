@@ -1,4 +1,4 @@
-Model,Trait,Environment (E),Genomic linear (G),G × E,Residual,Phenomic linear (P),P × E,Genomic Gaussian (GGK),GGK × E,Phenomic Gaussian (PGK),PGK × E,Genomic arc-cosine (GAK),GAK × E,Phenomic arc-cosine (PAK),PAK × E,G × W,Weather kernel (W),P × W,GGK × W,PGK × W,GAK × W,PAK × W
+Model,Trait,Ambiente (E),Genômico linear (G),G × E,Residual,Fenômico linear (P),P × E,Genômico Gaussiano (GGK),GGK × E,Fenômico Gaussiano (PGK),PGK × E,Genômico arc-cosine (GAK),GAK × E,Fenômico arc-cosine (PAK),PAK × E,G × W,Kernel climático (W),P × W,GGK × W,PGK × W,GAK × W,PAK × W
 M01,GY,83.43,12.09,1.71,2.77,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 M01,KW,75.98,20.33,1.42,2.27,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 M02,GY,0,NA,NA,0,100,0,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
