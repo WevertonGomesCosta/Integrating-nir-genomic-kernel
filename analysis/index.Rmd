@@ -18,7 +18,7 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 ## Project overview
 
-This project investigates whether genomic, phenomic, and weather-derived information can improve prediction for grain yield and kernel weight in multi-environment maize trials.
+This project investigates whether genomic, phenomic, and weather-derived information can improve prediction for grain yield and 500-kernel weight (KW) in multi-environment maize trials.
 
 The repository and website were organized as a tutorial-style analytical pipeline. Each page corresponds to one major step of the study, from weather data processing to kernel construction, variance component estimation, prediction analyses, and final visualization.
 
@@ -39,8 +39,9 @@ The workflow is divided into the following main steps:
 1. weather data acquisition and processing
 2. construction of genomic and phenomic kernels, the categorical environment matrix, and the weather kernel
 3. estimation of variance components for the reduced set of 18 models
-4. prediction analyses under four cross-validation scenarios
-5. consolidation of final figures and summary tables
+4. prediction analyses — Part I: setup, model specification, and cross-validation design
+5. prediction analyses — Part II: run outputs, output inventory, and prediction metadata
+6. consolidation of final figures and summary tables
 
 ## Main analytical message
 
@@ -53,7 +54,8 @@ The main pages of the project are:
 - **Climate data**: weather download, processing, and weather covariate generation
 - **Matrices**: aligned kernel construction
 - **Variance components**: decomposition of model variance
-- **Prediction**: cross-validation analyses
+- **Prediction — Part I**: setup, model catalog, ETA specification, and cross-validation design
+- **Prediction — Part II**: run outputs, output inventory, and prediction metadata
 - **Visualization**: final result summaries
 - **About**: project background and study rationale
 - **License**: licensing information for the repository and website
@@ -64,7 +66,7 @@ The main pages of the project are:
 
 ## Visão geral do projeto
 
-Este projeto investiga se informações genômicas, fenômicas e derivadas do clima podem melhorar a predição de produtividade de grãos e peso de grãos em ensaios de milho multiambientes.
+Este projeto investiga se informações genômicas, fenômicas e derivadas do clima podem melhorar a predição de produtividade de grãos e peso de 500 grãos (KW) em ensaios de milho multiambientes.
 
 O repositório e o site foram organizados como um pipeline analítico em formato tutorial. Cada página corresponde a uma etapa importante do estudo, desde o processamento dos dados climáticos até a construção dos kernels, a estimação dos componentes de variância, as análises preditivas e a visualização final.
 
@@ -85,8 +87,9 @@ O fluxo de trabalho é dividido nas seguintes etapas principais:
 1. obtenção e processamento de dados climáticos
 2. construção de kernels genômicos e fenômicos, da matriz categórica de ambiente e do kernel climático
 3. estimação de componentes de variância para o conjunto reduzido de 18 modelos
-4. análises preditivas sob quatro cenários de validação cruzada
-5. consolidação das figuras finais e das tabelas-resumo
+4. análises preditivas — Parte I: preparação, especificação dos modelos e desenho da validação cruzada
+5. análises preditivas — Parte II: saídas da execução, inventário dos outputs e metadados da predição
+6. consolidação das figuras finais e das tabelas-resumo
 
 ## Principal mensagem analítica
 
@@ -99,7 +102,8 @@ As páginas principais do projeto são:
 - **Climate data**: download meteorológico, processamento e geração de covariáveis climáticas
 - **Matrices**: construção de kernels alinhados
 - **Variance components**: decomposição da variância dos modelos
-- **Prediction**: análises de validação cruzada
+- **Prediction — Part I**: preparação, catálogo de modelos, especificação do ETA e desenho da validação cruzada
+- **Prediction — Part II**: saídas da execução, inventário dos outputs e metadados da predição
 - **Visualization**: resumos finais dos resultados
 - **About**: contexto do projeto e justificativa do estudo
 - **License**: informações de licenciamento do repositório e do site

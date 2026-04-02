@@ -24,6 +24,8 @@ Unless otherwise noted, the materials made available in this repository and webs
 
 This licensing statement applies to the project documentation and manuscript-oriented materials associated with this study, including rendered reports, explanatory text, figures, tables, and analytical narratives provided in this repository.
 
+For clarity, this licensing statement is intended primarily for the documentation, website pages, rendered reports, explanatory text, figures, tables, and manuscript-oriented materials of the project. Source code, analysis scripts, and third-party data resources may be subject to their own notices, repository terms, or upstream licensing conditions when explicitly indicated.
+
 ## What you may do
 
 Under this license, you are free to:
@@ -82,6 +84,8 @@ Email: wevertonufv@gmail.com
 Salvo indicação em contrário, os materiais disponibilizados neste repositório e neste site são distribuídos sob a **Licença Creative Commons Atribuição-NãoComercial-CompartilhaIgual 4.0 Internacional (CC BY-NC-SA 4.0)**.
 
 Esta declaração de licenciamento aplica-se à documentação do projeto e aos materiais orientados ao manuscrito associados a este estudo, incluindo relatórios renderizados, textos explicativos, figuras, tabelas e narrativas analíticas disponibilizadas neste repositório.
+
+Para evitar ambiguidades, esta declaração de licenciamento se destina principalmente à documentação, às páginas do site, aos relatórios renderizados, aos textos explicativos, às figuras, às tabelas e aos materiais orientados ao manuscrito do projeto. Código-fonte, scripts analíticos e recursos de dados de terceiros podem estar sujeitos a avisos próprios, termos do repositório ou condições de licenciamento de origem quando isso estiver explicitamente indicado.
 
 ## O que você pode fazer
 

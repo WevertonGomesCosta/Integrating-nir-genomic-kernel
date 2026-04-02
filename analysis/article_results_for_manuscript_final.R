@@ -357,7 +357,9 @@ if (file.exists(variance_file_table)) {
 # - esquema de validação (CV1, CV2, CV0, CV00);
 # - trait;
 # - modelo;
-# - repetição.
+# - repetição;
+# - fold;
+# - ambiente deixado de fora quando aplicável.
 # -----------------------------------------------------------------------------
 
 results_dir <- file.path(output_dir, "results")
@@ -372,25 +374,34 @@ if (dir.exists(results_dir)) {
       current_name_no_ext <- sub("\\.csv$", "", current_name)
       current_parts <- strsplit(current_name_no_ext, "_")[[1]]
 
-      current_cv <- NA
-      current_trait <- NA
-      current_model <- NA
-      current_rep <- NA
-      current_env <- NA
+      current_cv <- NA_character_
+      current_trait <- NA_character_
+      current_model <- NA_character_
+      current_rep <- NA_character_
+      current_fold <- NA_character_
+      current_env_leave <- NA_character_
 
-      if (length(current_parts) == 4 && current_parts[1] %in% c("CV1", "CV2")) {
+      if (length(current_parts) >= 5 && current_parts[1] %in% c("CV1", "CV2")) {
         current_cv <- current_parts[1]
         current_trait <- current_parts[2]
-        current_model <- current_parts[3]
-        current_rep <- current_parts[4]
+        current_model <- current_parts[length(current_parts) - 2]
+        current_rep <- current_parts[length(current_parts) - 1]
+        current_fold <- current_parts[length(current_parts)]
       }
 
-      if (length(current_parts) == 6 && current_parts[1] %in% c("CV0", "CV00")) {
+      if (length(current_parts) >= 6 && current_parts[1] %in% c("CV0", "CV00")) {
         current_cv <- current_parts[1]
         current_trait <- current_parts[2]
-        current_env <- paste(current_parts[3], current_parts[4], sep = "_")
-        current_model <- current_parts[5]
-        current_rep <- current_parts[6]
+        current_model <- current_parts[length(current_parts) - 2]
+        current_rep <- current_parts[length(current_parts) - 1]
+        current_fold <- current_parts[length(current_parts)]
+
+        env_index_start <- 3
+        env_index_end <- length(current_parts) - 3
+
+        if (env_index_end >= env_index_start) {
+          current_env_leave <- paste(current_parts[env_index_start:env_index_end], collapse = "_")
+        }
       }
 
       prediction_inventory <- bind_rows(
@@ -399,9 +410,11 @@ if (dir.exists(results_dir)) {
           file_name = current_name,
           CV = current_cv,
           Trait = current_trait,
-          Env = current_env,
+          Env = current_env_leave,
+          Env_leave = current_env_leave,
           Model = current_model,
           Rep = current_rep,
+          Fold = current_fold,
           stringsAsFactors = FALSE
         )
       )
@@ -411,7 +424,7 @@ if (dir.exists(results_dir)) {
 
 if (nrow(prediction_inventory) > 0) {
   prediction_inventory <- prediction_inventory %>%
-    arrange(CV, Trait, Env, Model, Rep)
+    arrange(CV, Trait, Env_leave, Model, Rep, Fold)
 
   write_csv(prediction_inventory, file.path(review_dir, "14_predicao_inventario_arquivos.csv"))
 

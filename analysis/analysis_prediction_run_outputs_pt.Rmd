@@ -20,7 +20,7 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 **Navegação do módulo / Module navigation:** [Parte I: setup, modelos e desenho de CV](analysis_prediction_pt.html)
 
-> **Nota operacional:** Nesta versão em português, a etapa pesada de predição permanece documentada, mas a renderização depende das saídas já geradas pela versão em inglês. Os blocos de execução custosa ficam desativados e as tabelas leves são carregadas a partir de `output/tables/analysis_prediction/`.
+> **Nota operacional:** Nesta versão em português, a etapa pesada de predição permanece documentada, mas a renderização prioriza as saídas leves já geradas pela versão em inglês. Os blocos de execução custosa ficam desativados por padrão e as tabelas leves são carregadas primeiro a partir de `output/tables/analysis_prediction/`; as matrizes pesadas só são exigidas se a execução completa for explicitamente reativada.
 
 ## 1. Introdução
 
@@ -76,7 +76,218 @@ bglr_runs_dir <- file.path(results_dir, "bglr_runs")
 analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction")
 
 dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
+
+heavy_execution_enabled <- FALSE
 ```
+
+### Carga oculta dos objetos necessários para a execução
+
+Quando este submódulo é renderizado isoladamente, os objetos definidos conceitualmente na Parte I podem não estar disponíveis em memória. Este chunk oculto recarrega as matrizes necessárias para a predição e reconstrói os objetos básicos de execução apenas quando eles ainda não existem. Assim, a camada de execução continua documentada e reproduzível sem exigir que o leitor rerode o arquivo anterior na mesma sessão.
+
+```{r load-required-objects, include=FALSE}
+if (isTRUE(heavy_execution_enabled)) {
+  matrices_dir <- file.path(project_root, "output", "Matrizes")
+
+  required_matrix_files <- c(
+    "Pheno.rds",
+    "ZG.rds", "ZP.rds", "ZE.rds", "ZW.rds",
+    "ZGZE.rds", "ZPZE.rds", "ZGZW.rds", "ZPZW.rds",
+    "GGK.rds", "PGK.rds", "GAK.rds", "PAK.rds",
+    "GGKE.rds", "PGKE.rds", "GAKE.rds", "PAKE.rds",
+    "GGKW.rds", "PGKW.rds", "GAKW.rds", "PAKW.rds"
+  )
+
+  required_matrix_paths <- file.path(matrices_dir, required_matrix_files)
+
+  if (!all(file.exists(required_matrix_paths))) {
+    missing_matrix_files <- required_matrix_files[!file.exists(required_matrix_paths)]
+    stop(
+      paste0(
+        "Os objetos necessários para a execução de analysis_prediction_run_outputs não foram encontrados em output/Matrizes/. Arquivos ausentes: ",
+        paste(missing_matrix_files, collapse = ", ")
+      )
+    )
+  }
+
+  if (!exists("Pheno")) Pheno <- readRDS(file.path(matrices_dir, "Pheno.rds"))
+  if (!exists("ZG"))   ZG   <- readRDS(file.path(matrices_dir, "ZG.rds"))
+  if (!exists("ZP"))   ZP   <- readRDS(file.path(matrices_dir, "ZP.rds"))
+  if (!exists("ZE"))   ZE   <- readRDS(file.path(matrices_dir, "ZE.rds"))
+  if (!exists("ZW"))   ZW   <- readRDS(file.path(matrices_dir, "ZW.rds"))
+
+  if (!exists("ZGZE")) ZGZE <- readRDS(file.path(matrices_dir, "ZGZE.rds"))
+  if (!exists("ZPZE")) ZPZE <- readRDS(file.path(matrices_dir, "ZPZE.rds"))
+  if (!exists("ZGZW")) ZGZW <- readRDS(file.path(matrices_dir, "ZGZW.rds"))
+  if (!exists("ZPZW")) ZPZW <- readRDS(file.path(matrices_dir, "ZPZW.rds"))
+
+  if (!exists("GGK"))  GGK  <- readRDS(file.path(matrices_dir, "GGK.rds"))
+  if (!exists("PGK"))  PGK  <- readRDS(file.path(matrices_dir, "PGK.rds"))
+  if (!exists("GAK"))  GAK  <- readRDS(file.path(matrices_dir, "GAK.rds"))
+  if (!exists("PAK"))  PAK  <- readRDS(file.path(matrices_dir, "PAK.rds"))
+
+  if (!exists("GGKE")) GGKE <- readRDS(file.path(matrices_dir, "GGKE.rds"))
+  if (!exists("PGKE")) PGKE <- readRDS(file.path(matrices_dir, "PGKE.rds"))
+  if (!exists("GAKE")) GAKE <- readRDS(file.path(matrices_dir, "GAKE.rds"))
+  if (!exists("PAKE")) PAKE <- readRDS(file.path(matrices_dir, "PAKE.rds"))
+
+  if (!exists("GGKW")) GGKW <- readRDS(file.path(matrices_dir, "GGKW.rds"))
+  if (!exists("PGKW")) PGKW <- readRDS(file.path(matrices_dir, "PGKW.rds"))
+  if (!exists("GAKW")) GAKW <- readRDS(file.path(matrices_dir, "GAKW.rds"))
+  if (!exists("PAKW")) PAKW <- readRDS(file.path(matrices_dir, "PAKW.rds"))
+
+  if (!exists("traits_to_run")) {
+    candidate_traits <- c("GY", "KW")
+    traits_to_run <- candidate_traits[candidate_traits %in% names(Pheno)]
+  }
+
+  if (!exists("nIter"))  nIter  <- 10000
+  if (!exists("burnIn")) burnIn <- 1000
+  if (!exists("thin"))   thin   <- 10
+  if (!exists("num_rep")) num_rep <- 20
+  if (!exists("n_cores")) n_cores <- max(1L, parallel::detectCores() - 1L)
+
+  if (!exists("model_catalog")) {
+    model_catalog <- data.frame(
+      ModelNumber = 1:18,
+      Model = sprintf("M%02d", 1:18),
+      Description = c(
+        "E + G + GE",
+        "E + P + PE",
+        "E + GGK + GGKE",
+        "E + PGK + PGKE",
+        "E + GAK + GAKE",
+        "E + PAK + PAKE",
+        "E + G + P + GE + PE",
+        "E + GGK + PGK + GGKE + PGKE",
+        "E + GAK + PAK + GAKE + PAKE",
+        "E + W + G + GE + GW",
+        "E + W + P + PE + PW",
+        "E + W + G + P + GE + PE + GW + PW",
+        "E + W + GGK + GGKE + GGKW",
+        "E + W + PGK + PGKE + PGKW",
+        "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+        "E + W + GAK + GAKE + GAKW",
+        "E + W + PAK + PAKE + PAKW",
+        "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+      ),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  if (!exists("Eta_list")) {
+    env_design <- model.matrix(~ Pheno$Env - 1)
+
+    Eta_list <- list()
+
+    Eta_list[[1]]  <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZG,   model = "RKHS"),
+                           list(K = ZGZE, model = "RKHS"))
+
+    Eta_list[[2]]  <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZP,   model = "RKHS"),
+                           list(K = ZPZE, model = "RKHS"))
+
+    Eta_list[[3]]  <- list(list(X = env_design, model = "BRR"),
+                           list(K = GGK,  model = "RKHS"),
+                           list(K = GGKE, model = "RKHS"))
+
+    Eta_list[[4]]  <- list(list(X = env_design, model = "BRR"),
+                           list(K = PGK,  model = "RKHS"),
+                           list(K = PGKE, model = "RKHS"))
+
+    Eta_list[[5]]  <- list(list(X = env_design, model = "BRR"),
+                           list(K = GAK,  model = "RKHS"),
+                           list(K = GAKE, model = "RKHS"))
+
+    Eta_list[[6]]  <- list(list(X = env_design, model = "BRR"),
+                           list(K = PAK,  model = "RKHS"),
+                           list(K = PAKE, model = "RKHS"))
+
+    Eta_list[[7]]  <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZG,   model = "RKHS"),
+                           list(K = ZP,   model = "RKHS"),
+                           list(K = ZGZE, model = "RKHS"),
+                           list(K = ZPZE, model = "RKHS"))
+
+    Eta_list[[8]]  <- list(list(X = env_design, model = "BRR"),
+                           list(K = GGK,  model = "RKHS"),
+                           list(K = PGK,  model = "RKHS"),
+                           list(K = GGKE, model = "RKHS"),
+                           list(K = PGKE, model = "RKHS"))
+
+    Eta_list[[9]]  <- list(list(X = env_design, model = "BRR"),
+                           list(K = GAK,  model = "RKHS"),
+                           list(K = PAK,  model = "RKHS"),
+                           list(K = GAKE, model = "RKHS"),
+                           list(K = PAKE, model = "RKHS"))
+
+    Eta_list[[10]] <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZW,   model = "RKHS"),
+                           list(K = ZG,   model = "RKHS"),
+                           list(K = ZGZE, model = "RKHS"),
+                           list(K = ZGZW, model = "RKHS"))
+
+    Eta_list[[11]] <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZW,   model = "RKHS"),
+                           list(K = ZP,   model = "RKHS"),
+                           list(K = ZPZE, model = "RKHS"),
+                           list(K = ZPZW, model = "RKHS"))
+
+    Eta_list[[12]] <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZW,   model = "RKHS"),
+                           list(K = ZG,   model = "RKHS"),
+                           list(K = ZP,   model = "RKHS"),
+                           list(K = ZGZE, model = "RKHS"),
+                           list(K = ZPZE, model = "RKHS"),
+                           list(K = ZGZW, model = "RKHS"),
+                           list(K = ZPZW, model = "RKHS"))
+
+    Eta_list[[13]] <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZW,   model = "RKHS"),
+                           list(K = GGK,  model = "RKHS"),
+                           list(K = GGKE, model = "RKHS"),
+                           list(K = GGKW, model = "RKHS"))
+
+    Eta_list[[14]] <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZW,   model = "RKHS"),
+                           list(K = PGK,  model = "RKHS"),
+                           list(K = PGKE, model = "RKHS"),
+                           list(K = PGKW, model = "RKHS"))
+
+    Eta_list[[15]] <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZW,   model = "RKHS"),
+                           list(K = GGK,  model = "RKHS"),
+                           list(K = PGK,  model = "RKHS"),
+                           list(K = GGKE, model = "RKHS"),
+                           list(K = PGKE, model = "RKHS"),
+                           list(K = GGKW, model = "RKHS"),
+                           list(K = PGKW, model = "RKHS"))
+
+    Eta_list[[16]] <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZW,   model = "RKHS"),
+                           list(K = GAK,  model = "RKHS"),
+                           list(K = GAKE, model = "RKHS"),
+                           list(K = GAKW, model = "RKHS"))
+
+    Eta_list[[17]] <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZW,   model = "RKHS"),
+                           list(K = PAK,  model = "RKHS"),
+                           list(K = PAKE, model = "RKHS"),
+                           list(K = PAKW, model = "RKHS"))
+
+    Eta_list[[18]] <- list(list(X = env_design, model = "BRR"),
+                           list(K = ZW,   model = "RKHS"),
+                           list(K = GAK,  model = "RKHS"),
+                           list(K = PAK,  model = "RKHS"),
+                           list(K = GAKE, model = "RKHS"),
+                           list(K = PAKE, model = "RKHS"),
+                           list(K = GAKW, model = "RKHS"),
+                           list(K = PAKW, model = "RKHS"))
+  }
+}
+
+```
+
 
 ## 3. Preparar as pastas de saída usadas pelo fluxo de predição
 
@@ -93,7 +304,6 @@ dir.create(file.path("output", "tables", "analysis_prediction"), recursive = TRU
 Este chunk define os traços, os ambientes e os pedigrees usados pelos laços de execução. Ele permanece desativado porque pertence à camada pesada e depende diretamente dos objetos preparados nas etapas anteriores do pipeline.
 
 ```{r define-run-objects, eval=FALSE}
-traits_to_run <- c("GY", "KW")
 env_levels <- unique(Pheno$Env)
 pedigrees <- unique(Pheno$Pedigree)
 ```
@@ -337,8 +547,6 @@ for (trait_name in traits_to_run) {
 
   for (env_leave in env_levels) {
 
-    env_parts <- strsplit(env_leave, "_")[[1]]
-
     # CV0
     y_cv0 <- y_full
     idx_env_leave <- which(Pheno$Env == env_leave)
@@ -405,7 +613,7 @@ for (trait_name in traits_to_run) {
         file = paste0(
           "output/results/CV0_",
           trait_name,
-          "_", env_parts[1], "_", env_parts[2],
+          "_", env_leave,
           "_", model_label,
           "_rep1_fold1.csv"
         ),
@@ -486,7 +694,7 @@ for (trait_name in traits_to_run) {
           file = paste0(
             "output/results/CV00_",
             trait_name,
-            "_", env_parts[1], "_", env_parts[2],
+            "_", env_leave,
             "_", model_label,
             "_rep1_fold1.csv"
           ),
@@ -566,16 +774,31 @@ if (length(prediction_files) > 0) {
       )
     }
 
-    if (length(current_parts) == 6 && current_parts[1] %in% c("CV0", "CV00")) {
+    if (length(current_parts) >= 6 && current_parts[1] %in% c("CV0", "CV00")) {
+      current_cv <- current_parts[1]
+      current_trait <- current_parts[2]
+      current_rep <- current_parts[length(current_parts) - 1]
+      current_fold <- current_parts[length(current_parts)]
+      current_model <- current_parts[length(current_parts) - 2]
+
+      env_index_start <- 3
+      env_index_end <- length(current_parts) - 3
+      current_env_leave <- NA_character_
+
+      if (env_index_end >= env_index_start) {
+        current_env_leave <- paste(current_parts[env_index_start:env_index_end], collapse = "_")
+      }
+
       inventory_cvloo <- bind_rows(
         inventory_cvloo,
         data.frame(
           file_name = current_name,
-          CV = current_parts[1],
-          Trait = current_parts[2],
-          Env_leave = paste(current_parts[3], current_parts[4], sep = "_"),
-          Model = current_parts[5],
-          RepFold = current_parts[6],
+          CV = current_cv,
+          Trait = current_trait,
+          Env_leave = current_env_leave,
+          Model = current_model,
+          Rep = current_rep,
+          Fold = current_fold,
           stringsAsFactors = FALSE
         )
       )
@@ -612,7 +835,7 @@ counts_by_trait <- data.frame()
 if (nrow(inventory_cv12) > 0 || nrow(inventory_cvloo) > 0) {
   combined_inventory <- bind_rows(
     inventory_cv12 %>% mutate(Env_leave = NA_character_),
-    inventory_cvloo %>% mutate(Fold = NA_character_)
+    inventory_cvloo
   )
 
   counts_by_cv <- combined_inventory %>%
