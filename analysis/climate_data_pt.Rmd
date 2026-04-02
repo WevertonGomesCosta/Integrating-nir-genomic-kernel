@@ -60,7 +60,7 @@ Em termos práticos, o fluxo tem quatro objetivos:
 - figuras climáticas usadas para inspeção exploratória
 
 **Próxima etapa**
-- `matrizes_pt.Rmd` usa as saídas derivadas do clima geradas aqui para alinhar a informação ambiental com a estrutura observacional e construir o kernel climático (`W`).
+- `matrizes.Rmd` usa as saídas derivadas do clima geradas aqui para alinhar a informação ambiental com a estrutura observacional e construir o kernel climático (`W`).
 
 ## 2. Ambiente em R
 
@@ -511,7 +511,7 @@ p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperatur
     caption = "As curvas LOESS tracejadas são incluídas apenas para resumir as trajetórias sazonais de cada métrica de temperatura."
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
-  scale_color_manual(values = c("Minimum" = "#4285F4", "Mean" = "#F4B400", "Maximum" = "#DB4437"), limits = c("Minimum", "Mean", "Maximum"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  scale_color_manual(values = c("Mínima" = "#4285F4", "Média" = "#F4B400", "Máxima" = "#DB4437"), limits = c("Mínima", "Média", "Máxima"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
   theme_bw(base_size = 11) +
   theme(
     panel.grid.minor = element_blank(),
