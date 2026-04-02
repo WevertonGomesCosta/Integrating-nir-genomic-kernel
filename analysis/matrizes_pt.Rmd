@@ -64,7 +64,7 @@ Um objetivo prático central deste tutorial é garantir que todas as matrizes se
 - kernels de interação usados nas etapas seguintes
 
 **Próxima etapa**
-- os objetos gerados aqui são consumidos diretamente por `variance_components.Rmd` e `analysis_prediction.Rmd`.
+- os objetos gerados aqui são consumidos diretamente por `variance_components_pt.Rmd` e `analysis_prediction_pt.Rmd`.
 
 ## 2. Ambiente em R e dependências
 

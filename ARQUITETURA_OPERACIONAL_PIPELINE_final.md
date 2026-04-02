@@ -14,6 +14,8 @@ Ele deve ser mantido na **raiz do repositório** e servir como referência para:
 
 Este documento **não substitui** o checklist operacional. Ele funciona como **mapa estrutural permanente** do projeto.
 
+> Este documento deve ser mantido com o nome canônico `ARQUITETURA_OPERACIONAL_PIPELINE.md` na raiz do repositório.
+
 ---
 
 ## Regra estrutural central do projeto
@@ -75,10 +77,10 @@ descrição dos resultados
 ### 1. Etapa climática
 
 #### EN
-- `climate_data_en_chunk_described_final.Rmd`
+- `climate_data.Rmd`
 
 #### PT
-- `climate_data_pt_chunk_described_functional_final.Rmd`
+- `climate_data_pt.Rmd`
 
 #### Função
 - baixar e organizar dados climáticos;
@@ -94,10 +96,10 @@ descrição dos resultados
 ### 2. Etapa de matrizes e kernels
 
 #### EN
-- `matrizes_en_chunk_described_final.Rmd`
+- `matrizes.Rmd`
 
 #### PT
-- `matrizes_pt_chunk_described_functional_final.Rmd`
+- `matrizes_pt.Rmd`
 
 #### Função
 - harmonizar dados fenotípicos, genômicos, fenômicos e climáticos;
@@ -123,10 +125,10 @@ Objetos principais:
 ### 3. Etapa de componentes de variância
 
 #### EN
-- `variance_components_en_chunk_described_final.Rmd`
+- `variance_components.Rmd`
 
 #### PT
-- `variance_components_pt_functional_dependent_editorial_cleaned_final_v2.Rmd`
+- `variance_components_pt.Rmd`
 
 #### Função
 - consolidar resultados de componentes de variância;
@@ -265,10 +267,10 @@ Arquivos:
 ### 6. Etapa de visualização
 
 #### EN
-- `visualization_en_chunk_described_final.Rmd`
+- `visualization.Rmd`
 
 #### PT
-- `visualization_pt_chunk_described_functional_final.Rmd`
+- `visualization_pt.Rmd`
 
 #### Função
 - consolidar os resultados brutos da predição;
@@ -321,18 +323,18 @@ Pasta:
 
 ```text
 analysis/
-├── climate_data_en_chunk_described_final.Rmd
-├── climate_data_pt_chunk_described_functional_final.Rmd
-├── matrizes_en_chunk_described_final.Rmd
-├── matrizes_pt_chunk_described_functional_final.Rmd
-├── variance_components_en_chunk_described_final.Rmd
-├── variance_components_pt_functional_dependent_editorial_cleaned_final_v2.Rmd
+├── climate_data.Rmd
+├── climate_data_pt.Rmd
+├── matrizes.Rmd
+├── matrizes_pt.Rmd
+├── variance_components.Rmd
+├── variance_components_pt.Rmd
 ├── analysis_prediction.Rmd
 ├── analysis_prediction_pt.Rmd
 ├── analysis_prediction_run_outputs.Rmd
 ├── analysis_prediction_run_outputs_pt.Rmd
-├── visualization_en_chunk_described_final.Rmd
-├── visualization_pt_chunk_described_functional_final.Rmd
+├── visualization.Rmd
+├── visualization_pt.Rmd
 └── _site.yml
 
 output/
@@ -353,14 +355,14 @@ code/
 
 ## Navegação do site
 
-O menu do site deve refletir a divisão da etapa de predição em duas partes.
+O menu principal do site deve permanecer enxuto e priorizar as páginas principais em inglês.
 
-No submenu `Prediction`, a estrutura recomendada é:
+A etapa de predição deve continuar dividida em duas partes:
 
-- Part I: setup, models and CV design — English
-- Parte I: setup, modelos e desenho de CV — Português
-- Part II: run prediction and outputs — English
-- Parte II: execução da predição e saídas — Português
+- **Prediction — Part I**: `analysis_prediction.html`
+- **Prediction — Part II**: `analysis_prediction_run_outputs.html`
+
+As versões em português devem permanecer acessíveis por links internos nas páginas em inglês correspondentes.
 
 ### Regras de navegação interna
 
@@ -409,12 +411,12 @@ O pipeline deve priorizar:
 
 A execução principal recomendada é:
 
-1. `climate_data_en_chunk_described_final.Rmd`
-2. `matrizes_en_chunk_described_final.Rmd`
-3. `variance_components_en_chunk_described_final.Rmd`
+1. `climate_data.Rmd`
+2. `matrizes.Rmd`
+3. `variance_components.Rmd`
 4. `analysis_prediction.Rmd`
 5. `analysis_prediction_run_outputs.Rmd`
-6. `visualization_en_chunk_described_final.Rmd`
+6. `visualization.Rmd`
 7. `script_tabelas_resultados_pipeline_v2.R`
 
 As versões PT entram como:

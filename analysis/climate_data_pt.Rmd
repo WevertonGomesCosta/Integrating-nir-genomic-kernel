@@ -60,7 +60,7 @@ Em termos práticos, o fluxo tem quatro objetivos:
 - figuras climáticas usadas para inspeção exploratória
 
 **Próxima etapa**
-- `matrizes.Rmd` usa as saídas derivadas do clima geradas aqui para alinhar a informação ambiental com a estrutura observacional e construir o kernel climático (`W`).
+- `matrizes_pt.Rmd` usa as saídas derivadas do clima geradas aqui para alinhar a informação ambiental com a estrutura observacional e construir o kernel climático (`W`).
 
 ## 2. Ambiente em R
 
