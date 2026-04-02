@@ -81,7 +81,7 @@ dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
 
 When this submodule is rendered on its own, the objects created conceptually in Part I may not be available in memory. This chunk reloads the matrices required for prediction and reconstructs the basic execution objects needed later in the execution layer. Because these objects are used directly in the script, their load remains explicit in the English version.
 
-```{r load-required-objects}
+```{r load-required-objects, eval=FALSE}
   matrices_dir <- file.path(project_root, "output", "Matrizes")
 
   required_matrix_files <- c(

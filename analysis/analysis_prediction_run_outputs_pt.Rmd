@@ -24,7 +24,7 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 ## 1. Introdução
 
-Este segundo submódulo concentra a parte operacional da etapa de predição. O objetivo aqui é documentar como os jobs são organizados, onde as saídas são gravadas e como essas saídas são preparadas para os resumos consumidos mais adiante por `visualization.Rmd` e `visualization.html`.
+Este segundo submódulo concentra a parte operacional da etapa de predição. O objetivo aqui é documentar como os jobs são organizados, onde as saídas são gravadas e como essas saídas são preparadas para os resumos consumidos mais adiante por `visualization_pt.Rmd` e `visualization_pt.html`.
 
 O fluxo é dividido em duas camadas:
 
@@ -45,7 +45,7 @@ Na versão em português, a camada pesada continua documentada, mas não é rero
 - tabelas leves de metadados gravadas em `output/tables/analysis_prediction/`
 
 **Próxima etapa**
-- `visualization.Rmd` lê as saídas organizadas aqui para construir as tabelas-resumo finais e as figuras comparativas.
+- `visualization_pt.Rmd` lê as saídas organizadas aqui para construir as tabelas-resumo finais e as figuras comparativas.
 
 ## 2. Pacotes e caminhos do projeto
 
@@ -765,7 +765,7 @@ if (nrow(bglr_inventory) > 0) {
 
 ## 13. Nota final
 
-Este submódulo fecha a etapa de predição ao documentar tanto os blocos de execução pesada quanto a estrutura dos arquivos que alimentam a próxima etapa do pipeline. Os resumos nas etapas posteriores, as médias ponderadas, as tabelas finais do manuscrito e as figuras são gerados depois por `visualization.Rmd` e `visualization.html`.
+Este submódulo fecha a etapa de predição ao documentar tanto os blocos de execução pesada quanto a estrutura dos arquivos que alimentam a próxima etapa do pipeline. Os resumos nas etapas posteriores, as médias ponderadas, as tabelas finais do manuscrito e as figuras são gerados depois por `visualization_pt.Rmd` e `visualization_pt.html`.
 
 ## Navegação entre etapas
 
