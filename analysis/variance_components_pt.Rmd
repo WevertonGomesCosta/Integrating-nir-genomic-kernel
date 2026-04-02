@@ -65,7 +65,7 @@ Uma grande proporção de variância associada a uma dada fonte não deve ser in
 - tabelas percentuais e figuras diagnósticas
 
 **Próxima etapa**
-- esta etapa complementa a interpretação estrutural dos modelos e deve ser lida em conjunto com os resultados preditivos gerados depois em `analysis_prediction.Rmd`.
+- esta etapa complementa a interpretação estrutural dos modelos e deve ser lida em conjunto com os resultados preditivos gerados depois em `analysis_prediction_pt.Rmd`.
 
 ## 2. Ambiente em R e entradas necessárias
 
