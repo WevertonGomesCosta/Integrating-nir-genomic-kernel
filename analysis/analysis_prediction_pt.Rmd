@@ -47,7 +47,7 @@ Ao separar setup, especificação dos modelos e desenho do CV da etapa de execu�
 - desenho conceitual de `CV1`, `CV2`, `CV0` e `CV00`
 
 **Próxima etapa**
-- `analysis_prediction_run_outputs.Rmd` documenta a execução operacional dos jobs de predição e a organização das saídas usadas depois por `visualization.Rmd`.
+- `analysis_prediction_run_outputs_pt.Rmd` documenta a execução operacional dos jobs de predição e a organização das saídas usadas depois por `visualization_pt.Rmd`.
 
 ## 2. Pacotes e opções
 
