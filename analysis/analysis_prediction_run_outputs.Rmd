@@ -75,15 +75,13 @@ analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_pre
 
 dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
 
-heavy_execution_enabled <- FALSE
 ```
 
-### Hidden load of the execution objects
+### Load of the execution objects
 
-When this submodule is rendered on its own, the objects created conceptually in Part I may not be available in memory. This hidden chunk reloads the matrices required for prediction and reconstructs the basic execution objects only when they are still missing. That keeps the execution layer documented and reproducible without forcing the reader to rerun the previous file in the same session.
+When this submodule is rendered on its own, the objects created conceptually in Part I may not be available in memory. This chunk reloads the matrices required for prediction and reconstructs the basic execution objects needed later in the execution layer. Because these objects are used directly in the script, their load remains explicit in the English version.
 
-```{r load-required-objects, include=FALSE}
-if (isTRUE(heavy_execution_enabled)) {
+```{r load-required-objects}
   matrices_dir <- file.path(project_root, "output", "Matrizes")
 
   required_matrix_files <- c(
@@ -282,8 +280,6 @@ if (isTRUE(heavy_execution_enabled)) {
                            list(K = GAKW, model = "RKHS"),
                            list(K = PAKW, model = "RKHS"))
   }
-}
-
 ```
 
 
