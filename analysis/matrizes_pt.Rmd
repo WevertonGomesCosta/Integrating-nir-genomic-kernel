@@ -89,6 +89,9 @@ suppressPackageStartupMessages({
   library(MASS)
   library(gridExtra)
   library(grid)
+  library(knitr)
+  library(kableExtra)
+  library(tools)
   library(patchwork)
 })
 

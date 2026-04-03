@@ -88,6 +88,8 @@ library(ggthemes)
 library(scales)
 library(fs)
 library(grid)
+library(knitr)
+library(kableExtra)
 ```
 
 ### 2.1. File paths

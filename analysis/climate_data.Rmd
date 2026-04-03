@@ -88,6 +88,8 @@ library(tidyverse)
 library(lubridate)
 library(patchwork)
 library(ggthemes)
+library(knitr)
+library(grid)
 library(kableExtra)
 
 if (!dir.exists("output")) dir.create("output")
