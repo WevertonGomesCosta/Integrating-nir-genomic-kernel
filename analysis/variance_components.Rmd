@@ -87,6 +87,7 @@ library(foreach)
 library(ggthemes)
 library(scales)
 library(fs)
+library(grid)
 ```
 
 ### 2.1. File paths

@@ -25,13 +25,14 @@ options(scipen = 999)
 # -----------------------------------------------------------------------------
 # 1. Pacotes
 # -----------------------------------------------------------------------------
-# Nesta seção carregamos apenas os pacotes necessários para leitura de arquivos
-# e manipulação simples de tabelas.
+# Nesta seção carregamos os pacotes usados no script para leitura de arquivos,
+# manipulação simples de tabelas e identificação de extensões de arquivos.
 # -----------------------------------------------------------------------------
 
 library(readr)
 library(dplyr)
 library(stringr)
+library(tools)
 
 # -----------------------------------------------------------------------------
 # 2. Localizar a raiz do projeto e criar pasta de saída

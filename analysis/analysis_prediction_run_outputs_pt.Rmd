@@ -49,7 +49,7 @@ Na versão em português, a camada pesada continua documentada, mas não é rero
 
 ## 2. Pacotes e caminhos do projeto
 
-Este chunk carrega apenas os pacotes necessários para a revisão leve das saídas de predição e padroniza os caminhos usados adiante no arquivo. O objetivo é tornar o documento robusto quando renderizado tanto a partir da raiz do projeto quanto da pasta `analysis/`.
+Este bloco carrega explicitamente os pacotes usados neste script e padroniza os caminhos que serão usados adiante. Mesmo quando a execução pesada permanece desativada no tutorial, os pacotes ligados à camada de execução continuam declarados aqui para deixar claro quais dependências pertencem a este módulo.
 
 ```{r setup}
 rm(list = ls())
@@ -59,6 +59,10 @@ library(readr)
 library(dplyr)
 library(stringr)
 library(knitr)
+library(BGLR)
+library(foreach)
+library(doParallel)
+library(parallel)
 
 project_root <- getwd()
 

@@ -47,7 +47,7 @@ In the tutorial version, the heavy execution chunks remain disabled. This keeps 
 
 ## 2. Packages and project paths
 
-This chunk loads only the packages required for the light review of prediction outputs and standardizes the paths used later in the file. The objective is to make the document robust whether it is rendered from the project root or from the `analysis/` folder.
+This section loads explicitly the packages used in this script and standardizes the paths that will be used later in the file. Even when the heavy execution layer remains disabled in the tutorial, the packages associated with that layer are still declared here so that the dependencies of this module remain clear to the reader.
 
 ```{r setup}
 rm(list = ls())
@@ -57,6 +57,10 @@ library(readr)
 library(dplyr)
 library(stringr)
 library(knitr)
+library(BGLR)
+library(foreach)
+library(doParallel)
+library(parallel)
 
 project_root <- getwd()
 
