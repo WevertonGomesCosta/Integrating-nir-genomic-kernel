@@ -81,7 +81,7 @@ dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
 
 When this submodule is rendered on its own, the objects created conceptually in Part I may not be available in memory. This chunk reloads the matrices required for prediction and reconstructs the basic execution objects needed later in the execution layer. Because these objects are used directly in the script, their load remains explicit in the English version.
 
-```{r load-required-objects, eval=TRUE}
+```{r load-required-objects, eval=FALSE}
   matrices_dir <- file.path(project_root, "output", "Matrizes")
 
   required_matrix_files <- c(
@@ -287,7 +287,7 @@ When this submodule is rendered on its own, the objects created conceptually in 
 
 This chunk shows the first operational step of the prediction stage: creating the folders where the raw CSV files and the auxiliary `BGLR` artifacts are stored. Because these folders are part of the heavy execution layer, the chunk remains disabled in the tutorial.
 
-```{r prepare-output-folders, eval=TRUE}
+```{r prepare-output-folders, eval=FALSE}
 dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path("output", "results", "bglr_runs"), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path("output", "tables", "analysis_prediction"), recursive = TRUE, showWarnings = FALSE)
@@ -297,7 +297,7 @@ dir.create(file.path("output", "tables", "analysis_prediction"), recursive = TRU
 
 This chunk defines the traits, environment labels, and pedigree labels that control the loops used later in the execution. It is kept disabled here because it belongs to the same heavy execution layer and depends on the matrices and phenotypic table prepared earlier in the pipeline.
 
-```{r define-run-objects, eval=TRUE}
+```{r define-run-objects, eval=FALSE}
 env_levels <- unique(Pheno$Env)
 pedigrees <- unique(Pheno$Pedigree)
 ```
@@ -306,7 +306,7 @@ pedigrees <- unique(Pheno$Pedigree)
 
 This chunk documents the parallel backend used by `foreach`. The cluster is started, registered, and configured so that each worker can fit models independently. The chunk remains disabled in the tutorial because it is part of the expensive execution stage.
 
-```{r start-parallel-backend, eval=TRUE}
+```{r start-parallel-backend, eval=FALSE}
 cl <- parallel::makeCluster(n_cores)
 doParallel::registerDoParallel(cl)
 
@@ -325,7 +325,7 @@ parallel::clusterEvalQ(cl, {
 
 This chunk contains the operational block used for `CV1` and `CV2`. It creates genotype folds, masks the appropriate observations, fits the 18 models in parallel, and stores one CSV per result object. The chunk is disabled because it is the computational core of the prediction pipeline.
 
-```{r run-predictions-cv12, eval=TRUE}
+```{r run-predictions-cv12, eval=FALSE}
 for (trait_name in traits_to_run) {
 
   y_full <- Pheno[[trait_name]]
@@ -534,7 +534,7 @@ for (trait_name in traits_to_run) {
 
 This chunk documents the operational block for the leave-one-environment-out scenarios. The logic is similar to the previous chunk, but now the masking strategy is defined at the environment level. The chunk remains disabled in the tutorial version.
 
-```{r run-predictions-cv0-cv00, eval=TRUE}
+```{r run-predictions-cv0-cv00, eval=FALSE}
 for (trait_name in traits_to_run) {
 
   y_full <- Pheno[[trait_name]]
