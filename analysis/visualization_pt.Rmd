@@ -8,31 +8,26 @@ output:
 
 **Language / Idioma:** [English](visualization.html) | [Português](visualization_pt.html)
 
-Este arquivo é a **versão didática** do fluxo final de visualização. Sua função é ler as saídas de predição geradas por `analysis_prediction_run_outputs.Rmd`, reorganizá-las em tabelas-resumo tidy e depois construir as figuras e os displays compactos usados adiante no manuscrito.
+Este arquivo é a versão didática da etapa de visualização. Sua finalidade é tomar as saídas brutas de predição produzidas em `analysis_prediction_run_outputs.Rmd`, reorganizá-las em tabelas-resumo interpretáveis e depois traduzir esses resumos em comparações compactas e figuras finais.
 
-O fluxo atual de predição grava arquivos brutos de saída em `output/results/` usando os seguintes padrões:
+Neste ponto do pipeline, a principal pergunta analítica já não é mais como cada modelo é especificado, mas como os modelos ajustados se comportam sob diferentes problemas de predição. Por essa razão, a etapa de visualização desloca o foco da construção dos modelos para a interpretação dos modelos. Ela reúne resumos de desempenho para `CV1`, `CV2`, `CV0` e `CV00`, destaca contrastes entre modelos com e sem o kernel climático (`W`) e organiza os resultados em tabelas e figuras que são mais fáceis de inspecionar do que os próprios arquivos brutos de predição.
 
-- `CV1_<trait>_<model>_rep<rep>_fold<fold>.csv`
-- `CV2_<trait>_<model>_rep<rep>_fold<fold>.csv`
-- `CV0_<trait>_<Env_leave>_<model>_rep<rep>_fold<fold>.csv`
-- `CV00_<trait>_<Env_leave>_<model>_rep<rep>_fold<fold>.csv`
+O fluxo atual de predição grava saídas brutas em `output/results/` usando nomes de arquivo que codificam o cenário de validação, o traço, o modelo ajustado, a repetição e o fold. Para `CV0` e `CV00`, o rótulo do ambiente deixado de fora também é registrado no nome do arquivo e depois é associado a `Env` pelo filtro `Env == Env_leave`. Essa estrutura de nomes é essencial porque conecta a etapa de execução à etapa de interpretação.
 
-Neste fluxo, a repetição e o fold são recuperados diretamente do nome do arquivo. Para `CV0` e `CV00`, o rótulo do ambiente deixado de fora também é recuperado do nome e depois associado a `Env` pelo filtro `Env == Env_leave`.
-
-Em linha com a interpretação analítica atual do repositório, o **kernel climático (`W`)** deve ser entendido como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente (`E`). O componente fenômico (`P`) também deve ser interpretado com cautela, porque a similaridade baseada em NIRS pode capturar forte resposta fisiológica ao ambiente além de estrutura preditiva potencialmente útil.
+Ao longo deste tutorial, o **kernel climático (`W`)** deve ser interpretado como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente (`E`). O componente fenômico (`P`) também deve ser interpretado com cuidado, porque a similaridade baseada em NIRS pode refletir forte resposta ambiental além de sinal preditivo potencialmente útil.
 
 ### O que este script faz
 
 O fluxo é organizado em quatro tarefas práticas:
 
 1. localizar e ler os arquivos CSV de predição;
-2. interpretar os nomes dos arquivos e recuperar traço, modelo, repetição e a informação de leave-one-environment-out;
+2. interpretar os nomes dos arquivos e recuperar as informações de traço, modelo, repetição e leave-one-environment-out;
 3. resumir os resultados para `CV1`, `CV2`, `CV0` e `CV00`;
 4. exportar tabelas limpas e figuras para a próxima etapa orientada ao manuscrito.
 
-Para facilitar a interpretação, os modelos são ordenados para ajudar a responder três perguntas práticas:
+Para tornar a interpretação mais fácil, os modelos são ordenados para ajudar a responder três perguntas práticas:
 
-1. passar de kernels lineares para Gaussianos ou arc-cosine melhora a capacidade preditiva?
+1. passar de kernels lineares para kernels Gaussianos ou arc-cosine melhora a capacidade preditiva?
 2. adicionar o kernel climático (`W`) melhora a capacidade preditiva?
 3. combinar informação genômica e fenômica melhora a capacidade preditiva?
 
@@ -44,7 +39,7 @@ Para facilitar a interpretação, os modelos são ordenados para ajudar a respon
 
 **Saídas desta etapa**
 - tabelas-resumo finais
-- rankings dos modelos
+- rankings de modelos
 - comparações do efeito de `W`
 - comparações entre famílias de kernel
 - figuras finais para interpretação posterior
@@ -54,9 +49,7 @@ Para facilitar a interpretação, os modelos são ordenados para ajudar a respon
 
 ## 1. Configuração
 
-Começamos definindo as opções padrão dos chunks para o relatório renderizado. O objetivo é manter código, tabelas e figuras legíveis quando o tutorial é renderizado em HTML.
-
-Este chunk define as opções globais de renderização do documento para que tabelas e figuras apareçam com um padrão de apresentação consistente.
+O documento começa definindo um estilo consistente de renderização para código, tabelas e figuras. Isso ajuda o tutorial a permanecer legível quando é inspecionado em HTML e mantém estável a apresentação visual entre os diferentes outputs produzidos nesta etapa.
 
 ```{r setup}
 knitr::opts_chunk$set( echo = TRUE,
@@ -69,9 +62,9 @@ knitr::opts_chunk$set( echo = TRUE,
 
 ## 2. Carregar pacotes e localizar as pastas do projeto
 
-Esta seção carrega os pacotes usados para manipulação de dados, construção de figuras e formatação de tabelas. Ela também verifica se o script está sendo executado a partir da raiz do projeto ou de `analysis/` e então padroniza os caminhos de saída.
+A etapa de visualização depende de um pequeno conjunto de pacotes para manipulação de dados, construção de figuras e formatação de tabelas. Ela também precisa localizar corretamente as pastas do projeto, porque os resumos gerados aqui devem ser gravados em caminhos de saída estáveis que depois podem ser reutilizados pelo site e por materiais orientados ao manuscrito.
 
-Este chunk carrega os pacotes de visualização e manipulação de dados, localiza as pastas do projeto e prepara os diretórios de saída usados neste módulo.
+Esta seção padroniza a raiz do projeto, localiza as pastas que contêm as saídas de predição e prepara os diretórios nos quais as tabelas e figuras finais serão gravadas.
 
 ```{r packages-and-paths}
 rm(list = ls())
@@ -114,9 +107,9 @@ dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
 
 ## 3. Catálogo de modelos usado no pipeline reduzido
 
-A etapa de visualização usa o mesmo catálogo reduzido de 18 modelos adotado no fluxo final de predição. Aqui o catálogo é reorganizado para enfatizar via analítica, família de kernel e a presença ou ausência de informação climática.
+A etapa de visualização usa o mesmo catálogo reduzido de 18 modelos adotado no fluxo de predição. Aqui esse catálogo é reorganizado para que os resumos se tornem mais fáceis de interpretar em termos analíticos. Em vez de mostrar apenas números de modelo, a tabela enfatiza a via representada, a família de kernel utilizada e se a informação climática está presente.
 
-Este chunk define o catálogo reduzido de modelos usado para anotar resumos, figuras e tabelas comparativas ao longo do documento.
+Essa organização é importante porque as comparações mostradas mais adiante no documento não são arbitrárias. Elas foram desenhadas para ajudar o leitor a entender de onde vêm os ganhos preditivos e se esses ganhos estão associados à informação climática, à escolha do kernel ou à integração entre fontes genômicas e fenômicas.
 
 ```{r model-catalog}
 model_catalog <- tibble( ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
@@ -132,9 +125,9 @@ model_catalog
 
 ## 4. Pares de comparação usados para contrastes entre com W e sem W
 
-Esta tabela auxiliar define os contrastes pareados entre modelos que diferem apenas pela inclusão do kernel climático (`W`). Essas comparações são exportadas mais adiante como tabelas analíticas prontas para o manuscrito.
+Uma pergunta central neste projeto é se adicionar o kernel climático (`W`) melhora a capacidade preditiva. Para responder a essa pergunta de forma justa, a comparação deve sempre ser feita entre modelos estruturalmente semelhantes e que diferem apenas pela inclusão da informação climática.
 
-Este chunk especifica os pares de modelos comparados nos contrastes entre versões sem `W` e com `W` usados mais adiante no tutorial.
+Os pares de comparação definidos abaixo fornecem exatamente essa estrutura. Eles são usados mais adiante para construir tabelas que quantificam quanto o desempenho preditivo muda quando `W` é introduzido dentro da mesma via e da mesma família de kernel.
 
 ```{r comparison-pairs}
 comparison_pairs <- tibble( Comparison = c( "Genômico linear", "Genômico Gaussiano", "Genômico arc-cosine", "Fenômico linear", "Fenômico Gaussiano", "Fenômico arc-cosine", "Combinado linear", "Combinado Gaussiano", "Combinado arc-cosine" ),
@@ -143,7 +136,13 @@ comparison_pairs <- tibble( Comparison = c( "Genômico linear", "Genômico Gauss
 comparison_pairs
 ```
 
-Este chunk carrega silenciosamente as tabelas já produzidas pelo arquivo em inglês, evitando repetir a leitura e a consolidação completas dos resultados de predição.
+## 5. Localizar arquivos de predição
+
+O primeiro passo operacional da etapa de visualização é localizar os arquivos brutos de predição produzidos pelo módulo anterior. Esses arquivos ficam armazenados em `output/results/` e são separados aqui de acordo com o problema de validação que representam.
+
+Manter `CV1/CV2` separados de `CV0/CV00` neste ponto torna os resumos posteriores mais fáceis de construir e mais fáceis de interpretar, porque os dois grupos correspondem a problemas de generalização diferentes.
+
+Na versão em português, as tabelas leves já produzidas pelo arquivo em inglês são carregadas silenciosamente para evitar repetir a leitura e a consolidação completas dos resultados de predição.
 
 ```{r load-generated-visualization-outputs, include=FALSE}
 required_tables <- c(
@@ -368,10 +367,6 @@ cv12_kernel_family_compare <- cv12_kernel_family_compare %>%
       "Phenomic pathway" = "Via fenômica",
       "Combined G + P pathway" = "Via combinada G + P"
     ),
-    KernelFamily = dplyr::recode(
-      KernelFamily,
-      "Gaussian" = "Gaussiano"
-    ),
     WeatherStatus = dplyr::recode(
       WeatherStatus,
       "Without W" = "Sem W",
@@ -386,10 +381,6 @@ cvloo_kernel_family_compare <- cvloo_kernel_family_compare %>%
       "Genomic pathway" = "Via genômica",
       "Phenomic pathway" = "Via fenômica",
       "Combined G + P pathway" = "Via combinada G + P"
-    ),
-    KernelFamily = dplyr::recode(
-      KernelFamily,
-      "Gaussian" = "Gaussiano"
     ),
     WeatherStatus = dplyr::recode(
       WeatherStatus,
@@ -436,14 +427,7 @@ cvloo_table_display <- cvloo_table_display %>%
     )
   )
 
-
-## 5. Localizar os arquivos de predição
-
-Na versão funcional em português, os blocos de leitura, consolidação e exportação permanecem documentados, mas não são reexecutados durante o knit. Em vez disso, este arquivo carrega silenciosamente as tabelas já produzidas pela versão em inglês de `visualization.Rmd`, preservando as tabelas e figuras finais sem duplicar o processamento.
-
-Neste ponto o script varre `output/results/`, separa os arquivos de `CV1/CV2` dos arquivos de `CV0/CV00` e interrompe cedo se nenhuma saída de predição for encontrada.
-
-Este chunk documenta a localização dos arquivos de predição gerados no módulo anterior e a separação deles por cenário de validação.
+```
 
 ```{r locate-files, eval=FALSE}
 all_result_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE)
@@ -468,7 +452,7 @@ cv12_list <- vector("list", length(cv12_files))
 for (i in seq_along(cv12_files)) {
   current_file <- cv12_files[i]
   file_name <- basename(current_file)
-  file_name <- sub("\.csv$", "", file_name)
+  file_name <- sub("\\.csv$", "", file_name)
   parts <- strsplit(file_name, "_")[[1]]
 
   if (length(parts) != 5) {
@@ -514,6 +498,8 @@ O script final de predição deve exportar colunas incluindo Env e cor."
 cv12_raw <- bind_rows(cv12_list) %>%
   left_join(model_catalog, by = c("ModelNumber", "Model"))
 
+
+if (!("Runtime_sec" %in% names(cv12_raw))) cv12_raw$Runtime_sec <- NA_real_
 readr::write_csv(cv12_raw, file.path(tables_dir, "prediction_cv1_cv2_raw.csv"))
 ```
 
@@ -528,7 +514,7 @@ cvloo_list <- vector("list", length(cvloo_files))
 for (i in seq_along(cvloo_files)) {
   current_file <- cvloo_files[i]
   file_name <- basename(current_file)
-  file_name <- sub("\.csv$", "", file_name)
+  file_name <- sub("\\.csv$", "", file_name)
   parts <- strsplit(file_name, "_")[[1]]
 
   if (length(parts) < 6) {
@@ -574,6 +560,7 @@ O script final de predição deve exportar colunas incluindo Env e cor."
 }
 cvloo_raw <- bind_rows(cvloo_list) %>%
   left_join(model_catalog, by = c("ModelNumber", "Model"))
+if (!("Runtime_sec" %in% names(cvloo_raw))) cvloo_raw$Runtime_sec <- NA_real_
 readr::write_csv(cvloo_raw, file.path(tables_dir, "prediction_cv0_cv00_raw.csv"))
 readr::write_csv(model_catalog, file.path(tables_dir, "prediction_model_catalog.csv"))
 ```
