@@ -1,4 +1,4 @@
-# script_tabelas_resultados_pipeline_v2.R
+# script_tabelas_resultados_pipeline_v3.R
 # -----------------------------------------------------------------------------
 # OBJETIVO
 # -----------------------------------------------------------------------------
@@ -11,9 +11,10 @@
 # 2) resumir as principais saídas climáticas;
 # 3) criar um inventário leve dos objetos gerados em output/Matrizes;
 # 4) resumir os resultados de variance_components;
-# 5) resumir os arquivos brutos de predição;
-# 6) organizar as tabelas finais produzidas por visualization.Rmd;
-# 7) gerar uma tabela final de checagem do pipeline.
+# 5) resumir os arquivos brutos de predição no novo formato Rep/Fold;
+# 6) inventariar os artefatos persistentes do BGLR;
+# 7) organizar as tabelas finais produzidas por visualization.Rmd;
+# 8) gerar uma tabela final de checagem do pipeline.
 #
 # Este script foi escrito em português, com foco em didática, funcionalidade
 # e simplicidade.
@@ -25,9 +26,6 @@ options(scipen = 999)
 # -----------------------------------------------------------------------------
 # 1. Pacotes
 # -----------------------------------------------------------------------------
-# Nesta seção carregamos os pacotes usados no script para leitura de arquivos,
-# manipulação simples de tabelas e identificação de extensões de arquivos.
-# -----------------------------------------------------------------------------
 
 library(readr)
 library(dplyr)
@@ -36,10 +34,6 @@ library(tools)
 
 # -----------------------------------------------------------------------------
 # 2. Localizar a raiz do projeto e criar pasta de saída
-# -----------------------------------------------------------------------------
-# O script pode ser executado a partir da raiz do projeto, de code/ ou de
-# analysis/. Aqui padronizamos os caminhos e criamos uma pasta própria para as
-# tabelas de revisão do pipeline.
 # -----------------------------------------------------------------------------
 
 project_root <- getwd()
@@ -63,11 +57,27 @@ cat("Raiz do projeto:", project_root, "\n")
 cat("Pasta de saída das tabelas de revisão:", review_dir, "\n")
 
 # -----------------------------------------------------------------------------
-# 3. Inventário geral de arquivos do pipeline
+# 3. Funções auxiliares
 # -----------------------------------------------------------------------------
-# Aqui criamos uma tabela com os arquivos encontrados nas principais pastas do
-# pipeline. Importante: excluímos a própria pasta pipeline_review para evitar
-# que o inventário comece a listar os arquivos de auditoria gerados pelo script.
+
+path_to_relative <- function(path, root) {
+  gsub(
+    paste0("^", normalizePath(root, winslash = "/"), "/?"),
+    "",
+    normalizePath(path, winslash = "/", mustWork = FALSE)
+  )
+}
+
+safe_read_csv_rows <- function(path) {
+  out <- tryCatch(
+    nrow(readr::read_csv(path, show_col_types = FALSE, progress = FALSE)),
+    error = function(e) NA_integer_
+  )
+  out
+}
+
+# -----------------------------------------------------------------------------
+# 4. Inventário geral de arquivos do pipeline
 # -----------------------------------------------------------------------------
 
 inventory <- data.frame()
@@ -94,11 +104,7 @@ for (current_dir in dirs_to_scan) {
       if (length(current_files_norm) > 0) {
         current_info <- data.frame(
           folder = basename(current_dir),
-          relative_path = gsub(
-            paste0("^", normalizePath(project_root, winslash = "/"), "/?"),
-            "",
-            current_files_norm
-          ),
+          relative_path = path_to_relative(current_files_norm, project_root),
           file_name = basename(current_files_norm),
           extension = tools::file_ext(current_files_norm),
           stringsAsFactors = FALSE
@@ -118,13 +124,7 @@ if (nrow(inventory) > 0) {
 }
 
 # -----------------------------------------------------------------------------
-# 4. Resumo dos arquivos climáticos
-# -----------------------------------------------------------------------------
-# Esta seção resume os arquivos principais produzidos por climate_data.Rmd.
-# O objetivo é deixar claro:
-# - quais tabelas climáticas existem;
-# - quantas linhas e colunas cada uma possui;
-# - quais ambientes aparecem em cada tabela.
+# 5. Resumo dos arquivos climáticos
 # -----------------------------------------------------------------------------
 
 climate_file_annual <- file.path(output_dir, "climate_results", "environmental_covariates.csv")
@@ -197,17 +197,7 @@ if (nrow(climate_overview) > 0) {
 }
 
 # -----------------------------------------------------------------------------
-# 5. Inventário leve dos objetos em output/Matrizes
-# -----------------------------------------------------------------------------
-# Aqui criamos um inventário mais leve dos .rds produzidos por matrizes.Rmd.
-# Para evitar alto consumo de memória, o script:
-#
-# - sempre registra nome do arquivo e tamanho em disco;
-# - tenta ler o objeto apenas quando o arquivo for pequeno;
-# - pula a leitura de objetos grandes.
-#
-# Assim, a etapa continua informativa, mas evita virar uma mini execução pesada
-# da etapa de matrizes.
+# 6. Inventário leve dos objetos em output/Matrizes
 # -----------------------------------------------------------------------------
 
 matrices_dir <- file.path(output_dir, "Matrizes")
@@ -271,11 +261,7 @@ if (nrow(matrix_inventory) > 0) {
 }
 
 # -----------------------------------------------------------------------------
-# 6. Resumo dos resultados de variance_components
-# -----------------------------------------------------------------------------
-# Esta seção organiza as principais saídas produzidas em output/variance_components.
-# O objetivo é deixar prontas tabelas fáceis de revisar antes da descrição dos
-# resultados.
+# 7. Resumo dos resultados de variance_components
 # -----------------------------------------------------------------------------
 
 variance_dir <- file.path(output_dir, "variance_components")
@@ -350,82 +336,105 @@ if (file.exists(variance_file_table)) {
   write_csv(variance_table, file.path(review_dir, "13_variance_components_table_percent_review.csv"))
 }
 
+variance_bglr_dir <- file.path(variance_dir, "bglr_runs")
+variance_bglr_inventory <- data.frame()
+
+if (dir.exists(variance_bglr_dir)) {
+  variance_bglr_files <- list.files(variance_bglr_dir, recursive = TRUE, full.names = TRUE)
+
+  if (length(variance_bglr_files) > 0) {
+    variance_bglr_inventory <- data.frame(
+      relative_path = path_to_relative(variance_bglr_files, project_root),
+      file_name = basename(variance_bglr_files),
+      extension = tools::file_ext(variance_bglr_files),
+      size_kb = round(file.info(variance_bglr_files)$size / 1024, 2),
+      stringsAsFactors = FALSE
+    ) %>%
+      arrange(relative_path)
+
+    write_csv(variance_bglr_inventory, file.path(review_dir, "13b_variance_bglr_runs_inventario.csv"))
+  }
+}
+
 # -----------------------------------------------------------------------------
-# 7. Inventário dos arquivos brutos de predição
-# -----------------------------------------------------------------------------
-# Nesta seção organizamos os arquivos presentes em output/results/. A ideia é
-# resumir rapidamente:
-# - esquema de validação (CV1, CV2, CV0, CV00);
-# - trait;
-# - modelo;
-# - repetição;
-# - fold;
-# - ambiente deixado de fora quando aplicável.
+# 8. Inventário dos arquivos brutos de predição (novo padrão Rep/Fold)
 # -----------------------------------------------------------------------------
 
 results_dir <- file.path(output_dir, "results")
 prediction_inventory <- data.frame()
 
 if (dir.exists(results_dir)) {
-  prediction_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE)
+  prediction_files <- list.files(results_dir, pattern = "\\.csv$", recursive = TRUE, full.names = TRUE)
 
   if (length(prediction_files) > 0) {
-    for (current_file in prediction_files) {
-      current_name <- basename(current_file)
-      current_name_no_ext <- sub("\\.csv$", "", current_name)
-      current_parts <- strsplit(current_name_no_ext, "_")[[1]]
+    prediction_files <- prediction_files[!grepl("/bglr_runs/", normalizePath(prediction_files, winslash = "/", mustWork = FALSE), fixed = FALSE)]
 
-      current_cv <- NA_character_
-      current_trait <- NA_character_
-      current_model <- NA_character_
-      current_rep <- NA_character_
-      current_fold <- NA_character_
-      current_env_leave <- NA_character_
+    if (length(prediction_files) > 0) {
+      for (current_file in prediction_files) {
+        relative_path <- path_to_relative(current_file, results_dir)
+        path_parts <- strsplit(relative_path, "/")[[1]]
+        current_name <- basename(current_file)
+        current_name_no_ext <- sub("\\.csv$", "", current_name)
 
-      if (length(current_parts) >= 5 && current_parts[1] %in% c("CV1", "CV2")) {
-        current_cv <- current_parts[1]
-        current_trait <- current_parts[2]
-        current_model <- current_parts[length(current_parts) - 2]
-        current_rep <- current_parts[length(current_parts) - 1]
-        current_fold <- current_parts[length(current_parts)]
-      }
+        current_cv <- NA_character_
+        current_trait <- NA_character_
+        current_model <- NA_character_
+        current_rep <- NA_character_
+        current_fold <- NA_character_
+        current_env_leave <- NA_character_
 
-      if (length(current_parts) >= 6 && current_parts[1] %in% c("CV0", "CV00")) {
-        current_cv <- current_parts[1]
-        current_trait <- current_parts[2]
-        current_model <- current_parts[length(current_parts) - 2]
-        current_rep <- current_parts[length(current_parts) - 1]
-        current_fold <- current_parts[length(current_parts)]
+        if (length(path_parts) >= 5 && path_parts[1] %in% c("CV1", "CV2")) {
+          current_cv <- path_parts[1]
+          current_trait <- path_parts[2]
+          current_rep <- path_parts[3]
+          current_fold <- path_parts[4]
 
-        env_index_start <- 3
-        env_index_end <- length(current_parts) - 3
-
-        if (env_index_end >= env_index_start) {
-          current_env_leave <- paste(current_parts[env_index_start:env_index_end], collapse = "_")
+          model_match <- stringr::str_match(current_name_no_ext, "Eta([0-9]+)")
+          if (!is.na(model_match[1, 2])) {
+            current_model <- paste0("Eta", model_match[1, 2])
+          }
         }
-      }
 
-      prediction_inventory <- bind_rows(
-        prediction_inventory,
-        data.frame(
-          file_name = current_name,
-          CV = current_cv,
-          Trait = current_trait,
-          Env = current_env_leave,
-          Env_leave = current_env_leave,
-          Model = current_model,
-          Rep = current_rep,
-          Fold = current_fold,
-          stringsAsFactors = FALSE
+        if (length(path_parts) >= 6 && path_parts[1] %in% c("CV0", "CV00")) {
+          current_cv <- path_parts[1]
+          current_env_leave <- path_parts[2]
+          current_trait <- path_parts[3]
+          current_rep <- path_parts[4]
+          current_fold <- path_parts[5]
+
+          model_match <- stringr::str_match(current_name_no_ext, "Eta([0-9]+)")
+          if (!is.na(model_match[1, 2])) {
+            current_model <- paste0("Eta", model_match[1, 2])
+          }
+        }
+
+        current_info <- file.info(current_file)
+
+        prediction_inventory <- bind_rows(
+          prediction_inventory,
+          data.frame(
+            relative_path = relative_path,
+            file_name = current_name,
+            CV = current_cv,
+            Trait = current_trait,
+            Env = current_env_leave,
+            Env_leave = current_env_leave,
+            Model = current_model,
+            Rep = current_rep,
+            Fold = current_fold,
+            size_kb = round(current_info$size / 1024, 2),
+            n_rows = safe_read_csv_rows(current_file),
+            stringsAsFactors = FALSE
+          )
         )
-      )
+      }
     }
   }
 }
 
 if (nrow(prediction_inventory) > 0) {
   prediction_inventory <- prediction_inventory %>%
-    arrange(CV, Trait, Env_leave, Model, Rep, Fold)
+    arrange(CV, Trait, Env_leave, Model, Rep, Fold, relative_path)
 
   write_csv(prediction_inventory, file.path(review_dir, "14_predicao_inventario_arquivos.csv"))
 
@@ -440,19 +449,80 @@ if (nrow(prediction_inventory) > 0) {
     arrange(CV, Trait)
 
   write_csv(prediction_count_by_trait, file.path(review_dir, "16_predicao_contagem_por_cv_trait.csv"))
+
+  prediction_count_by_rep_fold <- prediction_inventory %>%
+    count(CV, Trait, Env_leave, Rep, Fold, name = "n_arquivos") %>%
+    arrange(CV, Trait, Env_leave, Rep, Fold)
+
+  write_csv(prediction_count_by_rep_fold, file.path(review_dir, "16b_predicao_contagem_por_rep_fold.csv"))
+}
+
+prediction_bglr_dir <- file.path(results_dir, "bglr_runs")
+prediction_bglr_inventory <- data.frame()
+
+if (dir.exists(prediction_bglr_dir)) {
+  prediction_bglr_files <- list.files(prediction_bglr_dir, recursive = TRUE, full.names = TRUE)
+
+  if (length(prediction_bglr_files) > 0) {
+    for (current_file in prediction_bglr_files) {
+      relative_path <- path_to_relative(current_file, prediction_bglr_dir)
+      path_parts <- strsplit(relative_path, "/")[[1]]
+
+      current_block <- NA_character_
+      current_trait <- NA_character_
+      current_env_leave <- NA_character_
+      current_rep <- NA_character_
+      current_fold <- NA_character_
+      current_model <- NA_character_
+
+      if (length(path_parts) >= 5) {
+        current_block <- path_parts[1]
+
+        if (current_block == "CV1_CV2" && length(path_parts) >= 5) {
+          current_trait <- path_parts[2]
+          current_rep <- path_parts[3]
+          current_fold <- path_parts[4]
+          current_model <- path_parts[5]
+        }
+
+        if (current_block == "CV0_CV00" && length(path_parts) >= 6) {
+          current_env_leave <- path_parts[2]
+          current_trait <- path_parts[3]
+          current_rep <- path_parts[4]
+          current_fold <- path_parts[5]
+          current_model <- path_parts[6]
+        }
+      }
+
+      current_info <- file.info(current_file)
+
+      prediction_bglr_inventory <- bind_rows(
+        prediction_bglr_inventory,
+        data.frame(
+          relative_path = path_to_relative(current_file, project_root),
+          block = current_block,
+          Trait = current_trait,
+          Env_leave = current_env_leave,
+          Rep = current_rep,
+          Fold = current_fold,
+          Model = current_model,
+          file_name = basename(current_file),
+          extension = tools::file_ext(current_file),
+          size_kb = round(current_info$size / 1024, 2),
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+
+    prediction_bglr_inventory <- prediction_bglr_inventory %>%
+      arrange(block, Trait, Env_leave, Rep, Fold, Model, relative_path)
+
+    write_csv(prediction_bglr_inventory, file.path(review_dir, "16c_predicao_bglr_runs_inventario.csv"))
+  }
 }
 
 # -----------------------------------------------------------------------------
-# 8. Tabelas finais produzidas por visualization.Rmd
-# -----------------------------------------------------------------------------
-# Aqui organizamos as principais tabelas finais que serão mais úteis para a
-# descrição dos resultados do pipeline:
-#
-# - resumo de CV1/CV2;
-# - resumo de CV0/CV00;
-# - top 3 modelos;
-# - comparações com e sem W;
-# - comparação entre famílias de kernel.
+# 9. Tabelas finais produzidas por visualization.Rmd
 # -----------------------------------------------------------------------------
 
 file_cv12_summary <- file.path(tables_dir, "prediction_cv1_cv2_summary.csv")
@@ -555,10 +625,7 @@ if (file.exists(file_cvloo_kernel)) {
 }
 
 # -----------------------------------------------------------------------------
-# 9. Tabela final de checagem do pipeline
-# -----------------------------------------------------------------------------
-# Esta tabela resume, em uma única visão, se os principais arquivos que serão
-# usados na descrição dos resultados já existem ou ainda estão faltando.
+# 10. Tabela final de checagem do pipeline
 # -----------------------------------------------------------------------------
 
 pipeline_check <- data.frame(
@@ -569,6 +636,8 @@ pipeline_check <- data.frame(
     "variance_components",
     "variance_components",
     "variance_components",
+    "variance_components",
+    "predicao_bruta",
     "predicao_bruta",
     "visualizacao",
     "visualizacao",
@@ -582,7 +651,9 @@ pipeline_check <- data.frame(
     "output/variance_components/model_catalog.csv",
     "output/variance_components/variance_components_processed.csv",
     "output/variance_components/variance_components_table_percent.csv",
-    "output/results/*.csv",
+    "output/variance_components/bglr_runs/**",
+    "output/results/**/**/*.csv",
+    "output/results/bglr_runs/**",
     "output/tables/prediction_cv1_cv2_summary.csv",
     "output/tables/prediction_cv0_cv00_summary.csv",
     "output/tables/prediction_cv1_cv2_top3.csv",
@@ -595,7 +666,9 @@ pipeline_check <- data.frame(
     file.exists(variance_file_catalog),
     file.exists(variance_file_processed),
     file.exists(variance_file_table),
-    dir.exists(results_dir) && length(list.files(results_dir, pattern = "\\.csv$")) > 0,
+    dir.exists(variance_bglr_dir) && length(list.files(variance_bglr_dir, recursive = TRUE)) > 0,
+    dir.exists(results_dir) && length(list.files(results_dir, pattern = "\\.csv$", recursive = TRUE)) > 0,
+    dir.exists(prediction_bglr_dir) && length(list.files(prediction_bglr_dir, recursive = TRUE)) > 0,
     file.exists(file_cv12_summary),
     file.exists(file_cvloo_summary),
     file.exists(file_cv12_top3),
@@ -607,11 +680,7 @@ pipeline_check <- data.frame(
 write_csv(pipeline_check, file.path(review_dir, "26_pipeline_check_final.csv"))
 
 # -----------------------------------------------------------------------------
-# 10. Mensagem final
-# -----------------------------------------------------------------------------
-# Ao final, o script informa onde as tabelas foram salvas. Essas tabelas podem
-# ser usadas depois para descrevermos os resultados do pipeline de forma mais
-# organizada.
+# 11. Mensagem final
 # -----------------------------------------------------------------------------
 
 cat("\n")
@@ -626,7 +695,12 @@ cat("- 08_variance_components_check.csv\n")
 cat("- 11_variance_components_processed_review.csv\n")
 cat("- 12_variance_components_summary_by_trait.csv\n")
 cat("- 13_variance_components_table_percent_review.csv\n")
+cat("- 13b_variance_bglr_runs_inventario.csv\n")
 cat("- 14_predicao_inventario_arquivos.csv\n")
+cat("- 15_predicao_contagem_por_cv.csv\n")
+cat("- 16_predicao_contagem_por_cv_trait.csv\n")
+cat("- 16b_predicao_contagem_por_rep_fold.csv\n")
+cat("- 16c_predicao_bglr_runs_inventario.csv\n")
 cat("- 18_predicao_resumo_cv1_cv2.csv\n")
 cat("- 19_predicao_resumo_cv0_cv00.csv\n")
 cat("- 20_predicao_top3_cv1_cv2.csv\n")

@@ -389,16 +389,22 @@ cvloo_design
 
 ### 7.4 Nomes de arquivos e reprodutibilidade nas etapas posteriores
 
-O fluxo de predição produz muitos arquivos de saída, e seus nomes precisam carregar informação suficiente para identificar o cenário de validação, o trait, o modelo ajustado, a repetição e o ambiente deixado de fora quando aplicável. O fold é armazenado na coluna interna `.id` de cada CSV, e não no nome do arquivo. Manter esse padrão explícito é importante porque os módulos seguintes usam esses nomes para inventariar, resumir e visualizar os resultados. A tabela abaixo mostra a convenção de nomes que conecta a etapa de execução aos resumos posteriores.
+O fluxo de predição agora armazena suas saídas em uma estrutura hierárquica que facilita a validação rápida e reduz a chance de colisões de arquivos durante o ajuste iterativo dos modelos. No padrão atual, o cenário de validação, o ambiente retirado quando aplicável, o trait, a repetição e o fold aparecem na estrutura de pastas, enquanto o nome do arquivo mantém explícitos o cenário, o trait, o ambiente quando aplicável, o modelo ajustado, a repetição e o fold. Os artefatos de ajuste do `BGLR` são preservados separadamente em `output/results/bglr_runs/`, enquanto os resumos finais de CV permanecem em `output/results/`. Manter esse padrão explícito é importante porque os módulos seguintes usam esses nomes e caminhos para inventariar, resumir e visualizar os resultados.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(
   Scenario = c("CV1", "CV2", "CV0", "CV00"),
-  ExampleFile = c(
-    "CV1_GY_Eta1_rep2.csv",
-    "CV2_KW_Eta12_rep8.csv",
-    "CV0_GY_CS11_WS_Eta10_rep1.csv",
-    "CV00_KW_CS12_WW_Eta18_rep1.csv"
+  ExampleRelativePath = c(
+    "CV1/GY/rep02/fold03/CV1_GY_Eta1_rep02_fold03.csv",
+    "CV2/KW/rep08/fold05/CV2_KW_Eta12_rep08_fold05.csv",
+    "CV0/CS11_WS/GY/rep01/fold04/CV0_GY_CS11_WS_Eta10_rep01_fold04.csv",
+    "CV00/CS12_WW/KW/rep01/fold02/CV00_KW_CS12_WW_Eta18_rep01_fold02.csv"
+  ),
+  BGLRRunFolder = c(
+    "bglr_runs/CV1_CV2/GY/rep02/fold03/Eta1/",
+    "bglr_runs/CV1_CV2/KW/rep08/fold05/Eta12/",
+    "bglr_runs/CV0_CV00/CS11_WS/GY/rep01/fold04/Eta10/",
+    "bglr_runs/CV0_CV00/CS12_WW/KW/rep01/fold02/Eta18/"
   ),
   stringsAsFactors = FALSE
 )
@@ -408,9 +414,9 @@ prediction_file_patterns
 
 ## 8. Transição para o submódulo de execução
 
-Neste ponto, a etapa de predição já foi organizada a partir de três perspectivas complementares: as entradas analíticas estão definidas, o catálogo reduzido de 18 modelos está explícito e os esquemas de validação estão ligados às perguntas científicas que pretendem responder. Isso significa que a etapa de execução não precisa mais introduzir novos conceitos. Seu papel é aplicar a estrutura definida aqui, gerar os arquivos de predição e organizar as saídas que mais adiante serão resumidas e visualizadas.
+Neste ponto, a etapa de predição já foi organizada a partir de três perspectivas complementares: as entradas analíticas estão definidas, o catálogo reduzido de 18 modelos está explícito e os esquemas de validação estão ligados às perguntas científicas que pretendem responder. Isso significa que a etapa de execução não precisa mais introduzir novos conceitos. Seu papel é aplicar a estrutura definida aqui, gerar os arquivos de predição, organizar a árvore de saídas por rep/fold e preservar os artefatos do BGLR que poderão ser inspecionados depois em análises de convergência e diagnóstico.
 
-O próximo submódulo, `analysis_prediction_run_outputs_pt.Rmd`, passa então do desenho à implementação. Ali o foco deixa de estar na definição dos modelos e na lógica da validação e passa para os registros de execução, o inventário de arquivos de saída e as tabelas leves que tornam o fluxo de predição mais fácil de inspecionar e reaproveitar nos módulos posteriores.
+O próximo submódulo, `analysis_prediction_run_outputs_pt.Rmd`, passa então do desenho à implementação. Ali o foco deixa de estar na definição dos modelos e na lógica da validação e passa para os registros de execução, o inventário de saídas por rep/fold, as pastas persistentes de execução do BGLR e as tabelas leves que tornam o fluxo de predição mais fácil de inspecionar e reaproveitar nos módulos posteriores.
 
 ## Navegação entre etapas
 

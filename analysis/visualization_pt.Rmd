@@ -12,7 +12,7 @@ Este arquivo é a versão didática da etapa de visualização. Sua finalidade �
 
 Neste ponto do pipeline, a principal pergunta analítica já não é mais como cada modelo é especificado, mas como os modelos ajustados se comportam sob diferentes problemas de predição. Por essa razão, a etapa de visualização desloca o foco da construção dos modelos para a interpretação dos modelos. Ela reúne resumos de desempenho para `CV1`, `CV2`, `CV0` e `CV00`, destaca contrastes entre modelos com e sem o kernel climático (`W`) e organiza os resultados em tabelas e figuras que são mais fáceis de inspecionar do que os próprios arquivos brutos de predição.
 
-O fluxo atual de predição grava saídas brutas em `output/results/` usando nomes de arquivo que codificam o cenário de validação, o traço, o modelo ajustado e a repetição. O fold fica armazenado na coluna interna `.id` de cada CSV, e não no nome do arquivo. Para `CV0` e `CV00`, o rótulo do ambiente deixado de fora também é registrado no nome do arquivo, e a etapa de execução já restringe essas saídas ao ambiente correspondente. Essa estrutura de nomes é essencial porque conecta a etapa de execução à etapa de interpretação.
+O fluxo atual de predição grava saídas brutas em `output/results/` usando nomes de arquivo que codificam o cenário de validação, o traço, o modelo ajustado, a repetição e o fold. Para `CV0` e `CV00`, o rótulo do ambiente deixado de fora também é registrado no nome do arquivo e depois é associado a `Env` pelo filtro `Env == Env_leave`. Essa estrutura de nomes é essencial porque conecta a etapa de execução à etapa de interpretação.
 
 Ao longo deste tutorial, o **kernel climático (`W`)** deve ser interpretado como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente (`E`). O componente fenômico (`P`) também deve ser interpretado com cuidado, porque a similaridade baseada em NIRS pode refletir forte resposta ambiental além de sinal preditivo potencialmente útil.
 
@@ -138,9 +138,9 @@ comparison_pairs
 
 ## 5. Localizar arquivos de predição
 
-O primeiro passo operacional da etapa de visualização é localizar os arquivos brutos de predição produzidos pelo módulo anterior. Esses arquivos ficam armazenados em `output/results/` e são separados aqui de acordo com o problema de validação que representam.
+O primeiro passo operacional da etapa de visualização é localizar os arquivos brutos de predição produzidos pelo módulo anterior. No padrão atual do pipeline, esses arquivos são gravados recursivamente em `output/results/`, com uma hierarquia explícita por esquema de validação, traço, repetição e fold.
 
-Manter `CV1/CV2` separados de `CV0/CV00` neste ponto torna os resumos posteriores mais fáceis de construir e mais fáceis de interpretar, porque os dois grupos correspondem a problemas de generalização diferentes.
+Nesta etapa, o script lê a pasta de resultados de forma recursiva, mantém apenas os CSVs de predição armazenados dentro dos ramos estruturados `CV1`, `CV2`, `CV0` e `CV00`, e ignora outros artefatos, como `bglr_runs`. Isso torna os resumos posteriores compatíveis com o novo contrato `Rep/Fold` e preserva a separação entre os problemas de validação baseados em genótipos e os problemas leave-one-environment-out.
 
 ```{r load-generated-visualization-outputs, include=FALSE}
 required_tables <- c(
@@ -424,47 +424,78 @@ cvloo_table_display <- cvloo_table_display %>%
       "With W" = "Com W"
     )
   )
-
 ```
 
 ```{r locate-files, eval=FALSE}
-all_result_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE)
-all_result_names <- basename(all_result_files)
-cv12_files <- all_result_files[grepl("^CV1_|^CV2_", all_result_names)]
-cvloo_files <- all_result_files[grepl("^CV0_|^CV00_", all_result_names)]
-cat("Number of CV1/CV2 files:", length(cv12_files), "\n")
-cat("Number of CV0/CV00 files:", length(cvloo_files), "\n")
+all_result_rel_paths <- list.files(results_dir, pattern = "\\.csv$", full.names = FALSE, recursive = TRUE)
+all_result_rel_paths <- gsub("\\", "/", all_result_rel_paths)
+structured_idx <- grepl("^CV1/|^CV2/|^CV0/|^CV00/", all_result_rel_paths)
+all_result_rel_paths <- all_result_rel_paths[structured_idx]
+all_result_files <- file.path(results_dir, all_result_rel_paths)
+cv12_idx <- grepl("^CV1/|^CV2/", all_result_rel_paths)
+cvloo_idx <- grepl("^CV0/|^CV00/", all_result_rel_paths)
+cv12_files <- all_result_files[cv12_idx]
+cv12_rel_paths <- all_result_rel_paths[cv12_idx]
+cvloo_files <- all_result_files[cvloo_idx]
+cvloo_rel_paths <- all_result_rel_paths[cvloo_idx]
+cat("Número de arquivos CV1/CV2:", length(cv12_files), "
+")
+cat("Número de arquivos CV0/CV00:", length(cvloo_files), "
+")
 if (length(cv12_files) == 0 && length(cvloo_files) == 0) {
-  stop("Nenhum arquivo CSV de predição foi encontrado em output/results/.\nExecute analysis_prediction_run_outputs.Rmd primeiro.")
+  stop("Nenhum arquivo CSV de predição foi encontrado em output/results/.
+Execute analysis_prediction_run_outputs primeiro.")
 }
 ```
 
 ## 6. Ler os arquivos CV1 e CV2 gerados pelo script final de predição
 
-A próxima etapa lê os arquivos `CV1` e `CV2`, interpreta o nome do arquivo e recompõe os metadados necessários para os resumos posteriores. Neste fluxo, a repetição é recuperada do nome do arquivo e o fold é recuperado da coluna interna `.id`.
+Os arquivos `CV1` e `CV2` contêm as saídas brutas necessárias para resumir o desempenho preditivo quando o desafio é definido no eixo dos genótipos. No fluxo atual, repetição e fold ficam codificados tanto na hierarquia de pastas quanto no nome do arquivo, então o script reconstrói esses metadados explicitamente antes de montar os resumos.
+
+Esse desenho é útil porque mantém o sistema de arquivos organizado para inspeção rápida e, ao mesmo tempo, permite que a etapa de visualização reconstrua tabelas unificadas ao longo de repetições e folds.
 
 ```{r read-cv12, eval=FALSE}
 cv12_list <- vector("list", length(cv12_files))
 for (i in seq_along(cv12_files)) {
   current_file <- cv12_files[i]
-  file_name <- basename(current_file)
-  file_name <- sub("\\.csv$", "", file_name)
-  parts <- strsplit(file_name, "_")[[1]]
+  current_rel_path <- cv12_rel_paths[i]
+  path_parts <- strsplit(current_rel_path, "/")[[1]]
 
-  if (length(parts) != 4) {
+  if (length(path_parts) != 5) {
+    stop(
+      "Estrutura de diretórios inesperada para arquivo CV1/CV2: ",
+      current_rel_path,
+      ".
+Padrão esperado: CV1/<trait>/repXX/foldXX/<file>.csv ou CV2/<trait>/repXX/foldXX/<file>.csv"
+    )
+  }
+
+  current_cv <- path_parts[1]
+  trait_from_path <- path_parts[2]
+  rep_from_path <- as.numeric(gsub("^rep", "", path_parts[3]))
+  fold_from_path <- as.numeric(gsub("^fold", "", path_parts[4]))
+
+  file_name <- sub("\.csv$", "", basename(current_file))
+  file_parts <- strsplit(file_name, "_")[[1]]
+
+  if (length(file_parts) != 5) {
     stop(
       "Nome de arquivo inesperado para CV1/CV2: ",
       file_name,
       ".
-Padrão esperado: CV1_<trait>_<model>_rep<rep>.csv ou CV2_<trait>_<model>_rep<rep>.csv"
+Padrão esperado: CV1_<trait>_Eta<model>_repXX_foldXX.csv ou CV2_<trait>_Eta<model>_repXX_foldXX.csv"
     )
   }
 
-  current_cv <- parts[1]
-  current_trait <- parts[2]
-  current_model_label <- parts[3]
-  current_model_number <- as.numeric(gsub("Eta", "", current_model_label))
-  current_rep <- as.numeric(gsub("rep", "", parts[4]))
+  current_trait <- file_parts[2]
+  current_model_label <- file_parts[3]
+  current_model_number <- as.numeric(gsub("^Eta", "", current_model_label))
+  current_rep <- as.numeric(gsub("^rep", "", file_parts[4]))
+  current_fold <- as.numeric(gsub("^fold", "", file_parts[5]))
+
+  if (!identical(current_cv, file_parts[1]) || !identical(trait_from_path, current_trait) || !identical(rep_from_path, current_rep) || !identical(fold_from_path, current_fold)) {
+    stop("Inconsistência entre metadados do caminho e do nome do arquivo em: ", current_rel_path)
+  }
 
   current_data <- readr::read_csv(current_file, show_col_types = FALSE)
 
@@ -477,23 +508,9 @@ O script final de predição deve exportar colunas incluindo Env e cor."
     )
   }
 
-  if (".id" %in% names(current_data)) {
-    fold_source <- current_data$.id
-  } else if ("Fold" %in% names(current_data)) {
-    fold_source <- current_data$Fold
-  } else {
-    stop(
-      "Não foi possível recuperar a informação de fold do arquivo: ",
-      file_name,
-      ".
-No fluxo atual, o fold é armazenado na coluna interna .id."
-    )
-  }
-
-  current_fold <- as.numeric(gsub("[^0-9]+", "", as.character(fold_source)))
-
   current_data <- current_data %>%
     mutate(
+      RelativePath = current_rel_path,
       Fold = current_fold,
       CV = current_cv,
       Trait = current_trait,
@@ -514,31 +531,54 @@ readr::write_csv(cv12_raw, file.path(tables_dir, "prediction_cv1_cv2_raw.csv"))
 
 ## 7. Ler os arquivos CV0 e CV00 gerados pelo script final de predição
 
-A lógica é análoga à seção anterior, mas agora o nome do arquivo também carrega o rótulo do ambiente deixado de fora, enquanto o fold é recuperado da coluna interna `.id`. No fluxo final, esse rótulo pode conter múltiplos underscores, então o parser reconstrói `Env_leave` a partir do nome do arquivo lendo da direita para a esquerda.
+Os arquivos `CV0` e `CV00` representam os problemas de predição mais exigentes deste estudo porque envolvem um ambiente retirado do ajuste. No padrão atual do pipeline, o ambiente leave-one-environment-out é codificado tanto na hierarquia de pastas quanto no nome do arquivo, então o script reconstrói essa informação explicitamente antes de montar os resumos leave-one-environment-out.
+
+Esta seção lê esses arquivos, verifica a consistência dos caminhos estruturados e prepara os metadados necessários para manter `Env_leave` explícito ao longo dos resumos.
 
 ```{r read-cvloo, eval=FALSE}
 cvloo_list <- vector("list", length(cvloo_files))
 for (i in seq_along(cvloo_files)) {
   current_file <- cvloo_files[i]
-  file_name <- basename(current_file)
-  file_name <- sub("\\.csv$", "", file_name)
-  parts <- strsplit(file_name, "_")[[1]]
+  current_rel_path <- cvloo_rel_paths[i]
+  path_parts <- strsplit(current_rel_path, "/")[[1]]
 
-  if (length(parts) < 5) {
+  if (length(path_parts) != 6) {
+    stop(
+      "Estrutura de diretórios inesperada para arquivo CV0/CV00: ",
+      current_rel_path,
+      ".
+Padrão esperado: CV0/<Env_leave>/<trait>/repXX/foldXX/<file>.csv ou CV00/<Env_leave>/<trait>/repXX/foldXX/<file>.csv"
+    )
+  }
+
+  current_cv <- path_parts[1]
+  env_from_path <- path_parts[2]
+  trait_from_path <- path_parts[3]
+  rep_from_path <- as.numeric(gsub("^rep", "", path_parts[4]))
+  fold_from_path <- as.numeric(gsub("^fold", "", path_parts[5]))
+
+  file_name <- sub("\.csv$", "", basename(current_file))
+  file_parts <- strsplit(file_name, "_")[[1]]
+
+  if (length(file_parts) < 6) {
     stop(
       "Nome de arquivo inesperado para CV0/CV00: ",
       file_name,
       ".
-Padrão esperado: CV0_<trait>_<Env_leave>_<model>_rep<rep>.csv ou CV00_<trait>_<Env_leave>_<model>_rep<rep>.csv"
+Padrão esperado: CV0_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv ou CV00_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv"
     )
   }
 
-  current_cv <- parts[1]
-  current_trait <- parts[2]
-  current_model_label <- parts[length(parts) - 1]
-  current_model_number <- as.numeric(gsub("Eta", "", current_model_label))
-  current_rep <- as.numeric(gsub("rep", "", parts[length(parts)]))
-  current_env_leave <- paste(parts[3:(length(parts) - 2)], collapse = "_")
+  current_trait <- file_parts[2]
+  current_model_label <- file_parts[length(file_parts) - 2]
+  current_model_number <- as.numeric(gsub("^Eta", "", current_model_label))
+  current_rep <- as.numeric(gsub("^rep", "", file_parts[length(file_parts) - 1]))
+  current_fold <- as.numeric(gsub("^fold", "", file_parts[length(file_parts)]))
+  current_env_leave <- paste(file_parts[3:(length(file_parts) - 3)], collapse = "_")
+
+  if (!identical(current_cv, file_parts[1]) || !identical(env_from_path, current_env_leave) || !identical(trait_from_path, current_trait) || !identical(rep_from_path, current_rep) || !identical(fold_from_path, current_fold)) {
+    stop("Inconsistência entre metadados do caminho e do nome do arquivo em: ", current_rel_path)
+  }
 
   current_data <- readr::read_csv(current_file, show_col_types = FALSE)
 
@@ -551,23 +591,9 @@ O script final de predição deve exportar colunas incluindo Env e cor."
     )
   }
 
-  if (".id" %in% names(current_data)) {
-    fold_source <- current_data$.id
-  } else if ("Fold" %in% names(current_data)) {
-    fold_source <- current_data$Fold
-  } else {
-    stop(
-      "Não foi possível recuperar a informação de fold do arquivo: ",
-      file_name,
-      ".
-No fluxo atual, o fold é armazenado na coluna interna .id."
-    )
-  }
-
-  current_fold <- as.numeric(gsub("[^0-9]+", "", as.character(fold_source)))
-
   current_data <- current_data %>%
     mutate(
+      RelativePath = current_rel_path,
       Fold = current_fold,
       CV = current_cv,
       Trait = current_trait,
@@ -589,6 +615,8 @@ readr::write_csv(model_catalog, file.path(tables_dir, "prediction_model_catalog.
 ## 8. Resumir CV1 e CV2
 
 Esta etapa constrói os resumos para `CV1` e `CV2` de forma sequencial: primeiro por ambiente e fold, depois por ambiente dentro da repetição, depois por repetição e finalmente por médias e desvios-padrão em nível de modelo ao longo das repetições.
+
+Este chunk documenta a construção dos resumos hierárquicos para CV1 e CV2, desde os arquivos brutos até os resultados em nível de modelo.
 
 ```{r summarize-cv12, eval=FALSE}
 cv12_env_fold <- cv12_raw %>%
@@ -671,6 +699,8 @@ readr::write_csv(cv12_summary, file.path(tables_dir, "prediction_cv1_cv2_summary
 
 Para cenários leave-one-environment-out, o script primeiro restringe os resumos às linhas em que `Env == Env_leave`. Isso mantém apenas o componente do ambiente deixado de fora que é conceitualmente relevante para `CV0` e `CV00`.
 
+Este chunk documenta a construção dos resumos equivalentes para CV0 e CV00, mantendo explícito o ambiente leave-one-environment-out.
+
 ```{r summarize-cvloo, eval=FALSE}
 cvloo_env_filtered <- cvloo_raw %>%
   filter(Env == Env_leave)
@@ -740,6 +770,8 @@ readr::write_csv(cvloo_summary, file.path(tables_dir, "prediction_cv0_cv00_summa
 
 Esta seção deriva tabelas analíticas secundárias, especialmente o contraste entre modelos com e sem `W` e a comparação entre famílias de kernel dentro de cada via.
 
+Este chunk documenta a construção das tabelas comparativas derivadas, usadas para avaliar o efeito de `W` e comparar famílias de kernel.
+
 ```{r comparison-tables, eval=FALSE}
 cv12_w_effect <- comparison_pairs %>%
   left_join( cv12_summary %>% select(Trait, CV, Model, MeanCorrelation, SDCorrelation),
@@ -784,6 +816,8 @@ readr::write_csv(cvloo_kernel_family_compare,
 ## 11. Tabelas compactas de display
 
 Esses objetos são versões simplificadas dos resumos completos. Eles são úteis para tabelas do manuscrito, material suplementar e inspeção rápida dos modelos com melhor desempenho.
+
+Este chunk documenta a preparação das tabelas compactas e dos rankings Top-3, mais fáceis de inspecionar do que as saídas completas.
 
 ```{r display-tables, eval=FALSE}
 cv12_table_display <- cv12_summary %>%
@@ -839,6 +873,8 @@ readr::write_csv(cvloo_top3, file.path(tables_dir, "prediction_cv0_cv00_top3.csv
 
 Os dois chunks seguintes exibem os três modelos com melhor desempenho em cada esquema de validação.
 
+Este chunk renderiza a tabela Top-3 de CV1 e CV2, permitindo inspeção direta dos modelos com melhor desempenho.
+
 ```{r table-cv12-top3}
 cv12_top3 %>%
   knitr::kable( caption = "Top 3 modelos para cada traço e esquema de validação em CV1 e CV2.",
@@ -847,6 +883,8 @@ cv12_top3 %>%
    full_width = FALSE,
     position = "left" )
 ```
+
+Este chunk renderiza a tabela Top-3 de CV0 e CV00, estratificada pelo ambiente deixado de fora.
 
 ```{r table-cvloo-top3}
 cvloo_top3 %>%
@@ -861,6 +899,8 @@ cvloo_top3 %>%
 
 Essas tabelas apresentam as comparações pareadas entre modelos sem e com informação climática.
 
+Este chunk renderiza a tabela de comparação pareada entre modelos sem e com o kernel climático em CV1 e CV2.
+
 ```{r table-cv12-w-effect}
 cv12_w_effect %>%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
@@ -873,6 +913,8 @@ cv12_w_effect %>%
     position = "left" ) %>%
   kableExtra::scroll_box(width = "100%", height = "320px")
 ```
+
+Este chunk renderiza a tabela análoga do efeito de `W` para CV0 e CV00.
 
 ```{r table-cvloo-w-effect}
 cvloo_w_effect %>%
@@ -891,6 +933,8 @@ cvloo_w_effect %>%
 
 Aqui o script contrasta os kernels linear, Gaussiano e arc-cosine dentro de cada via analítica.
 
+Este chunk renderiza a tabela que compara kernels lineares, Gaussianos e arc-cosine em CV1 e CV2.
+
 ```{r table-cv12-kernel-family}
 cv12_kernel_family_compare %>%
   mutate( Linear = round(Linear, 3),
@@ -906,6 +950,8 @@ cv12_kernel_family_compare %>%
     position = "left" ) %>%
   kableExtra::scroll_box(width = "100%", height = "320px")
 ```
+
+Este chunk renderiza a tabela correspondente de comparação entre famílias de kernel para CV0 e CV00.
 
 ```{r table-cvloo-kernel-family}
 cvloo_kernel_family_compare %>%
@@ -926,6 +972,8 @@ cvloo_kernel_family_compare %>%
 ## 15. Figuras
 
 As figuras finais resumem a capacidade preditiva para o catálogo completo de modelos em `CV1/CV2` e `CV0/CV00`.
+
+Este chunk constrói a figura principal de CV1 e CV2, combinando correlações preditivas médias e barras de incerteza entre modelos.
 
 ```{r figure-cv12}
 cv12_plot_data <- cv12_summary %>%
@@ -962,6 +1010,8 @@ ggsave(file.path(figures_dir, "prediction_cv1_cv2.tiff"),
   bg = "white")
 ggsave(file.path(figures_dir, "prediction_cv1_cv2.pdf"), plot = p_cv12, width = 14, height = 8, bg = "white")
 ```
+
+Este chunk constrói a figura final de CV0 e CV00, mantendo os ambientes leave-one-environment-out explícitos no arranjo.
 
 ```{r figure-cvloo}
 cvloo_plot_data <- cvloo_summary %>%
@@ -1009,10 +1059,10 @@ ggsave(file.path(figures_dir, "prediction_cv0_cv00.pdf"),
 
 Esta versão didática está alinhada ao fluxo atual de predição baseado em `analysis_prediction_run_outputs.Rmd`. Ela espera arquivos nos quais:
 
-- a repetição está codificada no nome do arquivo;
-- o fold fica armazenado na coluna interna `.id` de cada CSV;
-- `CV0` e `CV00` carregam no nome o rótulo do ambiente deixado de fora e já saem restritos a esse ambiente na etapa de execução;
-- o filtro `Env == Env_leave` é mantido aqui como salvaguarda para os resumos do ambiente deixado de fora.
+- a repetição e o fold estão codificados tanto na hierarquia de pastas quanto no nome do arquivo;
+- `CV0` e `CV00` carregam o rótulo do ambiente deixado de fora tanto na hierarquia de pastas quanto no nome do arquivo;
+- os CSVs de predição são lidos recursivamente a partir de `output/results/`;
+- `CV0` e `CV00` ainda exigem o filtro `Env == Env_leave` para os resumos do ambiente deixado de fora.
 
 Depois de executar este arquivo, a próxima etapa no repositório é rodar o script orientado ao manuscrito que consome as tabelas-resumo gravadas em `output/tables/`.
 
