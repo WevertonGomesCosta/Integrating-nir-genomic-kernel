@@ -135,7 +135,7 @@ The table below should be read as a map of the modeling strategy adopted in the 
 ```{r model-catalog}
 model_catalog <- data.frame(
   ModelNumber = 1:18,
-  Model = sprintf("M%02d", 1:18),
+  Model = paste0("Eta", 1:18),
   Description = c(
     "E + G + GE",
     "E + P + PE",
@@ -316,7 +316,7 @@ length(Eta_list)
 
 ## 7. Cross-validation design
 
-Prediction accuracy depends not only on the fitted model, but also on the prediction problem being imposed. In this study, four validation schemes are used to represent different types of generalization: prediction of completely new genotypes, prediction of missing genotype-by-environment cells, prediction in a completely new environment, and prediction of new genotypes within a new environment. Because these scenarios are not equivalent, model performance must always be interpreted together with the structure of the masking rule.
+Prediction accuracy depends not only on the fitted model, but also on the prediction problem being imposed. In this workflow, the four validation schemes are implemented through two shared fits: one genotype-based fit that is later decomposed into `CV1` and `CV2`, and one leave-one-environment-out fit that is later decomposed into `CV0` and `CV00`. Because these scenarios are not equivalent, model performance must always be interpreted together with the exact masking rule used in the execution module.
 
 This section clarifies what is hidden in each validation scheme and what scientific question each one is intended to answer. That distinction is essential before moving to the execution stage, because the same model may perform very differently depending on whether the challenge lies on the genotype axis, on the environment axis, or on both simultaneously.
 
@@ -328,16 +328,16 @@ The four validation schemes adopted in this study are summarized below. Each one
 cv_scenarios <- data.frame(
   CV = c("CV1", "CV2", "CV0", "CV00"),
   WhatIsMasked = c(
-    "Entire genotypes",
-    "Selected genotype × environment cells",
-    "One environment at a time",
-    "Genotypes within a held-out environment"
+    "All observations from held-out genotypes",
+    "No new masking; evaluation on training genotypes from the CV1 fit",
+    "All observations from one held-out environment after genotype-based training masking",
+    "Held-out genotypes inside one held-out environment under the same CV0 fit"
   ),
   MainQuestion = c(
     "Can the model predict completely new genotypes?",
-    "Can the model predict a known genotype in a new environment for that genotype?",
-    "Can the model predict all genotypes in a completely new environment?",
-    "Can the model predict new genotypes within a completely new environment?"
+    "How well does the same CV1 fit describe the genotypes that remained in training?",
+    "Can the model predict previously seen genotypes in a completely held-out environment?",
+    "Can the model predict new genotypes inside a completely held-out environment?"
   ),
   stringsAsFactors = FALSE
 )
@@ -347,18 +347,18 @@ cv_scenarios
 
 ### 7.2 Prediction when genotypes are partially or completely unobserved
 
-The first two schemes focus on genotype-level uncertainty. In `CV1`, the model is asked to predict genotypes that are entirely absent from the training data. In `CV2`, the genotype has already been observed, but only part of its genotype-by-environment profile is hidden. This difference matters because predicting a completely new genotype is usually more demanding than completing a partially observed response profile. The summary below makes this contrast explicit.
+The first two schemes focus on genotype-level uncertainty, but they are produced from the same fit. In `CV1`, all observations from the held-out genotypes are removed before fitting and the evaluation is performed on those omitted genotypes. In `CV2`, no additional masking is introduced; instead, the same fit is evaluated on the genotypes that remained in training. This difference matters because `CV1` measures extrapolation to unseen genotypes, whereas `CV2` measures in-sample recovery under exactly the same fold split.
 
 ```{r cv1-cv2-design}
 cv12_design <- data.frame(
   Scenario = c("CV1", "CV2"),
   TrainingSet = c(
     "All observations except those from held-out genotypes",
-    "All observations except selected masked cells"
+    "Exactly the same fitted model used for CV1"
   ),
   EvaluationTarget = c(
-    "Predictions for unobserved genotypes",
-    "Predictions for masked genotype × environment cells"
+    "Predictions for held-out genotypes",
+    "Predictions for the genotypes that remained in training"
   ),
   stringsAsFactors = FALSE
 )
@@ -368,18 +368,18 @@ cv12_design
 
 ### 7.3 Prediction in environments that are not fully available during training
 
-The schemes `CV0` and `CV00` shift the difficulty from the genotype axis to the environment axis. Here the challenge is not only to recover missing values, but to generalize to an environment that is deliberately withheld from model fitting. The distinction between predicting all genotypes in that environment and predicting only new genotypes within it defines the difference between `CV0` and `CV00`.
+The schemes `CV0` and `CV00` shift the difficulty from the genotype axis to the environment axis, but they are also generated from the same fit. First, the training response keeps only the genotypes assigned to the training portion of the fold. Then, an entire environment is masked and the model is refit under that leave-one-environment-out rule. `CV0` evaluates the genotypes that were already seen in other environments, whereas `CV00` evaluates the genotypes that were held out by the fold split. This distinction is essential because the second target combines both genotype novelty and environment novelty.
 
 ```{r cv0-cv00-design}
 cvloo_design <- data.frame(
   Scenario = c("CV0", "CV00"),
   TrainingSet = c(
-    "All observations except those from the held-out environment",
-    "All observations except target genotypes within the held-out environment"
+    "Training genotypes only, with one environment fully masked",
+    "Exactly the same fitted model used for CV0"
   ),
   EvaluationTarget = c(
-    "Predictions for all genotypes in the held-out environment",
-    "Predictions for new genotypes in the held-out environment"
+    "Predictions for training genotypes inside the held-out environment",
+    "Predictions for held-out genotypes inside the held-out environment"
   ),
   stringsAsFactors = FALSE
 )
@@ -389,16 +389,16 @@ cvloo_design
 
 ### 7.4 File naming and downstream reproducibility
 
-The prediction workflow produces many output files, and their names must carry enough information to identify the validation scenario, the trait, the fitted model, the repetition, and the fold or held-out environment. Keeping this pattern explicit is important because the next modules use these names to inventory, summarize, and visualize the results. The table below shows the naming convention that connects the execution stage to the downstream summaries.
+The prediction workflow produces many output files, and their names must carry enough information to identify the validation scenario, the trait, the fitted model, the repetition, and the held-out environment when applicable. The fold is stored inside the internal `.id` column of each CSV, not in the file name. Keeping this pattern explicit is important because the next modules use these names to inventory, summarize, and visualize the results. The table below shows the naming convention that connects the execution stage to the downstream summaries.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(
   Scenario = c("CV1", "CV2", "CV0", "CV00"),
   ExampleFile = c(
-    "CV1_GY_M05_rep2_fold5.csv",
-    "CV2_KW_M12_rep8_fold3.csv",
-    "CV0_GY_CS11_WS_M10_rep1_fold1.csv",
-    "CV00_KW_CS12_WW_M18_rep1_fold1.csv"
+    "CV1_GY_Eta1_rep2.csv",
+    "CV2_KW_Eta12_rep8.csv",
+    "CV0_GY_CS11_WS_Eta10_rep1.csv",
+    "CV00_KW_CS12_WW_Eta18_rep1.csv"
   ),
   stringsAsFactors = FALSE
 )
