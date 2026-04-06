@@ -64,16 +64,18 @@ if (!dir.exists(file.path(project_root, "output"))) {
 }
 
 results_dir <- file.path(project_root, "output", "results")
+bglr_runs_dir <- file.path(results_dir, "bglr_runs")
 analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction")
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(bglr_runs_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
 ```
 
 
 ## 3. Recarregar os objetos de execução da Parte I
 
-Este chunk reconstrói o ambiente de execução quando o arquivo é renderizado isoladamente. Ele respeita o contrato de `analysis_prediction_pt.Rmd` e recria exatamente o conjunto reduzido de 18 objetos ETA definido na Parte I.
+O código abaixo reconstrói o ambiente de execução quando o arquivo é renderizado isoladamente. Ele respeita o contrato de `analysis_prediction_pt.Rmd` e recria exatamente o conjunto reduzido de 18 objetos ETA definido na Parte I.
 
 ```{r load-required-objects, eval=FALSE}
 matrices_dir <- file.path(project_root, "output", "Matrizes")
@@ -129,10 +131,10 @@ if (length(traits_to_run) == 0) {
   stop("Nenhum dos traits esperados (GY, KW) foi encontrado em Pheno.")
 }
 
-if (!exists("nIter"))   nIter   <- 10000
+if (!exists("nIter"))   nIter   <- 5000
 if (!exists("burnIn"))  burnIn  <- 1000
 if (!exists("thin"))    thin    <- 10
-if (!exists("num_rep")) num_rep <- 20
+if (!exists("num_rep")) num_rep <- 10
 if (!exists("n_cores")) n_cores <- max(1L, parallel::detectCores() - 1L)
 
 model_catalog <- data.frame(
@@ -194,22 +196,17 @@ Este bloco restaura os objetos operacionais usados pelo workflow atual: o conjun
 envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
 envs_leaveout <- envs_leaveout[envs_leaveout %in% unique(Pheno$Env)]
 
-run_bglr <- function(y2_vector, ETA, nIter, burnIn, thin, save_prefix = NULL) {
+run_bglr <- function(y2_vector, ETA, nIter, burnIn, thin, save_prefix) {
   y_t <- as.numeric(y2_vector)
 
-  if (is.null(save_prefix)) {
-    save_prefix <- tempfile(pattern = "bglr_", tmpdir = tempdir())
+  if (missing(save_prefix) || is.null(save_prefix) || !nzchar(save_prefix)) {
+    stop("A persistent save_prefix inside output/results/bglr_runs/ must be provided for each BGLR fit.")
   }
 
   start_time <- Sys.time()
   fit <- BGLR(y = y_t, ETA = ETA, nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix)
   end_time <- Sys.time()
   elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
-
-  generated_files <- Sys.glob(paste0(save_prefix, "*"))
-  if (length(generated_files) > 0) {
-    unlink(generated_files, recursive = FALSE, force = TRUE)
-  }
 
   retorno_foreach <- list(yHat = fit$yHat, runtime_sec = elapsed)
 
@@ -309,9 +306,9 @@ foreach(i = seq_len(nrow(combos)),
     yield$Y2 <- NA
     yield$Y2[yield$Pedigree %in% train_geno] <- yield[[TRAIT]][yield$Pedigree %in% train_geno]
 
-    save_prefix_full <- tempfile(
-      pattern = paste0("full_Eta", MODEL, "_", TRAIT, "_rep", rep_num, "_fold", fold_num, "_"),
-      tmpdir = tempdir()
+    save_prefix_full <- file.path(
+      bglr_runs_dir,
+      paste0("full_Eta", MODEL, "_", TRAIT, "_rep", rep_num, "_fold", fold_num, "_")
     )
 
     res_full <- run_bglr(
@@ -386,9 +383,9 @@ foreach(i = seq_len(nrow(combos)),
       yield2$Y2[yield2$Pedigree %in% train_geno] <- yield2[[TRAIT]][yield2$Pedigree %in% train_geno]
       yield2$Y2[yield2$Env == env_name] <- NA
 
-      save_prefix_env <- tempfile(
-        pattern = paste0(env_name, "_", TRAIT, "_Eta", MODEL, "_rep", rep_num, "_fold", fold_num, "_"),
-        tmpdir = tempdir()
+      save_prefix_env <- file.path(
+        bglr_runs_dir,
+        paste0(env_name, "_", TRAIT, "_Eta", MODEL, "_rep", rep_num, "_fold", fold_num, "_")
       )
 
       res_env <- run_bglr(
@@ -563,21 +560,21 @@ knitr::kable(output_examples, caption = "Exemplos de nomes de arquivos produzido
 ```
 
 
-## 12. Nota sobre artefatos temporários do `BGLR`
+## 12. Nota sobre artefatos salvos do `BGLR`
 
-Esta etapa de execução usa dois tipos de arquivos, e vale a pena distingui-los com clareza em um material tutorial.
+Esta etapa de execução agora armazena dois tipos diferentes de arquivos, e vale a pena distingui-los claramente em um material tutorial.
 
-**Artefatos auxiliares do ajuste.**  
-Durante cada chamada de `BGLR(...)`, o argumento `saveAt` aponta para um prefixo criado com `tempdir()`. Esses arquivos são arquivos temporários de trabalho usados internamente pelo `BGLR` enquanto o modelo está sendo ajustado. Em outras palavras, eles ajudam o ajuste a acontecer, mas não são os produtos analíticos que serão interpretados depois.
+**Artefatos auxiliares do ajuste salvos para diagnóstico.**  
+Durante cada chamada de `BGLR(...)`, o argumento `saveAt` aponta para um prefixo persistente dentro de `output/results/bglr_runs/`. Esses arquivos são gerados pelo `BGLR` enquanto o modelo está sendo ajustado. Eles não são os resumos principais dos esquemas de CV, mas agora são preservados porque podem ser necessários depois em análises de convergência ou em outros diagnósticos do ajuste.
 
 **Saídas analíticas finais.**  
-Depois que o ajuste termina, o script coleta em memória as predições, o runtime e os resumos dos CVs e então grava os CSVs finais em `output/results/`. Esses CSVs são as saídas que devem ser preservadas, compartilhadas e consumidas pelos módulos posteriores de visualização e resumo.
+Depois que o ajuste termina, o script coleta em memória as predições, o runtime e os resumos dos CVs e então grava os CSVs finais em `output/results/`. Esses CSVs continuam sendo as principais saídas interpretadas nos módulos posteriores de visualização e resumo.
 
-**Por que os temporários podem ser removidos.**  
-Os arquivos temporários de `saveAt` só são apagados depois que `BGLR(...)` termina e depois que o script já extraiu os objetos necessários para o workflow. Portanto, os temporários dão suporte ao ajuste enquanto ele está em execução, mas deixam de ser necessários quando os resumos finais já foram criados.
+**Por que vale a pena manter as duas camadas de arquivos.**  
+Os arquivos armazenados em `output/results/bglr_runs/` documentam o processo de ajuste em si, enquanto os CSVs em `output/results/` resumem os resultados preditivos comparados entre esquemas de CV, características, ambientes e modelos. Manter as duas camadas disponíveis deixa o workflow mais transparente e preserva o material necessário para análises futuras de convergência.
 
 **Interpretação prática para este módulo.**  
-Quando este arquivo inventaria saídas, ele inventaria apenas os CSVs finais armazenados em `output/results/`. Os artefatos temporários do `BGLR` em `tempdir()` são tratados apenas como auxiliares transitórios do fitting, e não como entregáveis analíticos reprodutíveis.
+Quando este arquivo inventaria saídas, ele inventaria apenas os CSVs finais armazenados diretamente em `output/results/`. A pasta `bglr_runs` é preservada como um arquivo auxiliar dos artefatos de fitting e não é misturada com as tabelas finais de predição.
 
 ## 13. Nota final
 
