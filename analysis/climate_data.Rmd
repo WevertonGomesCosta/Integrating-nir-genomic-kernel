@@ -35,7 +35,7 @@ This tutorial presents the workflow used to obtain and process daily weather dat
 
 The purpose of this script is not only to download daily weather records, but to convert those time series into a concise and biologically meaningful set of **weather-derived covariates**. These covariates summarize the main meteorological conditions of each growing season and are later used to build the **weather kernel (W)** in the final prediction pipeline.
 
-In the reduced set of 18 models used in the project, the weather kernel is included in models **M10-M18**. In those models, `W` is used to test whether weather-derived similarity adds useful information beyond the categorical environment effect (`E`) and the genomic (`G`) and phenomic (`P`) kernels. Therefore, `W` should be interpreted as a complementary source of meteorological information and **not** as a replacement for `E`.
+In the reduced set of 18 models used in the project, the weather kernel is included in models **Eta10-Eta18**. In those models, `W` is used to test whether weather-derived similarity adds useful information beyond the categorical environment effect (`E`) and the genomic (`G`) and phenomic (`P`) kernels. Therefore, `W` should be interpreted as a complementary source of meteorological information and **not** as a replacement for `E`.
 
 In practical terms, the workflow has four goals:
 
@@ -851,7 +851,7 @@ For example:
 
 This table is the practical output that connects the climate tutorial to the predictive modeling stage of the project and to the subsequent construction of the weather kernel.
 
-In the final reduced pipeline, these weather-derived outputs are used only in the models that explicitly include `W`, namely M10-M18. They are not intended to replace the categorical environment effect (`E`), which still captures the distinction among the four macro-environments. Because the weather information is summarized at the year level, CS11_WS and CS11_WW share the 2011 weather signature, whereas CS12_WS and CS12_WW share the 2012 weather signature.
+In the final reduced pipeline, these weather-derived outputs are used only in the models that explicitly include `W`, namely Eta10-Eta18. They are not intended to replace the categorical environment effect (`E`), which still captures the distinction among the four macro-environments. Because the weather information is summarized at the year level, CS11_WS and CS11_WW share the 2011 weather signature, whereas CS12_WS and CS12_WW share the 2012 weather signature.
 
 ## 7. Save the final outputs
 
@@ -887,7 +887,7 @@ cat("Climate files successfully saved in 'output/climate_results/'.")
 
 This tutorial establishes a reproducible weather preprocessing pipeline for the study. Starting from daily weather observations, it produces a curated set of weather-derived covariates and article-ready figures.
 
-In the broader workflow of the project, these outputs are not the final goal. They are intermediate scientific objects that support the construction of the weather kernel (`W`) used in models M10-M18.
+In the broader workflow of the project, these outputs are not the final goal. They are intermediate scientific objects that support the construction of the weather kernel (`W`) used in models Eta10-Eta18.
 
 It is also important to note that the weather kernel does not replace the categorical environment effect (`E`). In this dataset, the 2011 weather signature is shared by CS11_WS and CS11_WW, and the 2012 weather signature is shared by CS12_WS and CS12_WW. Therefore, `W` captures year-specific meteorological similarity, whereas `E` still represents the categorical distinction among the four macro-environments.
 
