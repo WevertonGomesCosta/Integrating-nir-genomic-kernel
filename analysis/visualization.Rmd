@@ -12,7 +12,7 @@ This file is the didactic version of the visualization stage. Its purpose is to 
 
 At this point in the pipeline, the main analytical question is no longer how each model is specified, but how the fitted models behave under different prediction problems. For that reason, the visualization stage moves from model construction to model interpretation. It brings together performance summaries for `CV1`, `CV2`, `CV0`, and `CV00`, highlights contrasts between models with and without the weather kernel (`W`), and organizes the results into tables and figures that are easier to inspect than the raw prediction files themselves.
 
-The current prediction workflow saves raw outputs in `output/results/` using filenames that encode the validation scenario, trait, fitted model, repetition, and fold. For `CV0` and `CV00`, the held-out environment label is also recorded in the filename and is later matched to `Env` through the filter `Env == Env_leave`. This naming structure is essential because it connects the execution stage to the interpretation stage.
+The current prediction workflow saves raw outputs in `output/results/` using filenames that encode the validation scenario, trait, fitted model, and repetition. The fold is stored in the internal `.id` column of each CSV rather than in the filename. For `CV0` and `CV00`, the held-out environment label is also recorded in the filename, and the execution stage already restricts those outputs to the corresponding held-out environment. This naming structure is essential because it connects the execution stage to the interpretation stage.
 
 Throughout this tutorial, the **weather kernel (`W`)** should be interpreted as a weather-derived source of similarity that complements, but does not replace, the categorical environment effect (`E`). The phenomic component (`P`) should also be interpreted carefully, because NIRS-based similarity can reflect strong environmental response in addition to potentially useful predictive signal.
 
@@ -113,7 +113,7 @@ This organization is important because the comparisons shown later in the docume
 
 ```{r model-catalog}
 model_catalog <- tibble( ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
- Model = sprintf("M%02d", c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
+ Model = paste0("Eta", c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
  Pathway = c( rep("Genomic pathway", 6), rep("Phenomic pathway", 6), rep("Combined G + P pathway", 6) ),
  KernelFamily = c( "Linear", "Linear", "Gaussian", "Gaussian", "Arc-cosine", "Arc-cosine", "Linear", "Linear", "Gaussian", "Gaussian", "Arc-cosine", "Arc-cosine", "Linear", "Linear", "Gaussian", "Gaussian", "Arc-cosine", "Arc-cosine" ),
  WeatherStatus = c( "Without W", "With W", "Without W", "With W", "Without W", "With W", "Without W", "With W", "Without W", "With W", "Without W", "With W", "Without W", "With W", "Without W", "With W", "Without W", "With W" ),
@@ -131,8 +131,8 @@ The comparison pairs defined below provide exactly that structure. They are late
 
 ```{r comparison-pairs}
 comparison_pairs <- tibble( Comparison = c( "Genomic linear", "Genomic Gaussian", "Genomic arc-cosine", "Phenomic linear", "Phenomic Gaussian", "Phenomic arc-cosine", "Combined linear", "Combined Gaussian", "Combined arc-cosine" ),
- WithoutW = c("M01", "M03", "M05", "M02", "M04", "M06", "M07", "M08", "M09"),
-  WithW = c("M10", "M13", "M16", "M11", "M14", "M17", "M12", "M15", "M18") )
+ WithoutW = c("Eta1", "Eta3", "Eta5", "Eta2", "Eta4", "Eta6", "Eta7", "Eta8", "Eta9"),
+  WithW = c("Eta10", "Eta13", "Eta16", "Eta11", "Eta14", "Eta17", "Eta12", "Eta15", "Eta18") )
 comparison_pairs
 ```
 
@@ -158,7 +158,7 @@ if (length(cv12_files) == 0 && length(cvloo_files) == 0) {
 
 The `CV1` and `CV2` files contain the raw outputs needed to summarize prediction performance when the challenge is defined on the genotype axis. At this stage, the task is to read those files and reconstruct the metadata that will later be used for grouped summaries.
 
-In this workflow, repetition and fold are stored directly in the filename. Recovering that information explicitly is what allows the script to move from raw files to environment-level and model-level summaries without losing the structure of the validation design.
+In this workflow, repetition is stored in the filename and fold is stored in the internal `.id` column of each CSV. Recovering both pieces explicitly is what allows the script to move from raw files to environment-level and model-level summaries without losing the structure of the validation design.
 
 ```{r read-cv12}
 cv12_list <- vector("list", length(cv12_files))
@@ -168,21 +168,20 @@ for (i in seq_along(cv12_files)) {
   file_name <- sub("\\.csv$", "", file_name)
   parts <- strsplit(file_name, "_")[[1]]
 
-  if (length(parts) != 5) {
+  if (length(parts) != 4) {
     stop(
       "Unexpected filename for CV1/CV2 file: ",
       file_name,
       ".
-Expected pattern CV1_<trait>_<model>_rep<rep>_fold<fold>.csv or CV2_<trait>_<model>_rep<rep>_fold<fold>.csv"
+Expected pattern CV1_<trait>_<model>_rep<rep>.csv or CV2_<trait>_<model>_rep<rep>.csv"
     )
   }
 
   current_cv <- parts[1]
   current_trait <- parts[2]
   current_model_label <- parts[3]
-  current_model_number <- as.numeric(gsub("M", "", current_model_label))
+  current_model_number <- as.numeric(gsub("Eta", "", current_model_label))
   current_rep <- as.numeric(gsub("rep", "", parts[4]))
-  current_fold <- as.numeric(gsub("fold", "", parts[5]))
 
   current_data <- readr::read_csv(current_file, show_col_types = FALSE)
 
@@ -194,6 +193,21 @@ Expected pattern CV1_<trait>_<model>_rep<rep>_fold<fold>.csv or CV2_<trait>_<mod
 The final prediction script should export columns including Env and cor."
     )
   }
+
+  if (".id" %in% names(current_data)) {
+    fold_source <- current_data$.id
+  } else if ("Fold" %in% names(current_data)) {
+    fold_source <- current_data$Fold
+  } else {
+    stop(
+      "Could not recover fold information from file: ",
+      file_name,
+      ".
+The current workflow stores fold in the internal .id column."
+    )
+  }
+
+  current_fold <- as.numeric(gsub("[^0-9]+", "", as.character(fold_source)))
 
   current_data <- current_data %>%
     mutate(
@@ -211,7 +225,6 @@ The final prediction script should export columns including Env and cor."
 cv12_raw <- bind_rows(cv12_list) %>%
   left_join(model_catalog, by = c("ModelNumber", "Model"))
 
-
 if (!("Runtime_sec" %in% names(cv12_raw))) cv12_raw$Runtime_sec <- NA_real_
 readr::write_csv(cv12_raw, file.path(tables_dir, "prediction_cv1_cv2_raw.csv"))
 ```
@@ -220,7 +233,7 @@ readr::write_csv(cv12_raw, file.path(tables_dir, "prediction_cv1_cv2_raw.csv"))
 
 The `CV0` and `CV00` files represent the most demanding prediction problems in the study because they involve a held-out environment. For that reason, the environment label must remain explicit throughout the summarization process.
 
-This section reads those files, recovers the held-out environment from the filename, and prepares the data for summaries that retain the leave-one-environment-out structure.
+This section reads those files, recovers the held-out environment from the filename, recovers fold from the internal `.id` column, and prepares the data for summaries that retain the leave-one-environment-out structure.
 
 ```{r read-cvloo}
 cvloo_list <- vector("list", length(cvloo_files))
@@ -230,22 +243,21 @@ for (i in seq_along(cvloo_files)) {
   file_name <- sub("\\.csv$", "", file_name)
   parts <- strsplit(file_name, "_")[[1]]
 
-  if (length(parts) < 6) {
+  if (length(parts) < 5) {
     stop(
       "Unexpected filename for CV0/CV00 file: ",
       file_name,
       ".
-Expected pattern CV0_<trait>_<Env_leave>_<model>_rep<rep>_fold<fold>.csv or CV00_<trait>_<Env_leave>_<model>_rep<rep>_fold<fold>.csv"
+Expected pattern CV0_<trait>_<Env_leave>_<model>_rep<rep>.csv or CV00_<trait>_<Env_leave>_<model>_rep<rep>.csv"
     )
   }
 
   current_cv <- parts[1]
   current_trait <- parts[2]
-  current_model_label <- parts[length(parts) - 2]
-  current_model_number <- as.numeric(gsub("M", "", current_model_label))
-  current_rep <- as.numeric(gsub("rep", "", parts[length(parts) - 1]))
-  current_fold <- as.numeric(gsub("fold", "", parts[length(parts)]))
-  current_env_leave <- paste(parts[3:(length(parts) - 3)], collapse = "_")
+  current_model_label <- parts[length(parts) - 1]
+  current_model_number <- as.numeric(gsub("Eta", "", current_model_label))
+  current_rep <- as.numeric(gsub("rep", "", parts[length(parts)]))
+  current_env_leave <- paste(parts[3:(length(parts) - 2)], collapse = "_")
 
   current_data <- readr::read_csv(current_file, show_col_types = FALSE)
 
@@ -257,6 +269,21 @@ Expected pattern CV0_<trait>_<Env_leave>_<model>_rep<rep>_fold<fold>.csv or CV00
 The final prediction script should export columns including Env and cor."
     )
   }
+
+  if (".id" %in% names(current_data)) {
+    fold_source <- current_data$.id
+  } else if ("Fold" %in% names(current_data)) {
+    fold_source <- current_data$Fold
+  } else {
+    stop(
+      "Could not recover fold information from file: ",
+      file_name,
+      ".
+The current workflow stores fold in the internal .id column."
+    )
+  }
+
+  current_fold <- as.numeric(gsub("[^0-9]+", "", as.character(fold_source)))
 
   current_data <- current_data %>%
     mutate(
@@ -729,9 +756,10 @@ ggsave(file.path(figures_dir, "prediction_cv0_cv00.pdf"),
 
 This tutorialized version is aligned with the current prediction workflow based on `analysis_prediction_run_outputs.Rmd`. It expects files in which:
 
-- repetition and fold are encoded in the filename;
-- `CV0` and `CV00` carry the held-out environment label in the filename;
-- `CV0` and `CV00` still require the `Env == Env_leave` filter for the held-out-environment summaries.
+- repetition is encoded in the filename;
+- fold is stored in the internal `.id` column of each CSV;
+- `CV0` and `CV00` carry the held-out environment label in the filename and are already restricted to that environment in the execution stage;
+- the `Env == Env_leave` filter is kept here as a safeguard for the held-out-environment summaries.
 
 After this stage, the pipeline is ready to move from technical summarization to manuscript-oriented interpretation. The tables written to `output/tables/` are the main bridge between the computational workflow and the final discussion of results.
 

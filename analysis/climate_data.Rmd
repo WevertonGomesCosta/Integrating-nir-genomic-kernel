@@ -16,7 +16,7 @@ editor_options:
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-This chunk sets the global knitting options used across the document so that figures, messages, and code blocks are displayed consistently in the rendered tutorial.
+The document starts by defining global knitting options so that figures, messages, and code blocks appear consistently throughout the tutorial.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -77,7 +77,7 @@ Each package has a clear role in the workflow:
 
 We also create the output directory at the beginning of the script. This avoids errors when saving figures and tables later in the analysis.
 
-This chunk loads the packages needed for data download, wrangling, plotting, and panel composition before any climate processing begins.
+The code below loads the packages required for data download, data wrangling, plotting, and panel composition before any climate processing begins.
 
 ```{r packages}
 # Uncomment if installation is required
@@ -104,7 +104,7 @@ The geographic coordinates identify the experimental site. The start and end dat
 
 These variables were selected because they allow us to derive weather-derived descriptors with direct agronomic interpretation, such as accumulated precipitation, growing degree days, thermal stress, and vapor pressure deficit.
 
-This chunk defines the locations, years, and basic metadata that control which weather series will be downloaded and how the downstream summaries will be labeled.
+The next code block defines the study location, the growing-season windows, and the variables that will be requested from NASA POWER. These settings control both the download itself and the labels used later in the summaries.
 
 ```{r parameters}
 # Experimental site coordinates (College Station, TX)
@@ -141,9 +141,7 @@ We run one query for each growing season. This keeps the workflow transparent an
 
 ### 4.1 Download daily climate data for each year
 
-The code below sends two independent requests to the NASA POWER service, one for 2011 and one for 2012. A `year` identifier is added immediately after retrieval so that the origin of each record remains explicit throughout the workflow.
-
-This chunk downloads the main daily weather data from NASA POWER and stores the raw table that later steps use for inspection, plotting, and feature engineering.
+The code below sends two independent requests to the NASA POWER service, one for 2011 and one for 2012. A `year` identifier is added immediately after retrieval so that the origin of each record remains explicit throughout the workflow. These yearly tables are the starting point for the inspection, plotting, and feature-engineering steps that follow.
 
 ```{r get_data}
 data_tx_2011 <- get_power(
@@ -171,7 +169,7 @@ Once both yearly tables are available, we merge them into a single dataset and c
 
 We also save the raw daily dataset as a CSV file. This is an important reproducibility step because it preserves the exact version of the retrieved data used in the analysis.
 
-This chunk expands the download logic to collect the complementary weather variables required to complete the final climate dataset used by the pipeline.
+After the two yearly tables are retrieved, they are merged into a single dataset, reformatted, previewed, and saved for later reuse in the pipeline.
 
 ```{r get_data2}
 texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012) %>%
@@ -234,9 +232,9 @@ To make the figures suitable for a scientific article, we define a common visual
 
 To keep the figures consistent, we define the month labels only once. This avoids mixing different month formats across panels and makes the comparisons easier to read.
 
-In this tutorial, the graphical settings are written directly inside each figure. This makes the code longer, but it is also easier to follow for readers who are still learning how each plot is built.
+To keep the tutorial easy to follow, most graphical settings are written explicitly rather than hidden inside helper functions. This makes the script longer, but it also makes each plotting decision easier to understand for beginners and intermediate readers.
 
-This chunk defines shared graphical settings so that the precipitation and temperature figures follow the same visual standard throughout the tutorial.
+The next block defines shared labels and date breaks so that the precipitation and temperature figures follow the same visual standard throughout the tutorial.
 
 ```{r figure_settings}
 month_levels <- 5:9
@@ -267,7 +265,7 @@ daily_data_with_parts <- texas_climate_data %>%
 
 This first figure provides a direct view of daily rainfall over time. It is useful for identifying dry periods, rainfall concentration, and broad differences between the two years.
 
-This chunk creates the first precipitation overview figure, giving a broad visual summary of rainfall behavior across the study conditions.
+The next figure gives a broad visual summary of rainfall behavior across the study conditions.
 
 ```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figure 1. Daily precipitation across the 2011 and 2012 maize growing seasons in College Station, Texas. Bars represent corrected daily precipitation obtained from NASA POWER."}
 p_precip_daily <- ggplot(
@@ -317,7 +315,7 @@ The next figure reorganizes the same rainfall information in a way that facilita
 
 This layout is especially helpful when the goal is to see whether one season was systematically drier or wetter during specific periods of crop development.
 
-This chunk reorganizes the precipitation data into grouped views that make between-environment patterns easier to compare.
+The code below reorganizes the precipitation data into grouped views that make between-year patterns easier to compare.
 
 ```{r plot_precipitation_grouped, fig.width=12, fig.height=6.4, fig.align="center", fig.cap="Figure 2. Daily precipitation arranged by day of month within each month to facilitate between-year comparison during the crop season."}
 p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill = Year)) +
@@ -363,7 +361,7 @@ p1
 
 Daily precipitation is informative, but monthly totals provide a simpler seasonal summary. This figure aggregates the daily series and allows a cleaner comparison of cumulative water input between years and months.
 
-This chunk summarizes precipitation at the monthly level so that seasonal contrasts can be inspected more clearly than in the daily series alone.
+The next step summarizes precipitation at the monthly level so that seasonal contrasts can be inspected more clearly than in the daily series alone.
 
 ```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figure 3. Monthly precipitation totals during the maize growing seasons of 2011 and 2012 in College Station, Texas."}
 monthly_precip <- texas_climate_data %>%
@@ -417,7 +415,7 @@ Temperature is another core descriptor of crop environment. In this figure, we c
 
 The dashed smoothing lines do not replace the original data. Their role is only to help visualize the general seasonal trends for each temperature metric.
 
-This chunk produces the temperature figure used to compare the thermal profile of the evaluated environments over time.
+The figure below is used to compare the thermal profile of the evaluated environments over time.
 
 ```{r plot_temperature, fig.width=10, fig.height=6, fig.align="center", fig.cap="Figure 4. Daily minimum, mean, and maximum air temperature during the 2011 and 2012 maize growing seasons. Dashed lines indicate LOESS trends used only to aid visual interpretation."}
 temperature_data <- texas_climate_data %>%
@@ -489,7 +487,7 @@ After creating the main precipitation and temperature plots, we combine them int
 
 The figure is also exported as a high-resolution TIFF file, which is a common requirement for journal submission.
 
-This chunk combines the main precipitation and temperature panels into a single layout that can be used directly in reports or teaching materials.
+The main precipitation and temperature panels are combined below into a single layout that can be used directly in reports or teaching materials.
 
 ```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 5. Multi-panel summary of the main climatic contrasts between years, including daily precipitation by month, monthly precipitation totals, and daily air temperature profiles."}
 main_layout <- "
@@ -528,7 +526,7 @@ ggsave(
 
 In addition to precipitation and temperature, the script also examines solar radiation, wind speed, and relative humidity. These variables are important because they help describe evaporative demand, atmospheric dryness, and energy availability during the crop cycle.
 
-This chunk builds the complementary plots that document secondary weather patterns not shown in the main combined panel.
+The following plots document secondary weather patterns that are not shown in the main combined panel.
 
 ```{r additional_plots, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 6. Additional daily climatic variables monitored during the maize growing seasons, including solar radiation, wind speed, and relative humidity."}
 p4 <- ggplot(
@@ -653,7 +651,7 @@ p6 <- ggplot(
 
 As in the previous subsection, we combine the individual plots into a single figure. The layout was built using `patchwork::wrap_plots()`, which avoids the composition error generated when the patchwork operators are not correctly recognized during rendering.
 
-This chunk arranges the complementary weather plots into a compact multi-panel figure for downstream inspection.
+These complementary weather plots are then arranged into a compact multi-panel figure for downstream inspection.
 
 ```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 7. Multi-panel summary of additional climatic variables across years, including shortwave solar radiation, wind speed, and relative humidity."}
 additional_layout <- "
@@ -700,7 +698,7 @@ Some weather-derived covariates depend on quantities that are not directly provi
 
 These intermediate variables are calculated day by day and then summarized at the annual level in the next subsection.
 
-This chunk computes the annual and expanded climate covariates that will later be used to build the weather-derived inputs of the prediction pipeline.
+The next block computes the annual and expanded climate covariates that will later be used to build the weather-derived inputs of the prediction pipeline.
 
 ```{r feature_engineering}
 texas_climate_data <- texas_climate_data %>%
@@ -867,7 +865,7 @@ Three files are exported:
 
 The last two files retain their historical names for compatibility with the downstream scripts, even though they now represent weather-derived covariates.
 
-This chunk writes the raw and engineered climate outputs to disk so that later modules can reuse them without repeating the download and preprocessing stages.
+Finally, the processed climate outputs are written to disk so that later modules can reuse them without repeating the download and preprocessing stages.
 
 ```{r save_csv}
 write.csv(

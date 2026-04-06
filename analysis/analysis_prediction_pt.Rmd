@@ -112,10 +112,10 @@ Uma vez que as entradas estejam disponíveis, o próximo passo é definir as con
 As configurações do MCMC (`nIter`, `burnIn` e `thin`) definem como a estimação Bayesiana será conduzida. O número de repetições (`num_rep`) controla quantas partições independentes serão mais adiante usadas nos esquemas de validação. O número de núcleos de processamento (`n_cores`) é registrado aqui porque o módulo de execução pode usar computação paralela quando a etapa cara de predição for ativada.
 
 ```{r mcmc-settings}
-nIter <- 10000
+nIter <- 5000
 burnIn <- 1000
 thin <- 10
-num_rep <- 20
+num_rep <- 10
 
 n_cores <- max(1, parallel::detectCores() - 1)
 

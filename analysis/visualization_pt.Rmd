@@ -12,7 +12,7 @@ Este arquivo é a versão didática da etapa de visualização. Sua finalidade �
 
 Neste ponto do pipeline, a principal pergunta analítica já não é mais como cada modelo é especificado, mas como os modelos ajustados se comportam sob diferentes problemas de predição. Por essa razão, a etapa de visualização desloca o foco da construção dos modelos para a interpretação dos modelos. Ela reúne resumos de desempenho para `CV1`, `CV2`, `CV0` e `CV00`, destaca contrastes entre modelos com e sem o kernel climático (`W`) e organiza os resultados em tabelas e figuras que são mais fáceis de inspecionar do que os próprios arquivos brutos de predição.
 
-O fluxo atual de predição grava saídas brutas em `output/results/` usando nomes de arquivo que codificam o cenário de validação, o traço, o modelo ajustado, a repetição e o fold. Para `CV0` e `CV00`, o rótulo do ambiente deixado de fora também é registrado no nome do arquivo e depois é associado a `Env` pelo filtro `Env == Env_leave`. Essa estrutura de nomes é essencial porque conecta a etapa de execução à etapa de interpretação.
+O fluxo atual de predição grava saídas brutas em `output/results/` usando nomes de arquivo que codificam o cenário de validação, o traço, o modelo ajustado e a repetição. O fold fica armazenado na coluna interna `.id` de cada CSV, e não no nome do arquivo. Para `CV0` e `CV00`, o rótulo do ambiente deixado de fora também é registrado no nome do arquivo, e a etapa de execução já restringe essas saídas ao ambiente correspondente. Essa estrutura de nomes é essencial porque conecta a etapa de execução à etapa de interpretação.
 
 Ao longo deste tutorial, o **kernel climático (`W`)** deve ser interpretado como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente (`E`). O componente fenômico (`P`) também deve ser interpretado com cuidado, porque a similaridade baseada em NIRS pode refletir forte resposta ambiental além de sinal preditivo potencialmente útil.
 
@@ -113,7 +113,7 @@ Essa organização é importante porque as comparações mostradas mais adiante 
 
 ```{r model-catalog}
 model_catalog <- tibble( ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
- Model = sprintf("M%02d", c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
+ Model = paste0("Eta", c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
  Pathway = c( rep("Via genômica", 6), rep("Via fenômica", 6), rep("Via combinada G + P", 6) ),
  KernelFamily = c( "Linear", "Linear", "Gaussiano", "Gaussiano", "Arc-cosine", "Arc-cosine", "Linear", "Linear", "Gaussiano", "Gaussiano", "Arc-cosine", "Arc-cosine", "Linear", "Linear", "Gaussiano", "Gaussiano", "Arc-cosine", "Arc-cosine" ),
  WeatherStatus = c( "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W" ),
@@ -131,8 +131,8 @@ Os pares de comparação definidos abaixo fornecem exatamente essa estrutura. El
 
 ```{r comparison-pairs}
 comparison_pairs <- tibble( Comparison = c( "Genômico linear", "Genômico Gaussiano", "Genômico arc-cosine", "Fenômico linear", "Fenômico Gaussiano", "Fenômico arc-cosine", "Combinado linear", "Combinado Gaussiano", "Combinado arc-cosine" ),
- WithoutW = c("M01", "M03", "M05", "M02", "M04", "M06", "M07", "M08", "M09"),
-  WithW = c("M10", "M13", "M16", "M11", "M14", "M17", "M12", "M15", "M18") )
+ WithoutW = c("Eta1", "Eta3", "Eta5", "Eta2", "Eta4", "Eta6", "Eta7", "Eta8", "Eta9"),
+  WithW = c("Eta10", "Eta13", "Eta16", "Eta11", "Eta14", "Eta17", "Eta12", "Eta15", "Eta18") )
 comparison_pairs
 ```
 
@@ -443,9 +443,9 @@ if (length(cv12_files) == 0 && length(cvloo_files) == 0) {
 
 ## 6. Ler os arquivos CV1 e CV2 gerados pelo script final de predição
 
-A próxima etapa lê os arquivos `CV1` e `CV2`, interpreta o nome do arquivo e recompõe os metadados necessários para os resumos posteriores. Neste fluxo, a repetição e o fold são recuperados diretamente do nome do arquivo.
+A próxima etapa lê os arquivos `CV1` e `CV2`, interpreta o nome do arquivo e recompõe os metadados necessários para os resumos posteriores. Neste fluxo, a repetição é recuperada do nome do arquivo e o fold é recuperado da coluna interna `.id`.
 
-Este chunk documenta a leitura dos arquivos de CV1 e CV2, incluindo a interpretação dos nomes e a reconstrução dos metadados usados nos resumos.
+Este chunk documenta a leitura dos arquivos de CV1 e CV2, incluindo a interpretação dos nomes, a recuperação do fold a partir de `.id` e a reconstrução dos metadados usados nos resumos.
 
 ```{r read-cv12, eval=FALSE}
 cv12_list <- vector("list", length(cv12_files))
@@ -455,21 +455,20 @@ for (i in seq_along(cv12_files)) {
   file_name <- sub("\\.csv$", "", file_name)
   parts <- strsplit(file_name, "_")[[1]]
 
-  if (length(parts) != 5) {
+  if (length(parts) != 4) {
     stop(
       "Nome de arquivo inesperado para CV1/CV2: ",
       file_name,
       ".
-Padrão esperado: CV1_<trait>_<model>_rep<rep>_fold<fold>.csv ou CV2_<trait>_<model>_rep<rep>_fold<fold>.csv"
+Padrão esperado: CV1_<trait>_<model>_rep<rep>.csv ou CV2_<trait>_<model>_rep<rep>.csv"
     )
   }
 
   current_cv <- parts[1]
   current_trait <- parts[2]
   current_model_label <- parts[3]
-  current_model_number <- as.numeric(gsub("M", "", current_model_label))
+  current_model_number <- as.numeric(gsub("Eta", "", current_model_label))
   current_rep <- as.numeric(gsub("rep", "", parts[4]))
-  current_fold <- as.numeric(gsub("fold", "", parts[5]))
 
   current_data <- readr::read_csv(current_file, show_col_types = FALSE)
 
@@ -481,6 +480,21 @@ Padrão esperado: CV1_<trait>_<model>_rep<rep>_fold<fold>.csv ou CV2_<trait>_<mo
 O script final de predição deve exportar colunas incluindo Env e cor."
     )
   }
+
+  if (".id" %in% names(current_data)) {
+    fold_source <- current_data$.id
+  } else if ("Fold" %in% names(current_data)) {
+    fold_source <- current_data$Fold
+  } else {
+    stop(
+      "Não foi possível recuperar a informação de fold do arquivo: ",
+      file_name,
+      ".
+No fluxo atual, o fold é armazenado na coluna interna .id."
+    )
+  }
+
+  current_fold <- as.numeric(gsub("[^0-9]+", "", as.character(fold_source)))
 
   current_data <- current_data %>%
     mutate(
@@ -498,14 +512,13 @@ O script final de predição deve exportar colunas incluindo Env e cor."
 cv12_raw <- bind_rows(cv12_list) %>%
   left_join(model_catalog, by = c("ModelNumber", "Model"))
 
-
 if (!("Runtime_sec" %in% names(cv12_raw))) cv12_raw$Runtime_sec <- NA_real_
 readr::write_csv(cv12_raw, file.path(tables_dir, "prediction_cv1_cv2_raw.csv"))
 ```
 
 ## 7. Ler os arquivos CV0 e CV00 gerados pelo script final de predição
 
-A lógica é análoga à seção anterior, mas agora o nome do arquivo também carrega o rótulo do ambiente deixado de fora. No fluxo final, esse rótulo pode conter múltiplos underscores, então o parser reconstrói `Env_leave` a partir do nome do arquivo lendo da direita para a esquerda.
+A lógica é análoga à seção anterior, mas agora o nome do arquivo também carrega o rótulo do ambiente deixado de fora, enquanto o fold é recuperado da coluna interna `.id`. No fluxo final, esse rótulo pode conter múltiplos underscores, então o parser reconstrói `Env_leave` a partir do nome do arquivo lendo da direita para a esquerda.
 
 Este chunk documenta a leitura dos arquivos de CV0 e CV00, incluindo a identificação explícita do ambiente deixado de fora.
 
@@ -517,22 +530,21 @@ for (i in seq_along(cvloo_files)) {
   file_name <- sub("\\.csv$", "", file_name)
   parts <- strsplit(file_name, "_")[[1]]
 
-  if (length(parts) < 6) {
+  if (length(parts) < 5) {
     stop(
       "Nome de arquivo inesperado para CV0/CV00: ",
       file_name,
       ".
-Padrão esperado: CV0_<trait>_<Env_leave>_<model>_rep<rep>_fold<fold>.csv ou CV00_<trait>_<Env_leave>_<model>_rep<rep>_fold<fold>.csv"
+Padrão esperado: CV0_<trait>_<Env_leave>_<model>_rep<rep>.csv ou CV00_<trait>_<Env_leave>_<model>_rep<rep>.csv"
     )
   }
 
   current_cv <- parts[1]
   current_trait <- parts[2]
-  current_model_label <- parts[length(parts) - 2]
-  current_model_number <- as.numeric(gsub("M", "", current_model_label))
-  current_rep <- as.numeric(gsub("rep", "", parts[length(parts) - 1]))
-  current_fold <- as.numeric(gsub("fold", "", parts[length(parts)]))
-  current_env_leave <- paste(parts[3:(length(parts) - 3)], collapse = "_")
+  current_model_label <- parts[length(parts) - 1]
+  current_model_number <- as.numeric(gsub("Eta", "", current_model_label))
+  current_rep <- as.numeric(gsub("rep", "", parts[length(parts)]))
+  current_env_leave <- paste(parts[3:(length(parts) - 2)], collapse = "_")
 
   current_data <- readr::read_csv(current_file, show_col_types = FALSE)
 
@@ -544,6 +556,21 @@ Padrão esperado: CV0_<trait>_<Env_leave>_<model>_rep<rep>_fold<fold>.csv ou CV0
 O script final de predição deve exportar colunas incluindo Env e cor."
     )
   }
+
+  if (".id" %in% names(current_data)) {
+    fold_source <- current_data$.id
+  } else if ("Fold" %in% names(current_data)) {
+    fold_source <- current_data$Fold
+  } else {
+    stop(
+      "Não foi possível recuperar a informação de fold do arquivo: ",
+      file_name,
+      ".
+No fluxo atual, o fold é armazenado na coluna interna .id."
+    )
+  }
+
+  current_fold <- as.numeric(gsub("[^0-9]+", "", as.character(fold_source)))
 
   current_data <- current_data %>%
     mutate(
@@ -1012,9 +1039,10 @@ ggsave(file.path(figures_dir, "prediction_cv0_cv00.pdf"),
 
 Esta versão didática está alinhada ao fluxo atual de predição baseado em `analysis_prediction_run_outputs.Rmd`. Ela espera arquivos nos quais:
 
-- a repetição e o fold estão codificados no nome do arquivo;
-- `CV0` e `CV00` carregam no nome o rótulo do ambiente deixado de fora;
-- `CV0` e `CV00` ainda exigem o filtro `Env == Env_leave` para os resumos do ambiente deixado de fora.
+- a repetição está codificada no nome do arquivo;
+- o fold fica armazenado na coluna interna `.id` de cada CSV;
+- `CV0` e `CV00` carregam no nome o rótulo do ambiente deixado de fora e já saem restritos a esse ambiente na etapa de execução;
+- o filtro `Env == Env_leave` é mantido aqui como salvaguarda para os resumos do ambiente deixado de fora.
 
 Depois de executar este arquivo, a próxima etapa no repositório é rodar o script orientado ao manuscrito que consome as tabelas-resumo gravadas em `output/tables/`.
 

@@ -513,10 +513,10 @@ model_info %>%
 Esses valores definem o amostrador de Gibbs usado pelo `BGLR`. Ajuste-os aqui se uma cadeia mais longa for necessária para diagnósticos de convergência ou análises de sensibilidade.
 
 ```{r mcmc-parameters}
-nIter   <- 10000
+nIter   <- 5000
 burnIn  <- 1000
 thin    <- 10
-num_rep <- 20
+num_rep <- 10
 traits  <- c("GY", "KW")
 ```
 

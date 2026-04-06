@@ -531,10 +531,10 @@ These values define the Gibbs sampler used by `BGLR`. Adjust them here if a long
 This chunk defines the MCMC settings and execution controls that regulate the estimation stage when the heavy computation is turned on.
 
 ```{r mcmc-parameters}
-nIter   <- 10000
+nIter   <- 5000
 burnIn  <- 1000
 thin    <- 10
-num_rep <- 20
+num_rep <- 10
 traits  <- c("GY", "KW")
 ```
 

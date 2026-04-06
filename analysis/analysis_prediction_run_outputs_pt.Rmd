@@ -565,7 +565,19 @@ knitr::kable(output_examples, caption = "Exemplos de nomes de arquivos produzido
 
 ## 12. Nota sobre artefatos temporários do `BGLR`
 
-No workflow atual de 18 modelos, os artefatos temporários de `saveAt` são escritos em `tempdir()` durante cada ajuste e removidos imediatamente após a coleta do runtime e das predições. Por isso, este módulo de execução inventaria apenas os CSVs finais armazenados em `output/results/`.
+Esta etapa de execução usa dois tipos de arquivos, e vale a pena distingui-los com clareza em um material tutorial.
+
+**Artefatos auxiliares do ajuste.**  
+Durante cada chamada de `BGLR(...)`, o argumento `saveAt` aponta para um prefixo criado com `tempdir()`. Esses arquivos são arquivos temporários de trabalho usados internamente pelo `BGLR` enquanto o modelo está sendo ajustado. Em outras palavras, eles ajudam o ajuste a acontecer, mas não são os produtos analíticos que serão interpretados depois.
+
+**Saídas analíticas finais.**  
+Depois que o ajuste termina, o script coleta em memória as predições, o runtime e os resumos dos CVs e então grava os CSVs finais em `output/results/`. Esses CSVs são as saídas que devem ser preservadas, compartilhadas e consumidas pelos módulos posteriores de visualização e resumo.
+
+**Por que os temporários podem ser removidos.**  
+Os arquivos temporários de `saveAt` só são apagados depois que `BGLR(...)` termina e depois que o script já extraiu os objetos necessários para o workflow. Portanto, os temporários dão suporte ao ajuste enquanto ele está em execução, mas deixam de ser necessários quando os resumos finais já foram criados.
+
+**Interpretação prática para este módulo.**  
+Quando este arquivo inventaria saídas, ele inventaria apenas os CSVs finais armazenados em `output/results/`. Os artefatos temporários do `BGLR` em `tempdir()` são tratados apenas como auxiliares transitórios do fitting, e não como entregáveis analíticos reprodutíveis.
 
 ## 13. Nota final
 

@@ -565,7 +565,19 @@ knitr::kable(output_examples, caption = "Examples of file names produced by the 
 
 ## 12. Note on temporary `BGLR` artifacts
 
-In the current 18-model workflow, temporary `saveAt` artifacts are written to `tempdir()` during each fit and removed immediately after the runtime information and predictions are collected. Therefore, this execution module inventories only the final CSV outputs stored under `output/results/`.
+This execution stage uses two different kinds of files, and it is useful to distinguish them clearly in tutorial form.
+
+**Auxiliary fitting artifacts.**  
+During each call to `BGLR(...)`, the argument `saveAt` points to a prefix created with `tempdir()`. These files are temporary working files used internally by `BGLR` while the model is being fitted. In other words, they help the fitting process run, but they are not the analytical products that will be interpreted later.
+
+**Final analytical outputs.**  
+After the fit finishes, the script collects the predictions, runtime, and CV summaries in memory and then writes the final CSV files to `output/results/`. These CSV files are the outputs that should be preserved, shared, and consumed by the downstream visualization and summary modules.
+
+**Why the temporary files can be removed.**  
+The temporary `saveAt` files are deleted only after `BGLR(...)` has returned and the script has already extracted the objects needed for the workflow. Therefore, the temporary files support the fit while it is running, but they are not needed anymore once the final summaries have been created.
+
+**Practical interpretation for this module.**  
+When this file inventories outputs, it inventories only the final CSV files stored under `output/results/`. The temporary `BGLR` artifacts in `tempdir()` are treated only as short-lived fitting aids, not as reproducible analytical deliverables.
 
 ## 13. Final note
 
