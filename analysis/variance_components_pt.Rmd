@@ -18,7 +18,6 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 **Language / Idioma:** [English](variance_components.html) | [Português](variance_components_pt.html)
 
-> **Nota operacional:** Nesta versão em português, a etapa pesada de ajuste Bayesiano permanece documentada, mas a renderização depende dos arquivos já gerados pela execução em inglês. Os chunks de carregamento ficam ocultos e a leitura dos resultados consolidados é feita a partir de `output/variance_components/`.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -41,7 +40,7 @@ O objetivo é quantificar quanto da variância fenotípica total é atribuída a
 - Quanto da variância está associado ao **efeito categórico de ambiente (E)**?
 - Quanto é capturado pelos **kernels genômicos**?
 - Quanto é capturado pelos **kernels fenômicos/NIRS (P)**?
-- Quanto está associado ao **kernel climático (W)**, usado principalmente nos modelos **M10-M18**?
+- Quanto está associado ao **kernel climático (W)**, usado principalmente nos modelos **Eta10-Eta18**?
 - Quão relevantes são os termos de interação como **G × E**, **G × W**, **P × E** e **P × W**?
 
 Este script está organizado em quatro estágios:
@@ -736,7 +735,7 @@ variance_summary <- all_variance %>%
   ungroup() %>%
   left_join(model_info, by = c("Model" = "ModelID")) %>%
   mutate(
-    Model = factor(sprintf("M%02d", Model), levels = sprintf("M%02d", 1:18)),
+    Model = factor(paste0("Eta", Model), levels = paste0("Eta", 1:18)),
     ComponentLabel = dplyr::recode(Component, !!!component_display),
     ComponentLabel = factor(ComponentLabel, levels = component_order),
     Trait = factor(Trait, levels = c("GY", "KW"))
@@ -772,11 +771,11 @@ head(variance_table, 12) %>%
 
 ## 10. Figura para o artigo
 
-A figura abaixo resume a contribuição percentual de cada componente de variância nos 18 modelos para ambos os caracteres. Para manter o eixo x legível, os modelos são exibidos como `M01` a `M18`, e as descrições detalhadas permanecem disponíveis no catálogo de modelos salvo acima.
+A figura abaixo resume a contribuição percentual de cada componente de variância nos 18 modelos para ambos os caracteres. Para manter o eixo x legível, os modelos são exibidos como `Eta1` a `Eta18`, e as descrições detalhadas permanecem disponíveis no catálogo de modelos salvo acima.
 
 Essa figura deve ser lida como um resumo estrutural dos modelos ajustados, e não como prova direta de que combinar mais fontes de dados leva automaticamente a maior complementaridade biológica ou melhor desempenho preditivo.
 
-```{r variance-figure, fig.cap="Figura 3. Percentual médio posterior da variância total atribuído a cada componente do modelo nos 18 modelos preditivos para produtividade de grãos (GY) e peso de grãos (KW). Cada barra empilhada representa um modelo (M01-M18), com média ao longo das repetições, e as cores identificam os componentes de variância incluídos na estrutura do modelo. O kernel climático (W) e seus termos de interação associados aparecem principalmente nos modelos M10-M18. A decomposição da variância deve ser interpretada como uma descrição da estrutura do modelo, e não automaticamente como evidência de maior complementaridade biológica entre as fontes de informação.", fig.height=10, fig.width=13}
+```{r variance-figure, fig.cap="Figura 3. Percentual médio posterior da variância total atribuído a cada componente do modelo nos 18 modelos preditivos para produtividade de grãos (GY) e peso de grãos (KW). Cada barra empilhada representa um modelo (Eta1-Eta18), com média ao longo das repetições, e as cores identificam os componentes de variância incluídos na estrutura do modelo. O kernel climático (W) e seus termos de interação associados aparecem principalmente nos modelos Eta10-Eta18. A decomposição da variância deve ser interpretada como uma descrição da estrutura do modelo, e não automaticamente como evidência de maior complementaridade biológica entre as fontes de informação.", fig.height=10, fig.width=13}
 trait_labels <- c(
   GY = "A. Produtividade de grãos (GY)",
   KW = "B. Peso de grãos (KW)"
@@ -841,7 +840,7 @@ Esta seção final esclarece como a figura deve ser interpretada.
 - Um grande segmento de **Ambiente (E)** indica que o efeito categórico de macroambiente domina a partição da variância.
 - Grandes termos genômicos como **G**, **GGK** ou **GAK** indicam que a similaridade genômica captura uma parcela importante da variabilidade do caráter.
 - Grandes termos fenômicos como **P**, **PGK** ou **PAK** indicam maior contribuição da similaridade derivada de NIRS, mas esses termos devem ser interpretados com cautela porque NIRS também pode refletir forte resposta fisiológica ao ambiente.
-- Grandes termos relacionados ao clima como **W**, **G × W** ou **P × W** indicam que covariáveis derivadas do clima explicam estrutura adicional. Esses termos aparecem principalmente nos modelos **M10-M18** e devem ser interpretados como complementares ao efeito categórico de ambiente, e não como substitutos de **E**.
+- Grandes termos relacionados ao clima como **W**, **G × W** ou **P × W** indicam que covariáveis derivadas do clima explicam estrutura adicional. Esses termos aparecem principalmente nos modelos **Eta10-Eta18** e devem ser interpretados como complementares ao efeito categórico de ambiente, e não como substitutos de **E**.
 - Um grande segmento de **Residual** indica que fontes importantes de variabilidade permanecem não explicadas pelo modelo ajustado.
 
 No contexto deste artigo, essas decomposições de variância complementam as análises preditivas ao mostrar **quais fontes de informação contribuem para a estrutura dos modelos**. Entretanto, uma grande parcela de variância de um componente não deve ser lida automaticamente como evidência de maior complementaridade biológica ou de melhor habilidade preditiva.
