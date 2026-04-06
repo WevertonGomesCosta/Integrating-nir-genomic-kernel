@@ -13,4 +13,4 @@ output/tables/prediction_cv1_cv2_raw.csv
 output/tables/prediction_cv0_cv00_raw.csv
 output/tables/prediction_cv1_cv2_by_rep_fold_env.csv
 analysis/analysis.Rmd
-Integrating-nir-genomic-kernel.zip
+*.R
