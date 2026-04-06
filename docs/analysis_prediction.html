@@ -417,7 +417,7 @@ id="fnref1"><sup>1</sup></a></h4>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+workflowr <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -428,8 +428,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> </a>
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -442,9 +442,9 @@ aria-hidden="true"></span> </a>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -468,21 +468,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of
-the R Markdown file created these results, you’ll want to first commit
-it to the Git repo. If you’re still working on the analysis, you can
-ignore this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -573,15 +570,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree04efebbd1a5bb828d071844324843149c8580e1ftargetblank04efebba">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree4fb14e1ec0518fbe869659ab37639693b48ac70etargetblank4fb14e1a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/04efebbd1a5bb828d071844324843149c8580e1f" target="_blank">04efebb</a>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/4fb14e1ec0518fbe869659ab37639693b48ac70e" target="_blank">4fb14e1</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree04efebbd1a5bb828d071844324843149c8580e1ftargetblank04efebba"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree4fb14e1ec0518fbe869659ab37639693b48ac70etargetblank4fb14e1a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -591,7 +588,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/04efebbd1a5bb828d071844324843149c8580e1f" target="_blank">04efebb</a>.
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/4fb14e1ec0518fbe869659ab37639693b48ac70e" target="_blank">4fb14e1</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -619,6 +616,7 @@ Ignored files:
     Ignored:    output/climate_results/combined_additional_climate_plots.tiff
     Ignored:    output/climate_results/combined_climate_plot.tiff
     Ignored:    output/cv-schemes.tiff
+    Ignored:    output/results/
     Ignored:    output/variance_components/figures/variance_components_article.tiff
     Ignored:    output/variance_components/rep_1/Eta01/GYETA_E_varB.dat
     Ignored:    output/variance_components/rep_1/Eta01/GYETA_GE_varU.dat
@@ -3086,748 +3084,7 @@ Untracked files:
     Untracked:  analysis/run_cv1_cv2_only.R
 
 Unstaged changes:
-    Modified:   analysis/analysis_prediction.Rmd
-    Modified:   analysis/analysis_prediction_pt.Rmd
-    Modified:   analysis/analysis_prediction_run_outputs.Rmd
     Modified:   analysis/analysis_prediction_run_outputs_pt.Rmd
-    Modified:   analysis/variance_components.Rmd
-    Modified:   analysis/variance_components_pt.Rmd
-    Modified:   analysis/visualization.Rmd
-    Modified:   analysis/visualization_pt.Rmd
-    Deleted:    output/figures/prediction_cv0_cv00.pdf
-    Deleted:    output/figures/prediction_cv1_cv2.pdf
-    Deleted:    output/tables/analysis_prediction/analysis_prediction_bglr_run_inventory.csv
-    Deleted:    output/tables/analysis_prediction/analysis_prediction_counts_by_cv.csv
-    Deleted:    output/tables/analysis_prediction/analysis_prediction_counts_by_trait.csv
-    Deleted:    output/tables/analysis_prediction/analysis_prediction_inventory_cv12.csv
-    Deleted:    output/tables/analysis_prediction/analysis_prediction_inventory_cvloo.csv
-    Deleted:    output/tables/analysis_prediction/analysis_prediction_output_examples.csv
-    Modified:   output/variance_components/figures/variance_components_article.pdf
-    Modified:   output/variance_components/rep_1/Eta01/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta01/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta02/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta02/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta03/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta03/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta04/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta04/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta05/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta05/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta06/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta06/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta07/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta07/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta08/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta08/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta09/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta09/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta10/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta10/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta11/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta11/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta12/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta12/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta13/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta13/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta14/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta14/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta15/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta15/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta16/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta16/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta17/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta17/KW_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta18/GY_metrics.rds
-    Modified:   output/variance_components/rep_1/Eta18/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta01/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta01/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta02/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta02/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta03/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta03/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta04/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta04/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta05/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta05/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta06/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta06/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta07/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta07/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta08/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta08/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta09/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta09/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta10/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta10/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta11/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta11/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta12/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta12/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta13/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta13/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta14/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta14/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta15/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta15/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta16/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta16/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta17/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta17/KW_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta18/GY_metrics.rds
-    Modified:   output/variance_components/rep_10/Eta18/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta01/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta01/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta02/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta02/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta03/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta03/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta04/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta04/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta05/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta05/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta06/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta06/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta07/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta07/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta08/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta08/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta09/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta09/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta10/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta10/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta11/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta11/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta12/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta12/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta13/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta13/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta14/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta14/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta15/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta15/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta16/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta16/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta17/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta17/KW_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta18/GY_metrics.rds
-    Deleted:    output/variance_components/rep_11/Eta18/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta01/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta01/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta02/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta02/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta03/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta03/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta04/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta04/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta05/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta05/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta06/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta06/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta07/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta07/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta08/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta08/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta09/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta09/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta10/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta10/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta11/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta11/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta12/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta12/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta13/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta13/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta14/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta14/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta15/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta15/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta16/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta16/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta17/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta17/KW_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta18/GY_metrics.rds
-    Deleted:    output/variance_components/rep_12/Eta18/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta01/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta01/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta02/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta02/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta03/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta03/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta04/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta04/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta05/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta05/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta06/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta06/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta07/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta07/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta08/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta08/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta09/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta09/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta10/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta10/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta11/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta11/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta12/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta12/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta13/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta13/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta14/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta14/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta15/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta15/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta16/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta16/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta17/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta17/KW_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta18/GY_metrics.rds
-    Deleted:    output/variance_components/rep_13/Eta18/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta01/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta01/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta02/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta02/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta03/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta03/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta04/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta04/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta05/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta05/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta06/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta06/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta07/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta07/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta08/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta08/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta09/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta09/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta10/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta10/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta11/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta11/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta12/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta12/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta13/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta13/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta14/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta14/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta15/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta15/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta16/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta16/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta17/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta17/KW_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta18/GY_metrics.rds
-    Deleted:    output/variance_components/rep_14/Eta18/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta01/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta01/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta02/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta02/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta03/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta03/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta04/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta04/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta05/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta05/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta06/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta06/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta07/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta07/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta08/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta08/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta09/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta09/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta10/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta10/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta11/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta11/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta12/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta12/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta13/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta13/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta14/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta14/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta15/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta15/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta16/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta16/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta17/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta17/KW_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta18/GY_metrics.rds
-    Deleted:    output/variance_components/rep_15/Eta18/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta01/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta01/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta02/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta02/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta03/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta03/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta04/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta04/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta05/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta05/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta06/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta06/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta07/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta07/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta08/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta08/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta09/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta09/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta10/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta10/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta11/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta11/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta12/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta12/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta13/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta13/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta14/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta14/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta15/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta15/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta16/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta16/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta17/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta17/KW_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta18/GY_metrics.rds
-    Deleted:    output/variance_components/rep_16/Eta18/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta01/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta01/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta02/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta02/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta03/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta03/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta04/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta04/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta05/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta05/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta06/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta06/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta07/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta07/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta08/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta08/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta09/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta09/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta10/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta10/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta11/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta11/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta12/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta12/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta13/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta13/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta14/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta14/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta15/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta15/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta16/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta16/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta17/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta17/KW_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta18/GY_metrics.rds
-    Deleted:    output/variance_components/rep_17/Eta18/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta01/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta01/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta02/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta02/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta03/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta03/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta04/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta04/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta05/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta05/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta06/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta06/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta07/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta07/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta08/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta08/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta09/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta09/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta10/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta10/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta11/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta11/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta12/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta12/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta13/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta13/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta14/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta14/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta15/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta15/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta16/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta16/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta17/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta17/KW_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta18/GY_metrics.rds
-    Deleted:    output/variance_components/rep_18/Eta18/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta01/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta01/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta02/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta02/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta03/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta03/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta04/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta04/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta05/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta05/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta06/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta06/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta07/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta07/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta08/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta08/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta09/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta09/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta10/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta10/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta11/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta11/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta12/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta12/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta13/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta13/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta14/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta14/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta15/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta15/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta16/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta16/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta17/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta17/KW_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta18/GY_metrics.rds
-    Deleted:    output/variance_components/rep_19/Eta18/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta01/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta01/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta02/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta02/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta03/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta03/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta04/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta04/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta05/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta05/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta06/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta06/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta07/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta07/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta08/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta08/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta09/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta09/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta10/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta10/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta11/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta11/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta12/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta12/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta13/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta13/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta14/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta14/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta15/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta15/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta16/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta16/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta17/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta17/KW_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta18/GY_metrics.rds
-    Modified:   output/variance_components/rep_2/Eta18/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta01/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta01/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta02/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta02/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta03/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta03/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta04/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta04/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta05/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta05/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta06/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta06/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta07/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta07/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta08/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta08/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta09/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta09/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta10/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta10/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta11/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta11/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta12/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta12/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta13/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta13/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta14/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta14/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta15/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta15/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta16/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta16/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta17/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta17/KW_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta18/GY_metrics.rds
-    Deleted:    output/variance_components/rep_20/Eta18/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta01/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta01/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta02/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta02/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta03/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta03/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta04/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta04/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta05/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta05/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta06/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta06/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta07/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta07/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta08/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta08/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta09/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta09/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta10/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta10/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta11/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta11/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta12/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta12/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta13/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta13/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta14/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta14/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta15/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta15/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta16/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta16/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta17/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta17/KW_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta18/GY_metrics.rds
-    Modified:   output/variance_components/rep_3/Eta18/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta01/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta01/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta02/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta02/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta03/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta03/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta04/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta04/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta05/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta05/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta06/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta06/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta07/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta07/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta08/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta08/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta09/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta09/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta10/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta10/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta11/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta11/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta12/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta12/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta13/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta13/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta14/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta14/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta15/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta15/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta16/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta16/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta17/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta17/KW_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta18/GY_metrics.rds
-    Modified:   output/variance_components/rep_4/Eta18/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta01/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta01/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta02/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta02/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta03/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta03/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta04/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta04/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta05/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta05/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta06/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta06/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta07/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta07/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta08/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta08/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta09/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta09/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta10/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta10/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta11/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta11/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta12/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta12/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta13/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta13/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta14/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta14/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta15/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta15/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta16/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta16/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta17/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta17/KW_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta18/GY_metrics.rds
-    Modified:   output/variance_components/rep_5/Eta18/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta01/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta01/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta02/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta02/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta03/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta03/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta04/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta04/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta05/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta05/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta06/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta06/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta07/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta07/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta08/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta08/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta09/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta09/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta10/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta10/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta11/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta11/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta12/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta12/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta13/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta13/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta14/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta14/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta15/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta15/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta16/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta16/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta17/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta17/KW_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta18/GY_metrics.rds
-    Modified:   output/variance_components/rep_6/Eta18/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta01/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta01/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta02/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta02/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta03/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta03/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta04/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta04/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta05/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta05/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta06/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta06/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta07/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta07/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta08/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta08/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta09/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta09/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta10/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta10/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta11/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta11/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta12/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta12/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta13/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta13/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta14/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta14/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta15/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta15/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta16/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta16/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta17/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta17/KW_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta18/GY_metrics.rds
-    Modified:   output/variance_components/rep_7/Eta18/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta01/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta01/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta02/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta02/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta03/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta03/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta04/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta04/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta05/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta05/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta06/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta06/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta07/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta07/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta08/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta08/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta09/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta09/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta10/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta10/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta11/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta11/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta12/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta12/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta13/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta13/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta14/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta14/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta15/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta15/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta16/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta16/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta17/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta17/KW_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta18/GY_metrics.rds
-    Modified:   output/variance_components/rep_8/Eta18/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta01/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta01/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta02/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta02/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta03/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta03/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta04/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta04/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta05/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta05/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta06/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta06/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta07/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta07/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta08/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta08/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta09/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta09/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta10/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta10/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta11/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta11/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta12/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta12/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta13/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta13/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta14/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta14/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta15/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta15/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta16/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta16/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta17/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta17/KW_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta18/GY_metrics.rds
-    Modified:   output/variance_components/rep_9/Eta18/KW_metrics.rds
-    Modified:   output/variance_components/variance_components_all.rds
-    Modified:   output/variance_components/variance_components_processed.csv
-    Modified:   output/variance_components/variance_components_raw.csv
-    Modified:   output/variance_components/variance_components_raw.rds
-    Modified:   output/variance_components/variance_components_table_percent.csv
 
 </code></pre>
 <p>
@@ -3872,6 +3129,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/d1beaba6ed6c154f423aca65195b19a2c8303265/analysis/analysis_prediction.Rmd" target="_blank">d1beaba</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-06
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/d1beaba6ed6c154f423aca65195b19a2c8303265/docs/analysis_prediction.html" target="_blank">d1beaba</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-06
+</td>
+<td>
+update
+</td>
+</tr>
 <tr>
 <td>
 Rmd
