@@ -258,9 +258,7 @@ daily_preview_table <- texas_climate_data %>%
   )
 ```
 
-A tabela a seguir mostra uma prévia organizada da base climática diária para que o leitor veja a estrutura dos dados carregados antes das figuras.
-
-```{r daily_preview_table_pt}
+```{r daily_preview_table_pt, echo=FALSE}
 knitr::kable(
   daily_preview_table,
   align = "c",
@@ -942,9 +940,7 @@ weather_covariates_display <- weather_covariates %>%
   rename(Ano = year)
 ```
 
-As tabelas a seguir exibem as covariáveis climáticas finais, mostrando exatamente quais resumos foram produzidos para as etapas seguintes.
-
-```{r climate_covariate_tables_pt}
+```{r climate_covariate_tables_pt, echo=FALSE}
 knitr::kable(
   weather_covariates_dictionary,
   align = c("l", "c", "l"),
