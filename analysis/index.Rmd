@@ -16,13 +16,15 @@ editor_options:
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-## Project overview
+## English version
+
+### Project overview
 
 This project investigates whether genomic, phenomic, and weather-derived information can improve prediction for grain yield and 500-kernel weight (KW) in multi-environment maize trials.
 
 The repository and website were organized as a tutorial-style analytical pipeline. Each page corresponds to one major step of the study, from weather data processing to kernel construction, variance component estimation, prediction analyses, and final visualization.
 
-## Main data sources
+### Main data sources
 
 The study combines three main types of information:
 
@@ -32,29 +34,29 @@ The study combines three main types of information:
 
 In this website, the term **weather** is used when referring to meteorological covariates derived from NASA POWER and to the kernel built from those covariates. The term **environment** is reserved for the categorical macro-environment effect (`E`) and for the field conditions under which hybrids were evaluated.
 
-## Analytical structure
+### Analytical structure
 
 The workflow is divided into the following main steps:
 
 1. weather data acquisition and processing
 2. construction of genomic and phenomic kernels, the categorical environment matrix, and the weather kernel
 3. estimation of variance components for the reduced set of 18 models
-4. prediction analyses — Part I: setup, model specification, and cross-validation design
+4. prediction analyses — Part I: setup, model catalog, Eta specification, and cross-validation design
 5. prediction analyses — Part II: run outputs, output inventory, and prediction metadata
 6. consolidation of final figures and summary tables
 
-## Main analytical message
+### Main analytical message
 
 The current version of the project is structured to support manuscript revision and reproducible reporting. The goal is not to assume that integration automatically improves prediction, but to evaluate whether genomic, phenomic, and weather-derived information provide complementary predictive signals under different kernels and validation scenarios.
 
-## Website navigation
+### Website navigation
 
 The main pages of the project are:
 
 - **Climate data**: weather download, processing, and weather covariate generation
 - **Matrices**: aligned kernel construction
 - **Variance components**: decomposition of model variance
-- **Prediction — Part I**: setup, model catalog, ETA specification, and cross-validation design
+- **Prediction — Part I**: setup, model catalog, Eta specification, and cross-validation design
 - **Prediction — Part II**: run outputs, output inventory, and prediction metadata
 - **Visualization**: final result summaries
 - **About**: project background and study rationale
@@ -64,13 +66,13 @@ The main pages of the project are:
 
 ## Versão em português
 
-## Visão geral do projeto
+### Visão geral do projeto
 
 Este projeto investiga se informações genômicas, fenômicas e derivadas do clima podem melhorar a predição de produtividade de grãos e peso de 500 grãos (KW) em ensaios de milho multiambientes.
 
 O repositório e o site foram organizados como um pipeline analítico em formato tutorial. Cada página corresponde a uma etapa importante do estudo, desde o processamento dos dados climáticos até a construção dos kernels, a estimação dos componentes de variância, as análises preditivas e a visualização final.
 
-## Principais fontes de dados
+### Principais fontes de dados
 
 O estudo combina três tipos principais de informação:
 
@@ -80,29 +82,29 @@ O estudo combina três tipos principais de informação:
 
 Neste site, o termo **weather** é usado quando a referência é às covariáveis meteorológicas derivadas da NASA POWER e ao kernel construído a partir delas. O termo **environment** é reservado para o efeito categórico de macroambiente (`E`) e para as condições de campo nas quais os híbridos foram avaliados.
 
-## Estrutura analítica
+### Estrutura analítica
 
 O fluxo de trabalho é dividido nas seguintes etapas principais:
 
 1. obtenção e processamento de dados climáticos
 2. construção de kernels genômicos e fenômicos, da matriz categórica de ambiente e do kernel climático
 3. estimação de componentes de variância para o conjunto reduzido de 18 modelos
-4. análises preditivas — Parte I: preparação, especificação dos modelos e desenho da validação cruzada
+4. análises preditivas — Parte I: preparação, catálogo de modelos, especificação do Eta e desenho da validação cruzada
 5. análises preditivas — Parte II: saídas da execução, inventário dos outputs e metadados da predição
 6. consolidação das figuras finais e das tabelas-resumo
 
-## Principal mensagem analítica
+### Principal mensagem analítica
 
 A versão atual do projeto foi estruturada para apoiar a revisão do manuscrito e a documentação reprodutível dos resultados. O objetivo não é assumir que a integração melhora automaticamente a predição, mas avaliar se informações genômicas, fenômicas e derivadas do clima fornecem sinais preditivos complementares sob diferentes kernels e cenários de validação.
 
-## Navegação do site
+### Navegação do site
 
 As páginas principais do projeto são:
 
 - **Climate data**: download meteorológico, processamento e geração de covariáveis climáticas
 - **Matrices**: construção de kernels alinhados
 - **Variance components**: decomposição da variância dos modelos
-- **Prediction — Part I**: preparação, catálogo de modelos, especificação do ETA e desenho da validação cruzada
+- **Prediction — Part I**: preparação, catálogo de modelos, especificação do Eta e desenho da validação cruzada
 - **Prediction — Part II**: saídas da execução, inventário dos outputs e metadados da predição
 - **Visualization**: resumos finais dos resultados
 - **About**: contexto do projeto e justificativa do estudo

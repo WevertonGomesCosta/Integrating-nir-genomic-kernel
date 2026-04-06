@@ -16,7 +16,9 @@ editor_options:
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-## Study background
+## English version
+
+### Study background
 
 This project evaluates kernel-based strategies for integrating genomic markers, NIR spectra, and weather-derived covariates in maize prediction models.
 
@@ -27,7 +29,7 @@ The study focuses on two agronomic traits:
 
 The analyses were conducted in four macro-environments formed by the combination of year and water regime.
 
-## Why this project was organized this way
+### Why this project was organized this way
 
 The website and repository were restructured to support two goals at the same time:
 
@@ -36,7 +38,7 @@ The website and repository were restructured to support two goals at the same ti
 
 For this reason, the workflow is organized into separate pages that follow the same order used in the manuscript revision process.
 
-## Terminology used in the project
+### Terminology used in the project
 
 A key adjustment in the current version of the project is the distinction between **environment** and **weather**.
 
@@ -45,7 +47,7 @@ A key adjustment in the current version of the project is the distinction betwee
 
 This distinction is important because the weather kernel is built only from meteorological variables. It does not include broader environmental descriptors such as soil, management, or other site-level factors.
 
-## Main methodological components
+### Main methodological components
 
 The project includes:
 
@@ -56,7 +58,7 @@ The project includes:
 - interaction terms such as `G × E`, `P × E`, `G × W`, and `P × W`
 - Bayesian multi-kernel prediction using `BGLR`
 
-## Current scientific emphasis
+### Current scientific emphasis
 
 The updated analytical pipeline is designed to support a careful revision of the manuscript. The main emphasis is to evaluate how genomic, phenomic, and weather information behave in the prediction process, rather than to assume that integration necessarily produces better performance.
 
@@ -66,7 +68,7 @@ This makes the project useful both as a research report and as a methodological 
 
 ## Versão em português
 
-## Contexto do estudo
+### Contexto do estudo
 
 Este projeto avalia estratégias baseadas em kernels para integrar marcadores genômicos, espectros NIR e covariáveis derivadas do clima em modelos de predição em milho.
 
@@ -77,7 +79,7 @@ O estudo é focado em dois caracteres agronômicos:
 
 As análises foram conduzidas em quatro macroambientes formados pela combinação entre ano e regime hídrico.
 
-## Por que este projeto foi organizado dessa forma
+### Por que este projeto foi organizado dessa forma
 
 O site e o repositório foram reestruturados para atender simultaneamente a dois objetivos:
 
@@ -86,7 +88,7 @@ O site e o repositório foram reestruturados para atender simultaneamente a dois
 
 Por isso, o fluxo de trabalho foi organizado em páginas separadas que seguem a mesma ordem usada no processo de revisão do manuscrito.
 
-## Terminologia usada no projeto
+### Terminologia usada no projeto
 
 Um ajuste central na versão atual do projeto é a distinção entre **environment** e **weather**.
 
@@ -95,7 +97,7 @@ Um ajuste central na versão atual do projeto é a distinção entre **environme
 
 Essa distinção é importante porque o kernel climático é construído apenas a partir de variáveis meteorológicas. Ele não inclui descritores ambientais mais amplos, como solo, manejo ou outros fatores em nível de local.
 
-## Principais componentes metodológicos
+### Principais componentes metodológicos
 
 O projeto inclui:
 
@@ -106,7 +108,7 @@ O projeto inclui:
 - termos de interação como `G × E`, `P × E`, `G × W` e `P × W`
 - predição Bayesiana multi-kernel usando `BGLR`
 
-## Ênfase científica atual
+### Ênfase científica atual
 
 O pipeline analítico atualizado foi desenhado para apoiar uma revisão cuidadosa do manuscrito. A ênfase principal é avaliar como as informações genômicas, fenômicas e climáticas se comportam no processo de predição, em vez de assumir que a integração necessariamente produz melhor desempenho.
 
