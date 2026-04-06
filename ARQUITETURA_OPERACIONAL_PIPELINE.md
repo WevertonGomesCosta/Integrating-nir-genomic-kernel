@@ -179,9 +179,15 @@ Arquivos principais:
 - `cv0-cv00-design`
 - `filename-patterns`
 
+#### Padrão atual de execução
+- 18 modelos de predição;
+- 5.000 iterações MCMC;
+- 10 repetições.
+
 #### Regras PT
-- `load-inputs` em `include=FALSE`;
-- o restante permanece ativo, pois é leve e didático.
+- a versão em português preserva a mesma estrutura didática visível do EN;
+- como esta etapa é leve, o PT pode permanecer ativo sem exigir desligamento de blocos principais;
+- a dependência funcional do EN permanece garantida pelos artefatos já produzidos em `output/Matrizes/`.
 
 #### Artefatos carregados no PT
 De `output/Matrizes/`, pelo menos:
@@ -221,6 +227,7 @@ De `output/Matrizes/`, pelo menos:
 - documentar a execução da predição;
 - separar a camada pesada da camada de outputs;
 - organizar os metadados das saídas;
+- preservar os arquivos de fitting do `BGLR` para análises de convergência;
 - conectar a etapa com `visualization`.
 
 #### Estrutura interna
@@ -248,7 +255,8 @@ De `output/Matrizes/`, pelo menos:
 - a parte visível do PT mostra apenas os metadados já produzidos pela versão em inglês.
 
 #### Artefatos gerados pelo EN
-Pasta:
+Pastas:
+- `output/results/bglr_runs/`
 - `output/tables/analysis_prediction/`
 
 Arquivos:
@@ -342,6 +350,7 @@ output/
 ├── Matrizes/
 ├── variance_components/
 ├── results/
+│   └── bglr_runs/
 ├── tables/
 │   ├── analysis_prediction/
 │   └── pipeline_review/
