@@ -184,15 +184,6 @@ component_order <- c(
 
 component_order[component_order == "PAKW × W"] <- "PAK × W"
 
-model_component_lookup <- bind_rows(
-  lapply(seq_along(models), function(i) {
-    tibble(
-      ModelID = i,
-      EtaIndex = seq_along(models[[i]]),
-      ComponentBase = names(models[[i]])
-    )
-  })
-)
 ```
 
 ## 3. Carregamento dos kernels e objetos fenotípicos
@@ -466,6 +457,16 @@ models[[18]] <- list(
 )
 
 names(models) <- paste0("Eta", seq_along(models))
+
+model_component_lookup <- bind_rows(
+  lapply(seq_along(models), function(i) {
+    tibble(
+      ModelID = i,
+      EtaIndex = seq_along(models[[i]]),
+      ComponentBase = names(models[[i]])
+    )
+  })
+)
 ```
 
 ### 4.1. Catálogo de modelos
@@ -897,13 +898,6 @@ ggsave(
   height = 10,
   dpi = 300,
   compression = "lzw",
-  bg = "white"
-)
-
-ggsave(
-  plot = variance_plot,
-  width = 14,
-  height = 10,
   bg = "white"
 )
 ```
