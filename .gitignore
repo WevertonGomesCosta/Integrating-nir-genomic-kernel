@@ -15,3 +15,5 @@ data/Maize-NIRS-GBS-main
 analysis/analysis.Rmd
 *.R
 /output/tables/pipeline_review
+/output/variance_components/bglr_runs
+/output/results/bglr_runs
