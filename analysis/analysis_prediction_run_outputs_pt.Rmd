@@ -24,12 +24,13 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 Este submódulo é a contraparte de execução de `analysis_prediction_pt.Rmd`. Seu papel é rodar os ajustes de predição para o catálogo reduzido de 18 modelos, salvar os arquivos CSV em `output/results/` e inventariar as saídas que mais adiante serão consumidas pela etapa de visualização.
 
-O contrato de execução usado aqui segue quatro regras operacionais:
+O contrato de execução usado aqui segue cinco regras operacionais:
 
 - `CV1` e `CV2` são derivados do mesmo ajuste em cada fold;
 - `CV0` e `CV00` são derivados do mesmo ajuste para cada ambiente deixado de fora em cada fold;
 - a partição em folds é determinística para cada tarefa `MODEL × REP × TRAIT` e é reutilizada nos dois blocos de CV;
-- os arquivos de saída são organizados explicitamente por esquema de validação, ambiente quando aplicável, trait, repetição e fold, com o fold representado tanto na árvore de pastas quanto no nome do arquivo.
+- os arquivos de saída são organizados explicitamente por esquema de validação, ambiente quando aplicável, trait, repetição e fold, com o fold representado tanto na árvore de pastas quanto no nome do arquivo;
+- os artefatos persistentes do `BGLR` são salvos nas pastas do ajuste primário (`CV1` e `CV0`), renomeados com rótulos explícitos dos componentes e depois espelhados para as pastas pareadas (`CV2` e `CV00`).
 
 Os chunks pesados de ajuste permanecem desativados por padrão no tutorial. Ainda assim, o código mostrado abaixo é a versão executável que deve ser usada quando a etapa de predição for rerodada.
 
@@ -163,27 +164,158 @@ model_catalog <- data.frame(
   stringsAsFactors = FALSE
 )
 
-env_design <- model.matrix(~ Pheno$Env - 1)
+env_design <- ZE
 
 Eta_list <- vector("list", 18)
-Eta_list[[1]]  <- list(list(X = env_design, model = "BRR"), list(K = ZG, model = "RKHS"), list(K = ZGZE, model = "RKHS"))
-Eta_list[[2]]  <- list(list(X = env_design, model = "BRR"), list(K = ZP, model = "RKHS"), list(K = ZPZE, model = "RKHS"))
-Eta_list[[3]]  <- list(list(X = env_design, model = "BRR"), list(K = GGK, model = "RKHS"), list(K = GGKE, model = "RKHS"))
-Eta_list[[4]]  <- list(list(X = env_design, model = "BRR"), list(K = PGK, model = "RKHS"), list(K = PGKE, model = "RKHS"))
-Eta_list[[5]]  <- list(list(X = env_design, model = "BRR"), list(K = GAK, model = "RKHS"), list(K = GAKE, model = "RKHS"))
-Eta_list[[6]]  <- list(list(X = env_design, model = "BRR"), list(K = PAK, model = "RKHS"), list(K = PAKE, model = "RKHS"))
-Eta_list[[7]]  <- list(list(X = env_design, model = "BRR"), list(K = ZG, model = "RKHS"), list(K = ZP, model = "RKHS"), list(K = ZGZE, model = "RKHS"), list(K = ZPZE, model = "RKHS"))
-Eta_list[[8]]  <- list(list(X = env_design, model = "BRR"), list(K = GGK, model = "RKHS"), list(K = PGK, model = "RKHS"), list(K = GGKE, model = "RKHS"), list(K = PGKE, model = "RKHS"))
-Eta_list[[9]]  <- list(list(X = env_design, model = "BRR"), list(K = GAK, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = GAKE, model = "RKHS"), list(K = PAKE, model = "RKHS"))
-Eta_list[[10]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = ZG, model = "RKHS"), list(K = ZGZE, model = "RKHS"), list(K = ZGZW, model = "RKHS"))
-Eta_list[[11]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = ZP, model = "RKHS"), list(K = ZPZE, model = "RKHS"), list(K = ZPZW, model = "RKHS"))
-Eta_list[[12]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = ZG, model = "RKHS"), list(K = ZP, model = "RKHS"), list(K = ZGZE, model = "RKHS"), list(K = ZPZE, model = "RKHS"), list(K = ZGZW, model = "RKHS"), list(K = ZPZW, model = "RKHS"))
-Eta_list[[13]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GGK, model = "RKHS"), list(K = GGKE, model = "RKHS"), list(K = GGKW, model = "RKHS"))
-Eta_list[[14]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = PGK, model = "RKHS"), list(K = PGKE, model = "RKHS"), list(K = PGKW, model = "RKHS"))
-Eta_list[[15]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GGK, model = "RKHS"), list(K = PGK, model = "RKHS"), list(K = GGKE, model = "RKHS"), list(K = PGKE, model = "RKHS"), list(K = GGKW, model = "RKHS"), list(K = PGKW, model = "RKHS"))
-Eta_list[[16]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GAK, model = "RKHS"), list(K = GAKE, model = "RKHS"), list(K = GAKW, model = "RKHS"))
-Eta_list[[17]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = PAKE, model = "RKHS"), list(K = PAKW, model = "RKHS"))
-Eta_list[[18]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GAK, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = GAKE, model = "RKHS"), list(K = PAKE, model = "RKHS"), list(K = GAKW, model = "RKHS"), list(K = PAKW, model = "RKHS"))
+
+Eta_list[[1]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  G = list(K = ZG, model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS")
+)
+
+Eta_list[[2]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  P = list(K = ZP, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS")
+)
+
+Eta_list[[3]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  GGK = list(K = GGK, model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS")
+)
+
+Eta_list[[4]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  PGK = list(K = PGK, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS")
+)
+
+Eta_list[[5]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  GAK = list(K = GAK, model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS")
+)
+
+Eta_list[[6]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  PAK = list(K = PAK, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS")
+)
+
+Eta_list[[7]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  G = list(K = ZG, model = "RKHS"),
+  P = list(K = ZP, model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS")
+)
+
+Eta_list[[8]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  GGK = list(K = GGK, model = "RKHS"),
+  PGK = list(K = PGK, model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS")
+)
+
+Eta_list[[9]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  GAK = list(K = GAK, model = "RKHS"),
+  PAK = list(K = PAK, model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS")
+)
+
+Eta_list[[10]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  G = list(K = ZG, model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  GW = list(K = ZGZW, model = "RKHS")
+)
+
+Eta_list[[11]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  P = list(K = ZP, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS"),
+  PW = list(K = ZPZW, model = "RKHS")
+)
+
+Eta_list[[12]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  G = list(K = ZG, model = "RKHS"),
+  P = list(K = ZP, model = "RKHS"),
+  GE = list(K = ZGZE, model = "RKHS"),
+  PE = list(K = ZPZE, model = "RKHS"),
+  GW = list(K = ZGZW, model = "RKHS"),
+  PW = list(K = ZPZW, model = "RKHS")
+)
+
+Eta_list[[13]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  GGK = list(K = GGK, model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  GGKW = list(K = GGKW, model = "RKHS")
+)
+
+Eta_list[[14]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  PGK = list(K = PGK, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS"),
+  PGKW = list(K = PGKW, model = "RKHS")
+)
+
+Eta_list[[15]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  GGK = list(K = GGK, model = "RKHS"),
+  PGK = list(K = PGK, model = "RKHS"),
+  GGKE = list(K = GGKE, model = "RKHS"),
+  PGKE = list(K = PGKE, model = "RKHS"),
+  GGKW = list(K = GGKW, model = "RKHS"),
+  PGKW = list(K = PGKW, model = "RKHS")
+)
+
+Eta_list[[16]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  GAK = list(K = GAK, model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  GAKW = list(K = GAKW, model = "RKHS")
+)
+
+Eta_list[[17]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  PAK = list(K = PAK, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS"),
+  PAKW = list(K = PAKW, model = "RKHS")
+)
+
+Eta_list[[18]] <- list(
+  E = list(X = env_design, model = "BRR"),
+  W = list(K = ZW, model = "RKHS"),
+  GAK = list(K = GAK, model = "RKHS"),
+  PAK = list(K = PAK, model = "RKHS"),
+  GAKE = list(K = GAKE, model = "RKHS"),
+  PAKE = list(K = PAKE, model = "RKHS"),
+  GAKW = list(K = GAKW, model = "RKHS"),
+  PAKW = list(K = PAKW, model = "RKHS")
+)
+
+Eta_labels <- lapply(Eta_list, function(current_model) {
+  paste0(
+    names(current_model),
+    "_",
+    vapply(current_model, function(component) component$model, character(1))
+  )
+})
 
 ```
 
@@ -228,7 +360,7 @@ cat("Rodando em ", useCores, " núcleos.")
 
 ## 6. Executar as análises preditivas para CV1 e CV2
 
-Este bloco implementa a validação baseada em genótipos para o workflow de 18 modelos. O mapa determinístico de folds, o ajuste do BGLR e o resumo por ambiente ficam escritos diretamente dentro do laço para manter cada etapa explícita. Um ajuste é rodado por fold e as predições resultantes são divididas em `CV1` (genótipos deixados de fora) e `CV2` (genótipos de treinamento sob o mesmo ajuste). No padrão atual, tanto os CSVs finais quanto os artefatos de ajuste do BGLR são salvos em uma hierarquia rep/fold.
+Este bloco implementa a validação baseada em genótipos para o workflow de 18 modelos. O mapa determinístico de folds, o ajuste do BGLR e o resumo por ambiente ficam escritos diretamente dentro do laço para manter cada etapa explícita. Um ajuste é rodado por fold, as predições resultantes são divididas em `CV1` (genótipos deixados de fora) e `CV2` (genótipos de treinamento sob o mesmo ajuste), e os artefatos persistentes são salvos primeiro em `bglr_runs/CV1/...` antes de serem espelhados para `bglr_runs/CV2/...` com rótulos explícitos dos componentes.
 
 ```{r run-predictions-cv12, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -284,10 +416,12 @@ foreach(i = seq_len(nrow(combos)),
     yield$Y2 <- NA
     yield$Y2[yield$Pedigree %in% train_geno] <- yield[[TRAIT]][yield$Pedigree %in% train_geno]
 
-    run_dir <- file.path(bglr_runs_dir, "CV1", TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
-    dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+    run_dir_cv1 <- file.path(bglr_runs_dir, "CV1", TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+    run_dir_cv2 <- file.path(bglr_runs_dir, "CV2", TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+    dir.create(run_dir_cv1, recursive = TRUE, showWarnings = FALSE)
+    dir.create(run_dir_cv2, recursive = TRUE, showWarnings = FALSE)
 
-    save_prefix_full <- file.path(run_dir, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
+    save_prefix_full <- file.path(run_dir_cv1, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
     y_t <- as.numeric(yield$Y2)
     start_time <- Sys.time()
@@ -298,6 +432,24 @@ foreach(i = seq_len(nrow(combos)),
     yield$yhat <- fit$yHat
     rm(fit)
     gc()
+
+    current_files <- list.files(run_dir_cv1, full.names = TRUE, recursive = FALSE)
+    for (current_file in current_files) {
+      current_name <- basename(current_file)
+      renamed_name <- current_name
+      for (eta_idx in seq_along(Eta_labels[[MODEL]])) {
+        renamed_name <- gsub(paste0("ETA_", eta_idx), Eta_labels[[MODEL]][eta_idx], renamed_name, fixed = TRUE)
+      }
+      if (!identical(current_name, renamed_name)) {
+        file.rename(current_file, file.path(run_dir_cv1, renamed_name))
+      }
+    }
+
+    current_files <- list.files(run_dir_cv1, full.names = TRUE, recursive = FALSE)
+    for (current_file in current_files) {
+      mirrored_name <- sub("^CV1_", "CV2_", basename(current_file))
+      file.copy(current_file, file.path(run_dir_cv2, mirrored_name), overwrite = TRUE)
+    }
 
     df_test <- yield[!yield$Pedigree %in% train_geno, ]
     df_train <- yield[yield$Pedigree %in% train_geno, ]
@@ -326,7 +478,7 @@ foreach(i = seq_len(nrow(combos)),
 ```
 ## 7. Executar as análises preditivas para CV0 e CV00
 
-Este bloco implementa a validação leave-one-environment-out para o mesmo workflow de 18 modelos. Para cada tarefa, o mapa determinístico de folds é reconstruído com a mesma regra usada em `CV1/CV2`, um ajuste é rodado para cada combinação `env_leave × fold` e as predições são divididas em `CV0` (genótipos de treinamento sob a máscara do ambiente) e `CV00` (genótipos deixados de fora sob a mesma máscara). Assim como no bloco baseado em genótipos, as saídas são gravadas em uma hierarquia rep/fold e os artefatos do BGLR são preservados em pastas persistentes correspondentes.
+Este bloco implementa a validação leave-one-environment-out para o mesmo workflow de 18 modelos. Para cada tarefa, o mapa determinístico de folds é reconstruído com a mesma regra usada em `CV1/CV2`, um ajuste é rodado para cada combinação `env_leave × fold` e as predições são divididas em `CV0` (genótipos de treinamento sob a máscara do ambiente) e `CV00` (genótipos deixados de fora sob a mesma máscara). Assim como no bloco baseado em genótipos, o caminho de execução permanece explícito. Os artefatos são salvos primeiro em `bglr_runs/CV0/...`, renomeados com rótulos explícitos dos componentes e depois espelhados para `bglr_runs/CV00/...`.
 
 ```{r run-predictions-cv0-cv00, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -385,10 +537,12 @@ foreach(i = seq_len(nrow(combos)),
       yield2$Y2[yield2$Pedigree %in% train_geno] <- yield2[[TRAIT]][yield2$Pedigree %in% train_geno]
       yield2$Y2[yield2$Env == env_name] <- NA
 
-      run_dir <- file.path(bglr_runs_dir, "CV0", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
-      dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+      run_dir_cv0 <- file.path(bglr_runs_dir, "CV0", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+      run_dir_cv00 <- file.path(bglr_runs_dir, "CV00", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+      dir.create(run_dir_cv0, recursive = TRUE, showWarnings = FALSE)
+      dir.create(run_dir_cv00, recursive = TRUE, showWarnings = FALSE)
 
-      save_prefix_env <- file.path(run_dir, paste0("CV0_", env_name, "_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
+      save_prefix_env <- file.path(run_dir_cv0, paste0("CV0_", env_name, "_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
       y_t <- as.numeric(yield2$Y2)
       start_time <- Sys.time()
@@ -399,6 +553,24 @@ foreach(i = seq_len(nrow(combos)),
       yield2$yhat <- fit$yHat
       rm(fit)
       gc()
+
+      current_files <- list.files(run_dir_cv0, full.names = TRUE, recursive = FALSE)
+      for (current_file in current_files) {
+        current_name <- basename(current_file)
+        renamed_name <- current_name
+        for (eta_idx in seq_along(Eta_labels[[MODEL]])) {
+          renamed_name <- gsub(paste0("ETA_", eta_idx), Eta_labels[[MODEL]][eta_idx], renamed_name, fixed = TRUE)
+        }
+        if (!identical(current_name, renamed_name)) {
+          file.rename(current_file, file.path(run_dir_cv0, renamed_name))
+        }
+      }
+
+      current_files <- list.files(run_dir_cv0, full.names = TRUE, recursive = FALSE)
+      for (current_file in current_files) {
+        mirrored_name <- sub("^CV0_", "CV00_", basename(current_file))
+        file.copy(current_file, file.path(run_dir_cv00, mirrored_name), overwrite = TRUE)
+      }
 
       df_test2 <- yield2[!yield2$Pedigree %in% train_geno & yield2$Env == env_name, , drop = FALSE]
       df_train2 <- yield2[yield2$Pedigree %in% train_geno & yield2$Env == env_name, , drop = FALSE]
@@ -541,7 +713,7 @@ output_examples <- bind_rows(
       "CV2/KW/rep10/fold05/CV2_KW_Eta18_rep10_fold05.csv"
     ),
     bglr_example = c(
-      "bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GxE_RKHS_varU.dat",
+      "bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GE_RKHS_varU.dat",
       "bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat"
     ),
     Meaning = c(
@@ -556,7 +728,7 @@ output_examples <- bind_rows(
       "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
     ),
     bglr_example = c(
-      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GxW_RKHS_varU.dat",
+      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GW_RKHS_varU.dat",
       "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
     ),
     Meaning = c(

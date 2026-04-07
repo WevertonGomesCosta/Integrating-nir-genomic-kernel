@@ -389,7 +389,7 @@ cvloo_design
 
 ### 7.4 File naming and downstream reproducibility
 
-The prediction workflow now uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Final CSV summaries are written inside `output/results/` under scenario-specific folders, and the persistent `BGLR` fitting artifacts are written inside `output/results/bglr_runs/` using the same logical structure. Keeping this pattern explicit is important because the next modules use these paths to inventory, summarize, and visualize the results.
+The prediction workflow now uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Final CSV summaries are written inside `output/results/` under scenario-specific folders. Persistent `BGLR` fitting artifacts are first written under the primary fit folders (`CV1` for the genotype-based fit and `CV0` for the leave-one-environment-out fit) and then mirrored to the paired folders (`CV2` and `CV00`) with scenario-specific prefixes, preserving the same logical structure under `output/results/bglr_runs/`. Keeping this pattern explicit is important because the next modules use these paths to inventory, summarize, and visualize the results.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(
@@ -401,9 +401,9 @@ prediction_file_patterns <- data.frame(
     "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
   ),
   ExampleBGLR = c(
-    "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GxE_RKHS_varU.dat",
-    "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PxW_RKHS_varU.dat",
-    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_CS11_WS_GY_Eta10_rep01_fold04_GxW_RKHS_varU.dat",
+    "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GE_RKHS_varU.dat",
+    "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PW_RKHS_varU.dat",
+    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_CS11_WS_GY_Eta10_rep01_fold04_GW_RKHS_varU.dat",
     "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
   ),
   stringsAsFactors = FALSE

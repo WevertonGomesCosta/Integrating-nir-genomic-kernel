@@ -478,14 +478,14 @@ if (dir.exists(prediction_bglr_dir)) {
       if (length(path_parts) >= 5) {
         current_block <- path_parts[1]
 
-        if (current_block == "CV1_CV2" && length(path_parts) >= 5) {
+        if (current_block %in% c("CV1", "CV2") && length(path_parts) >= 5) {
           current_trait <- path_parts[2]
           current_rep <- path_parts[3]
           current_fold <- path_parts[4]
           current_model <- path_parts[5]
         }
 
-        if (current_block == "CV0_CV00" && length(path_parts) >= 6) {
+        if (current_block %in% c("CV0", "CV00") && length(path_parts) >= 6) {
           current_env_leave <- path_parts[2]
           current_trait <- path_parts[3]
           current_rep <- path_parts[4]
