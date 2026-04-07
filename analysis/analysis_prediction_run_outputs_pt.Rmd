@@ -190,67 +190,11 @@ Eta_list[[18]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model =
 
 ## 4. Definir o contrato de execução
 
-Este bloco restaura os objetos operacionais usados pelo workflow atual: o conjunto fixo de ambientes leave-one-environment-out, um wrapper leve `run_bglr()`, uma função auxiliar de acurácia por ambiente, um construtor determinístico de folds compartilhado entre os blocos de CV e a grade de tarefas `MODEL × REP × TRAIT` para o catálogo de 18 modelos.
+Este bloco restaura os objetos operacionais usados pelo workflow atual: o conjunto fixo de ambientes leave-one-environment-out, o número de folds e a grade de tarefas `MODEL × REP × TRAIT` para o catálogo de 18 modelos. A lógica de ajuste e de resumo fica escrita diretamente dentro dos blocos de CV para manter o caminho de execução explícito.
 
 ```{r define-run-objects, eval=FALSE}
 envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
 envs_leaveout <- envs_leaveout[envs_leaveout %in% unique(Pheno$Env)]
-
-run_bglr <- function(y2_vector, ETA, nIter, burnIn, thin, save_prefix) {
-  y_t <- as.numeric(y2_vector)
-
-  if (missing(save_prefix) || is.null(save_prefix) || !nzchar(save_prefix)) {
-    stop("A persistent save_prefix must be provided to run_bglr().")
-  }
-
-  start_time <- Sys.time()
-  fit <- BGLR(y = y_t, ETA = ETA, nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix)
-  end_time <- Sys.time()
-  elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
-
-  retorno_foreach <- list(yHat = fit$yHat, runtime_sec = elapsed)
-
-  rm(fit)
-  gc()
-
-  return(retorno_foreach)
-}
-
-calc_cor_by_env <- function(df_with_yhat, trait_col) {
-  df_with_yhat %>%
-    dplyr::group_by(Env) %>%
-    dplyr::summarize(
-      cor = cor(.data[[trait_col]], yhat, use = "complete.obs"),
-      .groups = "drop"
-    ) %>%
-    as.data.frame()
-}
-
-build_fold_map <- function(Pedigree, num_fold, MODEL, rep_num, TRAIT) {
-  trait_id <- match(TRAIT, trait_reference_order)
-  if (is.na(trait_id)) {
-    trait_id <- 1L
-  }
-
-  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
-
-  old_seed_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (old_seed_exists) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-
-  set.seed(seed_value)
-  obs_per_fold <- ceiling(length(Pedigree) / num_fold)
-  folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
-
-  if (old_seed_exists) {
-    assign(".Random.seed", old_seed, envir = .GlobalEnv)
-  } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    rm(".Random.seed", envir = .GlobalEnv)
-  }
-
-  data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
-}
 
 num_fold <- 5L
 n_hybrids <- length(Pedigree)
@@ -284,7 +228,7 @@ cat("Rodando em ", useCores, " núcleos.")
 
 ## 6. Executar as análises preditivas para CV1 e CV2
 
-Este bloco implementa a validação baseada em genótipos para o workflow de 18 modelos. O mesmo mapa determinístico de folds é reconstruído para cada tarefa `MODEL × REP × TRAIT`, um ajuste é rodado por fold e as predições resultantes são divididas em `CV1` (genótipos deixados de fora) e `CV2` (genótipos de treinamento sob o mesmo ajuste). No padrão atual, tanto os CSVs finais quanto os artefatos de ajuste do BGLR são salvos em uma hierarquia rep/fold.
+Este bloco implementa a validação baseada em genótipos para o workflow de 18 modelos. O mapa determinístico de folds, o ajuste do BGLR e o resumo por ambiente ficam escritos diretamente dentro do laço para manter cada etapa explícita. Um ajuste é rodado por fold e as predições resultantes são divididas em `CV1` (genótipos deixados de fora) e `CV2` (genótipos de treinamento sob o mesmo ajuste). No padrão atual, tanto os CSVs finais quanto os artefatos de ajuste do BGLR são salvos em uma hierarquia rep/fold.
 
 ```{r run-predictions-cv12, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -294,7 +238,29 @@ foreach(i = seq_len(nrow(combos)),
   TRAIT <- as.character(combos$TRAIT[i])
 
   pheno <- data.frame(Pheno)
-  folds_df <- build_fold_map(Pedigree, num_fold, MODEL, rep_num, TRAIT)
+
+  trait_id <- match(TRAIT, trait_reference_order)
+  if (is.na(trait_id)) {
+    trait_id <- 1L
+  }
+
+  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
+  old_seed_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  if (old_seed_exists) {
+    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  }
+
+  set.seed(seed_value)
+  obs_per_fold <- ceiling(length(Pedigree) / num_fold)
+  folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
+
+  if (old_seed_exists) {
+    assign(".Random.seed", old_seed, envir = .GlobalEnv)
+  } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+    rm(".Random.seed", envir = .GlobalEnv)
+  }
+
+  folds_df <- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
 
   for (fold_num in seq_len(num_fold)) {
     rep_label <- sprintf("rep%02d", rep_num)
@@ -323,23 +289,29 @@ foreach(i = seq_len(nrow(combos)),
 
     save_prefix_full <- file.path(run_dir, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
-    res_full <- run_bglr(
-      yield$Y2,
-      ETA = Eta_list[[MODEL]],
-      nIter = nIter,
-      burnIn = burnIn,
-      thin = thin,
-      save_prefix = save_prefix_full
-    )
+    y_t <- as.numeric(yield$Y2)
+    start_time <- Sys.time()
+    fit <- BGLR(y = y_t, ETA = Eta_list[[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_full)
+    end_time <- Sys.time()
+    runtime_full <- as.numeric(difftime(end_time, start_time, units = "secs"))
 
-    yield$yhat <- res_full$yHat
-    runtime_full <- res_full$runtime_sec
+    yield$yhat <- fit$yHat
+    rm(fit)
+    gc()
 
     df_test <- yield[!yield$Pedigree %in% train_geno, ]
     df_train <- yield[yield$Pedigree %in% train_geno, ]
 
-    tmp1 <- calc_cor_by_env(df_test, TRAIT)
-    tmp2 <- calc_cor_by_env(df_train, TRAIT)
+    tmp1 <- df_test %>%
+      dplyr::group_by(Env) %>%
+      dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+      as.data.frame()
+
+    tmp2 <- df_train %>%
+      dplyr::group_by(Env) %>%
+      dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+      as.data.frame()
+
     tmp1$Runtime_sec <- runtime_full
     tmp2$Runtime_sec <- runtime_full
     tmp1$Fold <- fold_label
@@ -364,7 +336,29 @@ foreach(i = seq_len(nrow(combos)),
   TRAIT <- as.character(combos$TRAIT[i])
 
   pheno <- data.frame(Pheno)
-  folds_df <- build_fold_map(Pedigree, num_fold, MODEL, rep_num, TRAIT)
+
+  trait_id <- match(TRAIT, trait_reference_order)
+  if (is.na(trait_id)) {
+    trait_id <- 1L
+  }
+
+  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
+  old_seed_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  if (old_seed_exists) {
+    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  }
+
+  set.seed(seed_value)
+  obs_per_fold <- ceiling(length(Pedigree) / num_fold)
+  folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
+
+  if (old_seed_exists) {
+    assign(".Random.seed", old_seed, envir = .GlobalEnv)
+  } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+    rm(".Random.seed", envir = .GlobalEnv)
+  }
+
+  folds_df <- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
 
   for (fold_num in seq_len(num_fold)) {
     train_geno <- folds_df$Pedigree[folds_df$fold != fold_num]
@@ -396,23 +390,29 @@ foreach(i = seq_len(nrow(combos)),
 
       save_prefix_env <- file.path(run_dir, paste0("CV0_", env_name, "_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
-      res_env <- run_bglr(
-        yield2$Y2,
-        ETA = Eta_list[[MODEL]],
-        nIter = nIter,
-        burnIn = burnIn,
-        thin = thin,
-        save_prefix = save_prefix_env
-      )
+      y_t <- as.numeric(yield2$Y2)
+      start_time <- Sys.time()
+      fit <- BGLR(y = y_t, ETA = Eta_list[[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_env)
+      end_time <- Sys.time()
+      runtime_env <- as.numeric(difftime(end_time, start_time, units = "secs"))
 
-      yield2$yhat <- res_env$yHat
-      runtime_env <- res_env$runtime_sec
+      yield2$yhat <- fit$yHat
+      rm(fit)
+      gc()
 
-      df_test2 <- yield2[!yield2$Pedigree %in% train_geno & yield2$Env == env_name, ]
-      df_train2 <- yield2[yield2$Pedigree %in% train_geno & yield2$Env == env_name, ]
+      df_test2 <- yield2[!yield2$Pedigree %in% train_geno & yield2$Env == env_name, , drop = FALSE]
+      df_train2 <- yield2[yield2$Pedigree %in% train_geno & yield2$Env == env_name, , drop = FALSE]
 
-      tmp00 <- calc_cor_by_env(df_test2, TRAIT)
-      tmp0  <- calc_cor_by_env(df_train2, TRAIT)
+      tmp00 <- df_test2 %>%
+        dplyr::group_by(Env) %>%
+        dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+        as.data.frame()
+
+      tmp0 <- df_train2 %>%
+        dplyr::group_by(Env) %>%
+        dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+        as.data.frame()
+
       tmp00$Runtime_sec <- runtime_env
       tmp0$Runtime_sec <- runtime_env
       tmp00$Fold <- fold_label

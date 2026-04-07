@@ -193,47 +193,15 @@ component_order <- c(
 
 component_order[component_order == "PAKW × W"] <- "PAK × W"
 
-normalize_component_name <- function(component_name, model_value = NA_integer_) {
-  component_name <- as.character(component_name)
-
-  if (length(model_value) == 1L && length(component_name) > 1L) {
-    model_value <- rep(model_value, length(component_name))
-  }
-
-  if (length(model_value) != length(component_name)) {
-    stop("normalize_component_name() requires 'component_name' and 'model_value' to have the same length, or a scalar 'model_value'.")
-  }
-
-  vapply(seq_along(component_name), function(i) {
-    current_component <- component_name[i]
-    current_model <- model_value[i]
-
-    if (is.factor(current_model)) {
-      current_model <- as.character(current_model)
-    }
-
-    if (is.character(current_model)) {
-      current_model <- suppressWarnings(as.integer(sub("^Eta", "", current_model)))
-    }
-
-    if (length(current_component) == 0 || is.na(current_component) || !nzchar(current_component)) {
-      return(current_component)
-    }
-
-    if (length(current_model) == 1L && !is.na(current_model) && grepl("^ETA_[0-9]+$", current_component)) {
-      effect_index <- suppressWarnings(as.integer(sub("^ETA_", "", current_component)))
-      if (!is.na(effect_index) && current_model >= 1 && current_model <= length(models)) {
-        model_names <- names(models[[current_model]])
-        if (!is.null(model_names) && effect_index >= 1 && effect_index <= length(model_names)) {
-          current_component <- model_names[effect_index]
-        }
-      }
-    }
-
-    current_component <- sub("_(BRR|RKHS)$", "", current_component)
-    current_component
-  }, character(1))
-}
+model_component_lookup <- bind_rows(
+  lapply(seq_along(models), function(i) {
+    tibble(
+      ModelID = i,
+      EtaIndex = seq_along(models[[i]]),
+      ComponentBase = names(models[[i]])
+    )
+  })
+)
 ```
 
 ## 3. Loading the Kernels and Phenotypic Objects
@@ -512,7 +480,7 @@ models[[18]] <- list(
   PAKW = list(K = PAKW, model = "RKHS")
 )
 
-names(models) <- sprintf("Eta%02d", seq_along(models))
+names(models) <- paste0("Eta", seq_along(models))
 ```
 
 ### 4.1. Model catalog
@@ -769,7 +737,21 @@ if (length(rds_files) > 0) {
             Rep = rep_value,
             Model = model_value,
             Trait = trait_value,
-            Component = normalize_component_name(nm, model_value = model_value),
+            Component = {
+              current_component <- nm
+              if (grepl("^ETA_[0-9]+$", current_component)) {
+                current_eta_index <- suppressWarnings(as.integer(sub("^ETA_", "", current_component)))
+                current_match <- which(
+                  model_component_lookup$ModelID == model_value &
+                    model_component_lookup$EtaIndex == current_eta_index
+                )
+                if (length(current_match) == 1) {
+                  current_component <- model_component_lookup$ComponentBase[current_match]
+                }
+              }
+              current_component <- sub("_(BRR|RKHS)$", "", current_component)
+              current_component
+            },
             MeanVar = mean(current_object$variances_samples[[nm]], na.rm = TRUE),
             DIC = current_object$DIC,
             runtime_sec = current_object$runtime_sec
@@ -841,13 +823,26 @@ variance_summary <- all_variance %>%
   left_join(model_info, by = c("Model" = "ModelID")) %>%
   mutate(
     ModelNumber = Model,
+    EtaIndex = ifelse(grepl("^ETA_[0-9]+$", Component),
+                      suppressWarnings(as.integer(sub("^ETA_", "", Component))),
+                      NA_integer_),
+    Component = ifelse(
+      !is.na(EtaIndex),
+      model_component_lookup$ComponentBase[
+        match(
+          paste(ModelNumber, EtaIndex),
+          paste(model_component_lookup$ModelID, model_component_lookup$EtaIndex)
+        )
+      ],
+      Component
+    ),
+    Component = sub("_(BRR|RKHS)$", "", Component),
     Model = factor(paste0("Eta", ModelNumber), levels = paste0("Eta", 1:18)),
-    Component = normalize_component_name(Component, model_value = ModelNumber),
     ComponentLabel = dplyr::recode(Component, !!!component_display),
     ComponentLabel = factor(ComponentLabel, levels = component_order),
     Trait = factor(Trait, levels = c("GY", "KW"))
   ) %>%
-  dplyr::select(-ModelNumber)
+  dplyr::select(-ModelNumber, -EtaIndex)
 
 readr::write_csv(variance_summary, file.path(results_dir, "variance_components_processed.csv"))
 ```
@@ -933,6 +928,13 @@ ggsave(
   height = 10,
   dpi = 300,
   compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  plot = variance_plot,
+  width = 14,
+  height = 10,
   bg = "white"
 )
 ```
