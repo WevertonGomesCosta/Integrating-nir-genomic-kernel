@@ -91,13 +91,13 @@ library(kableExtra)
 
 ### 2.1. Caminhos dos arquivos
 
-Todos os kernels e objetos fenotípicos devem estar disponíveis em `output/Matrizes/`, que é o diretório de saída criado em `matrizes.Rmd`. Os resumos de componentes de variância gerados aqui são armazenados em `output/variance_components/`, enquanto os arquivos iterativos de ajuste do BGLR são preservados em `output/variance_components/bglr_runs/` para inspeção posterior, caso seja necessário avaliar a convergência.
+Todos os kernels e objetos fenotípicos devem estar disponíveis em `output/Matrizes/`, que é o diretório de saída criado em `matrizes.Rmd`. Os resultados de componentes de variância gerados aqui são armazenados em `output/variance_components/`.
 
 ```{r define-paths}
 kernel_dir <- "output/Matrizes"
 results_dir <- "output/variance_components"
-bglr_runs_dir <- file.path(results_dir, "bglr_runs")
 figure_dir <- file.path(results_dir, "figures")
+bglr_runs_dir <- file.path(results_dir, "bglr_runs")
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(bglr_runs_dir, recursive = TRUE, showWarnings = FALSE)
@@ -183,6 +183,48 @@ component_order <- c(
 )
 
 component_order[component_order == "PAKW × W"] <- "PAK × W"
+
+normalize_component_name <- function(component_name, model_value = NA_integer_) {
+  component_name <- as.character(component_name)
+
+  if (length(model_value) == 1L && length(component_name) > 1L) {
+    model_value <- rep(model_value, length(component_name))
+  }
+
+  if (length(model_value) != length(component_name)) {
+    stop("normalize_component_name() requires 'component_name' and 'model_value' to have the same length, or a scalar 'model_value'.")
+  }
+
+  vapply(seq_along(component_name), function(i) {
+    current_component <- component_name[i]
+    current_model <- model_value[i]
+
+    if (is.factor(current_model)) {
+      current_model <- as.character(current_model)
+    }
+
+    if (is.character(current_model)) {
+      current_model <- suppressWarnings(as.integer(sub("^Eta", "", current_model)))
+    }
+
+    if (length(current_component) == 0 || is.na(current_component) || !nzchar(current_component)) {
+      return(current_component)
+    }
+
+    if (length(current_model) == 1L && !is.na(current_model) && grepl("^ETA_[0-9]+$", current_component)) {
+      effect_index <- suppressWarnings(as.integer(sub("^ETA_", "", current_component)))
+      if (!is.na(effect_index) && current_model >= 1 && current_model <= length(models)) {
+        model_names <- names(models[[current_model]])
+        if (!is.null(model_names) && effect_index >= 1 && effect_index <= length(model_names)) {
+          current_component <- model_names[effect_index]
+        }
+      }
+    }
+
+    current_component <- sub("_(BRR|RKHS)$", "", current_component)
+    current_component
+  }, character(1))
+}
 ```
 
 ## 3. Carregamento dos kernels e objetos fenotípicos
@@ -465,7 +507,7 @@ Esta tabela é útil tanto para verificações internas quanto para vincular os 
 ```{r model-catalog}
 model_info <- tibble(
   ModelID = 1:18,
-  Model = sprintf("M%02d", 1:18),
+  Model = paste0("Eta", 1:18),
   ETA = names(models),
   Categoria = c(
     rep("Fonte única + E", 6),
@@ -545,18 +587,19 @@ results_list <- foreach(
   Model <- combos$Model[i]
   rep_num <- combos$REP[i]
   Trait <- combos$Trait[i]
+  rep_label <- sprintf("rep%02d", rep_num)
+  eta_label <- paste0("Eta", Model)
 
   pheno <- data.frame(Pheno)
   y_data <- as.numeric(pheno[[Trait]])
 
-  run_dir <- file.path(
-    bglr_runs_dir,
-    Trait,
-    sprintf("rep%02d", rep_num),
-    sprintf("Eta%02d", Model)
+  out_dir <- file.path(bglr_runs_dir, Trait, rep_label, eta_label)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  save_prefix <- file.path(
+    out_dir,
+    paste0("VC_", Trait, "_", eta_label, "_", rep_label, "_")
   )
-  dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
-  save_prefix <- file.path(run_dir, "BGLR_")
 
   start_time <- Sys.time()
   fit <- BGLR(
@@ -569,11 +612,39 @@ results_list <- foreach(
   )
   end_time <- Sys.time()
 
+  effect_names <- names(models[[Model]])
+  effect_models <- vapply(models[[Model]], function(x) x$model, character(1))
+  effect_labels <- paste0(effect_names, "_", effect_models)
+
+  generated_files <- list.files(
+    out_dir,
+    pattern = paste0("^", basename(save_prefix)),
+    full.names = TRUE
+  )
+
+  if (length(generated_files) > 0) {
+    for (current_file in generated_files) {
+      current_name <- basename(current_file)
+      renamed_name <- current_name
+
+      for (j in seq_along(effect_labels)) {
+        renamed_name <- sub(
+          paste0("ETA_", j),
+          effect_labels[j],
+          renamed_name,
+          fixed = TRUE
+        )
+      }
+
+      if (!identical(current_name, renamed_name)) {
+        file.rename(current_file, file.path(out_dir, renamed_name))
+      }
+    }
+  }
+
   variance_samples <- list()
 
   if (!is.null(fit$ETA)) {
-    effect_names <- names(fit$ETA)
-
     if (is.null(effect_names)) {
       effect_names <- paste0("Effect_", seq_along(fit$ETA))
     }
@@ -589,16 +660,13 @@ results_list <- foreach(
   }
 
   metrics_object <- list(
-    Model = Model,
-    Rep = rep_num,
-    Trait = Trait,
     varE_samples = fit$varE,
     variances_samples = variance_samples,
     DIC = fit$fit$DIC,
     runtime_sec = as.numeric(difftime(end_time, start_time, units = "secs"))
   )
 
-  saveRDS(metrics_object, file.path(run_dir, "variance_metrics.rds"))
+  saveRDS(metrics_object, file.path(out_dir, "variance_metrics.rds"))
 
   result_table <- tibble(
     Component = "Residual",
@@ -635,9 +703,9 @@ saveRDS(all_variance, file.path(results_dir, "variance_components_raw.rds"))
 
 Na versão atual do fluxo, esta é a seção usada com mais frequência. Em vez de reajustar todos os modelos a cada execução, o script lê os arquivos `_metrics.rds` previamente salvos e os consolida em um único objeto. Isso mantém o tutorial prático e reprodutível, ao mesmo tempo que deixa claro que esta página é principalmente uma **etapa de consolidação de resultados**, a menos que o usuário decida rerodar intencionalmente a etapa completa de ajuste no BGLR.
 
-```{r consolidate-saved-results, eval=FALSE}
+```{r consolidate-saved-results}
 rds_files <- list.files(
-  path = results_dir,
+  path = bglr_runs_dir,
   pattern = "(variance_metrics|_(metrics|metricas))\\.rds$",
   recursive = TRUE,
   full.names = TRUE
@@ -648,26 +716,17 @@ if (length(rds_files) > 0) {
 
   for (i in seq_along(rds_files)) {
     current_file <- normalizePath(rds_files[i], winslash = "/", mustWork = FALSE)
+    path_parts <- str_split(current_file, "/")[[1]]
+
+    rep_part <- path_parts[str_detect(path_parts, "^rep[0-9]+$|^rep_[0-9]+$")][1]
+    eta_part <- path_parts[str_detect(path_parts, "^Eta")][1]
+    trait_part <- path_parts[path_parts %in% traits][1]
+
+    rep_value <- as.integer(str_remove(rep_part, "^rep_?0*"))
+    model_value <- as.integer(str_remove(eta_part, "^Eta0*"))
+    trait_value <- trait_part
+
     current_object <- readRDS(current_file)
-
-    if (all(c("Rep", "Model", "Trait") %in% names(current_object))) {
-      rep_value <- as.integer(current_object$Rep)
-      model_value <- as.integer(current_object$Model)
-      trait_value <- as.character(current_object$Trait)
-    } else {
-      path_parts <- str_split(current_file, "/")[[1]]
-
-      rep_part <- path_parts[str_detect(path_parts, "^rep_?|^rep[0-9]{2}$")][1]
-      eta_part <- path_parts[str_detect(path_parts, "^Eta")][1]
-      file_part <- fs::path_file(current_file)
-
-      rep_value <- suppressWarnings(as.integer(str_remove(rep_part, "^rep_?0*")))
-      model_value <- suppressWarnings(as.integer(str_remove(eta_part, "^Eta0*")))
-      trait_value <- str_extract(file_part, "GY|KW")
-      if (is.na(trait_value) || is.null(trait_value)) {
-        trait_value <- path_parts[path_parts %in% traits][1]
-      }
-    }
 
     current_table <- tibble(
       Rep = rep_value,
@@ -687,7 +746,7 @@ if (length(rds_files) > 0) {
             Rep = rep_value,
             Model = model_value,
             Trait = trait_value,
-            Component = nm,
+            Component = normalize_component_name(nm, model_value = model_value),
             MeanVar = mean(current_object$variances_samples[[nm]], na.rm = TRUE),
             DIC = current_object$DIC,
             runtime_sec = current_object$runtime_sec
@@ -699,10 +758,10 @@ if (length(rds_files) > 0) {
     all_tables[[i]] <- current_table
   }
 
-  all_variance <- bind_rows(all_tables) %>%
-    arrange(Model, Rep, Trait, Component)
+  all_variance <- bind_rows(all_tables)
 
   saveRDS(all_variance, file.path(results_dir, "variance_components_all.rds"))
+  write_csv(all_variance, file.path(results_dir, "variance_components_raw.csv"))
 }
 ```
 
@@ -754,11 +813,14 @@ variance_summary <- all_variance %>%
   ungroup() %>%
   left_join(model_info, by = c("Model" = "ModelID")) %>%
   mutate(
-    Model = factor(paste0("Eta", Model), levels = paste0("Eta", 1:18)),
+    ModelNumber = Model,
+    Model = factor(paste0("Eta", ModelNumber), levels = paste0("Eta", 1:18)),
+    Component = normalize_component_name(Component, model_value = ModelNumber),
     ComponentLabel = dplyr::recode(Component, !!!component_display),
     ComponentLabel = factor(ComponentLabel, levels = component_order),
     Trait = factor(Trait, levels = c("GY", "KW"))
-  )
+  ) %>%
+  dplyr::select(-ModelNumber)
 
 readr::write_csv(variance_summary, file.path(results_dir, "variance_components_processed.csv"))
 ```
@@ -840,14 +902,6 @@ ggsave(
   height = 10,
   dpi = 300,
   compression = "lzw",
-  bg = "white"
-)
-
-ggsave(
-  filename = file.path(figure_dir, "variance_components_article.pdf"),
-  plot = variance_plot,
-  width = 14,
-  height = 10,
   bg = "white"
 )
 ```

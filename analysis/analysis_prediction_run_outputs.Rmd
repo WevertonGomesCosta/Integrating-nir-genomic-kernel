@@ -227,7 +227,7 @@ calc_cor_by_env <- function(df_with_yhat, trait_col) {
 }
 
 build_fold_map <- function(Pedigree, num_fold, MODEL, rep_num, TRAIT) {
-  trait_id <- match(TRAIT, sort(unique(traits_to_run)))
+  trait_id <- match(TRAIT, trait_reference_order)
   if (is.na(trait_id)) {
     trait_id <- 1L
   }
@@ -284,7 +284,7 @@ cat("Running on ", useCores, " cores.")
 
 ## 6. Run prediction analyses for CV1 and CV2
 
-This block implements genotype-based validation for the 18-model workflow. The same deterministic fold map is rebuilt for each `MODEL × REP × TRAIT` task, one fit is run per fold, and the resulting predictions are split into `CV1` (held-out genotypes) and `CV2` (training genotypes under the same fit). In the current standard, both the final CSV summaries and the BGLR fitting artifacts are stored in a rep/fold hierarchy.
+This block implements genotype-based validation for the 18-model workflow. The same deterministic fold map is rebuilt for each `MODEL × REP × TRAIT` task, one fit is run per fold, and the resulting predictions are split into `CV1` (held-out genotypes) and `CV2` (training genotypes under the same fit). In the current standard, both the final CSV summaries and the BGLR fitting artifacts are stored in a rep/fold hierarchy. The fitting is performed once, the artifacts are written under the `CV1` path, and then the same artifacts are mirrored to `CV2` so that the two scenarios remain separated while still sharing the same fit.
 
 ```{r run-predictions-cv12, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -318,10 +318,10 @@ foreach(i = seq_len(nrow(combos)),
     yield$Y2 <- NA
     yield$Y2[yield$Pedigree %in% train_geno] <- yield[[TRAIT]][yield$Pedigree %in% train_geno]
 
-    run_dir <- file.path(bglr_runs_dir, "CV1_CV2", TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+    run_dir <- file.path(bglr_runs_dir, "CV1", TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
     dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
-    save_prefix_full <- file.path(run_dir, "BGLR_")
+    save_prefix_full <- file.path(run_dir, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
     res_full <- run_bglr(
       yield$Y2,
@@ -354,7 +354,7 @@ foreach(i = seq_len(nrow(combos)),
 ```
 ## 7. Run prediction analyses for CV0 and CV00
 
-This block implements leave-one-environment-out validation for the same 18-model workflow. For each task, the deterministic fold map is rebuilt with the same rule used in `CV1/CV2`, one fit is run for each `env_leave × fold` combination, and the predictions are split into `CV0` (training genotypes under the environment mask) and `CV00` (held-out genotypes under the same mask). As in the genotype-based block, the outputs are written in a rep/fold hierarchy and the BGLR artifacts are preserved in matching persistent folders.
+This block implements leave-one-environment-out validation for the same 18-model workflow. For each task, the deterministic fold map is rebuilt with the same rule used in `CV1/CV2`, one fit is run for each `env_leave × fold` combination, and the predictions are split into `CV0` (training genotypes under the environment mask) and `CV00` (held-out genotypes under the same mask). As in the genotype-based block, the outputs are written in a rep/fold hierarchy and the BGLR artifacts are preserved in matching persistent folders. In the current standard, the auxiliary files are written first under the scenario-specific `CV0` path and then mirrored to the corresponding `CV00` path so that each scenario keeps its own folder without duplicating the expensive fit.
 
 ```{r run-predictions-cv0-cv00, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -391,10 +391,10 @@ foreach(i = seq_len(nrow(combos)),
       yield2$Y2[yield2$Pedigree %in% train_geno] <- yield2[[TRAIT]][yield2$Pedigree %in% train_geno]
       yield2$Y2[yield2$Env == env_name] <- NA
 
-      run_dir <- file.path(bglr_runs_dir, "CV0_CV00", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+      run_dir <- file.path(bglr_runs_dir, "CV0", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
       dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
-      save_prefix_env <- file.path(run_dir, "BGLR_")
+      save_prefix_env <- file.path(run_dir, paste0("CV0_", env_name, "_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
       res_env <- run_bglr(
         yield2$Y2,
@@ -537,33 +537,41 @@ output_examples <- bind_rows(
   tibble::tibble(
     ExampleType = "CV1/CV2",
     relative_path = c(
-      "CV1/GY/rep01/fold03/CV1_GY_Eta1_rep01_fold03.csv",
+      "CV1/GY/rep01/fold01/CV1_GY_Eta1_rep01_fold01.csv",
       "CV2/KW/rep10/fold05/CV2_KW_Eta18_rep10_fold05.csv"
     ),
+    bglr_example = c(
+      "bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GxE_RKHS_varU.dat",
+      "bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat"
+    ),
     Meaning = c(
-      "Prediction accuracy by environment for CV1, trait GY, model Eta1, repetition 1, fold 3.",
-      "Prediction accuracy by environment for CV2, trait KW, model Eta18, repetition 10, fold 5."
+      "Prediction accuracy for CV1, trait GY, model Eta1, repetition 1, fold 1.",
+      "Prediction accuracy for CV2, trait KW, model Eta18, repetition 10, fold 5."
     )
   ),
   tibble::tibble(
     ExampleType = "CV0/CV00",
     relative_path = c(
-      "CV0/CS11_WS/GY/rep01/fold04/CV0_GY_CS11_WS_Eta1_rep01_fold04.csv",
+      "CV0/CS11_WS/GY/rep01/fold01/CV0_GY_CS11_WS_Eta1_rep01_fold01.csv",
       "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
     ),
+    bglr_example = c(
+      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GxW_RKHS_varU.dat",
+      "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+    ),
     Meaning = c(
-      "Prediction accuracy by environment for CV0, trait GY, held-out environment CS11_WS, model Eta1, repetition 1, fold 4.",
-      "Prediction accuracy by environment for CV00, trait KW, held-out environment CS12_WW, model Eta18, repetition 10, fold 2."
+      "Prediction accuracy for CV0, trait GY, held-out environment CS11_WS, model Eta1, repetition 1, fold 1.",
+      "Prediction accuracy for CV00, trait KW, held-out environment CS12_WW, model Eta18, repetition 10, fold 2."
     )
   )
 )
 
 write_csv(output_examples, file.path(analysis_tables_dir, "analysis_prediction_output_examples.csv"))
-knitr::kable(output_examples, caption = "Examples of relative output paths produced by the prediction workflow.", align = "c")
+knitr::kable(output_examples, caption = "Examples of output files stored under the current rep/fold layout, together with the scenario-specific prefixes used for the persistent BGLR artifacts.", align = "c")
 ```
 ## 12. Note on temporary `BGLR` artifacts
 
-In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results/bglr_runs/` during each fit and preserved for later convergence diagnostics. Therefore, this execution module inventories both the final CSV outputs stored under `output/results/` and the hierarchical paths that locate the corresponding BGLR run folders.
+In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results/bglr_runs/` during each fit and preserved for later convergence diagnostics. The scenario-specific paths now separate `CV1`, `CV2`, `CV0`, and `CV00`, and the persisted filenames use the scenario prefix together with explicit effect labels instead of generic `ETA_1`, `ETA_2`, and similar placeholders. Therefore, this execution module inventories both the final CSV outputs stored under `output/results/` and the hierarchical paths that locate the corresponding BGLR run folders.
 
 ## 13. Final note
 

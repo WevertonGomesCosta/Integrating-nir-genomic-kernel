@@ -227,7 +227,7 @@ calc_cor_by_env <- function(df_with_yhat, trait_col) {
 }
 
 build_fold_map <- function(Pedigree, num_fold, MODEL, rep_num, TRAIT) {
-  trait_id <- match(TRAIT, sort(unique(traits_to_run)))
+  trait_id <- match(TRAIT, trait_reference_order)
   if (is.na(trait_id)) {
     trait_id <- 1L
   }
@@ -318,10 +318,10 @@ foreach(i = seq_len(nrow(combos)),
     yield$Y2 <- NA
     yield$Y2[yield$Pedigree %in% train_geno] <- yield[[TRAIT]][yield$Pedigree %in% train_geno]
 
-    run_dir <- file.path(bglr_runs_dir, "CV1_CV2", TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+    run_dir <- file.path(bglr_runs_dir, "CV1", TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
     dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
-    save_prefix_full <- file.path(run_dir, "BGLR_")
+    save_prefix_full <- file.path(run_dir, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
     res_full <- run_bglr(
       yield$Y2,
@@ -391,10 +391,10 @@ foreach(i = seq_len(nrow(combos)),
       yield2$Y2[yield2$Pedigree %in% train_geno] <- yield2[[TRAIT]][yield2$Pedigree %in% train_geno]
       yield2$Y2[yield2$Env == env_name] <- NA
 
-      run_dir <- file.path(bglr_runs_dir, "CV0_CV00", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+      run_dir <- file.path(bglr_runs_dir, "CV0", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
       dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
-      save_prefix_env <- file.path(run_dir, "BGLR_")
+      save_prefix_env <- file.path(run_dir, paste0("CV0_", env_name, "_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
       res_env <- run_bglr(
         yield2$Y2,
@@ -537,29 +537,37 @@ output_examples <- bind_rows(
   tibble::tibble(
     ExampleType = "CV1/CV2",
     relative_path = c(
-      "CV1/GY/rep01/fold03/CV1_GY_Eta1_rep01_fold03.csv",
+      "CV1/GY/rep01/fold01/CV1_GY_Eta1_rep01_fold01.csv",
       "CV2/KW/rep10/fold05/CV2_KW_Eta18_rep10_fold05.csv"
     ),
+    bglr_example = c(
+      "bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GxE_RKHS_varU.dat",
+      "bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat"
+    ),
     Meaning = c(
-      "Acurácia preditiva por ambiente para CV1, trait GY, modelo Eta1, repetição 1, fold 3.",
-      "Acurácia preditiva por ambiente para CV2, trait KW, modelo Eta18, repetição 10, fold 5."
+      "Acurácia preditiva para CV1, trait GY, modelo Eta1, repetição 1, fold 1.",
+      "Acurácia preditiva para CV2, trait KW, modelo Eta18, repetição 10, fold 5."
     )
   ),
   tibble::tibble(
     ExampleType = "CV0/CV00",
     relative_path = c(
-      "CV0/CS11_WS/GY/rep01/fold04/CV0_GY_CS11_WS_Eta1_rep01_fold04.csv",
+      "CV0/CS11_WS/GY/rep01/fold01/CV0_GY_CS11_WS_Eta1_rep01_fold01.csv",
       "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
     ),
+    bglr_example = c(
+      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GxW_RKHS_varU.dat",
+      "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+    ),
     Meaning = c(
-      "Acurácia preditiva por ambiente para CV0, trait GY, ambiente retirado CS11_WS, modelo Eta1, repetição 1, fold 4.",
-      "Acurácia preditiva por ambiente para CV00, trait KW, ambiente retirado CS12_WW, modelo Eta18, repetição 10, fold 2."
+      "Acurácia preditiva para CV0, trait GY, ambiente retirado CS11_WS, modelo Eta1, repetição 1, fold 1.",
+      "Acurácia preditiva para CV00, trait KW, ambiente retirado CS12_WW, modelo Eta18, repetição 10, fold 2."
     )
   )
 )
 
 write_csv(output_examples, file.path(analysis_tables_dir, "analysis_prediction_output_examples.csv"))
-knitr::kable(output_examples, caption = "Exemplos de caminhos relativos produzidos pelo fluxo de predição.", align = "c")
+knitr::kable(output_examples, caption = "Exemplos de arquivos de saída armazenados no layout atual por repetição e fold, juntamente com os prefixes específicos de cenário usados nos artefatos persistentes do BGLR.", align = "c")
 ```
 ## 12. Nota sobre artefatos temporários do `BGLR`
 

@@ -316,7 +316,7 @@ length(Eta_list)
 
 ## 7. Desenho da validação cruzada
 
-A acurácia preditiva depende não apenas do modelo ajustado, mas também do problema de predição que está sendo imposto. Neste workflow, os quatro esquemas de validação são implementados por meio de dois ajustes compartilhados: um ajuste baseado em genótipos, que depois é decomposto em `CV1` e `CV2`, e um ajuste leave-one-environment-out, que depois é decomposto em `CV0` e `CV00`. Como esses cenários não são equivalentes, o desempenho do modelo sempre precisa ser interpretado junto com a regra exata de mascaramento usada no módulo de execução.
+A acurácia preditiva depende não apenas do modelo ajustado, mas também do problema de predição que está sendo imposto. Neste estudo, quatro esquemas de validação são usados para representar diferentes tipos de generalização: predição de genótipos completamente novos, predição de células ausentes de genótipo por ambiente, predição em um ambiente completamente novo e predição de novos genótipos dentro de um ambiente novo. Como esses cenários não são equivalentes, o desempenho do modelo sempre precisa ser interpretado junto com a estrutura da regra de mascaramento.
 
 Esta seção esclarece o que é escondido em cada esquema de validação e qual pergunta científica cada um deles pretende responder. Essa distinção é essencial antes de avançar para a etapa de execução, porque o mesmo modelo pode ter desempenho muito diferente dependendo de o desafio estar no eixo dos genótipos, no eixo dos ambientes ou em ambos simultaneamente.
 
@@ -328,16 +328,16 @@ Os quatro esquemas de validação adotados neste estudo são resumidos abaixo. C
 cv_scenarios <- data.frame(
   CV = c("CV1", "CV2", "CV0", "CV00"),
   WhatIsMasked = c(
-    "Todas as observações dos genótipos deixados de fora",
-    "Sem novo mascaramento; avaliação nos genótipos de treinamento do ajuste de CV1",
-    "Todas as observações de um ambiente deixado de fora após o mascaramento de treinamento baseado em genótipos",
-    "Genótipos deixados de fora dentro de um ambiente deixado de fora sob o mesmo ajuste de CV0"
+    "Genótipos inteiros",
+    "Genótipos de treinamento sob o mesmo ajuste usado em CV1",
+    "Um ambiente por vez, avaliado em genótipos já vistos",
+    "Genótipos dentro de um ambiente deixado de fora"
   ),
   MainQuestion = c(
     "O modelo consegue prever genótipos completamente novos?",
-    "Quão bem o mesmo ajuste de CV1 descreve os genótipos que permaneceram no treinamento?",
-    "O modelo consegue prever genótipos já vistos em um ambiente completamente deixado de fora?",
-    "O modelo consegue prever novos genótipos dentro de um ambiente completamente deixado de fora?"
+    "Quão bem o mesmo ajuste de CV1 recupera os genótipos que permaneceram no treinamento?",
+    "O modelo consegue prever genótipos já vistos em um ambiente completamente novo?",
+    "O modelo consegue prever novos genótipos dentro de um ambiente completamente novo?"
   ),
   stringsAsFactors = FALSE
 )
@@ -345,20 +345,20 @@ cv_scenarios <- data.frame(
 cv_scenarios
 ```
 
-### 7.2 Predição quando genótipos estão parcial ou completamente não observados
+### 7.2 Predição quando genótipos estão completamente não observados versus mantidos no treinamento
 
-Os dois primeiros esquemas se concentram na incerteza no nível do genótipo, mas são produzidos a partir do mesmo ajuste. Em `CV1`, todas as observações dos genótipos deixados de fora são removidas antes do ajuste e a avaliação é feita nesses genótipos omitidos. Em `CV2`, nenhum mascaramento adicional é introduzido; em vez disso, o mesmo ajuste é avaliado nos genótipos que permaneceram no treinamento. Essa diferença importa porque `CV1` mede extrapolação para genótipos não vistos, enquanto `CV2` mede recuperação in-sample sob exatamente a mesma partição em folds.
+Os dois primeiros esquemas são gerados a partir do mesmo ajuste por folds. Em `CV1`, o modelo é avaliado em genótipos que foram completamente excluídos do treinamento naquele fold. Em `CV2`, o modelo é avaliado nos genótipos que permaneceram no treinamento sob esse mesmo ajuste. Portanto, `CV2` não é um segundo desenho de mascaramento; ele é a acurácia de referência dentro do fold para os genótipos de treinamento produzida pelo mesmo ajuste usado em `CV1`. O resumo abaixo deixa essa distinção explícita.
 
 ```{r cv1-cv2-design}
 cv12_design <- data.frame(
   Scenario = c("CV1", "CV2"),
   TrainingSet = c(
-    "Todas as observações, exceto aquelas dos genótipos deixados de fora",
-    "Exatamente o mesmo modelo ajustado usado em CV1"
+    "Todas as observações, exceto as dos genótipos retirados",
+    "Mesmo ajuste usado em CV1; sem mascaramento adicional"
   ),
   EvaluationTarget = c(
-    "Predições para os genótipos deixados de fora",
-    "Predições para os genótipos que permaneceram no treinamento"
+    "Predições para genótipos completamente não observados",
+    "Predições para genótipos mantidos no treinamento sob o mesmo fold"
   ),
   stringsAsFactors = FALSE
 )
@@ -368,18 +368,18 @@ cv12_design
 
 ### 7.3 Predição em ambientes que não estão totalmente disponíveis durante o treinamento
 
-Os esquemas `CV0` e `CV00` deslocam a dificuldade do eixo dos genótipos para o eixo dos ambientes, mas também são gerados a partir do mesmo ajuste. Primeiro, a resposta de treinamento mantém apenas os genótipos atribuídos à parte de treinamento do fold. Depois, um ambiente inteiro é mascarado e o modelo é reajustado sob essa regra leave-one-environment-out. `CV0` avalia os genótipos que já foram vistos em outros ambientes, enquanto `CV00` avalia os genótipos que foram deixados de fora pela partição em folds. Essa distinção é essencial porque o segundo alvo combina novidade de genótipo e novidade de ambiente.
+Os esquemas `CV0` e `CV00` deslocam a dificuldade para o eixo dos ambientes e são derivados do mesmo ajuste com ambiente mascarado dentro de cada fold. Em `CV0`, o alvo de avaliação é o conjunto de genótipos que já foram vistos em outros ambientes e precisam ser previstos no ambiente retirado. Em `CV00`, o alvo é mais restritivo: novos genótipos nesse mesmo ambiente retirado. Essa distinção é essencial porque `CV0` e `CV00` respondem a perguntas de generalização diferentes, embora nasçam do mesmo passo de mascaramento.
 
 ```{r cv0-cv00-design}
 cvloo_design <- data.frame(
   Scenario = c("CV0", "CV00"),
   TrainingSet = c(
     "Apenas genótipos de treinamento, com um ambiente totalmente mascarado",
-    "Exatamente o mesmo modelo ajustado usado em CV0"
+    "Mesmo ajuste usado em CV0; sem mascaramento adicional de ambiente"
   ),
   EvaluationTarget = c(
-    "Predições para genótipos de treinamento dentro do ambiente deixado de fora",
-    "Predições para genótipos deixados de fora dentro do ambiente deixado de fora"
+    "Predições para genótipos vistos em outros ambientes dentro do ambiente retirado",
+    "Predições para novos genótipos dentro do ambiente retirado"
   ),
   stringsAsFactors = FALSE
 )
@@ -389,22 +389,22 @@ cvloo_design
 
 ### 7.4 Nomes de arquivos e reprodutibilidade nas etapas posteriores
 
-O fluxo de predição agora armazena suas saídas em uma estrutura hierárquica que facilita a validação rápida e reduz a chance de colisões de arquivos durante o ajuste iterativo dos modelos. No padrão atual, o cenário de validação, o ambiente retirado quando aplicável, o trait, a repetição e o fold aparecem na estrutura de pastas, enquanto o nome do arquivo mantém explícitos o cenário, o trait, o ambiente quando aplicável, o modelo ajustado, a repetição e o fold. Os artefatos de ajuste do `BGLR` são preservados separadamente em `output/results/bglr_runs/`, enquanto os resumos finais de CV permanecem em `output/results/`. Manter esse padrão explícito é importante porque os módulos seguintes usam esses nomes e caminhos para inventariar, resumir e visualizar os resultados.
+O fluxo de predição produz muitos arquivos de saída, e seus nomes precisam carregar informação suficiente para identificar o cenário de validação, o trait, o modelo ajustado, a repetição e o fold ou ambiente deixado de fora. Manter esse padrão explícito é importante porque os módulos seguintes usam esses nomes para inventariar, resumir e visualizar os resultados. A tabela abaixo mostra a convenção de nomes que conecta a etapa de execução aos resumos posteriores.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(
   Scenario = c("CV1", "CV2", "CV0", "CV00"),
-  ExampleRelativePath = c(
+  ExampleCSV = c(
     "CV1/GY/rep02/fold03/CV1_GY_Eta1_rep02_fold03.csv",
-    "CV2/KW/rep08/fold05/CV2_KW_Eta12_rep08_fold05.csv",
+    "CV2/KW/rep08/fold01/CV2_KW_Eta12_rep08_fold01.csv",
     "CV0/CS11_WS/GY/rep01/fold04/CV0_GY_CS11_WS_Eta10_rep01_fold04.csv",
-    "CV00/CS12_WW/KW/rep01/fold02/CV00_KW_CS12_WW_Eta18_rep01_fold02.csv"
+    "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
   ),
-  BGLRRunFolder = c(
-    "bglr_runs/CV1_CV2/GY/rep02/fold03/Eta1/",
-    "bglr_runs/CV1_CV2/KW/rep08/fold05/Eta12/",
-    "bglr_runs/CV0_CV00/CS11_WS/GY/rep01/fold04/Eta10/",
-    "bglr_runs/CV0_CV00/CS12_WW/KW/rep01/fold02/Eta18/"
+  ExampleBGLR = c(
+    "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GxE_RKHS_varU.dat",
+    "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PxW_RKHS_varU.dat",
+    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_CS11_WS_GY_Eta10_rep01_fold04_GxW_RKHS_varU.dat",
+    "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
   ),
   stringsAsFactors = FALSE
 )
@@ -414,9 +414,9 @@ prediction_file_patterns
 
 ## 8. Transição para o submódulo de execução
 
-Neste ponto, a etapa de predição já foi organizada a partir de três perspectivas complementares: as entradas analíticas estão definidas, o catálogo reduzido de 18 modelos está explícito e os esquemas de validação estão ligados às perguntas científicas que pretendem responder. Isso significa que a etapa de execução não precisa mais introduzir novos conceitos. Seu papel é aplicar a estrutura definida aqui, gerar os arquivos de predição, organizar a árvore de saídas por rep/fold e preservar os artefatos do BGLR que poderão ser inspecionados depois em análises de convergência e diagnóstico.
+Neste ponto, a etapa de predição já foi organizada a partir de três perspectivas complementares: as entradas analíticas estão definidas, o catálogo reduzido de 18 modelos está explícito e os esquemas de validação estão ligados às perguntas científicas que pretendem responder. Isso significa que a etapa de execução não precisa mais introduzir novos conceitos. Seu papel é aplicar a estrutura definida aqui, gerar os arquivos de predição e organizar as saídas que mais adiante serão resumidas e visualizadas.
 
-O próximo submódulo, `analysis_prediction_run_outputs_pt.Rmd`, passa então do desenho à implementação. Ali o foco deixa de estar na definição dos modelos e na lógica da validação e passa para os registros de execução, o inventário de saídas por rep/fold, as pastas persistentes de execução do BGLR e as tabelas leves que tornam o fluxo de predição mais fácil de inspecionar e reaproveitar nos módulos posteriores.
+O próximo submódulo, `analysis_prediction_run_outputs_pt.Rmd`, passa então do desenho à implementação. Ali o foco deixa de estar na definição dos modelos e na lógica da validação e passa para os registros de execução, o inventário de arquivos de saída e as tabelas leves que tornam o fluxo de predição mais fácil de inspecionar e reaproveitar nos módulos posteriores.
 
 ## Navegação entre etapas
 

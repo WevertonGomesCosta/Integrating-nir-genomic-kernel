@@ -389,22 +389,22 @@ cvloo_design
 
 ### 7.4 File naming and downstream reproducibility
 
-The prediction workflow now stores its outputs in a hierarchical structure that makes quick validation easier and reduces the chance of file collisions during iterative model fitting. In the current standard, the validation scenario, held-out environment when applicable, trait, repetition, and fold are represented in the folder structure, while the file name keeps the scenario, trait, environment when applicable, fitted model, repetition, and fold explicit. The `BGLR` fitting artifacts are preserved separately under `output/results/bglr_runs/`, whereas the final CV summaries remain under `output/results/`. Keeping this pattern explicit is important because the next modules use these names and paths to inventory, summarize, and visualize the results.
+The prediction workflow now uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Final CSV summaries are written inside `output/results/` under scenario-specific folders, and the persistent `BGLR` fitting artifacts are written inside `output/results/bglr_runs/` using the same logical structure. Keeping this pattern explicit is important because the next modules use these paths to inventory, summarize, and visualize the results.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(
   Scenario = c("CV1", "CV2", "CV0", "CV00"),
-  ExampleRelativePath = c(
+  ExampleCSV = c(
     "CV1/GY/rep02/fold03/CV1_GY_Eta1_rep02_fold03.csv",
-    "CV2/KW/rep08/fold05/CV2_KW_Eta12_rep08_fold05.csv",
+    "CV2/KW/rep08/fold01/CV2_KW_Eta12_rep08_fold01.csv",
     "CV0/CS11_WS/GY/rep01/fold04/CV0_GY_CS11_WS_Eta10_rep01_fold04.csv",
-    "CV00/CS12_WW/KW/rep01/fold02/CV00_KW_CS12_WW_Eta18_rep01_fold02.csv"
+    "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
   ),
-  BGLRRunFolder = c(
-    "bglr_runs/CV1_CV2/GY/rep02/fold03/Eta1/",
-    "bglr_runs/CV1_CV2/KW/rep08/fold05/Eta12/",
-    "bglr_runs/CV0_CV00/CS11_WS/GY/rep01/fold04/Eta10/",
-    "bglr_runs/CV0_CV00/CS12_WW/KW/rep01/fold02/Eta18/"
+  ExampleBGLR = c(
+    "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GxE_RKHS_varU.dat",
+    "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PxW_RKHS_varU.dat",
+    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_CS11_WS_GY_Eta10_rep01_fold04_GxW_RKHS_varU.dat",
+    "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
   ),
   stringsAsFactors = FALSE
 )
@@ -414,9 +414,9 @@ prediction_file_patterns
 
 ## 8. Transition to the execution submodule
 
-At this point, the prediction stage has been organized from three complementary perspectives: the analytical inputs are defined, the reduced catalog of 18 models is made explicit, and the validation schemes are linked to the scientific questions they are meant to answer. This means that the execution stage no longer needs to introduce new concepts. Its role is to apply the structure defined here, generate the prediction files, organize the rep/fold output tree, and preserve the BGLR artifacts that may later be inspected for convergence and diagnostics.
+At this point, the prediction stage has been organized from three complementary perspectives: the analytical inputs are defined, the reduced catalog of 18 models is made explicit, and the validation schemes are linked to the scientific questions they are meant to answer. This means that the execution stage no longer needs to introduce new concepts. Its role is to apply the structure defined here, generate the prediction files, and organize the outputs that will later be summarized and visualized.
 
-The next submodule, `analysis_prediction_run_outputs.Rmd`, therefore moves from design to implementation. There the emphasis shifts from model definition and validation logic to execution records, rep/fold output inventory, persistent BGLR run folders, and lightweight tables that make the prediction workflow easier to inspect and reuse in the downstream modules.
+The next submodule, `analysis_prediction_run_outputs.Rmd`, therefore moves from design to implementation. There the emphasis shifts from model definition and validation logic to execution records, persistent `BGLR` artifacts organized by scenario, and recursive inventories that make the prediction workflow easier to inspect and reuse in the downstream modules.
 
 ## Stage navigation
 

@@ -16,6 +16,8 @@ editor_options:
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
+The document starts by setting knitting options so that tables, code, and figures are displayed consistently throughout the tutorial.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -58,7 +60,6 @@ A high variance share for a given source should not be interpreted automatically
 - the reduced catalog of 18 models used in the project
 
 **Outputs of this step**
-- persistent BGLR fitting files stored by trait, repetition, and model
 - raw variance-component results
 - processed variance-component summaries
 - percentage tables and diagnostic figures
@@ -69,6 +70,8 @@ A high variance share for a given source should not be interpreted automatically
 ## 2. R Environment and Required Inputs
 
 First, we load the packages used to manipulate the data, fit the Bayesian models, and generate the final article-quality figures.
+
+The next step loads the packages needed for reading the saved artifacts, reshaping the results, plotting summaries, and running the heavy estimation stage when required.
 
 ```{r load-packages}
 library(dplyr)
@@ -91,13 +94,15 @@ library(kableExtra)
 
 ### 2.1. File paths
 
-All kernels and phenotypic objects are expected to be available in `output/Matrizes/`, which is the output directory created in `matrizes.Rmd`. The variance-component summaries generated here are stored in `output/variance_components/`, while the iterative BGLR fitting files are preserved in `output/variance_components/bglr_runs/` so they can be inspected later if convergence diagnostics are needed.
+All kernels and phenotypic objects are expected to be available in `output/Matrizes/`, which is the output directory created in `matrizes.Rmd`. The variance-component results generated here are stored in `output/variance_components/`.
+
+The following lines define the project directories used to find matrices, store outputs, and organize the saved variance-component files.
 
 ```{r define-paths}
 kernel_dir <- "output/Matrizes"
 results_dir <- "output/variance_components"
-bglr_runs_dir <- file.path(results_dir, "bglr_runs")
 figure_dir <- file.path(results_dir, "figures")
+bglr_runs_dir <- file.path(results_dir, "bglr_runs")
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(bglr_runs_dir, recursive = TRUE, showWarnings = FALSE)
@@ -107,6 +112,8 @@ dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
 ### 2.2. Input checks
 
 Before reading the files, we check whether the expected `.rds` objects are present in the matrices output folder. This makes the tutorial easier to follow because the script stops immediately if a required object is missing.
+
+Before moving into model definition or result processing, the script checks that the required input files and directories are available.
 
 ```{r input-checks}
 required_files <- c(
@@ -132,6 +139,8 @@ if (length(missing_files) > 0) {
 ### 2.3. Labels used in the final tables and figures
 
 These vectors define how the variance components will appear in the final outputs. Keeping these labels visible in the main script helps the reader understand how internal model names are translated into article-ready labels.
+
+Here the script defines the labels and naming conventions that will be reused in tables, output files, and figures.
 
 ```{r labels-for-output}
 component_display <- c(
@@ -183,11 +192,55 @@ component_order <- c(
 )
 
 component_order[component_order == "PAKW × W"] <- "PAK × W"
+
+normalize_component_name <- function(component_name, model_value = NA_integer_) {
+  component_name <- as.character(component_name)
+
+  if (length(model_value) == 1L && length(component_name) > 1L) {
+    model_value <- rep(model_value, length(component_name))
+  }
+
+  if (length(model_value) != length(component_name)) {
+    stop("normalize_component_name() requires 'component_name' and 'model_value' to have the same length, or a scalar 'model_value'.")
+  }
+
+  vapply(seq_along(component_name), function(i) {
+    current_component <- component_name[i]
+    current_model <- model_value[i]
+
+    if (is.factor(current_model)) {
+      current_model <- as.character(current_model)
+    }
+
+    if (is.character(current_model)) {
+      current_model <- suppressWarnings(as.integer(sub("^Eta", "", current_model)))
+    }
+
+    if (length(current_component) == 0 || is.na(current_component) || !nzchar(current_component)) {
+      return(current_component)
+    }
+
+    if (length(current_model) == 1L && !is.na(current_model) && grepl("^ETA_[0-9]+$", current_component)) {
+      effect_index <- suppressWarnings(as.integer(sub("^ETA_", "", current_component)))
+      if (!is.na(effect_index) && current_model >= 1 && current_model <= length(models)) {
+        model_names <- names(models[[current_model]])
+        if (!is.null(model_names) && effect_index >= 1 && effect_index <= length(model_names)) {
+          current_component <- model_names[effect_index]
+        }
+      }
+    }
+
+    current_component <- sub("_(BRR|RKHS)$", "", current_component)
+    current_component
+  }, character(1))
+}
 ```
 
 ## 3. Loading the Kernels and Phenotypic Objects
 
 This section loads the matrices generated in `matrizes.Rmd`. These objects are the core inputs for the variance-component analysis.
+
+At this point, the script reads the matrices and kernels generated in the previous module so the variance-component models use the same aligned inputs as the prediction stage.
 
 ```{r load-matrices}
 ZG    <- readRDS(file.path(kernel_dir, "ZG.rds"))
@@ -227,6 +280,8 @@ cat("Number of pedigrees:", length(Pedigree), "\n")
 ### 3.1. Alignment diagnostics
 
 Before fitting the models, it is important to verify that the kernels are square and aligned to the same observation order used in `Pheno`. In a tutorial context, this is an important check because many downstream errors are caused by mismatched row and column orders.
+
+The loaded kernels are then checked for compatibility in dimension and ordering before they are combined in the Bayesian models.
 
 ```{r kernel-alignment-check}
 reference_ids <- Pheno$ObsID
@@ -310,6 +365,8 @@ kernel_inventory %>%
 ## 4. Definition of the 18 Predictive Models
 
 Each model is defined as a list in the format required by the `ETA` argument of `BGLR`. The environment term (`E`) is included as a fixed-effect design matrix with `model = "BRR"`, while the kernels are fitted as random effects with `model = "RKHS"`.
+
+The reduced set of 18 Bayesian multi-kernel models is defined below in the form required for the variance-component workflow.
 
 ```{r define-models}
 models <- list()
@@ -462,10 +519,12 @@ names(models) <- sprintf("Eta%02d", seq_along(models))
 
 This table is useful both for internal checks and for linking figure labels to the formal description of each model.
 
+The code below builds a compact model catalog linking each model identifier to its category and descriptive label for later summaries.
+
 ```{r model-catalog}
 model_info <- tibble(
   ModelID = 1:18,
-  Model = sprintf("M%02d", 1:18),
+  Model = paste0("Eta", 1:18),
   ETA = names(models),
   Category = c(
     rep("Single-source + E", 6),
@@ -513,6 +572,8 @@ model_info %>%
 
 These values define the Gibbs sampler used by `BGLR`. Adjust them here if a longer chain is required for convergence diagnostics or sensitivity analyses.
 
+This section defines the MCMC settings and execution controls that regulate the estimation stage when the heavy computation is turned on.
+
 ```{r mcmc-parameters}
 nIter   <- 5000
 burnIn  <- 1000
@@ -523,7 +584,9 @@ traits  <- c("GY", "KW")
 
 ## 6. Running BGLR for Each Model
 
-This is the computationally expensive step. The chunk is kept with `eval=FALSE` so that the tutorial can be rendered without rerunning all Bayesian models every time. When this stage is executed, each BGLR fit is saved in a persistent folder organized as `Trait/repXX/EtaXX`, which makes later convergence checks easier. When you need updated variance components, change `eval` to `TRUE` and run the chunk.
+This is the computationally expensive step. The chunk is kept with `eval=FALSE` so that the tutorial can be rendered without rerunning all Bayesian models every time. When you need updated variance components, change `eval` to `TRUE` and run the chunk.
+
+The next block contains the computationally expensive parallel estimation stage that fits the variance-component models, preserves the iterative BGLR artifacts in persistent folders, and saves the raw posterior summaries.
 
 ```{r parallel-run, eval=FALSE}
 numCores <- parallel::detectCores()
@@ -545,18 +608,19 @@ results_list <- foreach(
   Model <- combos$Model[i]
   rep_num <- combos$REP[i]
   Trait <- combos$Trait[i]
+  rep_label <- sprintf("rep%02d", rep_num)
+  eta_label <- paste0("Eta", Model)
 
   pheno <- data.frame(Pheno)
   y_data <- as.numeric(pheno[[Trait]])
 
-  run_dir <- file.path(
-    bglr_runs_dir,
-    Trait,
-    sprintf("rep%02d", rep_num),
-    sprintf("Eta%02d", Model)
+  out_dir <- file.path(bglr_runs_dir, Trait, rep_label, eta_label)
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  save_prefix <- file.path(
+    out_dir,
+    paste0("VC_", Trait, "_", eta_label, "_", rep_label, "_")
   )
-  dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
-  save_prefix <- file.path(run_dir, "BGLR_")
 
   start_time <- Sys.time()
   fit <- BGLR(
@@ -569,11 +633,39 @@ results_list <- foreach(
   )
   end_time <- Sys.time()
 
+  effect_names <- names(models[[Model]])
+  effect_models <- vapply(models[[Model]], function(x) x$model, character(1))
+  effect_labels <- paste0(effect_names, "_", effect_models)
+
+  generated_files <- list.files(
+    out_dir,
+    pattern = paste0("^", basename(save_prefix)),
+    full.names = TRUE
+  )
+
+  if (length(generated_files) > 0) {
+    for (current_file in generated_files) {
+      current_name <- basename(current_file)
+      renamed_name <- current_name
+
+      for (j in seq_along(effect_labels)) {
+        renamed_name <- sub(
+          paste0("ETA_", j),
+          effect_labels[j],
+          renamed_name,
+          fixed = TRUE
+        )
+      }
+
+      if (!identical(current_name, renamed_name)) {
+        file.rename(current_file, file.path(out_dir, renamed_name))
+      }
+    }
+  }
+
   variance_samples <- list()
 
   if (!is.null(fit$ETA)) {
-    effect_names <- names(fit$ETA)
-
     if (is.null(effect_names)) {
       effect_names <- paste0("Effect_", seq_along(fit$ETA))
     }
@@ -589,16 +681,13 @@ results_list <- foreach(
   }
 
   metrics_object <- list(
-    Model = Model,
-    Rep = rep_num,
-    Trait = Trait,
     varE_samples = fit$varE,
     variances_samples = variance_samples,
     DIC = fit$fit$DIC,
     runtime_sec = as.numeric(difftime(end_time, start_time, units = "secs"))
   )
 
-  saveRDS(metrics_object, file.path(run_dir, "variance_metrics.rds"))
+  saveRDS(metrics_object, file.path(out_dir, "variance_metrics.rds"))
 
   result_table <- tibble(
     Component = "Residual",
@@ -633,11 +722,13 @@ saveRDS(all_variance, file.path(results_dir, "variance_components_raw.rds"))
 
 ## 7. Consolidating Saved Posterior Summaries
 
-In the current version of the workflow, this is the section used most often. Instead of refitting all models every time, the script reads the previously saved `variance_metrics.rds` files from the persistent `bglr_runs` folders and consolidates them into one object. Backward compatibility with older `_metrics.rds` files is preserved so that previously completed runs can still be summarized. This keeps the tutorial practical and reproducible, while making it clear that this page is mainly a **result-consolidation step** unless the user intentionally reruns the full BGLR estimation stage.
+In the current version of the workflow, this is the section used most often. Instead of refitting all models every time, the script reads the previously saved `variance_metrics.rds` files from `output/variance_components/bglr_runs/` and consolidates them into one object. This keeps the tutorial practical and reproducible, while making it clear that this page is mainly a **result-consolidation step** unless the user intentionally reruns the full BGLR estimation stage.
+
+The saved outputs produced by the estimation stage are consolidated below into a single structure that can be processed more easily later.
 
 ```{r consolidate-saved-results}
 rds_files <- list.files(
-  path = results_dir,
+  path = bglr_runs_dir,
   pattern = "(variance_metrics|_(metrics|metricas))\\.rds$",
   recursive = TRUE,
   full.names = TRUE
@@ -648,26 +739,17 @@ if (length(rds_files) > 0) {
 
   for (i in seq_along(rds_files)) {
     current_file <- normalizePath(rds_files[i], winslash = "/", mustWork = FALSE)
+    path_parts <- str_split(current_file, "/")[[1]]
+
+    rep_part <- path_parts[str_detect(path_parts, "^rep[0-9]+$|^rep_[0-9]+$")][1]
+    eta_part <- path_parts[str_detect(path_parts, "^Eta")][1]
+    trait_part <- path_parts[path_parts %in% traits][1]
+
+    rep_value <- as.integer(str_remove(rep_part, "^rep_?0*"))
+    model_value <- as.integer(str_remove(eta_part, "^Eta0*"))
+    trait_value <- trait_part
+
     current_object <- readRDS(current_file)
-
-    if (all(c("Rep", "Model", "Trait") %in% names(current_object))) {
-      rep_value <- as.integer(current_object$Rep)
-      model_value <- as.integer(current_object$Model)
-      trait_value <- as.character(current_object$Trait)
-    } else {
-      path_parts <- str_split(current_file, "/")[[1]]
-
-      rep_part <- path_parts[str_detect(path_parts, "^rep_?|^rep[0-9]{2}$")][1]
-      eta_part <- path_parts[str_detect(path_parts, "^Eta")][1]
-      file_part <- fs::path_file(current_file)
-
-      rep_value <- suppressWarnings(as.integer(str_remove(rep_part, "^rep_?0*")))
-      model_value <- suppressWarnings(as.integer(str_remove(eta_part, "^Eta0*")))
-      trait_value <- str_extract(file_part, "GY|KW")
-      if (is.na(trait_value) || is.null(trait_value)) {
-        trait_value <- path_parts[path_parts %in% traits][1]
-      }
-    }
 
     current_table <- tibble(
       Rep = rep_value,
@@ -687,7 +769,7 @@ if (length(rds_files) > 0) {
             Rep = rep_value,
             Model = model_value,
             Trait = trait_value,
-            Component = nm,
+            Component = normalize_component_name(nm, model_value = model_value),
             MeanVar = mean(current_object$variances_samples[[nm]], na.rm = TRUE),
             DIC = current_object$DIC,
             runtime_sec = current_object$runtime_sec
@@ -699,10 +781,10 @@ if (length(rds_files) > 0) {
     all_tables[[i]] <- current_table
   }
 
-  all_variance <- bind_rows(all_tables) %>%
-    arrange(Model, Rep, Trait, Component)
+  all_variance <- bind_rows(all_tables)
 
   saveRDS(all_variance, file.path(results_dir, "variance_components_all.rds"))
+  write_csv(all_variance, file.path(results_dir, "variance_components_raw.csv"))
 }
 ```
 
@@ -710,13 +792,15 @@ if (length(rds_files) > 0) {
 
 This section loads the consolidated results and prepares them for summarization. If the file does not exist, the script stops and instructs the user to execute the model-fitting stage first.
 
+The document now loads the already consolidated variance-component results so that it can summarize and visualize them without repeating the expensive estimation.
+
 ```{r load-results, error=TRUE}
 raw_file <- file.path(results_dir, "variance_components_all.rds")
 
 if (!file.exists(raw_file)) {
   stop(
     "The file '", raw_file, "' was not found. ",
-    "Run the Bayesian fitting stage first or keep the previously saved metrics files in output/variance_components/bglr_runs/."
+    "Run the Bayesian fitting stage first or keep the previously saved _metrics.rds files in output/variance_components/."
   )
 }
 
@@ -736,6 +820,8 @@ cat("Number of rows in consolidated variance object:", nrow(all_variance), "\n")
 
 Now we average the posterior means across repetitions for each model, trait, and component. Then we convert the results to **percentages of total variance**, which makes the models directly comparable.
 
+The loaded results are then reshaped and annotated so that posterior means can be compared across traits, models, and component categories.
+
 ```{r process-variance-components}
 variance_summary <- all_variance %>%
   group_by(Model, Trait, Component) %>%
@@ -754,11 +840,14 @@ variance_summary <- all_variance %>%
   ungroup() %>%
   left_join(model_info, by = c("Model" = "ModelID")) %>%
   mutate(
-    Model = factor(paste0("Eta", Model), levels = paste0("Eta", 1:18)),
+    ModelNumber = Model,
+    Model = factor(paste0("Eta", ModelNumber), levels = paste0("Eta", 1:18)),
+    Component = normalize_component_name(Component, model_value = ModelNumber),
     ComponentLabel = dplyr::recode(Component, !!!component_display),
     ComponentLabel = factor(ComponentLabel, levels = component_order),
     Trait = factor(Trait, levels = c("GY", "KW"))
-  )
+  ) %>%
+  dplyr::select(-ModelNumber)
 
 readr::write_csv(variance_summary, file.path(results_dir, "variance_components_processed.csv"))
 ```
@@ -766,6 +855,8 @@ readr::write_csv(variance_summary, file.path(results_dir, "variance_components_p
 ### 9.1. Wide-format summary table
 
 This table is helpful when you need a compact numerical summary for the manuscript or supplementary material.
+
+The next table summarizes the relative contribution of each variance component across models.
 
 ```{r summary-table}
 variance_table <- variance_summary %>%
@@ -793,6 +884,8 @@ head(variance_table, 12) %>%
 The next figure summarizes the percentage contribution of each variance component across the 18 models for both traits. To keep the x-axis readable, the models are displayed as `Eta1` to `Eta18`, and the detailed descriptions remain available in the model catalog saved above.
 
 This figure should be read as a structural summary of the fitted models, not as direct proof that combining more data sources automatically leads to stronger biological complementarity or better predictive performance.
+
+The final figure turns the processed table into a compact visual summary for interpretation.
 
 ```{r variance-figure, fig.cap="Figure 3. Posterior mean percentage of total variance attributed to each model component across the 18 predictive models for grain yield (GY) and kernel weight (KW). Each stacked bar represents one model (Eta1-Eta18), averaged across repetitions, and colors identify the variance components included in the model structure. The weather kernel (W) and its associated interaction terms appear mainly in models Eta10-Eta18. Variance decomposition should be interpreted as a description of model structure and not automatically as evidence of stronger biological complementarity among information sources.", fig.height=10, fig.width=13}
 trait_labels <- c(
@@ -840,14 +933,6 @@ ggsave(
   height = 10,
   dpi = 300,
   compression = "lzw",
-  bg = "white"
-)
-
-ggsave(
-  filename = file.path(figure_dir, "variance_components_article.pdf"),
-  plot = variance_plot,
-  width = 14,
-  height = 10,
   bg = "white"
 )
 ```
