@@ -584,7 +584,6 @@ cvloo_table_display <- cvloo_table_display %>%
 
 ```{r locate-files, eval=FALSE}
 all_result_rel_paths <- list.files(results_dir, pattern = "\\.csv$", full.names = FALSE, recursive = TRUE)
-all_result_rel_paths <- gsub("\\", "/", all_result_rel_paths)
 structured_idx <- grepl("^CV1/|^CV2/|^CV0/|^CV00/", all_result_rel_paths)
 all_result_rel_paths <- all_result_rel_paths[structured_idx]
 all_result_files <- file.path(results_dir, all_result_rel_paths)
@@ -631,7 +630,7 @@ Padrão esperado: CV1/<trait>/repXX/foldXX/<file>.csv ou CV2/<trait>/repXX/foldX
   rep_from_path <- as.numeric(gsub("^rep", "", path_parts[3]))
   fold_from_path <- as.numeric(gsub("^fold", "", path_parts[4]))
 
-  file_name <- sub("\.csv$", "", basename(current_file))
+  file_name <- sub("\\.csv$", "", basename(current_file))
   file_parts <- strsplit(file_name, "_")[[1]]
 
   if (length(file_parts) != 5) {
@@ -713,7 +712,7 @@ Padrão esperado: CV0/<Env_leave>/<trait>/repXX/foldXX/<file>.csv ou CV00/<Env_l
   rep_from_path <- as.numeric(gsub("^rep", "", path_parts[4]))
   fold_from_path <- as.numeric(gsub("^fold", "", path_parts[5]))
 
-  file_name <- sub("\.csv$", "", basename(current_file))
+  file_name <- sub("\\.csv$", "", basename(current_file))
   file_parts <- strsplit(file_name, "_")[[1]]
 
   if (length(file_parts) < 6) {

@@ -1,19 +1,19 @@
-ModelNumber,Model,Pathway,KernelFamily,WeatherStatus,Group,Description,ShortDescription
-1,Eta1,Genomic pathway,Linear,Without W,Genomic baseline,Genomic linear + E,G + E
-10,Eta10,Genomic pathway,Linear,With W,Weather single-source,Genomic linear + W,G + W
-3,Eta3,Genomic pathway,Gaussian,Without W,Genomic baseline,Genomic Gaussian + E,GGK + E
-13,Eta13,Genomic pathway,Gaussian,With W,Weather single-source,Genomic Gaussian + W,GGK + W
-5,Eta5,Genomic pathway,Arc-cosine,Without W,Genomic baseline,Genomic arc-cosine + E,GAK + E
-16,Eta16,Genomic pathway,Arc-cosine,With W,Weather single-source,Genomic arc-cosine + W,GAK + W
-2,Eta2,Phenomic pathway,Linear,Without W,Phenomic baseline,Phenomic linear + E,P + E
-11,Eta11,Phenomic pathway,Linear,With W,Weather single-source,Phenomic linear + W,P + W
-4,Eta4,Phenomic pathway,Gaussian,Without W,Phenomic baseline,Phenomic Gaussian + E,PGK + E
-14,Eta14,Phenomic pathway,Gaussian,With W,Weather single-source,Phenomic Gaussian + W,PGK + W
-6,Eta6,Phenomic pathway,Arc-cosine,Without W,Phenomic baseline,Phenomic arc-cosine + E,PAK + E
-17,Eta17,Phenomic pathway,Arc-cosine,With W,Weather single-source,Phenomic arc-cosine + W,PAK + W
-7,Eta7,Combined G + P pathway,Linear,Without W,Combined baseline,Combined linear + E,G+P + E
-12,Eta12,Combined G + P pathway,Linear,With W,Weather combined,Combined linear + W,G+P + W
-8,Eta8,Combined G + P pathway,Gaussian,Without W,Combined baseline,Combined Gaussian + E,GGK+PGK + E
-15,Eta15,Combined G + P pathway,Gaussian,With W,Weather combined,Combined Gaussian + W,GGK+PGK + W
-9,Eta9,Combined G + P pathway,Arc-cosine,Without W,Combined baseline,Combined arc-cosine + E,GAK+PAK + E
-18,Eta18,Combined G + P pathway,Arc-cosine,With W,Weather combined,Combined arc-cosine + W,GAK+PAK + W
+ModelNumber,Model,Pathway,KernelFamily,WeatherStatus,Group,Description,ShortDescription,FullEffects,InterpretiveDescription
+1,Eta1,Genomic pathway,Linear,Without W,Genomic baseline,Genomic linear + E,G + E,E + G + GE,Linear genomic model with environment and G × E interaction
+10,Eta10,Genomic pathway,Linear,With W,Weather single-source,Genomic linear + W,G + W,E + W + G + GE + GW,"Linear genomic-weather model with environment, weather, GE, and GW"
+3,Eta3,Genomic pathway,Gaussian,Without W,Genomic baseline,Genomic Gaussian + E,GGK + E,E + GGK + GGKE,Gaussian genomic model with environment and GGK × E interaction
+13,Eta13,Genomic pathway,Gaussian,With W,Weather single-source,Genomic Gaussian + W,GGK + W,E + W + GGK + GGKE + GGKW,"Gaussian genomic-weather model with environment, weather, GGKE, and GGKW"
+5,Eta5,Genomic pathway,Arc-cosine,Without W,Genomic baseline,Genomic arc-cosine + E,GAK + E,E + GAK + GAKE,Arc-cosine genomic model with environment and GAK × E interaction
+16,Eta16,Genomic pathway,Arc-cosine,With W,Weather single-source,Genomic arc-cosine + W,GAK + W,E + W + GAK + GAKE + GAKW,"Arc-cosine genomic-weather model with environment, weather, GAKE, and GAKW"
+2,Eta2,Phenomic pathway,Linear,Without W,Phenomic baseline,Phenomic linear + E,P + E,E + P + PE,Linear phenomic model with environment and P × E interaction
+11,Eta11,Phenomic pathway,Linear,With W,Weather single-source,Phenomic linear + W,P + W,E + W + P + PE + PW,"Linear phenomic-weather model with environment, weather, PE, and PW"
+4,Eta4,Phenomic pathway,Gaussian,Without W,Phenomic baseline,Phenomic Gaussian + E,PGK + E,E + PGK + PGKE,Gaussian phenomic model with environment and PGK × E interaction
+14,Eta14,Phenomic pathway,Gaussian,With W,Weather single-source,Phenomic Gaussian + W,PGK + W,E + W + PGK + PGKE + PGKW,"Gaussian phenomic-weather model with environment, weather, PGKE, and PGKW"
+6,Eta6,Phenomic pathway,Arc-cosine,Without W,Phenomic baseline,Phenomic arc-cosine + E,PAK + E,E + PAK + PAKE,Arc-cosine phenomic model with environment and PAK × E interaction
+17,Eta17,Phenomic pathway,Arc-cosine,With W,Weather single-source,Phenomic arc-cosine + W,PAK + W,E + W + PAK + PAKE + PAKW,"Arc-cosine phenomic-weather model with environment, weather, PAKE, and PAKW"
+7,Eta7,Combined G + P pathway,Linear,Without W,Combined baseline,Combined linear + E,G+P + E,E + G + P + GE + PE,"Linear combined genomic + phenomic model with environment, GE, and PE"
+12,Eta12,Combined G + P pathway,Linear,With W,Weather combined,Combined linear + W,G+P + W,E + W + G + P + GE + PE + GW + PW,"Linear combined genomic + phenomic + weather model with GE, PE, GW, and PW"
+8,Eta8,Combined G + P pathway,Gaussian,Without W,Combined baseline,Combined Gaussian + E,GGK+PGK + E,E + GGK + PGK + GGKE + PGKE,"Gaussian combined genomic + phenomic model with environment, GGKE, and PGKE"
+15,Eta15,Combined G + P pathway,Gaussian,With W,Weather combined,Combined Gaussian + W,GGK+PGK + W,E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW,"Gaussian combined genomic + phenomic + weather model with GGKE, PGKE, GGKW, and PGKW"
+9,Eta9,Combined G + P pathway,Arc-cosine,Without W,Combined baseline,Combined arc-cosine + E,GAK+PAK + E,E + GAK + PAK + GAKE + PAKE,"Arc-cosine combined genomic + phenomic model with environment, GAKE, and PAKE"
+18,Eta18,Combined G + P pathway,Arc-cosine,With W,Weather combined,Combined arc-cosine + W,GAK+PAK + W,E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW,"Arc-cosine combined genomic + phenomic + weather model with GAKE, PAKE, GAKW, and PAKW"
