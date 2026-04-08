@@ -553,9 +553,9 @@ traits  <- c("GY", "KW")
 
 ## 6. Running BGLR for Each Model
 
-This is the computationally expensive step. The chunk is kept with `eval=FALSE` so that the tutorial can be rendered without rerunning all Bayesian models every time. When you need updated variance components, change `eval` to `TRUE` and run the chunk.
+This is the computationally expensive step of the workflow.
 
-The next block contains the computationally expensive parallel estimation stage that fits the variance-component models, preserves the iterative BGLR artifacts in persistent folders, and saves the raw posterior summaries.
+The next block contains the parallel estimation stage that fits the variance-component models, preserves the iterative BGLR artifacts in persistent folders, and saves the raw posterior summaries.
 
 ```{r parallel-run, eval=FALSE}
 numCores <- parallel::detectCores()

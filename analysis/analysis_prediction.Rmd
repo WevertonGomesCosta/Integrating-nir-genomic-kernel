@@ -389,7 +389,7 @@ cvloo_design
 
 ### 7.4 File naming and downstream reproducibility
 
-The prediction workflow now uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Final CSV summaries are written inside `output/results/` under scenario-specific folders. Persistent `BGLR` fitting artifacts are first written under the primary fit folders (`CV1` for the genotype-based fit and `CV0` for the leave-one-environment-out fit) and then mirrored to the paired folders (`CV2` and `CV00`) with scenario-specific prefixes, preserving the same logical structure under `output/results/bglr_runs/`. Keeping this pattern explicit is important because the next modules use these paths to inventory, summarize, and visualize the results.
+The prediction workflow now uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Final CSV summaries are written inside `output/results/` under scenario-specific folders, and the persistent `BGLR` fitting artifacts are written inside `output/results/bglr_runs/` using the same logical structure. Keeping this pattern explicit is important because the next modules use these paths to inventory, summarize, and visualize the results.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(

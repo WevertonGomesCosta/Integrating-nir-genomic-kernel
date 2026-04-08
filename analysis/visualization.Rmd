@@ -80,7 +80,13 @@ packages_needed <- c( "dplyr",
   "stringr" )
 packages_missing <- packages_needed[!(packages_needed %in% installed.packages()[, "Package"])]
 if (length(packages_missing) > 0) {
-  install.packages(packages_missing)
+  stop(
+    paste0(
+      "The following packages are required for this module but are not installed: ",
+      paste(packages_missing, collapse = ", "),
+      ". Install them before rendering visualization.Rmd."
+    )
+  )
 }
 library(dplyr)
 library(tidyr)

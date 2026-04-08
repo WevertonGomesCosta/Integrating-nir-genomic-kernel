@@ -534,7 +534,9 @@ traits  <- c("GY", "KW")
 
 ## 6. Ajuste do BGLR para cada modelo
 
-Este é o passo computacionalmente mais caro. O chunk é mantido com `eval=FALSE` para que o tutorial possa ser renderizado sem rerodar todos os modelos Bayesianos a cada vez. Quando você precisar de componentes de variância atualizados, mude `eval` para `TRUE` e execute o chunk.
+Este é o passo computacionalmente mais caro do fluxo.
+
+O bloco seguinte contém a etapa paralela de estimação que ajusta os modelos de componentes de variância, preserva os artefatos iterativos do BGLR em pastas persistentes e salva os resumos posteriores brutos.
 
 ```{r parallel-run, eval=FALSE}
 numCores <- parallel::detectCores()

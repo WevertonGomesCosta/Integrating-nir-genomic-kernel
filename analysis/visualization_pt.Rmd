@@ -80,7 +80,13 @@ packages_needed <- c( "dplyr",
   "stringr" )
 packages_missing <- packages_needed[!(packages_needed %in% installed.packages()[, "Package"])]
 if (length(packages_missing) > 0) {
-  install.packages(packages_missing)
+  stop(
+    paste0(
+      "Os seguintes pacotes são necessários para este módulo, mas não estão instalados: ",
+      paste(packages_missing, collapse = ", "),
+      ". Instale-os antes de renderizar visualization_pt.Rmd."
+    )
+  )
 }
 library(dplyr)
 library(tidyr)
@@ -863,7 +869,7 @@ readr::write_csv(cvloo_top3, file.path(tables_dir, "prediction_cv0_cv00_top3.csv
 
 ## 12. Tabelas Top-3
 
-Os dois chunks seguintes exibem os três modelos com melhor desempenho em cada esquema de validação.
+As duas tabelas seguintes exibem os três modelos com melhor desempenho em cada esquema de validação.
 
 ```{r table-cv12-top3}
 cv12_top3 %>%

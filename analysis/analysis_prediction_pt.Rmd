@@ -389,7 +389,7 @@ cvloo_design
 
 ### 7.4 Nomes de arquivos e reprodutibilidade nas etapas posteriores
 
-O fluxo de predição produz muitos arquivos de saída, e seus nomes precisam carregar informação suficiente para identificar o cenário de validação, o trait, o modelo ajustado, a repetição e o fold ou ambiente deixado de fora. Os CSVs finais são escritos em `output/results/` sob pastas específicas por cenário. Já os artefatos persistentes do `BGLR` são escritos primeiro nas pastas do ajuste primário (`CV1` para o ajuste baseado em genótipos e `CV0` para o ajuste leave-one-environment-out) e depois espelhados para as pastas pareadas (`CV2` e `CV00`) com prefixos específicos por cenário, preservando a mesma estrutura lógica em `output/results/bglr_runs/`. Manter esse padrão explícito é importante porque os módulos seguintes usam esses nomes para inventariar, resumir e visualizar os resultados. A tabela abaixo mostra a convenção de nomes que conecta a etapa de execução aos resumos posteriores.
+O fluxo de predição produz muitos arquivos de saída, e seus nomes precisam carregar informação suficiente para identificar o cenário de validação, o trait, o modelo ajustado, a repetição e o fold ou ambiente deixado de fora. Manter esse padrão explícito é importante porque os módulos seguintes usam esses nomes para inventariar, resumir e visualizar os resultados. A tabela abaixo mostra a convenção de nomes que conecta a etapa de execução aos resumos posteriores.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(

@@ -709,12 +709,13 @@ Os kernels lineares acima capturam similaridade aditiva. Para explorar relaçõe
 
 ### 12.1 Função matemática central para o kernel Gaussiano
 
-A função a seguir é mantida porque faz parte da própria estimação do kernel Gaussiano. Nós a usamos para otimizar o parâmetro de banda maximizando a verossimilhança marginal.
+A função a seguir é mantida porque faz parte do próprio método do kernel Gaussiano. Para manter o tutorial legível, o código é escrito com objetos intermediários explícitos (`Kh`, `Uh`, `Sh`, `d`), de modo que o leitor consiga acompanhar como a função-objetivo da verossimilhança marginal é construída.
 
-As funções auxiliares abaixo são usadas para otimizar e gerar os kernels Gaussianos genômicos e fenômicos não lineares.
+Mesmo aparecendo como função, ela não é um atalho de programação. Ela é a própria função matemática usada para escolher a largura do kernel Gaussiano.
 
 ```{r gk-functions}
-margh.fun <- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
+# The objective below is the marginal-likelihood criterion used to select the Gaussian-kernel bandwidth.
+gaussian_kernel_objective <- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
                       nuh = NULL, Sch = NULL, prior = NULL) {
   h <- theta[1]
   phi <- theta[2]
@@ -769,7 +770,7 @@ A busca abaixo identifica o parâmetro do kernel Gaussiano genômico que melhor 
 ```{r ggk-optimize, eval=FALSE}
 solG <- optim(
   c(1, 1),
-  margh.fun,
+  gaussian_kernel_objective,
   y = Pheno$GY,
   D = DG_proj,
   q = q05G,
@@ -829,7 +830,7 @@ A busca abaixo identifica o parâmetro do kernel Gaussiano fenômico usado na de
 ```{r pgk-optimize, eval=FALSE}
 solP <- optim(
   c(1, 1),
-  margh.fun,
+  gaussian_kernel_objective,
   y = Pheno$GY,
   D = DP_proj,
   q = q05P,
@@ -876,80 +877,110 @@ Neste tutorial mantemos explicitamente as funções matemáticas abaixo porque e
 
 ### 13.1 Funções matemáticas centrais para os kernels arc-cosine
 
-As funções abaixo definem os kernels arc-cosine usados para construir as estruturas não lineares aditivas.
+As funções abaixo definem os kernels arc-cosine usados para construir as estruturas não lineares aditivas. Elas são mantidas de forma explícita porque fazem parte do método. O objetivo aqui é mostrar cada etapa matemática com nomes mais claros, e não esconder o procedimento em atalhos de programação.
 
 ```{r ak-functions}
-AK1.fun <- function(X) {
-  cosalfa <- cor(t(X))
-  cosalfa[cosalfa > 1] <- 1
-  cosalfa[cosalfa < -1] <- -1
-  angulo <- acos(cosalfa)
-  mag <- sqrt(apply(X, 1, function(x) crossprod(x)))
-  sxy <- tcrossprod(mag)
-  AK1 <- (1 / pi) * sxy * (sin(angulo) + (pi - angulo) * cosalfa)
-  AK1 <- AK1 / median(AK1, na.rm = TRUE)
-  colnames(AK1) <- rownames(X)
-  rownames(AK1) <- rownames(X)
-  return(AK1)
+build_arc_cosine_base_kernel <- function(X) {
+  cosine_similarity <- cor(t(X))
+  cosine_similarity[cosine_similarity > 1] <- 1
+  cosine_similarity[cosine_similarity < -1] <- -1
+
+  angle_matrix <- acos(cosine_similarity)
+  observation_norm <- sqrt(apply(X, 1, function(x) crossprod(x)))
+  norm_crossproduct <- tcrossprod(observation_norm)
+
+  base_kernel <- (1 / pi) * norm_crossproduct *
+    (sin(angle_matrix) + (pi - angle_matrix) * cosine_similarity)
+
+  base_kernel <- base_kernel / median(base_kernel, na.rm = TRUE)
+  colnames(base_kernel) <- rownames(X)
+  rownames(base_kernel) <- rownames(X)
+  base_kernel
 }
 
-marg.AK <- function(y, AK1, ml) {
-  lden.fun <- function(phi, nr, Uh, Sh, d) {
-    lden <- -0.5 * sum(log(1 + phi * Sh)) -
-      (nr - 1) / 2 * log(sum(d^2 / (1 + phi * Sh)))
-    return(-lden)
+build_arc_cosine_kernel <- function(base_kernel, nl) {
+  n <- nrow(base_kernel)
+  updated_kernel <- base_kernel
+
+  for (layer_idx in seq_len(nl)) {
+    diagonal_crossproduct <- tcrossprod(diag(updated_kernel))
+    cosine_similarity <- updated_kernel * (diagonal_crossproduct^(-1 / 2))
+    cosine_vector <- as.vector(cosine_similarity)
+    cosine_vector[cosine_vector > 1] <- 1
+    cosine_vector[cosine_vector < -1] <- -1
+
+    angle_matrix <- matrix(acos(cosine_vector), n, n)
+
+    updated_kernel <- (1 / pi) * (diagonal_crossproduct^(1 / 2)) *
+      (sin(angle_matrix) + (pi - angle_matrix) * cos(angle_matrix))
   }
 
-  vero <- function(y, GC) {
-    Kh <- GC
-    eigenKh <- eigen(Kh)
-    nr <- length(which(eigenKh$values > 1e-10))
-    Uh <- eigenKh$vectors[, 1:nr, drop = FALSE]
-    Sh <- eigenKh$values[1:nr]
-    d <- t(Uh) %*% scale(y, scale = FALSE)
-    sol <- optimize(lden.fun, nr = nr, Uh = Uh, Sh = Sh, d = d,
-                    lower = 0.0005, upper = 200)
-    phi <- sol[[1]]
-    log.vero <- 0.5 * sum(log(1 + phi * Sh)) -
-      (nr - 1) / 2 * log(sum(d^2 / (1 + phi * Sh)))
-    return(log.vero)
-  }
-
-  GC <- AK1
-  l <- 1
-  GC2 <- GC
-  vero1 <- vero(y = y, GC = GC2)
-  m <- 0
-
-  while (m == 0 && (l < ml)) {
-    l <- l + 1
-    GC <- AK.fun(AK1 = GC2, nl = 1)
-    GC2 <- GC
-    vero2 <- vero(y = y, GC = GC2)
-    if (vero2 < vero1) m <- 1
-    vero1 <- vero2
-  }
-
-  return(l - 1)
+  updated_kernel <- updated_kernel / median(updated_kernel, na.rm = TRUE)
+  rownames(updated_kernel) <- rownames(base_kernel)
+  colnames(updated_kernel) <- colnames(base_kernel)
+  updated_kernel
 }
 
-AK.fun <- function(AK1, nl) {
-  n <- nrow(AK1)
-  AK <- AK1
-  for (l in 1:nl) {
-    Aux <- tcrossprod(diag(AK))
-    cosalfa <- AK * (Aux^(-1 / 2))
-    cosa <- as.vector(cosalfa)
-    cosa[cosa > 1] <- 1
-    cosa[cosa < -1] <- -1
-    angulo <- acos(cosa)
-    angulo <- matrix(angulo, n, n)
-    AK <- (1 / pi) * (Aux^(1 / 2)) * (sin(angulo) + (pi - angulo) * cos(angulo))
+select_arc_cosine_depth <- function(y, base_kernel, max_layers) {
+  current_layer <- 1
+  current_kernel <- base_kernel
+
+  eigen_current_kernel <- eigen(current_kernel)
+  current_rank <- length(which(eigen_current_kernel$values > 1e-10))
+  current_vectors <- eigen_current_kernel$vectors[, 1:current_rank, drop = FALSE]
+  current_values <- eigen_current_kernel$values[1:current_rank]
+  current_projection <- t(current_vectors) %*% scale(y, scale = FALSE)
+
+  current_phi_solution <- optimize(
+    function(phi) {
+      -0.5 * sum(log(1 + phi * current_values)) -
+        (current_rank - 1) / 2 * log(sum(current_projection^2 / (1 + phi * current_values)))
+    },
+    lower = 0.0005,
+    upper = 200,
+    maximum = FALSE
+  )
+
+  current_phi <- current_phi_solution$minimum
+  current_loglik <- 0.5 * sum(log(1 + current_phi * current_values)) -
+    (current_rank - 1) / 2 * log(sum(current_projection^2 / (1 + current_phi * current_values)))
+
+  stop_search <- FALSE
+
+  while (!stop_search && current_layer < max_layers) {
+    candidate_layer <- current_layer + 1
+    candidate_kernel <- build_arc_cosine_kernel(base_kernel = current_kernel, nl = 1)
+
+    eigen_candidate_kernel <- eigen(candidate_kernel)
+    candidate_rank <- length(which(eigen_candidate_kernel$values > 1e-10))
+    candidate_vectors <- eigen_candidate_kernel$vectors[, 1:candidate_rank, drop = FALSE]
+    candidate_values <- eigen_candidate_kernel$values[1:candidate_rank]
+    candidate_projection <- t(candidate_vectors) %*% scale(y, scale = FALSE)
+
+    candidate_phi_solution <- optimize(
+      function(phi) {
+        -0.5 * sum(log(1 + phi * candidate_values)) -
+          (candidate_rank - 1) / 2 * log(sum(candidate_projection^2 / (1 + phi * candidate_values)))
+      },
+      lower = 0.0005,
+      upper = 200,
+      maximum = FALSE
+    )
+
+    candidate_phi <- candidate_phi_solution$minimum
+    candidate_loglik <- 0.5 * sum(log(1 + candidate_phi * candidate_values)) -
+      (candidate_rank - 1) / 2 * log(sum(candidate_projection^2 / (1 + candidate_phi * candidate_values)))
+
+    if (candidate_loglik < current_loglik) {
+      stop_search <- TRUE
+    } else {
+      current_kernel <- candidate_kernel
+      current_layer <- candidate_layer
+      current_loglik <- candidate_loglik
+    }
   }
-  AK <- AK / median(AK, na.rm = TRUE)
-  rownames(AK) <- rownames(AK1)
-  colnames(AK) <- colnames(AK1)
-  return(AK)
+
+  current_layer
 }
 ```
 ### 13.2 Kernel arc-cosine genômico (`GAK`)
@@ -959,7 +990,7 @@ Os kernels arc-cosine seguem a mesma regra prática adotada para os kernels Gaus
 O código abaixo constrói o kernel arc-cosine genômico usado na via genômica não linear.
 
 ```{r gak, eval=FALSE}
-GAK1 <- AK1.fun(Geno)
+GAK1 <- build_arc_cosine_base_kernel(Geno)
 dim(GAK1)
 GAK1[1:5, 1:5]
 
@@ -971,14 +1002,14 @@ Z <- as.matrix(model.matrix(~ IDs - 1))
 rownames(Z) <- Pheno$ObsID
 G <- tcrossprod(tcrossprod(Z, GAK1), Z)
 
-Gl <- marg.AK(y = Pheno$GY, AK1 = G, ml = 50)
+Gl <- select_arc_cosine_depth(y = Pheno$GY, base_kernel = G, max_layers = 50)
 
 IDs.L <- factor(Pheno$Pedigree, levels = rownames(GAK1))
 Z.L <- as.matrix(model.matrix(~ IDs.L - 1))
 rownames(Z.L) <- Pheno$ObsID
 G.L <- tcrossprod(tcrossprod(Z.L, GAK1), Z.L)
 
-GAK <- AK.fun(AK1 = G.L, nl = Gl)
+GAK <- build_arc_cosine_kernel(base_kernel = G.L, nl = Gl)
 rownames(GAK) <- Pheno$ObsID
 colnames(GAK) <- Pheno$ObsID
 ```
@@ -996,7 +1027,7 @@ O kernel arc-cosine fenômico também é calibrado **uma vez usando GY como car�
 O código abaixo constrói o kernel arc-cosine fenômico usado na via fenômica não linear.
 
 ```{r pak, eval=FALSE}
-PAK1 <- AK1.fun(NIR.all)
+PAK1 <- build_arc_cosine_base_kernel(NIR.all)
 dim(PAK1)
 PAK1[1:5, 1:5]
 
@@ -1009,7 +1040,7 @@ Z0 <- tcrossprod(Z, Z)
 ZD <- tcrossprod(Z0, PAK1)
 P <- tcrossprod(ZD, Z0)
 
-Pl <- marg.AK(y = Pheno$GY, AK1 = P, ml = 50)
+Pl <- select_arc_cosine_depth(y = Pheno$GY, base_kernel = P, max_layers = 50)
 
 IDs.L <- rownames(NIR.all)
 Z.L <- as.matrix(model.matrix(~ IDs.L - 1))
@@ -1017,7 +1048,7 @@ rownames(Z.L) <- IDs.L
 Z0.L <- tcrossprod(Z.L, Z.L)
 P.L <- tcrossprod(tcrossprod(Z0.L, PAK1), Z0.L)
 
-PAK <- AK.fun(AK1 = P.L, nl = Pl)
+PAK <- build_arc_cosine_kernel(base_kernel = P.L, nl = Pl)
 rownames(PAK) <- rownames(NIR.all)
 colnames(PAK) <- rownames(NIR.all)
 ```
