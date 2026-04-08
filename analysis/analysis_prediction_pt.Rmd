@@ -403,8 +403,8 @@ prediction_file_patterns <- data.frame(
   ExampleBGLR = c(
     "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GE_RKHS_varU.dat",
     "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PW_RKHS_varU.dat",
-    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_CS11_WS_GY_Eta10_rep01_fold04_GW_RKHS_varU.dat",
-    "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_GY_CS11_WS_Eta10_rep01_fold04_GW_RKHS_varU.dat",
+    "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_KW_CS12_WW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
   ),
   stringsAsFactors = FALSE
 )

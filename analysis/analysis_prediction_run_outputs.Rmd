@@ -388,7 +388,7 @@ foreach(i = seq_len(nrow(combos)),
       run_dir <- file.path(bglr_runs_dir, "CV0", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
       dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
-      save_prefix_env <- file.path(run_dir, paste0("CV0_", env_name, "_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
+      save_prefix_env <- file.path(run_dir, paste0("CV0_", TRAIT, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
       y_t <- as.numeric(yield2$Y2)
       start_time <- Sys.time()
@@ -556,8 +556,8 @@ output_examples <- bind_rows(
       "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
     ),
     bglr_example = c(
-      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GW_RKHS_varU.dat",
-      "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_GY_CS11_WS_Eta1_rep01_fold01_GW_RKHS_varU.dat",
+      "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_KW_CS12_WW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
     ),
     Meaning = c(
       "Prediction accuracy for CV0, trait GY, held-out environment CS11_WS, model Eta1, repetition 1, fold 1.",
