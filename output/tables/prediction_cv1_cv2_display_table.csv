@@ -1,0 +1,73 @@
+Trait,CV,Pathway,KernelFamily,WeatherStatus,ShortDescription,MeanCorrelation,SDCorrelation,NumberOfRepetitions,MeanRuntimeSec
+GY,CV1,Combined G + P pathway,Arc-cosine,With W,GAK+PAK + W,0.706,0.009,10,219.08
+GY,CV1,Combined G + P pathway,Arc-cosine,Without W,GAK+PAK + E,0.703,0.01,10,146.98
+GY,CV1,Combined G + P pathway,Gaussian,With W,GGK+PGK + W,0.723,0.011,10,215.49
+GY,CV1,Combined G + P pathway,Gaussian,Without W,GGK+PGK + E,0.717,0.012,10,149.55
+GY,CV1,Combined G + P pathway,Linear,With W,G+P + W,0.719,0.012,10,261.32
+GY,CV1,Combined G + P pathway,Linear,Without W,G+P + E,0.713,0.013,10,169.53
+GY,CV1,Genomic pathway,Arc-cosine,With W,GAK + W,0.714,0.008,10,88.77
+GY,CV1,Genomic pathway,Arc-cosine,Without W,GAK + E,0.711,0.007,10,69.82
+GY,CV1,Genomic pathway,Gaussian,With W,GGK + W,0.727,0.012,10,94.17
+GY,CV1,Genomic pathway,Gaussian,Without W,GGK + E,0.719,0.011,10,69.43
+GY,CV1,Genomic pathway,Linear,With W,G + W,0.725,0.011,10,127.66
+GY,CV1,Genomic pathway,Linear,Without W,G + E,0.719,0.013,10,95.71
+GY,CV1,Phenomic pathway,Arc-cosine,With W,PAK + W,0.177,0.038,10,143.13
+GY,CV1,Phenomic pathway,Arc-cosine,Without W,PAK + E,0.178,0.03,10,98.29
+GY,CV1,Phenomic pathway,Gaussian,With W,PGK + W,0.147,0.019,10,130.18
+GY,CV1,Phenomic pathway,Gaussian,Without W,PGK + E,0.134,0.027,10,97.04
+GY,CV1,Phenomic pathway,Linear,With W,P + W,0.637,0.02,10,130.18
+GY,CV1,Phenomic pathway,Linear,Without W,P + E,0.645,0.012,10,93.73
+GY,CV2,Combined G + P pathway,Arc-cosine,With W,GAK+PAK + W,0.97,0.001,10,219.08
+GY,CV2,Combined G + P pathway,Arc-cosine,Without W,GAK+PAK + E,0.966,0,10,146.98
+GY,CV2,Combined G + P pathway,Gaussian,With W,GGK+PGK + W,0.991,0,10,215.49
+GY,CV2,Combined G + P pathway,Gaussian,Without W,GGK+PGK + E,0.989,0,10,149.55
+GY,CV2,Combined G + P pathway,Linear,With W,G+P + W,0.982,0,10,261.32
+GY,CV2,Combined G + P pathway,Linear,Without W,G+P + E,0.98,0,10,169.53
+GY,CV2,Genomic pathway,Arc-cosine,With W,GAK + W,0.968,0,10,88.77
+GY,CV2,Genomic pathway,Arc-cosine,Without W,GAK + E,0.964,0.001,10,69.82
+GY,CV2,Genomic pathway,Gaussian,With W,GGK + W,0.974,0,10,94.17
+GY,CV2,Genomic pathway,Gaussian,Without W,GGK + E,0.973,0,10,69.43
+GY,CV2,Genomic pathway,Linear,With W,G + W,0.984,0,10,127.66
+GY,CV2,Genomic pathway,Linear,Without W,G + E,0.982,0,10,95.71
+GY,CV2,Phenomic pathway,Arc-cosine,With W,PAK + W,0.692,0.014,10,143.13
+GY,CV2,Phenomic pathway,Arc-cosine,Without W,PAK + E,0.695,0.009,10,98.29
+GY,CV2,Phenomic pathway,Gaussian,With W,PGK + W,0.949,0.001,10,130.18
+GY,CV2,Phenomic pathway,Gaussian,Without W,PGK + E,0.945,0.002,10,97.04
+GY,CV2,Phenomic pathway,Linear,With W,P + W,0.933,0.077,10,130.18
+GY,CV2,Phenomic pathway,Linear,Without W,P + E,0.967,0.007,10,93.73
+KW,CV1,Combined G + P pathway,Arc-cosine,With W,GAK+PAK + W,0.548,0.017,10,208.41
+KW,CV1,Combined G + P pathway,Arc-cosine,Without W,GAK+PAK + E,0.555,0.024,10,145.09
+KW,CV1,Combined G + P pathway,Gaussian,With W,GGK+PGK + W,0.595,0.016,10,207.3
+KW,CV1,Combined G + P pathway,Gaussian,Without W,GGK+PGK + E,0.603,0.01,10,145.69
+KW,CV1,Combined G + P pathway,Linear,With W,G+P + W,0.708,0.015,10,240.86
+KW,CV1,Combined G + P pathway,Linear,Without W,G+P + E,0.728,0.015,10,158.05
+KW,CV1,Genomic pathway,Arc-cosine,With W,GAK + W,0.555,0.017,10,90
+KW,CV1,Genomic pathway,Arc-cosine,Without W,GAK + E,0.555,0.02,10,67.8
+KW,CV1,Genomic pathway,Gaussian,With W,GGK + W,0.595,0.015,10,87.02
+KW,CV1,Genomic pathway,Gaussian,Without W,GGK + E,0.602,0.015,10,66.22
+KW,CV1,Genomic pathway,Linear,With W,G + W,0.594,0.018,10,129.81
+KW,CV1,Genomic pathway,Linear,Without W,G + E,0.585,0.015,10,97.36
+KW,CV1,Phenomic pathway,Arc-cosine,With W,PAK + W,0.243,0.029,10,136.02
+KW,CV1,Phenomic pathway,Arc-cosine,Without W,PAK + E,0.271,0.027,10,98.89
+KW,CV1,Phenomic pathway,Gaussian,With W,PGK + W,0.203,0.02,10,129.41
+KW,CV1,Phenomic pathway,Gaussian,Without W,PGK + E,0.218,0.016,10,96.57
+KW,CV1,Phenomic pathway,Linear,With W,P + W,0.761,0.005,10,127.3
+KW,CV1,Phenomic pathway,Linear,Without W,P + E,0.762,0.01,10,95.62
+KW,CV2,Combined G + P pathway,Arc-cosine,With W,GAK+PAK + W,0.978,0.001,10,208.41
+KW,CV2,Combined G + P pathway,Arc-cosine,Without W,GAK+PAK + E,0.977,0,10,145.09
+KW,CV2,Combined G + P pathway,Gaussian,With W,GGK+PGK + W,0.994,0,10,207.3
+KW,CV2,Combined G + P pathway,Gaussian,Without W,GGK+PGK + E,0.993,0,10,145.69
+KW,CV2,Combined G + P pathway,Linear,With W,G+P + W,0.994,0.001,10,240.86
+KW,CV2,Combined G + P pathway,Linear,Without W,G+P + E,0.994,0,10,158.05
+KW,CV2,Genomic pathway,Arc-cosine,With W,GAK + W,0.975,0,10,90
+KW,CV2,Genomic pathway,Arc-cosine,Without W,GAK + E,0.974,0,10,67.8
+KW,CV2,Genomic pathway,Gaussian,With W,GGK + W,0.983,0,10,87.02
+KW,CV2,Genomic pathway,Gaussian,Without W,GGK + E,0.982,0,10,66.22
+KW,CV2,Genomic pathway,Linear,With W,G + W,0.99,0,10,129.81
+KW,CV2,Genomic pathway,Linear,Without W,G + E,0.989,0,10,97.36
+KW,CV2,Phenomic pathway,Arc-cosine,With W,PAK + W,0.771,0.008,10,136.02
+KW,CV2,Phenomic pathway,Arc-cosine,Without W,PAK + E,0.772,0.003,10,98.89
+KW,CV2,Phenomic pathway,Gaussian,With W,PGK + W,0.958,0.001,10,129.41
+KW,CV2,Phenomic pathway,Gaussian,Without W,PGK + E,0.955,0.001,10,96.57
+KW,CV2,Phenomic pathway,Linear,With W,P + W,0.986,0.004,10,127.3
+KW,CV2,Phenomic pathway,Linear,Without W,P + E,0.989,0.001,10,95.62
