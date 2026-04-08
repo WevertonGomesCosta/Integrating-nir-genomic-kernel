@@ -169,8 +169,7 @@ missing_tables <- required_tables[
 
 if (length(missing_tables) > 0) {
   stop(
-    "O arquivo de visualização em português depende de tabelas já geradas por visualization.Rmd.
-",
+    "O arquivo de visualização em português depende de tabelas já geradas por visualization.Rmd. ",
     "Arquivos ausentes em output/tables/: ",
     paste(missing_tables, collapse = ", ")
   )
@@ -433,24 +432,36 @@ cvloo_table_display <- cvloo_table_display %>%
 ```
 
 ```{r locate-files, eval=FALSE}
-all_result_rel_paths <- list.files(results_dir, pattern = "\\.csv$", full.names = FALSE, recursive = TRUE)
+all_result_rel_paths <- list.files(
+  results_dir,
+  pattern = "\\.csv$",
+  full.names = FALSE,
+  recursive = TRUE
+)
+
 all_result_rel_paths <- gsub("\\\\", "/", all_result_rel_paths)
+
 structured_idx <- grepl("^CV1/|^CV2/|^CV0/|^CV00/", all_result_rel_paths)
 all_result_rel_paths <- all_result_rel_paths[structured_idx]
 all_result_files <- file.path(results_dir, all_result_rel_paths)
+
 cv12_idx <- grepl("^CV1/|^CV2/", all_result_rel_paths)
 cvloo_idx <- grepl("^CV0/|^CV00/", all_result_rel_paths)
+
 cv12_files <- all_result_files[cv12_idx]
 cv12_rel_paths <- all_result_rel_paths[cv12_idx]
+
 cvloo_files <- all_result_files[cvloo_idx]
 cvloo_rel_paths <- all_result_rel_paths[cvloo_idx]
-cat("Número de arquivos CV1/CV2:", length(cv12_files), "
-")
-cat("Número de arquivos CV0/CV00:", length(cvloo_files), "
-")
+
+cat("Número de arquivos CV1/CV2:", length(cv12_files), "\n")
+cat("Número de arquivos CV0/CV00:", length(cvloo_files), "\n")
+
 if (length(cv12_files) == 0 && length(cvloo_files) == 0) {
-  stop("Nenhum arquivo CSV de predição foi encontrado em output/results/.
-Execute analysis_prediction_run_outputs primeiro.")
+  stop(
+    "Nenhum arquivo CSV de predição foi encontrado em output/results/. ",
+    "Execute analysis_prediction_run_outputs primeiro."
+  )
 }
 ```
 
@@ -462,6 +473,7 @@ Esse desenho é útil porque mantém o sistema de arquivos organizado para inspe
 
 ```{r read-cv12, eval=FALSE}
 cv12_list <- vector("list", length(cv12_files))
+
 for (i in seq_along(cv12_files)) {
   current_file <- cv12_files[i]
   current_rel_path <- cv12_rel_paths[i]
@@ -471,8 +483,8 @@ for (i in seq_along(cv12_files)) {
     stop(
       "Estrutura de diretórios inesperada para arquivo CV1/CV2: ",
       current_rel_path,
-      ".
-Padrão esperado: CV1/<trait>/repXX/foldXX/<file>.csv ou CV2/<trait>/repXX/foldXX/<file>.csv"
+      ". Padrão esperado: CV1/<trait>/repXX/foldXX/<file>.csv ou ",
+      "CV2/<trait>/repXX/foldXX/<file>.csv."
     )
   }
 
@@ -488,8 +500,8 @@ Padrão esperado: CV1/<trait>/repXX/foldXX/<file>.csv ou CV2/<trait>/repXX/foldX
     stop(
       "Nome de arquivo inesperado para CV1/CV2: ",
       file_name,
-      ".
-Padrão esperado: CV1_<trait>_Eta<model>_repXX_foldXX.csv ou CV2_<trait>_Eta<model>_repXX_foldXX.csv"
+      ". Padrão esperado: CV1_<trait>_Eta<model>_repXX_foldXX.csv ou ",
+      "CV2_<trait>_Eta<model>_repXX_foldXX.csv."
     )
   }
 
@@ -499,7 +511,12 @@ Padrão esperado: CV1_<trait>_Eta<model>_repXX_foldXX.csv ou CV2_<trait>_Eta<mod
   current_rep <- as.numeric(gsub("^rep", "", file_parts[4]))
   current_fold <- as.numeric(gsub("^fold", "", file_parts[5]))
 
-  if (!identical(current_cv, file_parts[1]) || !identical(trait_from_path, current_trait) || !identical(rep_from_path, current_rep) || !identical(fold_from_path, current_fold)) {
+  if (
+    !identical(current_cv, file_parts[1]) ||
+    !identical(trait_from_path, current_trait) ||
+    !identical(rep_from_path, current_rep) ||
+    !identical(fold_from_path, current_fold)
+  ) {
     stop("Inconsistência entre metadados do caminho e do nome do arquivo em: ", current_rel_path)
   }
 
@@ -509,8 +526,7 @@ Padrão esperado: CV1_<trait>_Eta<model>_repXX_foldXX.csv ou CV2_<trait>_Eta<mod
     stop(
       "Estrutura de colunas inesperada no arquivo: ",
       file_name,
-      ".
-O script final de predição deve exportar colunas incluindo Env e cor."
+      ". O script final de predição deve exportar colunas incluindo Env e cor."
     )
   }
 
@@ -531,7 +547,10 @@ O script final de predição deve exportar colunas incluindo Env e cor."
 cv12_raw <- bind_rows(cv12_list) %>%
   left_join(model_catalog, by = c("ModelNumber", "Model"))
 
-if (!("Runtime_sec" %in% names(cv12_raw))) cv12_raw$Runtime_sec <- NA_real_
+if (!("Runtime_sec" %in% names(cv12_raw))) {
+  cv12_raw$Runtime_sec <- NA_real_
+}
+
 readr::write_csv(cv12_raw, file.path(tables_dir, "prediction_cv1_cv2_raw.csv"))
 ```
 
@@ -543,6 +562,7 @@ Esta seção lê esses arquivos, verifica a consistência dos caminhos estrutura
 
 ```{r read-cvloo, eval=FALSE}
 cvloo_list <- vector("list", length(cvloo_files))
+
 for (i in seq_along(cvloo_files)) {
   current_file <- cvloo_files[i]
   current_rel_path <- cvloo_rel_paths[i]
@@ -552,8 +572,8 @@ for (i in seq_along(cvloo_files)) {
     stop(
       "Estrutura de diretórios inesperada para arquivo CV0/CV00: ",
       current_rel_path,
-      ".
-Padrão esperado: CV0/<Env_leave>/<trait>/repXX/foldXX/<file>.csv ou CV00/<Env_leave>/<trait>/repXX/foldXX/<file>.csv"
+      ". Padrão esperado: CV0/<Env_leave>/<trait>/repXX/foldXX/<file>.csv ou ",
+      "CV00/<Env_leave>/<trait>/repXX/foldXX/<file>.csv."
     )
   }
 
@@ -570,8 +590,8 @@ Padrão esperado: CV0/<Env_leave>/<trait>/repXX/foldXX/<file>.csv ou CV00/<Env_l
     stop(
       "Nome de arquivo inesperado para CV0/CV00: ",
       file_name,
-      ".
-Padrão esperado: CV0_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv ou CV00_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv"
+      ". Padrão esperado: CV0_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv ou ",
+      "CV00_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv."
     )
   }
 
@@ -582,7 +602,13 @@ Padrão esperado: CV0_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv ou CV00_<t
   current_fold <- as.numeric(gsub("^fold", "", file_parts[length(file_parts)]))
   current_env_leave <- paste(file_parts[3:(length(file_parts) - 3)], collapse = "_")
 
-  if (!identical(current_cv, file_parts[1]) || !identical(env_from_path, current_env_leave) || !identical(trait_from_path, current_trait) || !identical(rep_from_path, current_rep) || !identical(fold_from_path, current_fold)) {
+  if (
+    !identical(current_cv, file_parts[1]) ||
+    !identical(env_from_path, current_env_leave) ||
+    !identical(trait_from_path, current_trait) ||
+    !identical(rep_from_path, current_rep) ||
+    !identical(fold_from_path, current_fold)
+  ) {
     stop("Inconsistência entre metadados do caminho e do nome do arquivo em: ", current_rel_path)
   }
 
@@ -592,8 +618,7 @@ Padrão esperado: CV0_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv ou CV00_<t
     stop(
       "Estrutura de colunas inesperada no arquivo: ",
       file_name,
-      ".
-O script final de predição deve exportar colunas incluindo Env e cor."
+      ". O script final de predição deve exportar colunas incluindo Env e cor."
     )
   }
 
@@ -611,9 +636,14 @@ O script final de predição deve exportar colunas incluindo Env e cor."
 
   cvloo_list[[i]] <- current_data
 }
+
 cvloo_raw <- bind_rows(cvloo_list) %>%
   left_join(model_catalog, by = c("ModelNumber", "Model"))
-if (!("Runtime_sec" %in% names(cvloo_raw))) cvloo_raw$Runtime_sec <- NA_real_
+
+if (!("Runtime_sec" %in% names(cvloo_raw))) {
+  cvloo_raw$Runtime_sec <- NA_real_
+}
+
 readr::write_csv(cvloo_raw, file.path(tables_dir, "prediction_cv0_cv00_raw.csv"))
 readr::write_csv(model_catalog, file.path(tables_dir, "prediction_model_catalog.csv"))
 ```
