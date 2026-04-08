@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Costa, W. G." />
+
+<meta name="date" content="2026-04-08" />
+
+<title>Prediction analyses - run prediction and outputs</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">NIR and Genomic Kernel Integration</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="climate_data.html">Climate data</a>
+</li>
+<li>
+  <a href="matrizes.html">Matrices</a>
+</li>
+<li>
+  <a href="variance_components.html">Variance components</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Prediction
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="analysis_prediction.html">Part I: setup, models and CV design</a>
+    </li>
+    <li>
+      <a href="analysis_prediction_run_outputs.html">Part II: run prediction and outputs</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="visualization.html">Visualization</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Prediction analyses - run prediction and
+outputs</h1>
+<h4 class="author">Costa, W. G.<a href="#fn1" class="footnote-ref"
+id="fnref1"><sup>1</sup></a></h4>
+<h4 class="date">2026-04-08</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-04-08
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Integrating-nir-genomic-kernel/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20250829code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20250829)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20250829code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20250829)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltreeee9b0ba70abef097a5a1366edd33203f1fbb1e30targetblankee9b0baa">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/ee9b0ba70abef097a5a1366edd33203f1fbb1e30" target="_blank">ee9b0ba</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltreeee9b0ba70abef097a5a1366edd33203f1fbb1e30targetblankee9b0baa"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/ee9b0ba70abef097a5a1366edd33203f1fbb1e30" target="_blank">ee9b0ba</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/analysis.Rmd
+    Ignored:    analysis/run_cv0_cv00_only.R
+    Ignored:    analysis/run_cv1_cv2_only.R
+    Ignored:    analysis/script_tabelas_resultados_pipeline_v2.R
+    Ignored:    data/Article_documents/
+    Ignored:    data/Maize-NIRS-GBS-main/
+    Ignored:    output/Matrizes/Geno.all.rds
+    Ignored:    output/Matrizes/NIR.all.rds
+    Ignored:    output/Matrizes/figures/
+    Ignored:    output/adjust_models.rar
+    Ignored:    output/climate_results/additional_climate_plots.tiff
+    Ignored:    output/climate_results/combined_additional_climate_plots.tiff
+    Ignored:    output/climate_results/combined_climate_plot.tiff
+    Ignored:    output/cv-schemes.tiff
+    Ignored:    output/variance_components/bglr_runs/
+    Ignored:    output/variance_components/figures/
+
+Untracked files:
+    Untracked:  output/results/
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown
+(<code>analysis/analysis_prediction_run_outputs.Rmd</code>) and HTML
+(<code>docs/analysis_prediction_run_outputs.html</code>) files. If
+you’ve configured a remote Git repository (see
+<code>?wflow_git_remote</code>), click on the hyperlinks in the table
+below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/d7caa4820c0b44a91c6871ae51dddaa0bcc54cc1/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">d7caa48</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-07
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/bfbf03cdc166224298e3b9e923d742ae0bc923ab/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">bfbf03c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-07
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/e1fdde058584cbf27e23a659d4f7c056d108aeac/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">e1fdde0</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-07
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/0b2db189d42180011e6f2e6f260dd80d6a0040b1/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">0b2db18</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-07
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/2d2b88e8abecf03410016dac54dc6ed942c1ee25/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">2d2b88e</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-06
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/5aac46d0bea2e3b7818d45ed8b750fdecee84804/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">5aac46d</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-06
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/d1beaba6ed6c154f423aca65195b19a2c8303265/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">d1beaba</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-06
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/d1beaba6ed6c154f423aca65195b19a2c8303265/docs/analysis_prediction_run_outputs.html" target="_blank">d1beaba</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-06
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/04efebbd1a5bb828d071844324843149c8580e1f/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">04efebb</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-05
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/6b3257152fcd5afd444ccb004e5067da71d41083/docs/analysis_prediction_run_outputs.html" target="_blank">6b32571</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-05
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/0a6059c14ee567aa35fd22730e94b6a4a0ecd6fd/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">0a6059c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-03
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/f6d556032e533d1c91cf2e03b27a767eb3143010/docs/analysis_prediction_run_outputs.html" target="_blank">f6d5560</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-03
+</td>
+<td>
+update files
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/3c8baecc35ae3bd6e0fdabb990e7b48c9bd5a07a/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">3c8baec</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-03
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/262e87a193c79f20f7018756ef49060665f6d4b3/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">262e87a</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-02
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/9e064c526d4d51f46770025305cf154a90904a7c/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">9e064c5</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-02
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/5581b3899d729e588635058f640b4875aa8f3936/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">5581b38</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-02
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/cda6f8524e43e2f03f0ee7e3e5fc7e53206d9b56/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">cda6f85</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-02
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/cda6f8524e43e2f03f0ee7e3e5fc7e53206d9b56/docs/analysis_prediction_run_outputs.html" target="_blank">cda6f85</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-02
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/00ef3ef33d7d3795970741a65183c3a089e4a3b6/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">00ef3ef</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-01
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/731cac22bdb7041f679fbde96065efe36d47385b/analysis/analysis_prediction_run_outputs.Rmd" target="_blank">731cac2</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-01
+</td>
+<td>
+update
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<p><strong>Language / Idioma:</strong> <a
+href="analysis_prediction_run_outputs.html">English</a> | <a
+href="analysis_prediction_run_outputs_pt.html">Português</a></p>
+<p><strong>Module navigation / Navegação do módulo:</strong> <a
+href="analysis_prediction.html">Part I: setup, models and CV
+design</a></p>
+<div id="introduction" class="section level2">
+<h2>1. Introduction</h2>
+<p>This submodule is the execution counterpart of
+<code>analysis_prediction.Rmd</code>. Its role is to run the prediction
+jobs for the reduced catalog of 18 models, save the CSV files under
+<code>output/results/</code>, and inventory the outputs that will later
+be consumed by the visualization stage.</p>
+<p>The execution contract used here has four operational rules:</p>
+<ul>
+<li><code>CV1</code> and <code>CV2</code> are derived from the same fit
+within each fold;</li>
+<li><code>CV0</code> and <code>CV00</code> are derived from the same fit
+for each held-out environment within each fold;</li>
+<li>the fold partition is deterministic for each
+<code>MODEL × REP × TRAIT</code> task and is reused in both CV
+blocks;</li>
+<li>output files are organized explicitly by validation scheme,
+environment when applicable, trait, repetition, and fold, with the fold
+represented both in the directory tree and in the file name.</li>
+</ul>
+<p>The full fitting stage is preserved here for completeness. When the
+prediction stage needs to be rerun, the code shown below is the
+operational version used by the pipeline.</p>
+</div>
+<div id="packages-and-project-paths" class="section level2">
+<h2>2. Packages and project paths</h2>
+<p>The execution module needs both the matrix objects created upstream
+and the packages used by the parallel fitting layer. The path logic
+below keeps the file runnable from either the project root or the
+<code>analysis/</code> directory.</p>
+<pre class="r"><code>rm(list = ls())
+options(scipen = 999)
+
+library(readr)</code></pre>
+<pre><code>Warning: pacote &#39;readr&#39; foi compilado no R versão 4.5.2</code></pre>
+<pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>Warning: pacote &#39;dplyr&#39; foi compilado no R versão 4.5.2</code></pre>
+<pre><code>
+Anexando pacote: &#39;dplyr&#39;</code></pre>
+<pre><code>Os seguintes objetos são mascarados por &#39;package:stats&#39;:
+
+    filter, lag</code></pre>
+<pre><code>Os seguintes objetos são mascarados por &#39;package:base&#39;:
+
+    intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>library(stringr)
+library(knitr)
+library(BGLR)
+library(foreach)</code></pre>
+<pre><code>Warning: pacote &#39;foreach&#39; foi compilado no R versão 4.5.2</code></pre>
+<pre class="r"><code>library(doParallel)</code></pre>
+<pre><code>Warning: pacote &#39;doParallel&#39; foi compilado no R versão 4.5.2</code></pre>
+<pre><code>Carregando pacotes exigidos: iterators</code></pre>
+<pre><code>Carregando pacotes exigidos: parallel</code></pre>
+<pre class="r"><code>library(parallel)
+library(tidyr)</code></pre>
+<pre><code>Warning: pacote &#39;tidyr&#39; foi compilado no R versão 4.5.2</code></pre>
+<pre class="r"><code>project_root &lt;- getwd()
+
+if (!dir.exists(file.path(project_root, &quot;output&quot;)) &amp;&amp;
+    dir.exists(file.path(project_root, &quot;..&quot;, &quot;output&quot;))) {
+  project_root &lt;- normalizePath(file.path(project_root, &quot;..&quot;))
+}
+
+if (!dir.exists(file.path(project_root, &quot;output&quot;))) {
+  stop(&quot;Could not find the folder &#39;output/&#39;. Render this file from the project root or from analysis/.&quot;)
+}
+
+results_dir &lt;- file.path(project_root, &quot;output&quot;, &quot;results&quot;)
+analysis_tables_dir &lt;- file.path(project_root, &quot;output&quot;, &quot;tables&quot;, &quot;analysis_prediction&quot;)
+bglr_runs_dir &lt;- file.path(results_dir, &quot;bglr_runs&quot;)
+
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(bglr_runs_dir, recursive = TRUE, showWarnings = FALSE)</code></pre>
+</div>
+<div id="reload-the-execution-objects-from-part-i"
+class="section level2">
+<h2>3. Reload the execution objects from Part I</h2>
+<p>This section rebuilds the execution environment when the file is
+rendered on its own. It follows the contract of
+<code>analysis_prediction.Rmd</code> and recreates the reduced set of 18
+ETA objects exactly as defined in Part I.</p>
+<pre class="r"><code>matrices_dir &lt;- file.path(project_root, &quot;output&quot;, &quot;Matrizes&quot;)
+
+required_matrix_files &lt;- c(
+  &quot;Pheno.rds&quot;,
+  &quot;ZG.rds&quot;, &quot;ZP.rds&quot;, &quot;ZE.rds&quot;, &quot;ZW.rds&quot;,
+  &quot;ZGZE.rds&quot;, &quot;ZPZE.rds&quot;, &quot;ZGZW.rds&quot;, &quot;ZPZW.rds&quot;,
+  &quot;GGK.rds&quot;, &quot;PGK.rds&quot;, &quot;GAK.rds&quot;, &quot;PAK.rds&quot;,
+  &quot;GGKE.rds&quot;, &quot;PGKE.rds&quot;, &quot;GAKE.rds&quot;, &quot;PAKE.rds&quot;,
+  &quot;GGKW.rds&quot;, &quot;PGKW.rds&quot;, &quot;GAKW.rds&quot;, &quot;PAKW.rds&quot;
+)
+
+required_matrix_paths &lt;- file.path(matrices_dir, required_matrix_files)
+
+if (!all(file.exists(required_matrix_paths))) {
+  missing_matrix_files &lt;- required_matrix_files[!file.exists(required_matrix_paths)]
+  stop(
+    paste0(
+      &quot;The execution objects required by analysis_prediction_run_outputs were not found in output/Matrizes/. Missing files: &quot;,
+      paste(missing_matrix_files, collapse = &quot;, &quot;)
+    )
+  )
+}
+
+Pheno &lt;- readRDS(file.path(matrices_dir, &quot;Pheno.rds&quot;))
+ZG   &lt;- readRDS(file.path(matrices_dir, &quot;ZG.rds&quot;))
+ZP   &lt;- readRDS(file.path(matrices_dir, &quot;ZP.rds&quot;))
+ZE   &lt;- readRDS(file.path(matrices_dir, &quot;ZE.rds&quot;))
+ZW   &lt;- readRDS(file.path(matrices_dir, &quot;ZW.rds&quot;))
+ZGZE &lt;- readRDS(file.path(matrices_dir, &quot;ZGZE.rds&quot;))
+ZPZE &lt;- readRDS(file.path(matrices_dir, &quot;ZPZE.rds&quot;))
+ZGZW &lt;- readRDS(file.path(matrices_dir, &quot;ZGZW.rds&quot;))
+ZPZW &lt;- readRDS(file.path(matrices_dir, &quot;ZPZW.rds&quot;))
+GGK  &lt;- readRDS(file.path(matrices_dir, &quot;GGK.rds&quot;))
+PGK  &lt;- readRDS(file.path(matrices_dir, &quot;PGK.rds&quot;))
+GAK  &lt;- readRDS(file.path(matrices_dir, &quot;GAK.rds&quot;))
+PAK  &lt;- readRDS(file.path(matrices_dir, &quot;PAK.rds&quot;))
+GGKE &lt;- readRDS(file.path(matrices_dir, &quot;GGKE.rds&quot;))
+PGKE &lt;- readRDS(file.path(matrices_dir, &quot;PGKE.rds&quot;))
+GAKE &lt;- readRDS(file.path(matrices_dir, &quot;GAKE.rds&quot;))
+PAKE &lt;- readRDS(file.path(matrices_dir, &quot;PAKE.rds&quot;))
+GGKW &lt;- readRDS(file.path(matrices_dir, &quot;GGKW.rds&quot;))
+PGKW &lt;- readRDS(file.path(matrices_dir, &quot;PGKW.rds&quot;))
+GAKW &lt;- readRDS(file.path(matrices_dir, &quot;GAKW.rds&quot;))
+PAKW &lt;- readRDS(file.path(matrices_dir, &quot;PAKW.rds&quot;))
+
+if (!exists(&quot;Pedigree&quot;)) Pedigree &lt;- unique(Pheno$Pedigree)
+
+candidate_traits &lt;- c(&quot;GY&quot;, &quot;KW&quot;)
+traits_to_run &lt;- candidate_traits[candidate_traits %in% names(Pheno)]
+if (length(traits_to_run) == 0) {
+  stop(&quot;None of the expected traits (GY, KW) were found in Pheno.&quot;)
+}
+
+if (!exists(&quot;nIter&quot;))   nIter   &lt;- 5000
+if (!exists(&quot;burnIn&quot;))  burnIn  &lt;- 1000
+if (!exists(&quot;thin&quot;))    thin    &lt;- 10
+if (!exists(&quot;num_rep&quot;)) num_rep &lt;- 10
+if (!exists(&quot;n_cores&quot;)) n_cores &lt;- max(1L, parallel::detectCores() - 1L)
+
+model_catalog &lt;- data.frame(
+  ModelNumber = 1:18,
+  Model = paste0(&quot;Eta&quot;, 1:18),
+  Description = c(
+    &quot;E + G + GE&quot;,
+    &quot;E + P + PE&quot;,
+    &quot;E + GGK + GGKE&quot;,
+    &quot;E + PGK + PGKE&quot;,
+    &quot;E + GAK + GAKE&quot;,
+    &quot;E + PAK + PAKE&quot;,
+    &quot;E + G + P + GE + PE&quot;,
+    &quot;E + GGK + PGK + GGKE + PGKE&quot;,
+    &quot;E + GAK + PAK + GAKE + PAKE&quot;,
+    &quot;E + W + G + GE + GW&quot;,
+    &quot;E + W + P + PE + PW&quot;,
+    &quot;E + W + G + P + GE + PE + GW + PW&quot;,
+    &quot;E + W + GGK + GGKE + GGKW&quot;,
+    &quot;E + W + PGK + PGKE + PGKW&quot;,
+    &quot;E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW&quot;,
+    &quot;E + W + GAK + GAKE + GAKW&quot;,
+    &quot;E + W + PAK + PAKE + PAKW&quot;,
+    &quot;E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW&quot;
+  ),
+  stringsAsFactors = FALSE
+)
+
+env_design &lt;- model.matrix(~ Pheno$Env - 1)
+
+Eta_list &lt;- vector(&quot;list&quot;, 18)
+Eta_list[[1]]  &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZG, model = &quot;RKHS&quot;), list(K = ZGZE, model = &quot;RKHS&quot;))
+Eta_list[[2]]  &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZP, model = &quot;RKHS&quot;), list(K = ZPZE, model = &quot;RKHS&quot;))
+Eta_list[[3]]  &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = GGK, model = &quot;RKHS&quot;), list(K = GGKE, model = &quot;RKHS&quot;))
+Eta_list[[4]]  &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = PGK, model = &quot;RKHS&quot;), list(K = PGKE, model = &quot;RKHS&quot;))
+Eta_list[[5]]  &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = GAK, model = &quot;RKHS&quot;), list(K = GAKE, model = &quot;RKHS&quot;))
+Eta_list[[6]]  &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = PAK, model = &quot;RKHS&quot;), list(K = PAKE, model = &quot;RKHS&quot;))
+Eta_list[[7]]  &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZG, model = &quot;RKHS&quot;), list(K = ZP, model = &quot;RKHS&quot;), list(K = ZGZE, model = &quot;RKHS&quot;), list(K = ZPZE, model = &quot;RKHS&quot;))
+Eta_list[[8]]  &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = GGK, model = &quot;RKHS&quot;), list(K = PGK, model = &quot;RKHS&quot;), list(K = GGKE, model = &quot;RKHS&quot;), list(K = PGKE, model = &quot;RKHS&quot;))
+Eta_list[[9]]  &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = GAK, model = &quot;RKHS&quot;), list(K = PAK, model = &quot;RKHS&quot;), list(K = GAKE, model = &quot;RKHS&quot;), list(K = PAKE, model = &quot;RKHS&quot;))
+Eta_list[[10]] &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZW, model = &quot;RKHS&quot;), list(K = ZG, model = &quot;RKHS&quot;), list(K = ZGZE, model = &quot;RKHS&quot;), list(K = ZGZW, model = &quot;RKHS&quot;))
+Eta_list[[11]] &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZW, model = &quot;RKHS&quot;), list(K = ZP, model = &quot;RKHS&quot;), list(K = ZPZE, model = &quot;RKHS&quot;), list(K = ZPZW, model = &quot;RKHS&quot;))
+Eta_list[[12]] &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZW, model = &quot;RKHS&quot;), list(K = ZG, model = &quot;RKHS&quot;), list(K = ZP, model = &quot;RKHS&quot;), list(K = ZGZE, model = &quot;RKHS&quot;), list(K = ZPZE, model = &quot;RKHS&quot;), list(K = ZGZW, model = &quot;RKHS&quot;), list(K = ZPZW, model = &quot;RKHS&quot;))
+Eta_list[[13]] &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZW, model = &quot;RKHS&quot;), list(K = GGK, model = &quot;RKHS&quot;), list(K = GGKE, model = &quot;RKHS&quot;), list(K = GGKW, model = &quot;RKHS&quot;))
+Eta_list[[14]] &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZW, model = &quot;RKHS&quot;), list(K = PGK, model = &quot;RKHS&quot;), list(K = PGKE, model = &quot;RKHS&quot;), list(K = PGKW, model = &quot;RKHS&quot;))
+Eta_list[[15]] &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZW, model = &quot;RKHS&quot;), list(K = GGK, model = &quot;RKHS&quot;), list(K = PGK, model = &quot;RKHS&quot;), list(K = GGKE, model = &quot;RKHS&quot;), list(K = PGKE, model = &quot;RKHS&quot;), list(K = GGKW, model = &quot;RKHS&quot;), list(K = PGKW, model = &quot;RKHS&quot;))
+Eta_list[[16]] &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZW, model = &quot;RKHS&quot;), list(K = GAK, model = &quot;RKHS&quot;), list(K = GAKE, model = &quot;RKHS&quot;), list(K = GAKW, model = &quot;RKHS&quot;))
+Eta_list[[17]] &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZW, model = &quot;RKHS&quot;), list(K = PAK, model = &quot;RKHS&quot;), list(K = PAKE, model = &quot;RKHS&quot;), list(K = PAKW, model = &quot;RKHS&quot;))
+Eta_list[[18]] &lt;- list(list(X = env_design, model = &quot;BRR&quot;), list(K = ZW, model = &quot;RKHS&quot;), list(K = GAK, model = &quot;RKHS&quot;), list(K = PAK, model = &quot;RKHS&quot;), list(K = GAKE, model = &quot;RKHS&quot;), list(K = PAKE, model = &quot;RKHS&quot;), list(K = GAKW, model = &quot;RKHS&quot;), list(K = PAKW, model = &quot;RKHS&quot;))</code></pre>
+</div>
+<div id="define-the-execution-contract" class="section level2">
+<h2>4. Define the execution contract</h2>
+<p>This block restores the operational objects used by the current
+workflow: the fixed leave-one-environment-out set, the number of folds,
+and the <code>MODEL × REP × TRAIT</code> task grid for the 18-model
+catalog. The fitting and summarization logic are written directly inside
+the CV blocks so that the execution path stays explicit.</p>
+<pre class="r"><code>envs_leaveout &lt;- c(&quot;CS11_WS&quot;, &quot;CS11_WW&quot;, &quot;CS12_WS&quot;, &quot;CS12_WW&quot;)
+envs_leaveout &lt;- envs_leaveout[envs_leaveout %in% unique(Pheno$Env)]
+
+num_fold &lt;- 5L
+n_hybrids &lt;- length(Pedigree)
+combos &lt;- expand.grid(
+  MODEL = seq_along(Eta_list),
+  REP = seq_len(num_rep),
+  TRAIT = traits_to_run,
+  stringsAsFactors = FALSE
+)</code></pre>
+</div>
+<div id="start-the-parallel-backend" class="section level2">
+<h2>5. Start the parallel backend</h2>
+<p>The backend below mirrors the original workflow: one worker receives
+one combination of model, repetition, and trait.</p>
+<pre class="r"><code>useCores &lt;- max(1L, n_cores)
+cl &lt;- parallel::makeCluster(useCores)
+doParallel::registerDoParallel(cl)
+
+parallel::clusterEvalQ(cl, {
+  library(BGLR)
+  library(dplyr)
+  library(plyr)
+  NULL
+})
+
+cat(&quot;Running on &quot;, useCores, &quot; cores.&quot;)</code></pre>
+</div>
+<div id="run-prediction-analyses-for-cv1-and-cv2"
+class="section level2">
+<h2>6. Run prediction analyses for CV1 and CV2</h2>
+<p>This block implements genotype-based validation for the 18-model
+workflow. The deterministic fold map, the BGLR fit, and the
+environment-wise summary are all written directly inside the loop so
+that each step stays explicit. One fit is run per fold, and the
+resulting predictions are split into <code>CV1</code> (held-out
+genotypes) and <code>CV2</code> (training genotypes under the same fit).
+In the current standard, both the final CSV summaries and the BGLR
+fitting artifacts are stored in a rep/fold hierarchy.</p>
+<pre class="r"><code>foreach(i = seq_len(nrow(combos)),
+        .packages = c(&quot;BGLR&quot;, &quot;dplyr&quot;, &quot;plyr&quot;)) %dopar% {
+  MODEL &lt;- combos$MODEL[i]
+  rep_num &lt;- combos$REP[i]
+  TRAIT &lt;- as.character(combos$TRAIT[i])
+
+  pheno &lt;- data.frame(Pheno)
+
+  trait_id &lt;- match(TRAIT, trait_reference_order)
+  if (is.na(trait_id)) {
+    trait_id &lt;- 1L
+  }
+
+  seed_value &lt;- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
+  old_seed_exists &lt;- exists(&quot;.Random.seed&quot;, envir = .GlobalEnv, inherits = FALSE)
+  if (old_seed_exists) {
+    old_seed &lt;- get(&quot;.Random.seed&quot;, envir = .GlobalEnv, inherits = FALSE)
+  }
+
+  set.seed(seed_value)
+  obs_per_fold &lt;- ceiling(length(Pedigree) / num_fold)
+  folds &lt;- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
+
+  if (old_seed_exists) {
+    assign(&quot;.Random.seed&quot;, old_seed, envir = .GlobalEnv)
+  } else if (exists(&quot;.Random.seed&quot;, envir = .GlobalEnv, inherits = FALSE)) {
+    rm(&quot;.Random.seed&quot;, envir = .GlobalEnv)
+  }
+
+  folds_df &lt;- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
+
+  for (fold_num in seq_len(num_fold)) {
+    rep_label &lt;- sprintf(&quot;rep%02d&quot;, rep_num)
+    fold_label &lt;- sprintf(&quot;fold%02d&quot;, fold_num)
+
+    cv1_dir &lt;- file.path(results_dir, &quot;CV1&quot;, TRAIT, rep_label, fold_label)
+    cv2_dir &lt;- file.path(results_dir, &quot;CV2&quot;, TRAIT, rep_label, fold_label)
+    dir.create(cv1_dir, recursive = TRUE, showWarnings = FALSE)
+    dir.create(cv2_dir, recursive = TRUE, showWarnings = FALSE)
+
+    cv1_file &lt;- file.path(cv1_dir, paste0(&quot;CV1_&quot;, TRAIT, &quot;_Eta&quot;, MODEL, &quot;_&quot;, rep_label, &quot;_&quot;, fold_label, &quot;.csv&quot;))
+    cv2_file &lt;- file.path(cv2_dir, paste0(&quot;CV2_&quot;, TRAIT, &quot;_Eta&quot;, MODEL, &quot;_&quot;, rep_label, &quot;_&quot;, fold_label, &quot;.csv&quot;))
+
+    if (file.exists(cv1_file) &amp;&amp; file.exists(cv2_file)) {
+      next
+    }
+
+    train_geno &lt;- folds_df$Pedigree[folds_df$fold != fold_num]
+
+    yield &lt;- pheno
+    yield$Y2 &lt;- NA
+    yield$Y2[yield$Pedigree %in% train_geno] &lt;- yield[[TRAIT]][yield$Pedigree %in% train_geno]
+
+    run_dir &lt;- file.path(bglr_runs_dir, &quot;CV1&quot;, TRAIT, rep_label, fold_label, paste0(&quot;Eta&quot;, MODEL))
+    dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+
+    save_prefix_full &lt;- file.path(run_dir, paste0(&quot;CV1_&quot;, TRAIT, &quot;_Eta&quot;, MODEL, &quot;_&quot;, rep_label, &quot;_&quot;, fold_label, &quot;_&quot;))
+
+    y_t &lt;- as.numeric(yield$Y2)
+    start_time &lt;- Sys.time()
+    fit &lt;- BGLR(y = y_t, ETA = Eta_list[[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_full)
+    end_time &lt;- Sys.time()
+    runtime_full &lt;- as.numeric(difftime(end_time, start_time, units = &quot;secs&quot;))
+
+    yield$yhat &lt;- fit$yHat
+    rm(fit)
+    gc()
+
+    df_test &lt;- yield[!yield$Pedigree %in% train_geno, ]
+    df_train &lt;- yield[yield$Pedigree %in% train_geno, ]
+
+    tmp1 &lt;- df_test %&gt;%
+      dplyr::group_by(Env) %&gt;%
+      dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = &quot;complete.obs&quot;), .groups = &quot;drop&quot;) %&gt;%
+      as.data.frame()
+
+    tmp2 &lt;- df_train %&gt;%
+      dplyr::group_by(Env) %&gt;%
+      dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = &quot;complete.obs&quot;), .groups = &quot;drop&quot;) %&gt;%
+      as.data.frame()
+
+    tmp1$Runtime_sec &lt;- runtime_full
+    tmp2$Runtime_sec &lt;- runtime_full
+    tmp1$Fold &lt;- fold_label
+    tmp2$Fold &lt;- fold_label
+
+    write.csv(tmp1, file = cv1_file, row.names = FALSE)
+    write.csv(tmp2, file = cv2_file, row.names = FALSE)
+  }
+
+  NULL
+}</code></pre>
+</div>
+<div id="run-prediction-analyses-for-cv0-and-cv00"
+class="section level2">
+<h2>7. Run prediction analyses for CV0 and CV00</h2>
+<p>This block implements leave-one-environment-out validation for the
+same 18-model workflow. For each task, the deterministic fold map is
+rebuilt with the same rule used in <code>CV1/CV2</code>, one fit is run
+for each <code>env_leave × fold</code> combination, and the predictions
+are split into <code>CV0</code> (training genotypes under the
+environment mask) and <code>CV00</code> (held-out genotypes under the
+same mask). As in the genotype-based block, the fold construction, the
+BGLR fit, and the environment-wise summary are all written directly
+inside the loop so that the execution path remains explicit. The outputs
+are written in a rep/fold hierarchy and the BGLR artifacts are preserved
+in matching persistent folders.</p>
+<pre class="r"><code>foreach(i = seq_len(nrow(combos)),
+        .packages = c(&quot;BGLR&quot;, &quot;dplyr&quot;, &quot;plyr&quot;)) %dopar% {
+  MODEL &lt;- combos$MODEL[i]
+  rep_num &lt;- combos$REP[i]
+  TRAIT &lt;- as.character(combos$TRAIT[i])
+
+  pheno &lt;- data.frame(Pheno)
+
+  trait_id &lt;- match(TRAIT, trait_reference_order)
+  if (is.na(trait_id)) {
+    trait_id &lt;- 1L
+  }
+
+  seed_value &lt;- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
+  old_seed_exists &lt;- exists(&quot;.Random.seed&quot;, envir = .GlobalEnv, inherits = FALSE)
+  if (old_seed_exists) {
+    old_seed &lt;- get(&quot;.Random.seed&quot;, envir = .GlobalEnv, inherits = FALSE)
+  }
+
+  set.seed(seed_value)
+  obs_per_fold &lt;- ceiling(length(Pedigree) / num_fold)
+  folds &lt;- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
+
+  if (old_seed_exists) {
+    assign(&quot;.Random.seed&quot;, old_seed, envir = .GlobalEnv)
+  } else if (exists(&quot;.Random.seed&quot;, envir = .GlobalEnv, inherits = FALSE)) {
+    rm(&quot;.Random.seed&quot;, envir = .GlobalEnv)
+  }
+
+  folds_df &lt;- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
+
+  for (fold_num in seq_len(num_fold)) {
+    train_geno &lt;- folds_df$Pedigree[folds_df$fold != fold_num]
+    rep_label &lt;- sprintf(&quot;rep%02d&quot;, rep_num)
+    fold_label &lt;- sprintf(&quot;fold%02d&quot;, fold_num)
+
+    for (env_idx in seq_along(envs_leaveout)) {
+      env_name &lt;- envs_leaveout[env_idx]
+
+      cv00_dir &lt;- file.path(results_dir, &quot;CV00&quot;, env_name, TRAIT, rep_label, fold_label)
+      cv0_dir &lt;- file.path(results_dir, &quot;CV0&quot;, env_name, TRAIT, rep_label, fold_label)
+      dir.create(cv00_dir, recursive = TRUE, showWarnings = FALSE)
+      dir.create(cv0_dir, recursive = TRUE, showWarnings = FALSE)
+
+      cv00_file &lt;- file.path(cv00_dir, paste0(&quot;CV00_&quot;, TRAIT, &quot;_&quot;, env_name, &quot;_Eta&quot;, MODEL, &quot;_&quot;, rep_label, &quot;_&quot;, fold_label, &quot;.csv&quot;))
+      cv0_file &lt;- file.path(cv0_dir, paste0(&quot;CV0_&quot;, TRAIT, &quot;_&quot;, env_name, &quot;_Eta&quot;, MODEL, &quot;_&quot;, rep_label, &quot;_&quot;, fold_label, &quot;.csv&quot;))
+
+      if (file.exists(cv00_file) &amp;&amp; file.exists(cv0_file)) {
+        next
+      }
+
+      yield2 &lt;- pheno
+      yield2$Y2 &lt;- NA
+      yield2$Y2[yield2$Pedigree %in% train_geno] &lt;- yield2[[TRAIT]][yield2$Pedigree %in% train_geno]
+      yield2$Y2[yield2$Env == env_name] &lt;- NA
+
+      run_dir &lt;- file.path(bglr_runs_dir, &quot;CV0&quot;, env_name, TRAIT, rep_label, fold_label, paste0(&quot;Eta&quot;, MODEL))
+      dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+
+      save_prefix_env &lt;- file.path(run_dir, paste0(&quot;CV0_&quot;, env_name, &quot;_&quot;, TRAIT, &quot;_Eta&quot;, MODEL, &quot;_&quot;, rep_label, &quot;_&quot;, fold_label, &quot;_&quot;))
+
+      y_t &lt;- as.numeric(yield2$Y2)
+      start_time &lt;- Sys.time()
+      fit &lt;- BGLR(y = y_t, ETA = Eta_list[[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_env)
+      end_time &lt;- Sys.time()
+      runtime_env &lt;- as.numeric(difftime(end_time, start_time, units = &quot;secs&quot;))
+
+      yield2$yhat &lt;- fit$yHat
+      rm(fit)
+      gc()
+
+      df_test2 &lt;- yield2[!yield2$Pedigree %in% train_geno &amp; yield2$Env == env_name, , drop = FALSE]
+      df_train2 &lt;- yield2[yield2$Pedigree %in% train_geno &amp; yield2$Env == env_name, , drop = FALSE]
+
+      tmp00 &lt;- df_test2 %&gt;%
+        dplyr::group_by(Env) %&gt;%
+        dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = &quot;complete.obs&quot;), .groups = &quot;drop&quot;) %&gt;%
+        as.data.frame()
+
+      tmp0 &lt;- df_train2 %&gt;%
+        dplyr::group_by(Env) %&gt;%
+        dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = &quot;complete.obs&quot;), .groups = &quot;drop&quot;) %&gt;%
+        as.data.frame()
+
+      tmp00$Runtime_sec &lt;- runtime_env
+      tmp0$Runtime_sec &lt;- runtime_env
+      tmp00$Fold &lt;- fold_label
+      tmp0$Fold &lt;- fold_label
+
+      write.csv(tmp00, file = cv00_file, row.names = FALSE)
+      write.csv(tmp0, file = cv0_file, row.names = FALSE)
+    }
+  }
+
+  NULL
+}</code></pre>
+</div>
+<div id="stop-the-parallel-backend" class="section level2">
+<h2>8. Stop the parallel backend</h2>
+<pre class="r"><code>stopCluster(cl)
+foreach::registerDoSEQ()</code></pre>
+</div>
+<div id="inventory-of-the-prediction-output-files"
+class="section level2">
+<h2>9. Inventory of the prediction output files</h2>
+<p>The inventories below summarize the CSV files produced by the
+execution stage using the current rep/fold folder contract for the
+18-model workflow.</p>
+<pre class="r"><code>prediction_files &lt;- character(0)
+
+if (dir.exists(results_dir)) {
+  prediction_files &lt;- list.files(results_dir, pattern = &quot;\\.csv$&quot;, full.names = TRUE, recursive = TRUE)
+}
+
+inventory_cv12 &lt;- data.frame()
+inventory_cvloo &lt;- data.frame()
+
+if (length(prediction_files) &gt; 0) {
+  results_root &lt;- normalizePath(results_dir, winslash = &quot;/&quot;)
+
+  for (current_file in prediction_files) {
+    current_norm &lt;- normalizePath(current_file, winslash = &quot;/&quot;)
+    rel_path &lt;- substring(current_norm, nchar(results_root) + 2)
+    path_parts &lt;- strsplit(rel_path, &quot;/&quot;, fixed = TRUE)[[1]]
+    current_name &lt;- basename(current_file)
+    current_name_no_ext &lt;- sub(&quot;\\.csv$&quot;, &quot;&quot;, current_name)
+    current_parts &lt;- strsplit(current_name_no_ext, &quot;_&quot;)[[1]]
+
+    if (length(path_parts) &gt;= 5 &amp;&amp; current_parts[1] %in% c(&quot;CV1&quot;, &quot;CV2&quot;)) {
+      inventory_cv12 &lt;- dplyr::bind_rows(
+        inventory_cv12,
+        data.frame(
+          relative_path = rel_path,
+          file_name = current_name,
+          CV = current_parts[1],
+          Trait = path_parts[2],
+          Rep = path_parts[3],
+          Fold = path_parts[4],
+          Model = current_parts[3],
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+
+    if (length(path_parts) &gt;= 6 &amp;&amp; current_parts[1] %in% c(&quot;CV0&quot;, &quot;CV00&quot;)) {
+      inventory_cvloo &lt;- dplyr::bind_rows(
+        inventory_cvloo,
+        data.frame(
+          relative_path = rel_path,
+          file_name = current_name,
+          CV = current_parts[1],
+          Env_leave = path_parts[2],
+          Trait = path_parts[3],
+          Rep = path_parts[4],
+          Fold = path_parts[5],
+          Model = current_parts[length(current_parts) - 2],
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+  }
+}
+
+write_csv(inventory_cv12, file.path(analysis_tables_dir, &quot;analysis_prediction_inventory_cv12.csv&quot;))
+write_csv(inventory_cvloo, file.path(analysis_tables_dir, &quot;analysis_prediction_inventory_cvloo.csv&quot;))</code></pre>
+</div>
+<div id="counts-of-files-by-validation-scheme-and-trait"
+class="section level2">
+<h2>10. Counts of files by validation scheme and trait</h2>
+<pre class="r"><code>counts_by_cv &lt;- data.frame()
+counts_by_trait &lt;- data.frame()
+
+if (nrow(inventory_cv12) &gt; 0 || nrow(inventory_cvloo) &gt; 0) {
+  combined_inventory &lt;- bind_rows(
+    inventory_cv12 %&gt;% mutate(Env_leave = NA_character_),
+    inventory_cvloo
+  )
+
+  counts_by_cv &lt;- combined_inventory %&gt;%
+    count(CV, name = &quot;n_files&quot;) %&gt;%
+    arrange(CV)
+
+  counts_by_trait &lt;- combined_inventory %&gt;%
+    count(CV, Trait, name = &quot;n_files&quot;) %&gt;%
+    arrange(CV, Trait)
+}
+
+write_csv(counts_by_cv, file.path(analysis_tables_dir, &quot;analysis_prediction_counts_by_cv.csv&quot;))
+write_csv(counts_by_trait, file.path(analysis_tables_dir, &quot;analysis_prediction_counts_by_trait.csv&quot;))
+
+if (nrow(counts_by_cv) &gt; 0) {
+  knitr::kable(counts_by_cv, caption = &quot;Number of prediction files by validation scheme.&quot;, align = &quot;cc&quot;)
+} else {
+  cat(&quot;Prediction counts by validation scheme are not available yet.
+&quot;)
+}</code></pre>
+<table>
+<caption>Number of prediction files by validation scheme.</caption>
+<thead>
+<tr class="header">
+<th align="center">CV</th>
+<th align="center">n_files</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">CV0</td>
+<td align="center">7200</td>
+</tr>
+<tr class="even">
+<td align="center">CV00</td>
+<td align="center">7200</td>
+</tr>
+<tr class="odd">
+<td align="center">CV1</td>
+<td align="center">1800</td>
+</tr>
+<tr class="even">
+<td align="center">CV2</td>
+<td align="center">1800</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="examples-of-the-output-path-pattern" class="section level2">
+<h2>11. Examples of the output path pattern</h2>
+<pre class="r"><code>output_examples &lt;- bind_rows(
+  tibble::tibble(
+    ExampleType = &quot;CV1/CV2&quot;,
+    relative_path = c(
+      &quot;CV1/GY/rep01/fold01/CV1_GY_Eta1_rep01_fold01.csv&quot;,
+      &quot;CV2/KW/rep10/fold05/CV2_KW_Eta18_rep10_fold05.csv&quot;
+    ),
+    bglr_example = c(
+      &quot;bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GE_RKHS_varU.dat&quot;,
+      &quot;bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat&quot;
+    ),
+    Meaning = c(
+      &quot;Prediction accuracy for CV1, trait GY, model Eta1, repetition 1, fold 1.&quot;,
+      &quot;Prediction accuracy for CV2, trait KW, model Eta18, repetition 10, fold 5.&quot;
+    )
+  ),
+  tibble::tibble(
+    ExampleType = &quot;CV0/CV00&quot;,
+    relative_path = c(
+      &quot;CV0/CS11_WS/GY/rep01/fold01/CV0_GY_CS11_WS_Eta1_rep01_fold01.csv&quot;,
+      &quot;CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv&quot;
+    ),
+    bglr_example = c(
+      &quot;bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GW_RKHS_varU.dat&quot;,
+      &quot;bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat&quot;
+    ),
+    Meaning = c(
+      &quot;Prediction accuracy for CV0, trait GY, held-out environment CS11_WS, model Eta1, repetition 1, fold 1.&quot;,
+      &quot;Prediction accuracy for CV00, trait KW, held-out environment CS12_WW, model Eta18, repetition 10, fold 2.&quot;
+    )
+  )
+)
+
+write_csv(output_examples, file.path(analysis_tables_dir, &quot;analysis_prediction_output_examples.csv&quot;))
+knitr::kable(output_examples, caption = &quot;Examples of output files stored under the current rep/fold layout, together with the scenario-specific prefixes used for the persistent BGLR artifacts.&quot;, align = &quot;c&quot;)</code></pre>
+<table>
+<caption>Examples of output files stored under the current rep/fold
+layout, together with the scenario-specific prefixes used for the
+persistent BGLR artifacts.</caption>
+<colgroup>
+<col width="4%" />
+<col width="23%" />
+<col width="34%" />
+<col width="37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">ExampleType</th>
+<th align="center">relative_path</th>
+<th align="center">bglr_example</th>
+<th align="center">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">CV1/CV2</td>
+<td align="center">CV1/GY/rep01/fold01/CV1_GY_Eta1_rep01_fold01.csv</td>
+<td
+align="center">bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GE_RKHS_varU.dat</td>
+<td align="center">Prediction accuracy for CV1, trait GY, model Eta1,
+repetition 1, fold 1.</td>
+</tr>
+<tr class="even">
+<td align="center">CV1/CV2</td>
+<td
+align="center">CV2/KW/rep10/fold05/CV2_KW_Eta18_rep10_fold05.csv</td>
+<td
+align="center">bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat</td>
+<td align="center">Prediction accuracy for CV2, trait KW, model Eta18,
+repetition 10, fold 5.</td>
+</tr>
+<tr class="odd">
+<td align="center">CV0/CV00</td>
+<td
+align="center">CV0/CS11_WS/GY/rep01/fold01/CV0_GY_CS11_WS_Eta1_rep01_fold01.csv</td>
+<td
+align="center">bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GW_RKHS_varU.dat</td>
+<td align="center">Prediction accuracy for CV0, trait GY, held-out
+environment CS11_WS, model Eta1, repetition 1, fold 1.</td>
+</tr>
+<tr class="even">
+<td align="center">CV0/CV00</td>
+<td
+align="center">CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv</td>
+<td
+align="center">bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat</td>
+<td align="center">Prediction accuracy for CV00, trait KW, held-out
+environment CS12_WW, model Eta18, repetition 10, fold 2.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="note-on-temporary-bglr-artifacts" class="section level2">
+<h2>12. Note on temporary <code>BGLR</code> artifacts</h2>
+<p>In the current 18-model workflow, persistent <code>saveAt</code>
+artifacts are written under <code>output/results/bglr_runs/</code>
+during each fit and preserved for later convergence diagnostics. The
+scenario-specific paths now separate <code>CV1</code>, <code>CV2</code>,
+<code>CV0</code>, and <code>CV00</code>, and the persisted filenames use
+the scenario prefix together with explicit effect labels instead of
+generic <code>ETA_1</code>, <code>ETA_2</code>, and similar
+placeholders. Therefore, this execution module inventories both the
+final CSV outputs stored under <code>output/results/</code> and the
+hierarchical paths that locate the corresponding BGLR run folders.</p>
+</div>
+<div id="final-note" class="section level2">
+<h2>13. Final note</h2>
+<p>This file closes the execution layer of the prediction stage while
+preserving consistency with the reduced 18-model preprocessing module
+documented in <code>analysis_prediction.Rmd</code> and with the current
+rep/fold output contract used by the downstream summaries.</p>
+</div>
+<div id="stage-navigation" class="section level2">
+<h2>Stage navigation</h2>
+<p><strong>Previous stage:</strong> <a
+href="analysis_prediction.html">Prediction — Part I</a><br />
+<strong>Next stage:</strong> <a
+href="visualization.html">Visualization</a></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] parallel  stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+[1] tidyr_1.3.2       doParallel_1.0.17 iterators_1.0.14  foreach_1.5.2    
+[5] BGLR_1.1.4        knitr_1.50        stringr_1.6.0     dplyr_1.2.0      
+[9] readr_2.2.0      
+
+loaded via a namespace (and not attached):
+ [1] sass_0.4.10       generics_0.1.4    stringi_1.8.7     hms_1.1.4        
+ [5] digest_0.6.39     magrittr_2.0.4    evaluate_1.0.5    fastmap_1.2.0    
+ [9] rprojroot_2.1.1   workflowr_1.7.2   jsonlite_2.0.0    whisker_0.4.1    
+[13] promises_1.5.0    purrr_1.2.1       truncnorm_1.0-9   codetools_0.2-20 
+[17] jquerylib_0.1.4   cli_3.6.5         rlang_1.1.7       crayon_1.5.3     
+[21] bit64_4.6.0-1     cachem_1.1.0      yaml_2.3.12       otel_0.2.0       
+[25] tools_4.5.1       tzdb_0.5.0        httpuv_1.6.16     vctrs_0.7.1      
+[29] R6_2.6.1          lifecycle_1.0.5   git2r_0.36.2      fs_1.6.6         
+[33] bit_4.6.0         vroom_1.7.0       MASS_7.3-65       pkgconfig_2.0.3  
+[37] pillar_1.11.1     bslib_0.9.0       later_1.4.4       glue_1.8.0       
+[41] Rcpp_1.1.1        xfun_0.54         tibble_3.3.1      tidyselect_1.2.1 
+[45] rstudioapi_0.17.1 htmltools_0.5.9   rmarkdown_2.30    compiler_4.5.1   </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Weverton Gomes da Costa, Postdoctoral Researcher,
+Department of Statistics - Universidade Federal de Viçosa, <a
+href="mailto:wevertonufv@gmail.com"
+class="email">wevertonufv@gmail.com</a><a href="#fnref1"
+class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUHJlZGljdGlvbiBhbmFseXNlcyAtIHJ1biBwcmVkaWN0aW9uIGFuZCBvdXRwdXRzIgphdXRob3I6CiAgLSBDb3N0YSwgVy4gRy5eW1dldmVydG9uIEdvbWVzIGRhIENvc3RhLCBQb3N0ZG9jdG9yYWwgUmVzZWFyY2hlciwgRGVwYXJ0bWVudCBvZiBTdGF0aXN0aWNzIC0gVW5pdmVyc2lkYWRlIEZlZGVyYWwgZGUgVmnDp29zYSwgd2V2ZXJ0b251ZnZAZ21haWwuY29tXQpkYXRlOiAiYHIgU3lzLkRhdGUoKWAiCnNpdGU6IHdvcmtmbG93cjo6d2Zsb3dfc2l0ZQp1cmw6IGh0dHBzOi8vd2V2ZXJ0b25nb21lc2Nvc3RhLmdpdGh1Yi5pby9JbnRlZ3JhdGluZy1uaXItZ2Vub21pYy1rZXJuZWwvCm91dHB1dDoKICB3b3JrZmxvd3I6OndmbG93X2h0bWw6CiAgICB0b2M6IHRydWUKICAgIHRvY19kZXB0aDogMwogICAgdG9jX2Zsb2F0OiB0cnVlCiAgICBjb2RlX2Rvd25sb2FkOiB0cnVlCmVkaXRvcl9vcHRpb25zOgogIGNodW5rX291dHB1dF90eXBlOiBjb25zb2xlCmdpdGh1Yi1yZXBvOiBXZXZlcnRvbkdvbWVzQ29zdGEvSW50ZWdyYXRpbmctbmlyLWdlbm9taWMta2VybmVsCi0tLQoKKipMYW5ndWFnZSAvIElkaW9tYToqKiBbRW5nbGlzaF0oYW5hbHlzaXNfcHJlZGljdGlvbl9ydW5fb3V0cHV0cy5odG1sKSB8IFtQb3J0dWd1w6pzXShhbmFseXNpc19wcmVkaWN0aW9uX3J1bl9vdXRwdXRzX3B0Lmh0bWwpCgoqKk1vZHVsZSBuYXZpZ2F0aW9uIC8gTmF2ZWdhw6fDo28gZG8gbcOzZHVsbzoqKiBbUGFydCBJOiBzZXR1cCwgbW9kZWxzIGFuZCBDViBkZXNpZ25dKGFuYWx5c2lzX3ByZWRpY3Rpb24uaHRtbCkKCiMjIDEuIEludHJvZHVjdGlvbgoKVGhpcyBzdWJtb2R1bGUgaXMgdGhlIGV4ZWN1dGlvbiBjb3VudGVycGFydCBvZiBgYW5hbHlzaXNfcHJlZGljdGlvbi5SbWRgLiBJdHMgcm9sZSBpcyB0byBydW4gdGhlIHByZWRpY3Rpb24gam9icyBmb3IgdGhlIHJlZHVjZWQgY2F0YWxvZyBvZiAxOCBtb2RlbHMsIHNhdmUgdGhlIENTViBmaWxlcyB1bmRlciBgb3V0cHV0L3Jlc3VsdHMvYCwgYW5kIGludmVudG9yeSB0aGUgb3V0cHV0cyB0aGF0IHdpbGwgbGF0ZXIgYmUgY29uc3VtZWQgYnkgdGhlIHZpc3VhbGl6YXRpb24gc3RhZ2UuCgpUaGUgZXhlY3V0aW9uIGNvbnRyYWN0IHVzZWQgaGVyZSBoYXMgZm91ciBvcGVyYXRpb25hbCBydWxlczoKCi0gYENWMWAgYW5kIGBDVjJgIGFyZSBkZXJpdmVkIGZyb20gdGhlIHNhbWUgZml0IHdpdGhpbiBlYWNoIGZvbGQ7Ci0gYENWMGAgYW5kIGBDVjAwYCBhcmUgZGVyaXZlZCBmcm9tIHRoZSBzYW1lIGZpdCBmb3IgZWFjaCBoZWxkLW91dCBlbnZpcm9ubWVudCB3aXRoaW4gZWFjaCBmb2xkOwotIHRoZSBmb2xkIHBhcnRpdGlvbiBpcyBkZXRlcm1pbmlzdGljIGZvciBlYWNoIGBNT0RFTCDDlyBSRVAgw5cgVFJBSVRgIHRhc2sgYW5kIGlzIHJldXNlZCBpbiBib3RoIENWIGJsb2NrczsKLSBvdXRwdXQgZmlsZXMgYXJlIG9yZ2FuaXplZCBleHBsaWNpdGx5IGJ5IHZhbGlkYXRpb24gc2NoZW1lLCBlbnZpcm9ubWVudCB3aGVuIGFwcGxpY2FibGUsIHRyYWl0LCByZXBldGl0aW9uLCBhbmQgZm9sZCwgd2l0aCB0aGUgZm9sZCByZXByZXNlbnRlZCBib3RoIGluIHRoZSBkaXJlY3RvcnkgdHJlZSBhbmQgaW4gdGhlIGZpbGUgbmFtZS4KClRoZSBmdWxsIGZpdHRpbmcgc3RhZ2UgaXMgcHJlc2VydmVkIGhlcmUgZm9yIGNvbXBsZXRlbmVzcy4gV2hlbiB0aGUgcHJlZGljdGlvbiBzdGFnZSBuZWVkcyB0byBiZSByZXJ1biwgdGhlIGNvZGUgc2hvd24gYmVsb3cgaXMgdGhlIG9wZXJhdGlvbmFsIHZlcnNpb24gdXNlZCBieSB0aGUgcGlwZWxpbmUuCgojIyAyLiBQYWNrYWdlcyBhbmQgcHJvamVjdCBwYXRocwoKVGhlIGV4ZWN1dGlvbiBtb2R1bGUgbmVlZHMgYm90aCB0aGUgbWF0cml4IG9iamVjdHMgY3JlYXRlZCB1cHN0cmVhbSBhbmQgdGhlIHBhY2thZ2VzIHVzZWQgYnkgdGhlIHBhcmFsbGVsIGZpdHRpbmcgbGF5ZXIuIFRoZSBwYXRoIGxvZ2ljIGJlbG93IGtlZXBzIHRoZSBmaWxlIHJ1bm5hYmxlIGZyb20gZWl0aGVyIHRoZSBwcm9qZWN0IHJvb3Qgb3IgdGhlIGBhbmFseXNpcy9gIGRpcmVjdG9yeS4KCgpgYGB7ciBzZXR1cH0Kcm0obGlzdCA9IGxzKCkpCm9wdGlvbnMoc2NpcGVuID0gOTk5KQoKbGlicmFyeShyZWFkcikKbGlicmFyeShkcGx5cikKbGlicmFyeShzdHJpbmdyKQpsaWJyYXJ5KGtuaXRyKQpsaWJyYXJ5KEJHTFIpCmxpYnJhcnkoZm9yZWFjaCkKbGlicmFyeShkb1BhcmFsbGVsKQpsaWJyYXJ5KHBhcmFsbGVsKQpsaWJyYXJ5KHRpZHlyKQoKcHJvamVjdF9yb290IDwtIGdldHdkKCkKCmlmICghZGlyLmV4aXN0cyhmaWxlLnBhdGgocHJvamVjdF9yb290LCAib3V0cHV0IikpICYmCiAgICBkaXIuZXhpc3RzKGZpbGUucGF0aChwcm9qZWN0X3Jvb3QsICIuLiIsICJvdXRwdXQiKSkpIHsKICBwcm9qZWN0X3Jvb3QgPC0gbm9ybWFsaXplUGF0aChmaWxlLnBhdGgocHJvamVjdF9yb290LCAiLi4iKSkKfQoKaWYgKCFkaXIuZXhpc3RzKGZpbGUucGF0aChwcm9qZWN0X3Jvb3QsICJvdXRwdXQiKSkpIHsKICBzdG9wKCJDb3VsZCBub3QgZmluZCB0aGUgZm9sZGVyICdvdXRwdXQvJy4gUmVuZGVyIHRoaXMgZmlsZSBmcm9tIHRoZSBwcm9qZWN0IHJvb3Qgb3IgZnJvbSBhbmFseXNpcy8uIikKfQoKcmVzdWx0c19kaXIgPC0gZmlsZS5wYXRoKHByb2plY3Rfcm9vdCwgIm91dHB1dCIsICJyZXN1bHRzIikKYW5hbHlzaXNfdGFibGVzX2RpciA8LSBmaWxlLnBhdGgocHJvamVjdF9yb290LCAib3V0cHV0IiwgInRhYmxlcyIsICJhbmFseXNpc19wcmVkaWN0aW9uIikKYmdscl9ydW5zX2RpciA8LSBmaWxlLnBhdGgocmVzdWx0c19kaXIsICJiZ2xyX3J1bnMiKQoKZGlyLmNyZWF0ZShyZXN1bHRzX2RpciwgcmVjdXJzaXZlID0gVFJVRSwgc2hvd1dhcm5pbmdzID0gRkFMU0UpCmRpci5jcmVhdGUoYW5hbHlzaXNfdGFibGVzX2RpciwgcmVjdXJzaXZlID0gVFJVRSwgc2hvd1dhcm5pbmdzID0gRkFMU0UpCmRpci5jcmVhdGUoYmdscl9ydW5zX2RpciwgcmVjdXJzaXZlID0gVFJVRSwgc2hvd1dhcm5pbmdzID0gRkFMU0UpCmBgYAoKCiMjIDMuIFJlbG9hZCB0aGUgZXhlY3V0aW9uIG9iamVjdHMgZnJvbSBQYXJ0IEkKClRoaXMgc2VjdGlvbiByZWJ1aWxkcyB0aGUgZXhlY3V0aW9uIGVudmlyb25tZW50IHdoZW4gdGhlIGZpbGUgaXMgcmVuZGVyZWQgb24gaXRzIG93bi4gSXQgZm9sbG93cyB0aGUgY29udHJhY3Qgb2YgYGFuYWx5c2lzX3ByZWRpY3Rpb24uUm1kYCBhbmQgcmVjcmVhdGVzIHRoZSByZWR1Y2VkIHNldCBvZiAxOCBFVEEgb2JqZWN0cyBleGFjdGx5IGFzIGRlZmluZWQgaW4gUGFydCBJLgoKYGBge3IgbG9hZC1yZXF1aXJlZC1vYmplY3RzLCBldmFsPUZBTFNFfQptYXRyaWNlc19kaXIgPC0gZmlsZS5wYXRoKHByb2plY3Rfcm9vdCwgIm91dHB1dCIsICJNYXRyaXplcyIpCgpyZXF1aXJlZF9tYXRyaXhfZmlsZXMgPC0gYygKICAiUGhlbm8ucmRzIiwKICAiWkcucmRzIiwgIlpQLnJkcyIsICJaRS5yZHMiLCAiWlcucmRzIiwKICAiWkdaRS5yZHMiLCAiWlBaRS5yZHMiLCAiWkdaVy5yZHMiLCAiWlBaVy5yZHMiLAogICJHR0sucmRzIiwgIlBHSy5yZHMiLCAiR0FLLnJkcyIsICJQQUsucmRzIiwKICAiR0dLRS5yZHMiLCAiUEdLRS5yZHMiLCAiR0FLRS5yZHMiLCAiUEFLRS5yZHMiLAogICJHR0tXLnJkcyIsICJQR0tXLnJkcyIsICJHQUtXLnJkcyIsICJQQUtXLnJkcyIKKQoKcmVxdWlyZWRfbWF0cml4X3BhdGhzIDwtIGZpbGUucGF0aChtYXRyaWNlc19kaXIsIHJlcXVpcmVkX21hdHJpeF9maWxlcykKCmlmICghYWxsKGZpbGUuZXhpc3RzKHJlcXVpcmVkX21hdHJpeF9wYXRocykpKSB7CiAgbWlzc2luZ19tYXRyaXhfZmlsZXMgPC0gcmVxdWlyZWRfbWF0cml4X2ZpbGVzWyFmaWxlLmV4aXN0cyhyZXF1aXJlZF9tYXRyaXhfcGF0aHMpXQogIHN0b3AoCiAgICBwYXN0ZTAoCiAgICAgICJUaGUgZXhlY3V0aW9uIG9iamVjdHMgcmVxdWlyZWQgYnkgYW5hbHlzaXNfcHJlZGljdGlvbl9ydW5fb3V0cHV0cyB3ZXJlIG5vdCBmb3VuZCBpbiBvdXRwdXQvTWF0cml6ZXMvLiBNaXNzaW5nIGZpbGVzOiAiLAogICAgICBwYXN0ZShtaXNzaW5nX21hdHJpeF9maWxlcywgY29sbGFwc2UgPSAiLCAiKQogICAgKQogICkKfQoKUGhlbm8gPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiUGhlbm8ucmRzIikpClpHICAgPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiWkcucmRzIikpClpQICAgPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiWlAucmRzIikpClpFICAgPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiWkUucmRzIikpClpXICAgPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiWlcucmRzIikpClpHWkUgPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiWkdaRS5yZHMiKSkKWlBaRSA8LSByZWFkUkRTKGZpbGUucGF0aChtYXRyaWNlc19kaXIsICJaUFpFLnJkcyIpKQpaR1pXIDwtIHJlYWRSRFMoZmlsZS5wYXRoKG1hdHJpY2VzX2RpciwgIlpHWlcucmRzIikpClpQWlcgPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiWlBaVy5yZHMiKSkKR0dLICA8LSByZWFkUkRTKGZpbGUucGF0aChtYXRyaWNlc19kaXIsICJHR0sucmRzIikpClBHSyAgPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiUEdLLnJkcyIpKQpHQUsgIDwtIHJlYWRSRFMoZmlsZS5wYXRoKG1hdHJpY2VzX2RpciwgIkdBSy5yZHMiKSkKUEFLICA8LSByZWFkUkRTKGZpbGUucGF0aChtYXRyaWNlc19kaXIsICJQQUsucmRzIikpCkdHS0UgPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiR0dLRS5yZHMiKSkKUEdLRSA8LSByZWFkUkRTKGZpbGUucGF0aChtYXRyaWNlc19kaXIsICJQR0tFLnJkcyIpKQpHQUtFIDwtIHJlYWRSRFMoZmlsZS5wYXRoKG1hdHJpY2VzX2RpciwgIkdBS0UucmRzIikpClBBS0UgPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiUEFLRS5yZHMiKSkKR0dLVyA8LSByZWFkUkRTKGZpbGUucGF0aChtYXRyaWNlc19kaXIsICJHR0tXLnJkcyIpKQpQR0tXIDwtIHJlYWRSRFMoZmlsZS5wYXRoKG1hdHJpY2VzX2RpciwgIlBHS1cucmRzIikpCkdBS1cgPC0gcmVhZFJEUyhmaWxlLnBhdGgobWF0cmljZXNfZGlyLCAiR0FLVy5yZHMiKSkKUEFLVyA8LSByZWFkUkRTKGZpbGUucGF0aChtYXRyaWNlc19kaXIsICJQQUtXLnJkcyIpKQoKaWYgKCFleGlzdHMoIlBlZGlncmVlIikpIFBlZGlncmVlIDwtIHVuaXF1ZShQaGVubyRQZWRpZ3JlZSkKCmNhbmRpZGF0ZV90cmFpdHMgPC0gYygiR1kiLCAiS1ciKQp0cmFpdHNfdG9fcnVuIDwtIGNhbmRpZGF0ZV90cmFpdHNbY2FuZGlkYXRlX3RyYWl0cyAlaW4lIG5hbWVzKFBoZW5vKV0KaWYgKGxlbmd0aCh0cmFpdHNfdG9fcnVuKSA9PSAwKSB7CiAgc3RvcCgiTm9uZSBvZiB0aGUgZXhwZWN0ZWQgdHJhaXRzIChHWSwgS1cpIHdlcmUgZm91bmQgaW4gUGhlbm8uIikKfQoKaWYgKCFleGlzdHMoIm5JdGVyIikpICAgbkl0ZXIgICA8LSA1MDAwCmlmICghZXhpc3RzKCJidXJuSW4iKSkgIGJ1cm5JbiAgPC0gMTAwMAppZiAoIWV4aXN0cygidGhpbiIpKSAgICB0aGluICAgIDwtIDEwCmlmICghZXhpc3RzKCJudW1fcmVwIikpIG51bV9yZXAgPC0gMTAKaWYgKCFleGlzdHMoIm5fY29yZXMiKSkgbl9jb3JlcyA8LSBtYXgoMUwsIHBhcmFsbGVsOjpkZXRlY3RDb3JlcygpIC0gMUwpCgptb2RlbF9jYXRhbG9nIDwtIGRhdGEuZnJhbWUoCiAgTW9kZWxOdW1iZXIgPSAxOjE4LAogIE1vZGVsID0gcGFzdGUwKCJFdGEiLCAxOjE4KSwKICBEZXNjcmlwdGlvbiA9IGMoCiAgICAiRSArIEcgKyBHRSIsCiAgICAiRSArIFAgKyBQRSIsCiAgICAiRSArIEdHSyArIEdHS0UiLAogICAgIkUgKyBQR0sgKyBQR0tFIiwKICAgICJFICsgR0FLICsgR0FLRSIsCiAgICAiRSArIFBBSyArIFBBS0UiLAogICAgIkUgKyBHICsgUCArIEdFICsgUEUiLAogICAgIkUgKyBHR0sgKyBQR0sgKyBHR0tFICsgUEdLRSIsCiAgICAiRSArIEdBSyArIFBBSyArIEdBS0UgKyBQQUtFIiwKICAgICJFICsgVyArIEcgKyBHRSArIEdXIiwKICAgICJFICsgVyArIFAgKyBQRSArIFBXIiwKICAgICJFICsgVyArIEcgKyBQICsgR0UgKyBQRSArIEdXICsgUFciLAogICAgIkUgKyBXICsgR0dLICsgR0dLRSArIEdHS1ciLAogICAgIkUgKyBXICsgUEdLICsgUEdLRSArIFBHS1ciLAogICAgIkUgKyBXICsgR0dLICsgUEdLICsgR0dLRSArIFBHS0UgKyBHR0tXICsgUEdLVyIsCiAgICAiRSArIFcgKyBHQUsgKyBHQUtFICsgR0FLVyIsCiAgICAiRSArIFcgKyBQQUsgKyBQQUtFICsgUEFLVyIsCiAgICAiRSArIFcgKyBHQUsgKyBQQUsgKyBHQUtFICsgUEFLRSArIEdBS1cgKyBQQUtXIgogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCmVudl9kZXNpZ24gPC0gbW9kZWwubWF0cml4KH4gUGhlbm8kRW52IC0gMSkKCkV0YV9saXN0IDwtIHZlY3RvcigibGlzdCIsIDE4KQpFdGFfbGlzdFtbMV1dICA8LSBsaXN0KGxpc3QoWCA9IGVudl9kZXNpZ24sIG1vZGVsID0gIkJSUiIpLCBsaXN0KEsgPSBaRywgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBaR1pFLCBtb2RlbCA9ICJSS0hTIikpCkV0YV9saXN0W1syXV0gIDwtIGxpc3QobGlzdChYID0gZW52X2Rlc2lnbiwgbW9kZWwgPSAiQlJSIiksIGxpc3QoSyA9IFpQLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFpQWkUsIG1vZGVsID0gIlJLSFMiKSkKRXRhX2xpc3RbWzNdXSAgPC0gbGlzdChsaXN0KFggPSBlbnZfZGVzaWduLCBtb2RlbCA9ICJCUlIiKSwgbGlzdChLID0gR0dLLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IEdHS0UsIG1vZGVsID0gIlJLSFMiKSkKRXRhX2xpc3RbWzRdXSAgPC0gbGlzdChsaXN0KFggPSBlbnZfZGVzaWduLCBtb2RlbCA9ICJCUlIiKSwgbGlzdChLID0gUEdLLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFBHS0UsIG1vZGVsID0gIlJLSFMiKSkKRXRhX2xpc3RbWzVdXSAgPC0gbGlzdChsaXN0KFggPSBlbnZfZGVzaWduLCBtb2RlbCA9ICJCUlIiKSwgbGlzdChLID0gR0FLLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IEdBS0UsIG1vZGVsID0gIlJLSFMiKSkKRXRhX2xpc3RbWzZdXSAgPC0gbGlzdChsaXN0KFggPSBlbnZfZGVzaWduLCBtb2RlbCA9ICJCUlIiKSwgbGlzdChLID0gUEFLLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFBBS0UsIG1vZGVsID0gIlJLSFMiKSkKRXRhX2xpc3RbWzddXSAgPC0gbGlzdChsaXN0KFggPSBlbnZfZGVzaWduLCBtb2RlbCA9ICJCUlIiKSwgbGlzdChLID0gWkcsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gWlAsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gWkdaRSwgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBaUFpFLCBtb2RlbCA9ICJSS0hTIikpCkV0YV9saXN0W1s4XV0gIDwtIGxpc3QobGlzdChYID0gZW52X2Rlc2lnbiwgbW9kZWwgPSAiQlJSIiksIGxpc3QoSyA9IEdHSywgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBQR0ssIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gR0dLRSwgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBQR0tFLCBtb2RlbCA9ICJSS0hTIikpCkV0YV9saXN0W1s5XV0gIDwtIGxpc3QobGlzdChYID0gZW52X2Rlc2lnbiwgbW9kZWwgPSAiQlJSIiksIGxpc3QoSyA9IEdBSywgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBQQUssIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gR0FLRSwgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBQQUtFLCBtb2RlbCA9ICJSS0hTIikpCkV0YV9saXN0W1sxMF1dIDwtIGxpc3QobGlzdChYID0gZW52X2Rlc2lnbiwgbW9kZWwgPSAiQlJSIiksIGxpc3QoSyA9IFpXLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFpHLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFpHWkUsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gWkdaVywgbW9kZWwgPSAiUktIUyIpKQpFdGFfbGlzdFtbMTFdXSA8LSBsaXN0KGxpc3QoWCA9IGVudl9kZXNpZ24sIG1vZGVsID0gIkJSUiIpLCBsaXN0KEsgPSBaVywgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBaUCwgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBaUFpFLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFpQWlcsIG1vZGVsID0gIlJLSFMiKSkKRXRhX2xpc3RbWzEyXV0gPC0gbGlzdChsaXN0KFggPSBlbnZfZGVzaWduLCBtb2RlbCA9ICJCUlIiKSwgbGlzdChLID0gWlcsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gWkcsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gWlAsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gWkdaRSwgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBaUFpFLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFpHWlcsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gWlBaVywgbW9kZWwgPSAiUktIUyIpKQpFdGFfbGlzdFtbMTNdXSA8LSBsaXN0KGxpc3QoWCA9IGVudl9kZXNpZ24sIG1vZGVsID0gIkJSUiIpLCBsaXN0KEsgPSBaVywgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBHR0ssIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gR0dLRSwgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBHR0tXLCBtb2RlbCA9ICJSS0hTIikpCkV0YV9saXN0W1sxNF1dIDwtIGxpc3QobGlzdChYID0gZW52X2Rlc2lnbiwgbW9kZWwgPSAiQlJSIiksIGxpc3QoSyA9IFpXLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFBHSywgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBQR0tFLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFBHS1csIG1vZGVsID0gIlJLSFMiKSkKRXRhX2xpc3RbWzE1XV0gPC0gbGlzdChsaXN0KFggPSBlbnZfZGVzaWduLCBtb2RlbCA9ICJCUlIiKSwgbGlzdChLID0gWlcsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gR0dLLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFBHSywgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBHR0tFLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFBHS0UsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gR0dLVywgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBQR0tXLCBtb2RlbCA9ICJSS0hTIikpCkV0YV9saXN0W1sxNl1dIDwtIGxpc3QobGlzdChYID0gZW52X2Rlc2lnbiwgbW9kZWwgPSAiQlJSIiksIGxpc3QoSyA9IFpXLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IEdBSywgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBHQUtFLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IEdBS1csIG1vZGVsID0gIlJLSFMiKSkKRXRhX2xpc3RbWzE3XV0gPC0gbGlzdChsaXN0KFggPSBlbnZfZGVzaWduLCBtb2RlbCA9ICJCUlIiKSwgbGlzdChLID0gWlcsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gUEFLLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFBBS0UsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gUEFLVywgbW9kZWwgPSAiUktIUyIpKQpFdGFfbGlzdFtbMThdXSA8LSBsaXN0KGxpc3QoWCA9IGVudl9kZXNpZ24sIG1vZGVsID0gIkJSUiIpLCBsaXN0KEsgPSBaVywgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBHQUssIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gUEFLLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IEdBS0UsIG1vZGVsID0gIlJLSFMiKSwgbGlzdChLID0gUEFLRSwgbW9kZWwgPSAiUktIUyIpLCBsaXN0KEsgPSBHQUtXLCBtb2RlbCA9ICJSS0hTIiksIGxpc3QoSyA9IFBBS1csIG1vZGVsID0gIlJLSFMiKSkKCmBgYAoKCiMjIDQuIERlZmluZSB0aGUgZXhlY3V0aW9uIGNvbnRyYWN0CgpUaGlzIGJsb2NrIHJlc3RvcmVzIHRoZSBvcGVyYXRpb25hbCBvYmplY3RzIHVzZWQgYnkgdGhlIGN1cnJlbnQgd29ya2Zsb3c6IHRoZSBmaXhlZCBsZWF2ZS1vbmUtZW52aXJvbm1lbnQtb3V0IHNldCwgdGhlIG51bWJlciBvZiBmb2xkcywgYW5kIHRoZSBgTU9ERUwgw5cgUkVQIMOXIFRSQUlUYCB0YXNrIGdyaWQgZm9yIHRoZSAxOC1tb2RlbCBjYXRhbG9nLiBUaGUgZml0dGluZyBhbmQgc3VtbWFyaXphdGlvbiBsb2dpYyBhcmUgd3JpdHRlbiBkaXJlY3RseSBpbnNpZGUgdGhlIENWIGJsb2NrcyBzbyB0aGF0IHRoZSBleGVjdXRpb24gcGF0aCBzdGF5cyBleHBsaWNpdC4KCmBgYHtyIGRlZmluZS1ydW4tb2JqZWN0cywgZXZhbD1GQUxTRX0KZW52c19sZWF2ZW91dCA8LSBjKCJDUzExX1dTIiwgIkNTMTFfV1ciLCAiQ1MxMl9XUyIsICJDUzEyX1dXIikKZW52c19sZWF2ZW91dCA8LSBlbnZzX2xlYXZlb3V0W2VudnNfbGVhdmVvdXQgJWluJSB1bmlxdWUoUGhlbm8kRW52KV0KCm51bV9mb2xkIDwtIDVMCm5faHlicmlkcyA8LSBsZW5ndGgoUGVkaWdyZWUpCmNvbWJvcyA8LSBleHBhbmQuZ3JpZCgKICBNT0RFTCA9IHNlcV9hbG9uZyhFdGFfbGlzdCksCiAgUkVQID0gc2VxX2xlbihudW1fcmVwKSwKICBUUkFJVCA9IHRyYWl0c190b19ydW4sCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKYGBgCgojIyA1LiBTdGFydCB0aGUgcGFyYWxsZWwgYmFja2VuZAoKVGhlIGJhY2tlbmQgYmVsb3cgbWlycm9ycyB0aGUgb3JpZ2luYWwgd29ya2Zsb3c6IG9uZSB3b3JrZXIgcmVjZWl2ZXMgb25lIGNvbWJpbmF0aW9uIG9mIG1vZGVsLCByZXBldGl0aW9uLCBhbmQgdHJhaXQuCgpgYGB7ciBzdGFydC1wYXJhbGxlbC1iYWNrZW5kLCBldmFsPUZBTFNFfQp1c2VDb3JlcyA8LSBtYXgoMUwsIG5fY29yZXMpCmNsIDwtIHBhcmFsbGVsOjptYWtlQ2x1c3Rlcih1c2VDb3JlcykKZG9QYXJhbGxlbDo6cmVnaXN0ZXJEb1BhcmFsbGVsKGNsKQoKcGFyYWxsZWw6OmNsdXN0ZXJFdmFsUShjbCwgewogIGxpYnJhcnkoQkdMUikKICBsaWJyYXJ5KGRwbHlyKQogIGxpYnJhcnkocGx5cikKICBOVUxMCn0pCgpjYXQoIlJ1bm5pbmcgb24gIiwgdXNlQ29yZXMsICIgY29yZXMuIikKYGBgCgoKIyMgNi4gUnVuIHByZWRpY3Rpb24gYW5hbHlzZXMgZm9yIENWMSBhbmQgQ1YyCgpUaGlzIGJsb2NrIGltcGxlbWVudHMgZ2Vub3R5cGUtYmFzZWQgdmFsaWRhdGlvbiBmb3IgdGhlIDE4LW1vZGVsIHdvcmtmbG93LiBUaGUgZGV0ZXJtaW5pc3RpYyBmb2xkIG1hcCwgdGhlIEJHTFIgZml0LCBhbmQgdGhlIGVudmlyb25tZW50LXdpc2Ugc3VtbWFyeSBhcmUgYWxsIHdyaXR0ZW4gZGlyZWN0bHkgaW5zaWRlIHRoZSBsb29wIHNvIHRoYXQgZWFjaCBzdGVwIHN0YXlzIGV4cGxpY2l0LiBPbmUgZml0IGlzIHJ1biBwZXIgZm9sZCwgYW5kIHRoZSByZXN1bHRpbmcgcHJlZGljdGlvbnMgYXJlIHNwbGl0IGludG8gYENWMWAgKGhlbGQtb3V0IGdlbm90eXBlcykgYW5kIGBDVjJgICh0cmFpbmluZyBnZW5vdHlwZXMgdW5kZXIgdGhlIHNhbWUgZml0KS4gSW4gdGhlIGN1cnJlbnQgc3RhbmRhcmQsIGJvdGggdGhlIGZpbmFsIENTViBzdW1tYXJpZXMgYW5kIHRoZSBCR0xSIGZpdHRpbmcgYXJ0aWZhY3RzIGFyZSBzdG9yZWQgaW4gYSByZXAvZm9sZCBoaWVyYXJjaHkuCgpgYGB7ciBydW4tcHJlZGljdGlvbnMtY3YxMiwgZXZhbD1GQUxTRX0KZm9yZWFjaChpID0gc2VxX2xlbihucm93KGNvbWJvcykpLAogICAgICAgIC5wYWNrYWdlcyA9IGMoIkJHTFIiLCAiZHBseXIiLCAicGx5ciIpKSAlZG9wYXIlIHsKICBNT0RFTCA8LSBjb21ib3MkTU9ERUxbaV0KICByZXBfbnVtIDwtIGNvbWJvcyRSRVBbaV0KICBUUkFJVCA8LSBhcy5jaGFyYWN0ZXIoY29tYm9zJFRSQUlUW2ldKQoKICBwaGVubyA8LSBkYXRhLmZyYW1lKFBoZW5vKQoKICB0cmFpdF9pZCA8LSBtYXRjaChUUkFJVCwgdHJhaXRfcmVmZXJlbmNlX29yZGVyKQogIGlmIChpcy5uYSh0cmFpdF9pZCkpIHsKICAgIHRyYWl0X2lkIDwtIDFMCiAgfQoKICBzZWVkX3ZhbHVlIDwtIGFzLmludGVnZXIoMTAwMDAwTCAqIE1PREVMICsgMTAwTCAqIHJlcF9udW0gKyB0cmFpdF9pZCkKICBvbGRfc2VlZF9leGlzdHMgPC0gZXhpc3RzKCIuUmFuZG9tLnNlZWQiLCBlbnZpciA9IC5HbG9iYWxFbnYsIGluaGVyaXRzID0gRkFMU0UpCiAgaWYgKG9sZF9zZWVkX2V4aXN0cykgewogICAgb2xkX3NlZWQgPC0gZ2V0KCIuUmFuZG9tLnNlZWQiLCBlbnZpciA9IC5HbG9iYWxFbnYsIGluaGVyaXRzID0gRkFMU0UpCiAgfQoKICBzZXQuc2VlZChzZWVkX3ZhbHVlKQogIG9ic19wZXJfZm9sZCA8LSBjZWlsaW5nKGxlbmd0aChQZWRpZ3JlZSkgLyBudW1fZm9sZCkKICBmb2xkcyA8LSBzYW1wbGUocmVwKHNlcV9sZW4obnVtX2ZvbGQpLCBlYWNoID0gb2JzX3Blcl9mb2xkLCBsZW5ndGgub3V0ID0gbGVuZ3RoKFBlZGlncmVlKSkpCgogIGlmIChvbGRfc2VlZF9leGlzdHMpIHsKICAgIGFzc2lnbigiLlJhbmRvbS5zZWVkIiwgb2xkX3NlZWQsIGVudmlyID0gLkdsb2JhbEVudikKICB9IGVsc2UgaWYgKGV4aXN0cygiLlJhbmRvbS5zZWVkIiwgZW52aXIgPSAuR2xvYmFsRW52LCBpbmhlcml0cyA9IEZBTFNFKSkgewogICAgcm0oIi5SYW5kb20uc2VlZCIsIGVudmlyID0gLkdsb2JhbEVudikKICB9CgogIGZvbGRzX2RmIDwtIGRhdGEuZnJhbWUoUGVkaWdyZWUgPSBQZWRpZ3JlZSwgZm9sZCA9IGZvbGRzLCBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UpCgogIGZvciAoZm9sZF9udW0gaW4gc2VxX2xlbihudW1fZm9sZCkpIHsKICAgIHJlcF9sYWJlbCA8LSBzcHJpbnRmKCJyZXAlMDJkIiwgcmVwX251bSkKICAgIGZvbGRfbGFiZWwgPC0gc3ByaW50ZigiZm9sZCUwMmQiLCBmb2xkX251bSkKCiAgICBjdjFfZGlyIDwtIGZpbGUucGF0aChyZXN1bHRzX2RpciwgIkNWMSIsIFRSQUlULCByZXBfbGFiZWwsIGZvbGRfbGFiZWwpCiAgICBjdjJfZGlyIDwtIGZpbGUucGF0aChyZXN1bHRzX2RpciwgIkNWMiIsIFRSQUlULCByZXBfbGFiZWwsIGZvbGRfbGFiZWwpCiAgICBkaXIuY3JlYXRlKGN2MV9kaXIsIHJlY3Vyc2l2ZSA9IFRSVUUsIHNob3dXYXJuaW5ncyA9IEZBTFNFKQogICAgZGlyLmNyZWF0ZShjdjJfZGlyLCByZWN1cnNpdmUgPSBUUlVFLCBzaG93V2FybmluZ3MgPSBGQUxTRSkKCiAgICBjdjFfZmlsZSA8LSBmaWxlLnBhdGgoY3YxX2RpciwgcGFzdGUwKCJDVjFfIiwgVFJBSVQsICJfRXRhIiwgTU9ERUwsICJfIiwgcmVwX2xhYmVsLCAiXyIsIGZvbGRfbGFiZWwsICIuY3N2IikpCiAgICBjdjJfZmlsZSA8LSBmaWxlLnBhdGgoY3YyX2RpciwgcGFzdGUwKCJDVjJfIiwgVFJBSVQsICJfRXRhIiwgTU9ERUwsICJfIiwgcmVwX2xhYmVsLCAiXyIsIGZvbGRfbGFiZWwsICIuY3N2IikpCgogICAgaWYgKGZpbGUuZXhpc3RzKGN2MV9maWxlKSAmJiBmaWxlLmV4aXN0cyhjdjJfZmlsZSkpIHsKICAgICAgbmV4dAogICAgfQoKICAgIHRyYWluX2dlbm8gPC0gZm9sZHNfZGYkUGVkaWdyZWVbZm9sZHNfZGYkZm9sZCAhPSBmb2xkX251bV0KCiAgICB5aWVsZCA8LSBwaGVubwogICAgeWllbGQkWTIgPC0gTkEKICAgIHlpZWxkJFkyW3lpZWxkJFBlZGlncmVlICVpbiUgdHJhaW5fZ2Vub10gPC0geWllbGRbW1RSQUlUXV1beWllbGQkUGVkaWdyZWUgJWluJSB0cmFpbl9nZW5vXQoKICAgIHJ1bl9kaXIgPC0gZmlsZS5wYXRoKGJnbHJfcnVuc19kaXIsICJDVjEiLCBUUkFJVCwgcmVwX2xhYmVsLCBmb2xkX2xhYmVsLCBwYXN0ZTAoIkV0YSIsIE1PREVMKSkKICAgIGRpci5jcmVhdGUocnVuX2RpciwgcmVjdXJzaXZlID0gVFJVRSwgc2hvd1dhcm5pbmdzID0gRkFMU0UpCgogICAgc2F2ZV9wcmVmaXhfZnVsbCA8LSBmaWxlLnBhdGgocnVuX2RpciwgcGFzdGUwKCJDVjFfIiwgVFJBSVQsICJfRXRhIiwgTU9ERUwsICJfIiwgcmVwX2xhYmVsLCAiXyIsIGZvbGRfbGFiZWwsICJfIikpCgogICAgeV90IDwtIGFzLm51bWVyaWMoeWllbGQkWTIpCiAgICBzdGFydF90aW1lIDwtIFN5cy50aW1lKCkKICAgIGZpdCA8LSBCR0xSKHkgPSB5X3QsIEVUQSA9IEV0YV9saXN0W1tNT0RFTF1dLCBuSXRlciA9IG5JdGVyLCBidXJuSW4gPSBidXJuSW4sIHRoaW4gPSB0aGluLCBzYXZlQXQgPSBzYXZlX3ByZWZpeF9mdWxsKQogICAgZW5kX3RpbWUgPC0gU3lzLnRpbWUoKQogICAgcnVudGltZV9mdWxsIDwtIGFzLm51bWVyaWMoZGlmZnRpbWUoZW5kX3RpbWUsIHN0YXJ0X3RpbWUsIHVuaXRzID0gInNlY3MiKSkKCiAgICB5aWVsZCR5aGF0IDwtIGZpdCR5SGF0CiAgICBybShmaXQpCiAgICBnYygpCgogICAgZGZfdGVzdCA8LSB5aWVsZFsheWllbGQkUGVkaWdyZWUgJWluJSB0cmFpbl9nZW5vLCBdCiAgICBkZl90cmFpbiA8LSB5aWVsZFt5aWVsZCRQZWRpZ3JlZSAlaW4lIHRyYWluX2dlbm8sIF0KCiAgICB0bXAxIDwtIGRmX3Rlc3QgJT4lCiAgICAgIGRwbHlyOjpncm91cF9ieShFbnYpICU+JQogICAgICBkcGx5cjo6c3VtbWFyaXplKGNvciA9IGNvciguZGF0YVtbVFJBSVRdXSwgeWhhdCwgdXNlID0gImNvbXBsZXRlLm9icyIpLCAuZ3JvdXBzID0gImRyb3AiKSAlPiUKICAgICAgYXMuZGF0YS5mcmFtZSgpCgogICAgdG1wMiA8LSBkZl90cmFpbiAlPiUKICAgICAgZHBseXI6Omdyb3VwX2J5KEVudikgJT4lCiAgICAgIGRwbHlyOjpzdW1tYXJpemUoY29yID0gY29yKC5kYXRhW1tUUkFJVF1dLCB5aGF0LCB1c2UgPSAiY29tcGxldGUub2JzIiksIC5ncm91cHMgPSAiZHJvcCIpICU+JQogICAgICBhcy5kYXRhLmZyYW1lKCkKCiAgICB0bXAxJFJ1bnRpbWVfc2VjIDwtIHJ1bnRpbWVfZnVsbAogICAgdG1wMiRSdW50aW1lX3NlYyA8LSBydW50aW1lX2Z1bGwKICAgIHRtcDEkRm9sZCA8LSBmb2xkX2xhYmVsCiAgICB0bXAyJEZvbGQgPC0gZm9sZF9sYWJlbAoKICAgIHdyaXRlLmNzdih0bXAxLCBmaWxlID0gY3YxX2ZpbGUsIHJvdy5uYW1lcyA9IEZBTFNFKQogICAgd3JpdGUuY3N2KHRtcDIsIGZpbGUgPSBjdjJfZmlsZSwgcm93Lm5hbWVzID0gRkFMU0UpCiAgfQoKICBOVUxMCn0KYGBgCiMjIDcuIFJ1biBwcmVkaWN0aW9uIGFuYWx5c2VzIGZvciBDVjAgYW5kIENWMDAKClRoaXMgYmxvY2sgaW1wbGVtZW50cyBsZWF2ZS1vbmUtZW52aXJvbm1lbnQtb3V0IHZhbGlkYXRpb24gZm9yIHRoZSBzYW1lIDE4LW1vZGVsIHdvcmtmbG93LiBGb3IgZWFjaCB0YXNrLCB0aGUgZGV0ZXJtaW5pc3RpYyBmb2xkIG1hcCBpcyByZWJ1aWx0IHdpdGggdGhlIHNhbWUgcnVsZSB1c2VkIGluIGBDVjEvQ1YyYCwgb25lIGZpdCBpcyBydW4gZm9yIGVhY2ggYGVudl9sZWF2ZSDDlyBmb2xkYCBjb21iaW5hdGlvbiwgYW5kIHRoZSBwcmVkaWN0aW9ucyBhcmUgc3BsaXQgaW50byBgQ1YwYCAodHJhaW5pbmcgZ2Vub3R5cGVzIHVuZGVyIHRoZSBlbnZpcm9ubWVudCBtYXNrKSBhbmQgYENWMDBgIChoZWxkLW91dCBnZW5vdHlwZXMgdW5kZXIgdGhlIHNhbWUgbWFzaykuIEFzIGluIHRoZSBnZW5vdHlwZS1iYXNlZCBibG9jaywgdGhlIGZvbGQgY29uc3RydWN0aW9uLCB0aGUgQkdMUiBmaXQsIGFuZCB0aGUgZW52aXJvbm1lbnQtd2lzZSBzdW1tYXJ5IGFyZSBhbGwgd3JpdHRlbiBkaXJlY3RseSBpbnNpZGUgdGhlIGxvb3Agc28gdGhhdCB0aGUgZXhlY3V0aW9uIHBhdGggcmVtYWlucyBleHBsaWNpdC4gVGhlIG91dHB1dHMgYXJlIHdyaXR0ZW4gaW4gYSByZXAvZm9sZCBoaWVyYXJjaHkgYW5kIHRoZSBCR0xSIGFydGlmYWN0cyBhcmUgcHJlc2VydmVkIGluIG1hdGNoaW5nIHBlcnNpc3RlbnQgZm9sZGVycy4KCmBgYHtyIHJ1bi1wcmVkaWN0aW9ucy1jdjAtY3YwMCwgZXZhbD1GQUxTRX0KZm9yZWFjaChpID0gc2VxX2xlbihucm93KGNvbWJvcykpLAogICAgICAgIC5wYWNrYWdlcyA9IGMoIkJHTFIiLCAiZHBseXIiLCAicGx5ciIpKSAlZG9wYXIlIHsKICBNT0RFTCA8LSBjb21ib3MkTU9ERUxbaV0KICByZXBfbnVtIDwtIGNvbWJvcyRSRVBbaV0KICBUUkFJVCA8LSBhcy5jaGFyYWN0ZXIoY29tYm9zJFRSQUlUW2ldKQoKICBwaGVubyA8LSBkYXRhLmZyYW1lKFBoZW5vKQoKICB0cmFpdF9pZCA8LSBtYXRjaChUUkFJVCwgdHJhaXRfcmVmZXJlbmNlX29yZGVyKQogIGlmIChpcy5uYSh0cmFpdF9pZCkpIHsKICAgIHRyYWl0X2lkIDwtIDFMCiAgfQoKICBzZWVkX3ZhbHVlIDwtIGFzLmludGVnZXIoMTAwMDAwTCAqIE1PREVMICsgMTAwTCAqIHJlcF9udW0gKyB0cmFpdF9pZCkKICBvbGRfc2VlZF9leGlzdHMgPC0gZXhpc3RzKCIuUmFuZG9tLnNlZWQiLCBlbnZpciA9IC5HbG9iYWxFbnYsIGluaGVyaXRzID0gRkFMU0UpCiAgaWYgKG9sZF9zZWVkX2V4aXN0cykgewogICAgb2xkX3NlZWQgPC0gZ2V0KCIuUmFuZG9tLnNlZWQiLCBlbnZpciA9IC5HbG9iYWxFbnYsIGluaGVyaXRzID0gRkFMU0UpCiAgfQoKICBzZXQuc2VlZChzZWVkX3ZhbHVlKQogIG9ic19wZXJfZm9sZCA8LSBjZWlsaW5nKGxlbmd0aChQZWRpZ3JlZSkgLyBudW1fZm9sZCkKICBmb2xkcyA8LSBzYW1wbGUocmVwKHNlcV9sZW4obnVtX2ZvbGQpLCBlYWNoID0gb2JzX3Blcl9mb2xkLCBsZW5ndGgub3V0ID0gbGVuZ3RoKFBlZGlncmVlKSkpCgogIGlmIChvbGRfc2VlZF9leGlzdHMpIHsKICAgIGFzc2lnbigiLlJhbmRvbS5zZWVkIiwgb2xkX3NlZWQsIGVudmlyID0gLkdsb2JhbEVudikKICB9IGVsc2UgaWYgKGV4aXN0cygiLlJhbmRvbS5zZWVkIiwgZW52aXIgPSAuR2xvYmFsRW52LCBpbmhlcml0cyA9IEZBTFNFKSkgewogICAgcm0oIi5SYW5kb20uc2VlZCIsIGVudmlyID0gLkdsb2JhbEVudikKICB9CgogIGZvbGRzX2RmIDwtIGRhdGEuZnJhbWUoUGVkaWdyZWUgPSBQZWRpZ3JlZSwgZm9sZCA9IGZvbGRzLCBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UpCgogIGZvciAoZm9sZF9udW0gaW4gc2VxX2xlbihudW1fZm9sZCkpIHsKICAgIHRyYWluX2dlbm8gPC0gZm9sZHNfZGYkUGVkaWdyZWVbZm9sZHNfZGYkZm9sZCAhPSBmb2xkX251bV0KICAgIHJlcF9sYWJlbCA8LSBzcHJpbnRmKCJyZXAlMDJkIiwgcmVwX251bSkKICAgIGZvbGRfbGFiZWwgPC0gc3ByaW50ZigiZm9sZCUwMmQiLCBmb2xkX251bSkKCiAgICBmb3IgKGVudl9pZHggaW4gc2VxX2Fsb25nKGVudnNfbGVhdmVvdXQpKSB7CiAgICAgIGVudl9uYW1lIDwtIGVudnNfbGVhdmVvdXRbZW52X2lkeF0KCiAgICAgIGN2MDBfZGlyIDwtIGZpbGUucGF0aChyZXN1bHRzX2RpciwgIkNWMDAiLCBlbnZfbmFtZSwgVFJBSVQsIHJlcF9sYWJlbCwgZm9sZF9sYWJlbCkKICAgICAgY3YwX2RpciA8LSBmaWxlLnBhdGgocmVzdWx0c19kaXIsICJDVjAiLCBlbnZfbmFtZSwgVFJBSVQsIHJlcF9sYWJlbCwgZm9sZF9sYWJlbCkKICAgICAgZGlyLmNyZWF0ZShjdjAwX2RpciwgcmVjdXJzaXZlID0gVFJVRSwgc2hvd1dhcm5pbmdzID0gRkFMU0UpCiAgICAgIGRpci5jcmVhdGUoY3YwX2RpciwgcmVjdXJzaXZlID0gVFJVRSwgc2hvd1dhcm5pbmdzID0gRkFMU0UpCgogICAgICBjdjAwX2ZpbGUgPC0gZmlsZS5wYXRoKGN2MDBfZGlyLCBwYXN0ZTAoIkNWMDBfIiwgVFJBSVQsICJfIiwgZW52X25hbWUsICJfRXRhIiwgTU9ERUwsICJfIiwgcmVwX2xhYmVsLCAiXyIsIGZvbGRfbGFiZWwsICIuY3N2IikpCiAgICAgIGN2MF9maWxlIDwtIGZpbGUucGF0aChjdjBfZGlyLCBwYXN0ZTAoIkNWMF8iLCBUUkFJVCwgIl8iLCBlbnZfbmFtZSwgIl9FdGEiLCBNT0RFTCwgIl8iLCByZXBfbGFiZWwsICJfIiwgZm9sZF9sYWJlbCwgIi5jc3YiKSkKCiAgICAgIGlmIChmaWxlLmV4aXN0cyhjdjAwX2ZpbGUpICYmIGZpbGUuZXhpc3RzKGN2MF9maWxlKSkgewogICAgICAgIG5leHQKICAgICAgfQoKICAgICAgeWllbGQyIDwtIHBoZW5vCiAgICAgIHlpZWxkMiRZMiA8LSBOQQogICAgICB5aWVsZDIkWTJbeWllbGQyJFBlZGlncmVlICVpbiUgdHJhaW5fZ2Vub10gPC0geWllbGQyW1tUUkFJVF1dW3lpZWxkMiRQZWRpZ3JlZSAlaW4lIHRyYWluX2dlbm9dCiAgICAgIHlpZWxkMiRZMlt5aWVsZDIkRW52ID09IGVudl9uYW1lXSA8LSBOQQoKICAgICAgcnVuX2RpciA8LSBmaWxlLnBhdGgoYmdscl9ydW5zX2RpciwgIkNWMCIsIGVudl9uYW1lLCBUUkFJVCwgcmVwX2xhYmVsLCBmb2xkX2xhYmVsLCBwYXN0ZTAoIkV0YSIsIE1PREVMKSkKICAgICAgZGlyLmNyZWF0ZShydW5fZGlyLCByZWN1cnNpdmUgPSBUUlVFLCBzaG93V2FybmluZ3MgPSBGQUxTRSkKCiAgICAgIHNhdmVfcHJlZml4X2VudiA8LSBmaWxlLnBhdGgocnVuX2RpciwgcGFzdGUwKCJDVjBfIiwgZW52X25hbWUsICJfIiwgVFJBSVQsICJfRXRhIiwgTU9ERUwsICJfIiwgcmVwX2xhYmVsLCAiXyIsIGZvbGRfbGFiZWwsICJfIikpCgogICAgICB5X3QgPC0gYXMubnVtZXJpYyh5aWVsZDIkWTIpCiAgICAgIHN0YXJ0X3RpbWUgPC0gU3lzLnRpbWUoKQogICAgICBmaXQgPC0gQkdMUih5ID0geV90LCBFVEEgPSBFdGFfbGlzdFtbTU9ERUxdXSwgbkl0ZXIgPSBuSXRlciwgYnVybkluID0gYnVybkluLCB0aGluID0gdGhpbiwgc2F2ZUF0ID0gc2F2ZV9wcmVmaXhfZW52KQogICAgICBlbmRfdGltZSA8LSBTeXMudGltZSgpCiAgICAgIHJ1bnRpbWVfZW52IDwtIGFzLm51bWVyaWMoZGlmZnRpbWUoZW5kX3RpbWUsIHN0YXJ0X3RpbWUsIHVuaXRzID0gInNlY3MiKSkKCiAgICAgIHlpZWxkMiR5aGF0IDwtIGZpdCR5SGF0CiAgICAgIHJtKGZpdCkKICAgICAgZ2MoKQoKICAgICAgZGZfdGVzdDIgPC0geWllbGQyWyF5aWVsZDIkUGVkaWdyZWUgJWluJSB0cmFpbl9nZW5vICYgeWllbGQyJEVudiA9PSBlbnZfbmFtZSwgLCBkcm9wID0gRkFMU0VdCiAgICAgIGRmX3RyYWluMiA8LSB5aWVsZDJbeWllbGQyJFBlZGlncmVlICVpbiUgdHJhaW5fZ2VubyAmIHlpZWxkMiRFbnYgPT0gZW52X25hbWUsICwgZHJvcCA9IEZBTFNFXQoKICAgICAgdG1wMDAgPC0gZGZfdGVzdDIgJT4lCiAgICAgICAgZHBseXI6Omdyb3VwX2J5KEVudikgJT4lCiAgICAgICAgZHBseXI6OnN1bW1hcml6ZShjb3IgPSBjb3IoLmRhdGFbW1RSQUlUXV0sIHloYXQsIHVzZSA9ICJjb21wbGV0ZS5vYnMiKSwgLmdyb3VwcyA9ICJkcm9wIikgJT4lCiAgICAgICAgYXMuZGF0YS5mcmFtZSgpCgogICAgICB0bXAwIDwtIGRmX3RyYWluMiAlPiUKICAgICAgICBkcGx5cjo6Z3JvdXBfYnkoRW52KSAlPiUKICAgICAgICBkcGx5cjo6c3VtbWFyaXplKGNvciA9IGNvciguZGF0YVtbVFJBSVRdXSwgeWhhdCwgdXNlID0gImNvbXBsZXRlLm9icyIpLCAuZ3JvdXBzID0gImRyb3AiKSAlPiUKICAgICAgICBhcy5kYXRhLmZyYW1lKCkKCiAgICAgIHRtcDAwJFJ1bnRpbWVfc2VjIDwtIHJ1bnRpbWVfZW52CiAgICAgIHRtcDAkUnVudGltZV9zZWMgPC0gcnVudGltZV9lbnYKICAgICAgdG1wMDAkRm9sZCA8LSBmb2xkX2xhYmVsCiAgICAgIHRtcDAkRm9sZCA8LSBmb2xkX2xhYmVsCgogICAgICB3cml0ZS5jc3YodG1wMDAsIGZpbGUgPSBjdjAwX2ZpbGUsIHJvdy5uYW1lcyA9IEZBTFNFKQogICAgICB3cml0ZS5jc3YodG1wMCwgZmlsZSA9IGN2MF9maWxlLCByb3cubmFtZXMgPSBGQUxTRSkKICAgIH0KICB9CgogIE5VTEwKfQpgYGAKIyMgOC4gU3RvcCB0aGUgcGFyYWxsZWwgYmFja2VuZAoKYGBge3Igc3RvcC1wYXJhbGxlbC1iYWNrZW5kLCBldmFsPUZBTFNFfQpzdG9wQ2x1c3RlcihjbCkKZm9yZWFjaDo6cmVnaXN0ZXJEb1NFUSgpCmBgYAoKCiMjIDkuIEludmVudG9yeSBvZiB0aGUgcHJlZGljdGlvbiBvdXRwdXQgZmlsZXMKClRoZSBpbnZlbnRvcmllcyBiZWxvdyBzdW1tYXJpemUgdGhlIENTViBmaWxlcyBwcm9kdWNlZCBieSB0aGUgZXhlY3V0aW9uIHN0YWdlIHVzaW5nIHRoZSBjdXJyZW50IHJlcC9mb2xkIGZvbGRlciBjb250cmFjdCBmb3IgdGhlIDE4LW1vZGVsIHdvcmtmbG93LgoKYGBge3IgcHJlZGljdGlvbi1vdXRwdXQtaW52ZW50b3J5fQpwcmVkaWN0aW9uX2ZpbGVzIDwtIGNoYXJhY3RlcigwKQoKaWYgKGRpci5leGlzdHMocmVzdWx0c19kaXIpKSB7CiAgcHJlZGljdGlvbl9maWxlcyA8LSBsaXN0LmZpbGVzKHJlc3VsdHNfZGlyLCBwYXR0ZXJuID0gIlxcLmNzdiQiLCBmdWxsLm5hbWVzID0gVFJVRSwgcmVjdXJzaXZlID0gVFJVRSkKfQoKaW52ZW50b3J5X2N2MTIgPC0gZGF0YS5mcmFtZSgpCmludmVudG9yeV9jdmxvbyA8LSBkYXRhLmZyYW1lKCkKCmlmIChsZW5ndGgocHJlZGljdGlvbl9maWxlcykgPiAwKSB7CiAgcmVzdWx0c19yb290IDwtIG5vcm1hbGl6ZVBhdGgocmVzdWx0c19kaXIsIHdpbnNsYXNoID0gIi8iKQoKICBmb3IgKGN1cnJlbnRfZmlsZSBpbiBwcmVkaWN0aW9uX2ZpbGVzKSB7CiAgICBjdXJyZW50X25vcm0gPC0gbm9ybWFsaXplUGF0aChjdXJyZW50X2ZpbGUsIHdpbnNsYXNoID0gIi8iKQogICAgcmVsX3BhdGggPC0gc3Vic3RyaW5nKGN1cnJlbnRfbm9ybSwgbmNoYXIocmVzdWx0c19yb290KSArIDIpCiAgICBwYXRoX3BhcnRzIDwtIHN0cnNwbGl0KHJlbF9wYXRoLCAiLyIsIGZpeGVkID0gVFJVRSlbWzFdXQogICAgY3VycmVudF9uYW1lIDwtIGJhc2VuYW1lKGN1cnJlbnRfZmlsZSkKICAgIGN1cnJlbnRfbmFtZV9ub19leHQgPC0gc3ViKCJcXC5jc3YkIiwgIiIsIGN1cnJlbnRfbmFtZSkKICAgIGN1cnJlbnRfcGFydHMgPC0gc3Ryc3BsaXQoY3VycmVudF9uYW1lX25vX2V4dCwgIl8iKVtbMV1dCgogICAgaWYgKGxlbmd0aChwYXRoX3BhcnRzKSA+PSA1ICYmIGN1cnJlbnRfcGFydHNbMV0gJWluJSBjKCJDVjEiLCAiQ1YyIikpIHsKICAgICAgaW52ZW50b3J5X2N2MTIgPC0gZHBseXI6OmJpbmRfcm93cygKICAgICAgICBpbnZlbnRvcnlfY3YxMiwKICAgICAgICBkYXRhLmZyYW1lKAogICAgICAgICAgcmVsYXRpdmVfcGF0aCA9IHJlbF9wYXRoLAogICAgICAgICAgZmlsZV9uYW1lID0gY3VycmVudF9uYW1lLAogICAgICAgICAgQ1YgPSBjdXJyZW50X3BhcnRzWzFdLAogICAgICAgICAgVHJhaXQgPSBwYXRoX3BhcnRzWzJdLAogICAgICAgICAgUmVwID0gcGF0aF9wYXJ0c1szXSwKICAgICAgICAgIEZvbGQgPSBwYXRoX3BhcnRzWzRdLAogICAgICAgICAgTW9kZWwgPSBjdXJyZW50X3BhcnRzWzNdLAogICAgICAgICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgICAgICAgKQogICAgICApCiAgICB9CgogICAgaWYgKGxlbmd0aChwYXRoX3BhcnRzKSA+PSA2ICYmIGN1cnJlbnRfcGFydHNbMV0gJWluJSBjKCJDVjAiLCAiQ1YwMCIpKSB7CiAgICAgIGludmVudG9yeV9jdmxvbyA8LSBkcGx5cjo6YmluZF9yb3dzKAogICAgICAgIGludmVudG9yeV9jdmxvbywKICAgICAgICBkYXRhLmZyYW1lKAogICAgICAgICAgcmVsYXRpdmVfcGF0aCA9IHJlbF9wYXRoLAogICAgICAgICAgZmlsZV9uYW1lID0gY3VycmVudF9uYW1lLAogICAgICAgICAgQ1YgPSBjdXJyZW50X3BhcnRzWzFdLAogICAgICAgICAgRW52X2xlYXZlID0gcGF0aF9wYXJ0c1syXSwKICAgICAgICAgIFRyYWl0ID0gcGF0aF9wYXJ0c1szXSwKICAgICAgICAgIFJlcCA9IHBhdGhfcGFydHNbNF0sCiAgICAgICAgICBGb2xkID0gcGF0aF9wYXJ0c1s1XSwKICAgICAgICAgIE1vZGVsID0gY3VycmVudF9wYXJ0c1tsZW5ndGgoY3VycmVudF9wYXJ0cykgLSAyXSwKICAgICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICAgICAgICkKICAgICAgKQogICAgfQogIH0KfQoKd3JpdGVfY3N2KGludmVudG9yeV9jdjEyLCBmaWxlLnBhdGgoYW5hbHlzaXNfdGFibGVzX2RpciwgImFuYWx5c2lzX3ByZWRpY3Rpb25faW52ZW50b3J5X2N2MTIuY3N2IikpCndyaXRlX2NzdihpbnZlbnRvcnlfY3Zsb28sIGZpbGUucGF0aChhbmFseXNpc190YWJsZXNfZGlyLCAiYW5hbHlzaXNfcHJlZGljdGlvbl9pbnZlbnRvcnlfY3Zsb28uY3N2IikpCmBgYAojIyAxMC4gQ291bnRzIG9mIGZpbGVzIGJ5IHZhbGlkYXRpb24gc2NoZW1lIGFuZCB0cmFpdAoKYGBge3IgcHJlZGljdGlvbi1vdXRwdXQtY291bnRzfQpjb3VudHNfYnlfY3YgPC0gZGF0YS5mcmFtZSgpCmNvdW50c19ieV90cmFpdCA8LSBkYXRhLmZyYW1lKCkKCmlmIChucm93KGludmVudG9yeV9jdjEyKSA+IDAgfHwgbnJvdyhpbnZlbnRvcnlfY3Zsb28pID4gMCkgewogIGNvbWJpbmVkX2ludmVudG9yeSA8LSBiaW5kX3Jvd3MoCiAgICBpbnZlbnRvcnlfY3YxMiAlPiUgbXV0YXRlKEVudl9sZWF2ZSA9IE5BX2NoYXJhY3Rlcl8pLAogICAgaW52ZW50b3J5X2N2bG9vCiAgKQoKICBjb3VudHNfYnlfY3YgPC0gY29tYmluZWRfaW52ZW50b3J5ICU+JQogICAgY291bnQoQ1YsIG5hbWUgPSAibl9maWxlcyIpICU+JQogICAgYXJyYW5nZShDVikKCiAgY291bnRzX2J5X3RyYWl0IDwtIGNvbWJpbmVkX2ludmVudG9yeSAlPiUKICAgIGNvdW50KENWLCBUcmFpdCwgbmFtZSA9ICJuX2ZpbGVzIikgJT4lCiAgICBhcnJhbmdlKENWLCBUcmFpdCkKfQoKd3JpdGVfY3N2KGNvdW50c19ieV9jdiwgZmlsZS5wYXRoKGFuYWx5c2lzX3RhYmxlc19kaXIsICJhbmFseXNpc19wcmVkaWN0aW9uX2NvdW50c19ieV9jdi5jc3YiKSkKd3JpdGVfY3N2KGNvdW50c19ieV90cmFpdCwgZmlsZS5wYXRoKGFuYWx5c2lzX3RhYmxlc19kaXIsICJhbmFseXNpc19wcmVkaWN0aW9uX2NvdW50c19ieV90cmFpdC5jc3YiKSkKCmlmIChucm93KGNvdW50c19ieV9jdikgPiAwKSB7CiAga25pdHI6OmthYmxlKGNvdW50c19ieV9jdiwgY2FwdGlvbiA9ICJOdW1iZXIgb2YgcHJlZGljdGlvbiBmaWxlcyBieSB2YWxpZGF0aW9uIHNjaGVtZS4iLCBhbGlnbiA9ICJjYyIpCn0gZWxzZSB7CiAgY2F0KCJQcmVkaWN0aW9uIGNvdW50cyBieSB2YWxpZGF0aW9uIHNjaGVtZSBhcmUgbm90IGF2YWlsYWJsZSB5ZXQuCiIpCn0KYGBgCgoKIyMgMTEuIEV4YW1wbGVzIG9mIHRoZSBvdXRwdXQgcGF0aCBwYXR0ZXJuCgpgYGB7ciBwcmVkaWN0aW9uLW91dHB1dC1leGFtcGxlc30Kb3V0cHV0X2V4YW1wbGVzIDwtIGJpbmRfcm93cygKICB0aWJibGU6OnRpYmJsZSgKICAgIEV4YW1wbGVUeXBlID0gIkNWMS9DVjIiLAogICAgcmVsYXRpdmVfcGF0aCA9IGMoCiAgICAgICJDVjEvR1kvcmVwMDEvZm9sZDAxL0NWMV9HWV9FdGExX3JlcDAxX2ZvbGQwMS5jc3YiLAogICAgICAiQ1YyL0tXL3JlcDEwL2ZvbGQwNS9DVjJfS1dfRXRhMThfcmVwMTBfZm9sZDA1LmNzdiIKICAgICksCiAgICBiZ2xyX2V4YW1wbGUgPSBjKAogICAgICAiYmdscl9ydW5zL0NWMS9HWS9yZXAwMS9mb2xkMDEvRXRhMS9DVjFfR1lfRXRhMV9yZXAwMV9mb2xkMDFfR0VfUktIU192YXJVLmRhdCIsCiAgICAgICJiZ2xyX3J1bnMvQ1YyL0tXL3JlcDEwL2ZvbGQwNS9FdGExOC9DVjJfS1dfRXRhMThfcmVwMTBfZm9sZDA1X1BBS1dfUktIU192YXJVLmRhdCIKICAgICksCiAgICBNZWFuaW5nID0gYygKICAgICAgIlByZWRpY3Rpb24gYWNjdXJhY3kgZm9yIENWMSwgdHJhaXQgR1ksIG1vZGVsIEV0YTEsIHJlcGV0aXRpb24gMSwgZm9sZCAxLiIsCiAgICAgICJQcmVkaWN0aW9uIGFjY3VyYWN5IGZvciBDVjIsIHRyYWl0IEtXLCBtb2RlbCBFdGExOCwgcmVwZXRpdGlvbiAxMCwgZm9sZCA1LiIKICAgICkKICApLAogIHRpYmJsZTo6dGliYmxlKAogICAgRXhhbXBsZVR5cGUgPSAiQ1YwL0NWMDAiLAogICAgcmVsYXRpdmVfcGF0aCA9IGMoCiAgICAgICJDVjAvQ1MxMV9XUy9HWS9yZXAwMS9mb2xkMDEvQ1YwX0dZX0NTMTFfV1NfRXRhMV9yZXAwMV9mb2xkMDEuY3N2IiwKICAgICAgIkNWMDAvQ1MxMl9XVy9LVy9yZXAxMC9mb2xkMDIvQ1YwMF9LV19DUzEyX1dXX0V0YTE4X3JlcDEwX2ZvbGQwMi5jc3YiCiAgICApLAogICAgYmdscl9leGFtcGxlID0gYygKICAgICAgImJnbHJfcnVucy9DVjAvQ1MxMV9XUy9HWS9yZXAwMS9mb2xkMDEvRXRhMS9DVjBfQ1MxMV9XU19HWV9FdGExX3JlcDAxX2ZvbGQwMV9HV19SS0hTX3ZhclUuZGF0IiwKICAgICAgImJnbHJfcnVucy9DVjAwL0NTMTJfV1cvS1cvcmVwMTAvZm9sZDAyL0V0YTE4L0NWMDBfQ1MxMl9XV19LV19FdGExOF9yZXAxMF9mb2xkMDJfUEFLV19SS0hTX3ZhclUuZGF0IgogICAgKSwKICAgIE1lYW5pbmcgPSBjKAogICAgICAiUHJlZGljdGlvbiBhY2N1cmFjeSBmb3IgQ1YwLCB0cmFpdCBHWSwgaGVsZC1vdXQgZW52aXJvbm1lbnQgQ1MxMV9XUywgbW9kZWwgRXRhMSwgcmVwZXRpdGlvbiAxLCBmb2xkIDEuIiwKICAgICAgIlByZWRpY3Rpb24gYWNjdXJhY3kgZm9yIENWMDAsIHRyYWl0IEtXLCBoZWxkLW91dCBlbnZpcm9ubWVudCBDUzEyX1dXLCBtb2RlbCBFdGExOCwgcmVwZXRpdGlvbiAxMCwgZm9sZCAyLiIKICAgICkKICApCikKCndyaXRlX2NzdihvdXRwdXRfZXhhbXBsZXMsIGZpbGUucGF0aChhbmFseXNpc190YWJsZXNfZGlyLCAiYW5hbHlzaXNfcHJlZGljdGlvbl9vdXRwdXRfZXhhbXBsZXMuY3N2IikpCmtuaXRyOjprYWJsZShvdXRwdXRfZXhhbXBsZXMsIGNhcHRpb24gPSAiRXhhbXBsZXMgb2Ygb3V0cHV0IGZpbGVzIHN0b3JlZCB1bmRlciB0aGUgY3VycmVudCByZXAvZm9sZCBsYXlvdXQsIHRvZ2V0aGVyIHdpdGggdGhlIHNjZW5hcmlvLXNwZWNpZmljIHByZWZpeGVzIHVzZWQgZm9yIHRoZSBwZXJzaXN0ZW50IEJHTFIgYXJ0aWZhY3RzLiIsIGFsaWduID0gImMiKQpgYGAKIyMgMTIuIE5vdGUgb24gdGVtcG9yYXJ5IGBCR0xSYCBhcnRpZmFjdHMKCkluIHRoZSBjdXJyZW50IDE4LW1vZGVsIHdvcmtmbG93LCBwZXJzaXN0ZW50IGBzYXZlQXRgIGFydGlmYWN0cyBhcmUgd3JpdHRlbiB1bmRlciBgb3V0cHV0L3Jlc3VsdHMvYmdscl9ydW5zL2AgZHVyaW5nIGVhY2ggZml0IGFuZCBwcmVzZXJ2ZWQgZm9yIGxhdGVyIGNvbnZlcmdlbmNlIGRpYWdub3N0aWNzLiBUaGUgc2NlbmFyaW8tc3BlY2lmaWMgcGF0aHMgbm93IHNlcGFyYXRlIGBDVjFgLCBgQ1YyYCwgYENWMGAsIGFuZCBgQ1YwMGAsIGFuZCB0aGUgcGVyc2lzdGVkIGZpbGVuYW1lcyB1c2UgdGhlIHNjZW5hcmlvIHByZWZpeCB0b2dldGhlciB3aXRoIGV4cGxpY2l0IGVmZmVjdCBsYWJlbHMgaW5zdGVhZCBvZiBnZW5lcmljIGBFVEFfMWAsIGBFVEFfMmAsIGFuZCBzaW1pbGFyIHBsYWNlaG9sZGVycy4gVGhlcmVmb3JlLCB0aGlzIGV4ZWN1dGlvbiBtb2R1bGUgaW52ZW50b3JpZXMgYm90aCB0aGUgZmluYWwgQ1NWIG91dHB1dHMgc3RvcmVkIHVuZGVyIGBvdXRwdXQvcmVzdWx0cy9gIGFuZCB0aGUgaGllcmFyY2hpY2FsIHBhdGhzIHRoYXQgbG9jYXRlIHRoZSBjb3JyZXNwb25kaW5nIEJHTFIgcnVuIGZvbGRlcnMuCgojIyAxMy4gRmluYWwgbm90ZQoKVGhpcyBmaWxlIGNsb3NlcyB0aGUgZXhlY3V0aW9uIGxheWVyIG9mIHRoZSBwcmVkaWN0aW9uIHN0YWdlIHdoaWxlIHByZXNlcnZpbmcgY29uc2lzdGVuY3kgd2l0aCB0aGUgcmVkdWNlZCAxOC1tb2RlbCBwcmVwcm9jZXNzaW5nIG1vZHVsZSBkb2N1bWVudGVkIGluIGBhbmFseXNpc19wcmVkaWN0aW9uLlJtZGAgYW5kIHdpdGggdGhlIGN1cnJlbnQgcmVwL2ZvbGQgb3V0cHV0IGNvbnRyYWN0IHVzZWQgYnkgdGhlIGRvd25zdHJlYW0gc3VtbWFyaWVzLgoKIyMgU3RhZ2UgbmF2aWdhdGlvbgoKKipQcmV2aW91cyBzdGFnZToqKiBbUHJlZGljdGlvbiDigJQgUGFydCBJXShhbmFseXNpc19wcmVkaWN0aW9uLmh0bWwpICAKKipOZXh0IHN0YWdlOioqIFtWaXN1YWxpemF0aW9uXSh2aXN1YWxpemF0aW9uLmh0bWwpCgo=</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeSourceEmbed("analysis_prediction_run_outputs.Rmd");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
