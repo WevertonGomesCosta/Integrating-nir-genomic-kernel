@@ -181,29 +181,41 @@ Eta_list <- list()
 The first six models establish the basic comparison framework of the study. In all of them, the categorical effect of environment is retained, and this environmental baseline is then combined with one main source of biological information and its corresponding interaction with environment. These models are useful because they show how prediction behaves when genomic, phenomic, or kernel-based information is considered separately rather than in integrated form.
 
 ```{r eta-list-models-1-6}
-Eta_list[[1]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZG,   model = "RKHS"),
-                       list(K = ZGZE, model = "RKHS"))
+Eta_list[[1]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZG,   model = "RKHS"),
+  list(K = ZGZE, model = "RKHS")
+)
 
-Eta_list[[2]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZP,   model = "RKHS"),
-                       list(K = ZPZE, model = "RKHS"))
+Eta_list[[2]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZP,   model = "RKHS"),
+  list(K = ZPZE, model = "RKHS")
+)
 
-Eta_list[[3]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = GGK,  model = "RKHS"),
-                       list(K = GGKE, model = "RKHS"))
+Eta_list[[3]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = GGK,  model = "RKHS"),
+  list(K = GGKE, model = "RKHS")
+)
 
-Eta_list[[4]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = PGK,  model = "RKHS"),
-                       list(K = PGKE, model = "RKHS"))
+Eta_list[[4]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = PGK,  model = "RKHS"),
+  list(K = PGKE, model = "RKHS")
+)
 
-Eta_list[[5]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = GAK,  model = "RKHS"),
-                       list(K = GAKE, model = "RKHS"))
+Eta_list[[5]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = GAK,  model = "RKHS"),
+  list(K = GAKE, model = "RKHS")
+)
 
-Eta_list[[6]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = PAK,  model = "RKHS"),
-                       list(K = PAKE, model = "RKHS"))
+Eta_list[[6]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = PAK,  model = "RKHS"),
+  list(K = PAKE, model = "RKHS")
+)
 ```
 
 ### 6.3 Models 7 to 9: integrated genomic and phenomic pathways without `W`
@@ -211,23 +223,29 @@ Eta_list[[6]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
 The next three models move from isolated information sources to combined pathways. Here the goal is to evaluate whether integrating genomic and phenomic information improves predictive performance before weather-derived information is introduced. Conceptually, this group helps the reader compare single-source models against multi-source models while keeping the weather component out of the equation.
 
 ```{r eta-list-models-7-9}
-Eta_list[[7]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZG,   model = "RKHS"),
-                       list(K = ZP,   model = "RKHS"),
-                       list(K = ZGZE, model = "RKHS"),
-                       list(K = ZPZE, model = "RKHS"))
+Eta_list[[7]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZG,   model = "RKHS"),
+  list(K = ZP,   model = "RKHS"),
+  list(K = ZGZE, model = "RKHS"),
+  list(K = ZPZE, model = "RKHS")
+)
 
-Eta_list[[8]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = GGK,  model = "RKHS"),
-                       list(K = PGK,  model = "RKHS"),
-                       list(K = GGKE, model = "RKHS"),
-                       list(K = PGKE, model = "RKHS"))
+Eta_list[[8]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = GGK,  model = "RKHS"),
+  list(K = PGK,  model = "RKHS"),
+  list(K = GGKE, model = "RKHS"),
+  list(K = PGKE, model = "RKHS")
+)
 
-Eta_list[[9]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = GAK,  model = "RKHS"),
-                       list(K = PAK,  model = "RKHS"),
-                       list(K = GAKE, model = "RKHS"),
-                       list(K = PAKE, model = "RKHS"))
+Eta_list[[9]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = GAK,  model = "RKHS"),
+  list(K = PAK,  model = "RKHS"),
+  list(K = GAKE, model = "RKHS"),
+  list(K = PAKE, model = "RKHS")
+)
 ```
 
 ### 6.4 Models 10 to 12: weather-augmented linear pathways
@@ -235,26 +253,32 @@ Eta_list[[9]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
 Models 10 to 12 introduce weather-derived information into the prediction structure. At this point, the comparison is no longer restricted to genomic and phenomic sources alone. The purpose of this group is to show how prediction changes when climatic similarity is incorporated together with linear genomic or phenomic relationships and their interactions.
 
 ```{r eta-list-models-10-12}
-Eta_list[[10]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZW,   model = "RKHS"),
-                       list(K = ZG,   model = "RKHS"),
-                       list(K = ZGZE, model = "RKHS"),
-                       list(K = ZGZW, model = "RKHS"))
+Eta_list[[10]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZW,   model = "RKHS"),
+  list(K = ZG,   model = "RKHS"),
+  list(K = ZGZE, model = "RKHS"),
+  list(K = ZGZW, model = "RKHS")
+)
 
-Eta_list[[11]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZW,   model = "RKHS"),
-                       list(K = ZP,   model = "RKHS"),
-                       list(K = ZPZE, model = "RKHS"),
-                       list(K = ZPZW, model = "RKHS"))
+Eta_list[[11]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZW,   model = "RKHS"),
+  list(K = ZP,   model = "RKHS"),
+  list(K = ZPZE, model = "RKHS"),
+  list(K = ZPZW, model = "RKHS")
+)
 
-Eta_list[[12]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZW,   model = "RKHS"),
-                       list(K = ZG,   model = "RKHS"),
-                       list(K = ZP,   model = "RKHS"),
-                       list(K = ZGZE, model = "RKHS"),
-                       list(K = ZPZE, model = "RKHS"),
-                       list(K = ZGZW, model = "RKHS"),
-                       list(K = ZPZW, model = "RKHS"))
+Eta_list[[12]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZW,   model = "RKHS"),
+  list(K = ZG,   model = "RKHS"),
+  list(K = ZP,   model = "RKHS"),
+  list(K = ZGZE, model = "RKHS"),
+  list(K = ZPZE, model = "RKHS"),
+  list(K = ZGZW, model = "RKHS"),
+  list(K = ZPZW, model = "RKHS")
+)
 ```
 
 ### 6.5 Models 13 to 18: weather-augmented nonlinear pathways
@@ -262,47 +286,59 @@ Eta_list[[12]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
 The final six models extend the previous comparison by combining weather-derived information with nonlinear kernel structures. These models are important because they represent the most flexible specifications in the catalog. In practical terms, they allow the workflow to compare simpler linear formulations against richer nonlinear alternatives that may capture more complex similarity patterns among genotypes, phenomic profiles, and environments.
 
 ```{r eta-list-models-13-18}
-Eta_list[[13]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZW,   model = "RKHS"),
-                       list(K = GGK,  model = "RKHS"),
-                       list(K = GGKE, model = "RKHS"),
-                       list(K = GGKW, model = "RKHS"))
+Eta_list[[13]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZW,   model = "RKHS"),
+  list(K = GGK,  model = "RKHS"),
+  list(K = GGKE, model = "RKHS"),
+  list(K = GGKW, model = "RKHS")
+)
 
-Eta_list[[14]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZW,   model = "RKHS"),
-                       list(K = PGK,  model = "RKHS"),
-                       list(K = PGKE, model = "RKHS"),
-                       list(K = PGKW, model = "RKHS"))
+Eta_list[[14]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZW,   model = "RKHS"),
+  list(K = PGK,  model = "RKHS"),
+  list(K = PGKE, model = "RKHS"),
+  list(K = PGKW, model = "RKHS")
+)
 
-Eta_list[[15]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZW,   model = "RKHS"),
-                       list(K = GGK,  model = "RKHS"),
-                       list(K = PGK,  model = "RKHS"),
-                       list(K = GGKE, model = "RKHS"),
-                       list(K = PGKE, model = "RKHS"),
-                       list(K = GGKW, model = "RKHS"),
-                       list(K = PGKW, model = "RKHS"))
+Eta_list[[15]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZW,   model = "RKHS"),
+  list(K = GGK,  model = "RKHS"),
+  list(K = PGK,  model = "RKHS"),
+  list(K = GGKE, model = "RKHS"),
+  list(K = PGKE, model = "RKHS"),
+  list(K = GGKW, model = "RKHS"),
+  list(K = PGKW, model = "RKHS")
+)
 
-Eta_list[[16]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZW,   model = "RKHS"),
-                       list(K = GAK,  model = "RKHS"),
-                       list(K = GAKE, model = "RKHS"),
-                       list(K = GAKW, model = "RKHS"))
+Eta_list[[16]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZW,   model = "RKHS"),
+  list(K = GAK,  model = "RKHS"),
+  list(K = GAKE, model = "RKHS"),
+  list(K = GAKW, model = "RKHS")
+)
 
-Eta_list[[17]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZW,   model = "RKHS"),
-                       list(K = PAK,  model = "RKHS"),
-                       list(K = PAKE, model = "RKHS"),
-                       list(K = PAKW, model = "RKHS"))
+Eta_list[[17]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZW,   model = "RKHS"),
+  list(K = PAK,  model = "RKHS"),
+  list(K = PAKE, model = "RKHS"),
+  list(K = PAKW, model = "RKHS")
+)
 
-Eta_list[[18]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-                       list(K = ZW,   model = "RKHS"),
-                       list(K = GAK,  model = "RKHS"),
-                       list(K = PAK,  model = "RKHS"),
-                       list(K = GAKE, model = "RKHS"),
-                       list(K = PAKE, model = "RKHS"),
-                       list(K = GAKW, model = "RKHS"),
-                       list(K = PAKW, model = "RKHS"))
+Eta_list[[18]] <- list(
+  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+  list(K = ZW,   model = "RKHS"),
+  list(K = GAK,  model = "RKHS"),
+  list(K = PAK,  model = "RKHS"),
+  list(K = GAKE, model = "RKHS"),
+  list(K = PAKE, model = "RKHS"),
+  list(K = GAKW, model = "RKHS"),
+  list(K = PAKW, model = "RKHS")
+)
 ```
 
 ### 6.6 Final integrity check of the ETA list
