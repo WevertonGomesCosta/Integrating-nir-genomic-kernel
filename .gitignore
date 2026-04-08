@@ -1,18 +1,31 @@
+# R / RStudio
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+
+# Temporary / binary outputs
 *.tiff
 *.rar
 *.dat
+
+# Local scripts not meant for versioning
 *.R
 *.all.rds
+
+# Historical reference file kept outside active pipeline
 /analysis/analysis.Rmd
-/data/Article_documents
-/data/Maize-NIRS-GBS-main
+
+# External or heavy data folders
+/data/Article_documents/
+/data/Maize-NIRS-GBS-main/
+
+# Output tables generated during analysis
 /output/tables/prediction_cv1_cv2_raw.csv
 /output/tables/prediction_cv0_cv00_raw.csv
 /output/tables/prediction_cv1_cv2_by_rep_fold_env.csv
 /output/tables/prediction_cv0_cv00_by_rep_fold_env.csv
-/output/tables/pipeline_review
-/output/results/*.csv
+/output/tables/pipeline_review/
+
+# Prediction result CSVs generated anywhere under output/results
+/output/results/**/*.csv
