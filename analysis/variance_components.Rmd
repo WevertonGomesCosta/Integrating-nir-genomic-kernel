@@ -18,9 +18,6 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 The document starts by setting knitting options so that tables, code, and figures are displayed consistently throughout the tutorial.
 
-This chunk initializes the session and standard document options for the variance-component module.
-It ensures that the following analyses start from a controlled and reproducible environment.
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -76,9 +73,6 @@ First, we load the packages used to manipulate the data, fit the Bayesian models
 
 The next step loads the packages needed for reading the saved artifacts, reshaping the results, plotting summaries, and running the heavy estimation stage when required.
 
-This chunk loads the packages used for model fitting, data manipulation, tabulation, and plotting.
-Bringing them together here makes the structure of the module easier to understand.
-
 ```{r load-packages}
 library(dplyr)
 library(tidyr)
@@ -104,9 +98,6 @@ All kernels and phenotypic objects are expected to be available in `output/Matri
 
 The following lines define the project directories used to find matrices, store outputs, and organize the saved variance-component files.
 
-This chunk defines the folders used to read the matrices and to save the variance-component outputs.
-Making the paths explicit clarifies where the module receives inputs and where it writes results.
-
 ```{r define-paths}
 kernel_dir <- "output/Matrizes"
 results_dir <- "output/variance_components"
@@ -123,9 +114,6 @@ dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
 Before reading the files, we check whether the expected `.rds` objects are present in the matrices output folder. This makes the tutorial easier to follow because the script stops immediately if a required object is missing.
 
 Before moving into model definition or result processing, the script checks that the required input files and directories are available.
-
-This chunk verifies that all required matrices and supporting files are available. The goal is to
-stop early if the upstream modules have not produced the objects needed for this stage.
 
 ```{r input-checks}
 required_files <- c(
@@ -153,9 +141,6 @@ if (length(missing_files) > 0) {
 These vectors define how the variance components will appear in the final outputs. Keeping these labels visible in the main script helps the reader understand how internal model names are translated into article-ready labels.
 
 Here the script defines the labels and naming conventions that will be reused in tables, output files, and figures.
-
-This chunk defines the labels used to translate model components into readable output names. These
-labels are important because they make the saved variance summaries easier to interpret.
 
 ```{r labels-for-output}
 component_display <- c(
@@ -216,9 +201,6 @@ This section loads the matrices generated in `matrizes.Rmd`. These objects are t
 
 At this point, the script reads the matrices and kernels generated in the previous module so the variance-component models use the same aligned inputs as the prediction stage.
 
-This chunk restores the matrices and kernels that enter the variance-component models. Once loaded,
-these objects provide the full set of sources whose contributions will be summarized.
-
 ```{r load-matrices}
 ZG    <- readRDS(file.path(kernel_dir, "ZG.rds"))
 ZP    <- readRDS(file.path(kernel_dir, "ZP.rds"))
@@ -259,9 +241,6 @@ cat("Number of pedigrees:", length(Pedigree), "\n")
 Before fitting the models, it is important to verify that the kernels are square and aligned to the same observation order used in `Pheno`. In a tutorial context, this is an important check because many downstream errors are caused by mismatched row and column orders.
 
 The loaded kernels are then checked for compatibility in dimension and ordering before they are combined in the Bayesian models.
-
-This chunk performs structural checks to confirm that the loaded matrices are dimensionally aligned.
-These checks help ensure that the model components can be combined without hidden indexing problems.
 
 ```{r kernel-alignment-check}
 reference_ids <- Pheno$ObsID
@@ -347,10 +326,6 @@ kernel_inventory %>%
 Each model is defined as a list in the format required by the `ETA` argument of `BGLR`. The environment term (`E`) is included as a fixed-effect design matrix with `model = "BRR"`, while the kernels are fitted as random effects with `model = "RKHS"`.
 
 The reduced set of 18 Bayesian multi-kernel models is defined below in the form required for the variance-component workflow.
-
-This chunk defines the 18 model structures used for variance decomposition. It mirrors the model
-catalog used in prediction so that the interpretation of components remains consistent across
-modules.
 
 ```{r define-models}
 models <- list()
@@ -515,9 +490,6 @@ This table is useful both for internal checks and for linking figure labels to t
 
 The code below builds a compact model catalog linking each model identifier to its category and descriptive label for later summaries.
 
-This chunk builds a tabular description of the model catalog used in the variance analysis. The
-table serves as a guide when reading the summaries and figures produced later.
-
 ```{r model-catalog}
 model_info <- tibble(
   ModelID = 1:18,
@@ -571,9 +543,6 @@ These values define the Gibbs sampler used by `BGLR`. Adjust them here if a long
 
 This section defines the MCMC settings and execution controls that regulate the estimation stage when the heavy computation is turned on.
 
-This chunk records the MCMC settings and repetition controls used in the variance-component fits.
-These values define the computational plan for the decomposition stage.
-
 ```{r mcmc-parameters}
 nIter   <- 5000
 burnIn  <- 1000
@@ -584,12 +553,9 @@ traits  <- c("GY", "KW")
 
 ## 6. Running BGLR for Each Model
 
-This is the computationally expensive step of the workflow.
+This is the computationally expensive step. The chunk is kept with `eval=FALSE` so that the tutorial can be rendered without rerunning all Bayesian models every time. When you need updated variance components, change `eval` to `TRUE` and run the chunk.
 
-The next block contains the parallel estimation stage that fits the variance-component models, preserves the iterative BGLR artifacts in persistent folders, and saves the raw posterior summaries.
-
-This chunk fits the variance-component models and saves the raw BGLR artifacts needed for later
-consolidation. It is the computational core of the module.
+The next block contains the computationally expensive parallel estimation stage that fits the variance-component models, preserves the iterative BGLR artifacts in persistent folders, and saves the raw posterior summaries.
 
 ```{r parallel-run, eval=FALSE}
 numCores <- parallel::detectCores()
@@ -729,9 +695,6 @@ In the current version of the workflow, this is the section used most often. Ins
 
 The saved outputs produced by the estimation stage are consolidated below into a single structure that can be processed more easily later.
 
-This chunk gathers the saved outputs produced during model fitting and reorganizes them into
-analysis-ready tables. The purpose is to bridge the raw artifacts and the final summaries.
-
 ```{r consolidate-saved-results}
 rds_files <- list.files(
   path = bglr_runs_dir,
@@ -814,10 +777,6 @@ This section loads the consolidated results and prepares them for summarization.
 
 The document now loads the already consolidated variance-component results so that it can summarize and visualize them without repeating the expensive estimation.
 
-This chunk restores the consolidated variance results so the remaining sections can focus on
-processing and interpretation. This keeps the explanatory part of the document centered on the final
-outputs.
-
 ```{r load-results, error=TRUE}
 raw_file <- file.path(results_dir, "variance_components_all.rds")
 
@@ -845,10 +804,6 @@ cat("Number of rows in consolidated variance object:", nrow(all_variance), "\n")
 Now we average the posterior means across repetitions for each model, trait, and component. Then we convert the results to **percentages of total variance**, which makes the models directly comparable.
 
 The loaded results are then reshaped and annotated so that posterior means can be compared across traits, models, and component categories.
-
-This chunk calculates the processed summaries that express how much variance is attributed to each
-model component. These summaries turn the raw saved quantities into interpretable decomposition
-results.
 
 ```{r process-variance-components}
 variance_summary <- all_variance %>%
@@ -899,9 +854,6 @@ This table is helpful when you need a compact numerical summary for the manuscri
 
 The next table summarizes the relative contribution of each variance component across models.
 
-This chunk assembles the main tabular summary of the variance decomposition. The table provides a
-compact numerical view of the component contributions across models.
-
 ```{r summary-table}
 variance_table <- variance_summary %>%
   dplyr::select(Model, Trait, ComponentLabel, Percentage) %>%
@@ -930,9 +882,6 @@ The next figure summarizes the percentage contribution of each variance componen
 This figure should be read as a structural summary of the fitted models, not as direct proof that combining more data sources automatically leads to stronger biological complementarity or better predictive performance.
 
 The final figure turns the processed table into a compact visual summary for interpretation.
-
-This chunk builds the final figure that compares variance contributions across models and traits.
-The graphic helps interpret how the structure of each model redistributes the explained variance.
 
 ```{r variance-figure, fig.cap="Figure 3. Posterior mean percentage of total variance attributed to each model component across the 18 predictive models for grain yield (GY) and kernel weight (KW). Each stacked bar represents one model (Eta1-Eta18), averaged across repetitions, and colors identify the variance components included in the model structure. The weather kernel (W) and its associated interaction terms appear mainly in models Eta10-Eta18. Variance decomposition should be interpreted as a description of model structure and not automatically as evidence of stronger biological complementarity among information sources.", fig.height=10, fig.width=13}
 trait_labels <- c(

@@ -31,7 +31,7 @@ O contrato de execução usado aqui segue quatro regras operacionais:
 - a partição em folds é determinística para cada tarefa `MODEL × REP × TRAIT` e é reutilizada nos dois blocos de CV;
 - os arquivos de saída são organizados explicitamente por esquema de validação, ambiente quando aplicável, trait, repetição e fold, com o fold representado tanto na árvore de pastas quanto no nome do arquivo.
 
-A etapa completa de ajuste é preservada aqui para manter o fluxo íntegro. Quando a etapa de predição precisar ser rerodada, o código mostrado abaixo é a versão operacional usada pelo pipeline.
+Os chunks pesados de ajuste permanecem desativados por padrão no tutorial. Ainda assim, o código mostrado abaixo é a versão executável que deve ser usada quando a etapa de predição for rerodada.
 
 ## 2. Pacotes e caminhos do projeto
 
@@ -64,7 +64,6 @@ if (!dir.exists(file.path(project_root, "output"))) {
 }
 
 results_dir <- file.path(project_root, "output", "results")
-matrices_dir <- file.path(project_root, "output", "Matrizes")
 analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction")
 bglr_runs_dir <- file.path(results_dir, "bglr_runs")
 
@@ -79,19 +78,42 @@ dir.create(bglr_runs_dir, recursive = TRUE, showWarnings = FALSE)
 Esta seção reconstrói o ambiente de execução quando o arquivo é renderizado isoladamente. Ela segue o contrato de `analysis_prediction_pt.Rmd` e recria exatamente o conjunto reduzido de 18 objetos ETA definido na Parte I.
 
 ```{r load-required-objects, eval=FALSE}
+matrices_dir <- file.path(project_root, "output", "Matrizes")
+
+required_matrix_files <- c(
+  "Pheno.rds",
+  "ZG.rds", "ZP.rds", "ZE.rds", "ZW.rds",
+  "ZGZE.rds", "ZPZE.rds", "ZGZW.rds", "ZPZW.rds",
+  "GGK.rds", "PGK.rds", "GAK.rds", "PAK.rds",
+  "GGKE.rds", "PGKE.rds", "GAKE.rds", "PAKE.rds",
+  "GGKW.rds", "PGKW.rds", "GAKW.rds", "PAKW.rds"
+)
+
+required_matrix_paths <- file.path(matrices_dir, required_matrix_files)
+
+if (!all(file.exists(required_matrix_paths))) {
+  missing_matrix_files <- required_matrix_files[!file.exists(required_matrix_paths)]
+  stop(
+    paste0(
+      "Os objetos de execução exigidos por analysis_prediction_run_outputs não foram encontrados em output/Matrizes/. Arquivos ausentes: ",
+      paste(missing_matrix_files, collapse = ", ")
+    )
+  )
+}
+
 Pheno <- readRDS(file.path(matrices_dir, "Pheno.rds"))
-ZG <- readRDS(file.path(matrices_dir, "ZG.rds"))
-ZP <- readRDS(file.path(matrices_dir, "ZP.rds"))
-ZE <- readRDS(file.path(matrices_dir, "ZE.rds"))
-ZW <- readRDS(file.path(matrices_dir, "ZW.rds"))
+ZG   <- readRDS(file.path(matrices_dir, "ZG.rds"))
+ZP   <- readRDS(file.path(matrices_dir, "ZP.rds"))
+ZE   <- readRDS(file.path(matrices_dir, "ZE.rds"))
+ZW   <- readRDS(file.path(matrices_dir, "ZW.rds"))
 ZGZE <- readRDS(file.path(matrices_dir, "ZGZE.rds"))
 ZPZE <- readRDS(file.path(matrices_dir, "ZPZE.rds"))
 ZGZW <- readRDS(file.path(matrices_dir, "ZGZW.rds"))
 ZPZW <- readRDS(file.path(matrices_dir, "ZPZW.rds"))
-GGK <- readRDS(file.path(matrices_dir, "GGK.rds"))
-PGK <- readRDS(file.path(matrices_dir, "PGK.rds"))
-GAK <- readRDS(file.path(matrices_dir, "GAK.rds"))
-PAK <- readRDS(file.path(matrices_dir, "PAK.rds"))
+GGK  <- readRDS(file.path(matrices_dir, "GGK.rds"))
+PGK  <- readRDS(file.path(matrices_dir, "PGK.rds"))
+GAK  <- readRDS(file.path(matrices_dir, "GAK.rds"))
+PAK  <- readRDS(file.path(matrices_dir, "PAK.rds"))
 GGKE <- readRDS(file.path(matrices_dir, "GGKE.rds"))
 PGKE <- readRDS(file.path(matrices_dir, "PGKE.rds"))
 GAKE <- readRDS(file.path(matrices_dir, "GAKE.rds"))
@@ -101,35 +123,43 @@ PGKW <- readRDS(file.path(matrices_dir, "PGKW.rds"))
 GAKW <- readRDS(file.path(matrices_dir, "GAKW.rds"))
 PAKW <- readRDS(file.path(matrices_dir, "PAKW.rds"))
 
-if (!exists("Pedigree")) {
-  Pedigree <- unique(Pheno$Pedigree)
-}
+if (!exists("Pedigree")) Pedigree <- unique(Pheno$Pedigree)
 
 candidate_traits <- c("GY", "KW")
 traits_to_run <- candidate_traits[candidate_traits %in% names(Pheno)]
 if (length(traits_to_run) == 0) {
-  stop("None of the expected traits (GY, KW) were found in Pheno.")
+  stop("Nenhum dos traits esperados (GY, KW) foi encontrado em Pheno.")
 }
 
-if (!exists("nIter")) {
-  nIter <- 5000
-}
-if (!exists("burnIn")) {
-  burnIn <- 1000
-}
-if (!exists("thin")) {
-  thin <- 10
-}
-if (!exists("num_rep")) {
-  num_rep <- 10
-}
-if (!exists("n_cores")) {
-  n_cores <- max(1L, parallel::detectCores() - 1L)
-}
+if (!exists("nIter"))   nIter   <- 5000
+if (!exists("burnIn"))  burnIn  <- 1000
+if (!exists("thin"))    thin    <- 10
+if (!exists("num_rep")) num_rep <- 10
+if (!exists("n_cores")) n_cores <- max(1L, parallel::detectCores() - 1L)
 
 model_catalog <- data.frame(
   ModelNumber = 1:18,
   Model = paste0("Eta", 1:18),
+  ShortDescription = c(
+    "G + E",
+    "P + E",
+    "GGK + E",
+    "PGK + E",
+    "GAK + E",
+    "PAK + E",
+    "G+P + E",
+    "GGK+PGK + E",
+    "GAK+PAK + E",
+    "G + W",
+    "P + W",
+    "G+P + W",
+    "GGK + W",
+    "PGK + W",
+    "GGK+PGK + W",
+    "GAK + W",
+    "PAK + W",
+    "GAK+PAK + W"
+  ),
   Description = c(
     "E + G + GE",
     "E + P + PE",
@@ -150,135 +180,71 @@ model_catalog <- data.frame(
     "E + W + PAK + PAKE + PAKW",
     "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
   ),
+  FullEffects = c(
+    "E + G + GE",
+    "E + P + PE",
+    "E + GGK + GGKE",
+    "E + PGK + PGKE",
+    "E + GAK + GAKE",
+    "E + PAK + PAKE",
+    "E + G + P + GE + PE",
+    "E + GGK + PGK + GGKE + PGKE",
+    "E + GAK + PAK + GAKE + PAKE",
+    "E + W + G + GE + GW",
+    "E + W + P + PE + PW",
+    "E + W + G + P + GE + PE + GW + PW",
+    "E + W + GGK + GGKE + GGKW",
+    "E + W + PGK + PGKE + PGKW",
+    "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    "E + W + GAK + GAKE + GAKW",
+    "E + W + PAK + PAKE + PAKW",
+    "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+  ),
+  InterpretiveDescription = c(
+    "Modelo genômico linear com ambiente e interação G × E",
+    "Modelo fenômico linear com ambiente e interação P × E",
+    "Modelo genômico Gaussiano com ambiente e interação GGK × E",
+    "Modelo fenômico Gaussiano com ambiente e interação PGK × E",
+    "Modelo genômico arc-cosine com ambiente e interação GAK × E",
+    "Modelo fenômico arc-cosine com ambiente e interação PAK × E",
+    "Modelo combinado linear com ambiente, GE e PE",
+    "Modelo combinado Gaussiano com ambiente, GGKE e PGKE",
+    "Modelo combinado arc-cosine com ambiente, GAKE e PAKE",
+    "Modelo genômico linear com ambiente, clima, GE e GW",
+    "Modelo fenômico linear com ambiente, clima, PE e PW",
+    "Modelo combinado linear com ambiente, clima, GE, PE, GW e PW",
+    "Modelo genômico Gaussiano com ambiente, clima, GGKE e GGKW",
+    "Modelo fenômico Gaussiano com ambiente, clima, PGKE e PGKW",
+    "Modelo combinado Gaussiano com ambiente, clima, GGKE, PGKE, GGKW e PGKW",
+    "Modelo genômico arc-cosine com ambiente, clima, GAKE e GAKW",
+    "Modelo fenômico arc-cosine com ambiente, clima, PAKE e PAKW",
+    "Modelo combinado arc-cosine com ambiente, clima, GAKE, PAKE, GAKW e PAKW"
+  ),
   stringsAsFactors = FALSE
 )
 
 env_design <- model.matrix(~ Pheno$Env - 1)
 
 Eta_list <- vector("list", 18)
-Eta_list[[1]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZG,   model = "RKHS"),
-  list(K = ZGZE, model = "RKHS")
-)
-Eta_list[[2]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZP,   model = "RKHS"),
-  list(K = ZPZE, model = "RKHS")
-)
-Eta_list[[3]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = GGK,  model = "RKHS"),
-  list(K = GGKE, model = "RKHS")
-)
-Eta_list[[4]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = PGK,  model = "RKHS"),
-  list(K = PGKE, model = "RKHS")
-)
-Eta_list[[5]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = GAK,  model = "RKHS"),
-  list(K = GAKE, model = "RKHS")
-)
-Eta_list[[6]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = PAK,  model = "RKHS"),
-  list(K = PAKE, model = "RKHS")
-)
-Eta_list[[7]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZG,   model = "RKHS"),
-  list(K = ZP,   model = "RKHS"),
-  list(K = ZGZE, model = "RKHS"),
-  list(K = ZPZE, model = "RKHS")
-)
-Eta_list[[8]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = GGK,  model = "RKHS"),
-  list(K = PGK,  model = "RKHS"),
-  list(K = GGKE, model = "RKHS"),
-  list(K = PGKE, model = "RKHS")
-)
-Eta_list[[9]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = GAK,  model = "RKHS"),
-  list(K = PAK,  model = "RKHS"),
-  list(K = GAKE, model = "RKHS"),
-  list(K = PAKE, model = "RKHS")
-)
-Eta_list[[10]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = ZG,   model = "RKHS"),
-  list(K = ZGZE, model = "RKHS"),
-  list(K = ZGZW, model = "RKHS")
-)
-Eta_list[[11]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = ZP,   model = "RKHS"),
-  list(K = ZPZE, model = "RKHS"),
-  list(K = ZPZW, model = "RKHS")
-)
-Eta_list[[12]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = ZG,   model = "RKHS"),
-  list(K = ZP,   model = "RKHS"),
-  list(K = ZGZE, model = "RKHS"),
-  list(K = ZPZE, model = "RKHS"),
-  list(K = ZGZW, model = "RKHS"),
-  list(K = ZPZW, model = "RKHS")
-)
-Eta_list[[13]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = GGK,  model = "RKHS"),
-  list(K = GGKE, model = "RKHS"),
-  list(K = GGKW, model = "RKHS")
-)
-Eta_list[[14]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = PGK,  model = "RKHS"),
-  list(K = PGKE, model = "RKHS"),
-  list(K = PGKW, model = "RKHS")
-)
-Eta_list[[15]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = GGK,  model = "RKHS"),
-  list(K = PGK,  model = "RKHS"),
-  list(K = GGKE, model = "RKHS"),
-  list(K = PGKE, model = "RKHS"),
-  list(K = GGKW, model = "RKHS"),
-  list(K = PGKW, model = "RKHS")
-)
-Eta_list[[16]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = GAK,  model = "RKHS"),
-  list(K = GAKE, model = "RKHS"),
-  list(K = GAKW, model = "RKHS")
-)
-Eta_list[[17]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = PAK,  model = "RKHS"),
-  list(K = PAKE, model = "RKHS"),
-  list(K = PAKW, model = "RKHS")
-)
-Eta_list[[18]] <- list(
-  list(X = env_design, model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = GAK,  model = "RKHS"),
-  list(K = PAK,  model = "RKHS"),
-  list(K = GAKE, model = "RKHS"),
-  list(K = PAKE, model = "RKHS"),
-  list(K = GAKW, model = "RKHS"),
-  list(K = PAKW, model = "RKHS")
-)
+Eta_list[[1]]  <- list(list(X = env_design, model = "BRR"), list(K = ZG, model = "RKHS"), list(K = ZGZE, model = "RKHS"))
+Eta_list[[2]]  <- list(list(X = env_design, model = "BRR"), list(K = ZP, model = "RKHS"), list(K = ZPZE, model = "RKHS"))
+Eta_list[[3]]  <- list(list(X = env_design, model = "BRR"), list(K = GGK, model = "RKHS"), list(K = GGKE, model = "RKHS"))
+Eta_list[[4]]  <- list(list(X = env_design, model = "BRR"), list(K = PGK, model = "RKHS"), list(K = PGKE, model = "RKHS"))
+Eta_list[[5]]  <- list(list(X = env_design, model = "BRR"), list(K = GAK, model = "RKHS"), list(K = GAKE, model = "RKHS"))
+Eta_list[[6]]  <- list(list(X = env_design, model = "BRR"), list(K = PAK, model = "RKHS"), list(K = PAKE, model = "RKHS"))
+Eta_list[[7]]  <- list(list(X = env_design, model = "BRR"), list(K = ZG, model = "RKHS"), list(K = ZP, model = "RKHS"), list(K = ZGZE, model = "RKHS"), list(K = ZPZE, model = "RKHS"))
+Eta_list[[8]]  <- list(list(X = env_design, model = "BRR"), list(K = GGK, model = "RKHS"), list(K = PGK, model = "RKHS"), list(K = GGKE, model = "RKHS"), list(K = PGKE, model = "RKHS"))
+Eta_list[[9]]  <- list(list(X = env_design, model = "BRR"), list(K = GAK, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = GAKE, model = "RKHS"), list(K = PAKE, model = "RKHS"))
+Eta_list[[10]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = ZG, model = "RKHS"), list(K = ZGZE, model = "RKHS"), list(K = ZGZW, model = "RKHS"))
+Eta_list[[11]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = ZP, model = "RKHS"), list(K = ZPZE, model = "RKHS"), list(K = ZPZW, model = "RKHS"))
+Eta_list[[12]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = ZG, model = "RKHS"), list(K = ZP, model = "RKHS"), list(K = ZGZE, model = "RKHS"), list(K = ZPZE, model = "RKHS"), list(K = ZGZW, model = "RKHS"), list(K = ZPZW, model = "RKHS"))
+Eta_list[[13]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GGK, model = "RKHS"), list(K = GGKE, model = "RKHS"), list(K = GGKW, model = "RKHS"))
+Eta_list[[14]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = PGK, model = "RKHS"), list(K = PGKE, model = "RKHS"), list(K = PGKW, model = "RKHS"))
+Eta_list[[15]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GGK, model = "RKHS"), list(K = PGK, model = "RKHS"), list(K = GGKE, model = "RKHS"), list(K = PGKE, model = "RKHS"), list(K = GGKW, model = "RKHS"), list(K = PGKW, model = "RKHS"))
+Eta_list[[16]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GAK, model = "RKHS"), list(K = GAKE, model = "RKHS"), list(K = GAKW, model = "RKHS"))
+Eta_list[[17]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = PAKE, model = "RKHS"), list(K = PAKW, model = "RKHS"))
+Eta_list[[18]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GAK, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = GAKE, model = "RKHS"), list(K = PAKE, model = "RKHS"), list(K = GAKW, model = "RKHS"), list(K = PAKW, model = "RKHS"))
+
 ```
 
 
@@ -316,7 +282,7 @@ parallel::clusterEvalQ(cl, {
   NULL
 })
 
-cat("Running on ", useCores, " cores.")
+cat("Rodando em ", useCores, " núcleos.")
 ```
 
 
@@ -482,7 +448,7 @@ foreach(i = seq_len(nrow(combos)),
       run_dir <- file.path(bglr_runs_dir, "CV0", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
       dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
-      save_prefix_env <- file.path(run_dir, paste0("CV0_", TRAIT, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
+      save_prefix_env <- file.path(run_dir, paste0("CV0_", env_name, "_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
       y_t <- as.numeric(yield2$Y2)
       start_time <- Sys.time()
@@ -635,7 +601,7 @@ output_examples <- bind_rows(
       "CV2/KW/rep10/fold05/CV2_KW_Eta18_rep10_fold05.csv"
     ),
     bglr_example = c(
-      "bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GE_RKHS_varU.dat",
+      "bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GxE_RKHS_varU.dat",
       "bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat"
     ),
     Meaning = c(
@@ -650,8 +616,8 @@ output_examples <- bind_rows(
       "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
     ),
     bglr_example = c(
-      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_GY_CS11_WS_Eta1_rep01_fold01_GW_RKHS_varU.dat",
-      "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_KW_CS12_WW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GxW_RKHS_varU.dat",
+      "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
     ),
     Meaning = c(
       "Acurácia preditiva para CV0, trait GY, ambiente retirado CS11_WS, modelo Eta1, repetição 1, fold 1.",

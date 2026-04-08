@@ -59,10 +59,6 @@ Before defining any prediction model, it is useful to begin from a clean and rep
 
 At this stage, the emphasis is still on organization rather than execution. The prediction models are introduced, compared, and translated into their ETA structures, but the expensive fitting routine is left for the execution module. For that reason, the setup here is intentionally minimal. Scientific notation is turned off to improve readability of printed values, the workspace is cleared so that the objects used later in the file are those explicitly loaded from the pipeline outputs, and the `parallel` package is declared because the number of processor cores is already defined at this stage.
 
-This chunk initializes a clean R session and loads the basic package needed to define computational
-resources. The goal is to ensure that the prediction setup starts from explicit inputs rather than
-from objects left in memory.
-
 ```{r setup}
 rm(list = ls())
 options(scipen = 999)
@@ -77,10 +73,6 @@ The prediction analysis starts from the matrices and kernels already generated i
 These objects represent different parts of the problem. `Pheno` contains the observation-level structure of the study, including traits, genotypes, and environments. `ZG` and `ZP` represent the linear genomic and phenomic relationships. `ZE` represents the categorical environment structure, whereas `ZW` carries the weather-derived information. The remaining objects correspond to interactions and nonlinear kernels that allow the comparison of simpler and more flexible prediction models.
 
 Reading these objects directly from `output/Matrizes/` is important for two reasons. First, it keeps the workflow reproducible by making prediction depend on artifacts already created in the previous stage. Second, it allows the reader to see how the prediction module is connected to the harmonization and kernel-construction module.
-
-This chunk reads the matrices and kernels produced in the previous module. Together, these objects
-provide the complete set of inputs needed to describe the prediction models without rebuilding them
-from scratch.
 
 ```{r load-inputs}
 Pheno <- readRDS("output/Matrizes/Pheno.rds")
@@ -119,10 +111,6 @@ Once the inputs are available, the next step is to define the computational sett
 
 The MCMC settings (`nIter`, `burnIn`, and `thin`) define how the Bayesian estimation is run. The number of repetitions (`num_rep`) controls how many independent partitions will later be used in the validation schemes. The number of processor cores (`n_cores`) is recorded here because the execution module can use parallel computation when the expensive prediction stage is activated.
 
-This chunk records the MCMC controls and the repetition structure that will govern the execution
-stage. These values define the computational scope of the prediction workflow and make the fitting
-plan explicit before any model is run.
-
 ```{r mcmc-settings}
 nIter <- 5000
 burnIn <- 1000
@@ -144,13 +132,30 @@ The prediction stage does not compare a single specification. Instead, it evalua
 
 The table below should be read as a map of the modeling strategy adopted in the study. Each row identifies one model, gives it a stable label, and summarizes its main composition. These labels will be used again in the execution step, in the output files, and later in the visualization module. For that reason, understanding the catalog here makes the rest of the prediction workflow much easier to follow.
 
-This chunk creates a compact catalog of the 18 models compared in the study. The table works as a
-roadmap that links each Eta label to its biological and statistical composition.
-
 ```{r model-catalog}
 model_catalog <- data.frame(
   ModelNumber = 1:18,
   Model = paste0("Eta", 1:18),
+  ShortDescription = c(
+    "G + E",
+    "P + E",
+    "GGK + E",
+    "PGK + E",
+    "GAK + E",
+    "PAK + E",
+    "G+P + E",
+    "GGK+PGK + E",
+    "GAK+PAK + E",
+    "G + W",
+    "P + W",
+    "G+P + W",
+    "GGK + W",
+    "PGK + W",
+    "GGK+PGK + W",
+    "GAK + W",
+    "PAK + W",
+    "GAK+PAK + W"
+  ),
   Description = c(
     "E + G + GE",
     "E + P + PE",
@@ -171,6 +176,46 @@ model_catalog <- data.frame(
     "E + W + PAK + PAKE + PAKW",
     "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
   ),
+  FullEffects = c(
+    "E + G + GE",
+    "E + P + PE",
+    "E + GGK + GGKE",
+    "E + PGK + PGKE",
+    "E + GAK + GAKE",
+    "E + PAK + PAKE",
+    "E + G + P + GE + PE",
+    "E + GGK + PGK + GGKE + PGKE",
+    "E + GAK + PAK + GAKE + PAKE",
+    "E + W + G + GE + GW",
+    "E + W + P + PE + PW",
+    "E + W + G + P + GE + PE + GW + PW",
+    "E + W + GGK + GGKE + GGKW",
+    "E + W + PGK + PGKE + PGKW",
+    "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    "E + W + GAK + GAKE + GAKW",
+    "E + W + PAK + PAKE + PAKW",
+    "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+  ),
+  InterpretiveDescription = c(
+    "Linear genomic model with environment and G × E interaction",
+    "Linear phenomic model with environment and P × E interaction",
+    "Gaussian genomic model with environment and GGK × E interaction",
+    "Gaussian phenomic model with environment and PGK × E interaction",
+    "Arc-cosine genomic model with environment and GAK × E interaction",
+    "Arc-cosine phenomic model with environment and PAK × E interaction",
+    "Linear combined genomic + phenomic model with environment, GE, and PE",
+    "Gaussian combined genomic + phenomic model with environment, GGKE, and PGKE",
+    "Arc-cosine combined genomic + phenomic model with environment, GAKE, and PAKE",
+    "Linear genomic-weather model with environment, weather, GE, and GW",
+    "Linear phenomic-weather model with environment, weather, PE, and PW",
+    "Linear combined genomic + phenomic + weather model with GE, PE, GW, and PW",
+    "Gaussian genomic-weather model with environment, weather, GGKE, and GGKW",
+    "Gaussian phenomic-weather model with environment, weather, PGKE, and PGKW",
+    "Gaussian combined genomic + phenomic + weather model with GGKE, PGKE, GGKW, and PGKW",
+    "Arc-cosine genomic-weather model with environment, weather, GAKE, and GAKW",
+    "Arc-cosine phenomic-weather model with environment, weather, PAKE, and PAKW",
+    "Arc-cosine combined genomic + phenomic + weather model with GAKE, PAKE, GAKW, and PAKW"
+  ),
   stringsAsFactors = FALSE
 )
 
@@ -187,10 +232,6 @@ This part of the tutorial is important because it connects the biological meanin
 
 The first step is simply to create the object that will hold all model specifications. Starting with an empty container makes it easier to add the models one group at a time and to keep the final structure aligned with the catalog presented above.
 
-This chunk creates the container that will store all ETA specifications. Starting from an empty
-object makes it easier to add models in small groups and to keep the final structure aligned with
-the catalog.
-
 ```{r eta-list-initialize}
 Eta_list <- list()
 ```
@@ -199,187 +240,134 @@ Eta_list <- list()
 
 The first six models establish the basic comparison framework of the study. In all of them, the categorical effect of environment is retained, and this environmental baseline is then combined with one main source of biological information and its corresponding interaction with environment. These models are useful because they show how prediction behaves when genomic, phenomic, or kernel-based information is considered separately rather than in integrated form.
 
-This chunk defines the first six models, each combining the environmental baseline with one primary
-information source and its interaction with environment. These models establish the simplest
-comparison paths in the study.
-
 ```{r eta-list-models-1-6}
-Eta_list[[1]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZG,   model = "RKHS"),
-  list(K = ZGZE, model = "RKHS")
-)
+Eta_list[[1]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZG,   model = "RKHS"),
+                       list(K = ZGZE, model = "RKHS"))
 
-Eta_list[[2]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZP,   model = "RKHS"),
-  list(K = ZPZE, model = "RKHS")
-)
+Eta_list[[2]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZP,   model = "RKHS"),
+                       list(K = ZPZE, model = "RKHS"))
 
-Eta_list[[3]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = GGK,  model = "RKHS"),
-  list(K = GGKE, model = "RKHS")
-)
+Eta_list[[3]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = GGK,  model = "RKHS"),
+                       list(K = GGKE, model = "RKHS"))
 
-Eta_list[[4]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = PGK,  model = "RKHS"),
-  list(K = PGKE, model = "RKHS")
-)
+Eta_list[[4]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = PGK,  model = "RKHS"),
+                       list(K = PGKE, model = "RKHS"))
 
-Eta_list[[5]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = GAK,  model = "RKHS"),
-  list(K = GAKE, model = "RKHS")
-)
+Eta_list[[5]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = GAK,  model = "RKHS"),
+                       list(K = GAKE, model = "RKHS"))
 
-Eta_list[[6]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = PAK,  model = "RKHS"),
-  list(K = PAKE, model = "RKHS")
-)
+Eta_list[[6]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = PAK,  model = "RKHS"),
+                       list(K = PAKE, model = "RKHS"))
 ```
 
 ### 6.3 Models 7 to 9: integrated genomic and phenomic pathways without `W`
 
 The next three models move from isolated information sources to combined pathways. Here the goal is to evaluate whether integrating genomic and phenomic information improves predictive performance before weather-derived information is introduced. Conceptually, this group helps the reader compare single-source models against multi-source models while keeping the weather component out of the equation.
 
-This chunk defines the integrated models that combine genomic and phenomic information without the
-weather kernel. They expand the comparison from single-source models to joint biological pathways.
-
 ```{r eta-list-models-7-9}
-Eta_list[[7]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZG,   model = "RKHS"),
-  list(K = ZP,   model = "RKHS"),
-  list(K = ZGZE, model = "RKHS"),
-  list(K = ZPZE, model = "RKHS")
-)
+Eta_list[[7]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZG,   model = "RKHS"),
+                       list(K = ZP,   model = "RKHS"),
+                       list(K = ZGZE, model = "RKHS"),
+                       list(K = ZPZE, model = "RKHS"))
 
-Eta_list[[8]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = GGK,  model = "RKHS"),
-  list(K = PGK,  model = "RKHS"),
-  list(K = GGKE, model = "RKHS"),
-  list(K = PGKE, model = "RKHS")
-)
+Eta_list[[8]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = GGK,  model = "RKHS"),
+                       list(K = PGK,  model = "RKHS"),
+                       list(K = GGKE, model = "RKHS"),
+                       list(K = PGKE, model = "RKHS"))
 
-Eta_list[[9]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = GAK,  model = "RKHS"),
-  list(K = PAK,  model = "RKHS"),
-  list(K = GAKE, model = "RKHS"),
-  list(K = PAKE, model = "RKHS")
-)
+Eta_list[[9]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = GAK,  model = "RKHS"),
+                       list(K = PAK,  model = "RKHS"),
+                       list(K = GAKE, model = "RKHS"),
+                       list(K = PAKE, model = "RKHS"))
 ```
 
 ### 6.4 Models 10 to 12: weather-augmented linear pathways
 
 Models 10 to 12 introduce weather-derived information into the prediction structure. At this point, the comparison is no longer restricted to genomic and phenomic sources alone. The purpose of this group is to show how prediction changes when climatic similarity is incorporated together with linear genomic or phenomic relationships and their interactions.
 
-This chunk adds models that include the weather-derived kernel together with linear genomic and
-phenomic information. These specifications are useful for evaluating whether weather improves
-prediction beyond the main biological effects.
-
 ```{r eta-list-models-10-12}
-Eta_list[[10]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = ZG,   model = "RKHS"),
-  list(K = ZGZE, model = "RKHS"),
-  list(K = ZGZW, model = "RKHS")
-)
+Eta_list[[10]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = ZG,   model = "RKHS"),
+                       list(K = ZGZE, model = "RKHS"),
+                       list(K = ZGZW, model = "RKHS"))
 
-Eta_list[[11]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = ZP,   model = "RKHS"),
-  list(K = ZPZE, model = "RKHS"),
-  list(K = ZPZW, model = "RKHS")
-)
+Eta_list[[11]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = ZP,   model = "RKHS"),
+                       list(K = ZPZE, model = "RKHS"),
+                       list(K = ZPZW, model = "RKHS"))
 
-Eta_list[[12]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = ZG,   model = "RKHS"),
-  list(K = ZP,   model = "RKHS"),
-  list(K = ZGZE, model = "RKHS"),
-  list(K = ZPZE, model = "RKHS"),
-  list(K = ZGZW, model = "RKHS"),
-  list(K = ZPZW, model = "RKHS")
-)
+Eta_list[[12]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = ZG,   model = "RKHS"),
+                       list(K = ZP,   model = "RKHS"),
+                       list(K = ZGZE, model = "RKHS"),
+                       list(K = ZPZE, model = "RKHS"),
+                       list(K = ZGZW, model = "RKHS"),
+                       list(K = ZPZW, model = "RKHS"))
 ```
 
 ### 6.5 Models 13 to 18: weather-augmented nonlinear pathways
 
 The final six models extend the previous comparison by combining weather-derived information with nonlinear kernel structures. These models are important because they represent the most flexible specifications in the catalog. In practical terms, they allow the workflow to compare simpler linear formulations against richer nonlinear alternatives that may capture more complex similarity patterns among genotypes, phenomic profiles, and environments.
 
-This chunk completes the catalog with weather-augmented nonlinear kernels and their interactions.
-These models represent the most flexible structures considered in the prediction study.
-
 ```{r eta-list-models-13-18}
-Eta_list[[13]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = GGK,  model = "RKHS"),
-  list(K = GGKE, model = "RKHS"),
-  list(K = GGKW, model = "RKHS")
-)
+Eta_list[[13]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = GGK,  model = "RKHS"),
+                       list(K = GGKE, model = "RKHS"),
+                       list(K = GGKW, model = "RKHS"))
 
-Eta_list[[14]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = PGK,  model = "RKHS"),
-  list(K = PGKE, model = "RKHS"),
-  list(K = PGKW, model = "RKHS")
-)
+Eta_list[[14]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = PGK,  model = "RKHS"),
+                       list(K = PGKE, model = "RKHS"),
+                       list(K = PGKW, model = "RKHS"))
 
-Eta_list[[15]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = GGK,  model = "RKHS"),
-  list(K = PGK,  model = "RKHS"),
-  list(K = GGKE, model = "RKHS"),
-  list(K = PGKE, model = "RKHS"),
-  list(K = GGKW, model = "RKHS"),
-  list(K = PGKW, model = "RKHS")
-)
+Eta_list[[15]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = GGK,  model = "RKHS"),
+                       list(K = PGK,  model = "RKHS"),
+                       list(K = GGKE, model = "RKHS"),
+                       list(K = PGKE, model = "RKHS"),
+                       list(K = GGKW, model = "RKHS"),
+                       list(K = PGKW, model = "RKHS"))
 
-Eta_list[[16]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = GAK,  model = "RKHS"),
-  list(K = GAKE, model = "RKHS"),
-  list(K = GAKW, model = "RKHS")
-)
+Eta_list[[16]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = GAK,  model = "RKHS"),
+                       list(K = GAKE, model = "RKHS"),
+                       list(K = GAKW, model = "RKHS"))
 
-Eta_list[[17]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = PAK,  model = "RKHS"),
-  list(K = PAKE, model = "RKHS"),
-  list(K = PAKW, model = "RKHS")
-)
+Eta_list[[17]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = PAK,  model = "RKHS"),
+                       list(K = PAKE, model = "RKHS"),
+                       list(K = PAKW, model = "RKHS"))
 
-Eta_list[[18]] <- list(
-  list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
-  list(K = ZW,   model = "RKHS"),
-  list(K = GAK,  model = "RKHS"),
-  list(K = PAK,  model = "RKHS"),
-  list(K = GAKE, model = "RKHS"),
-  list(K = PAKE, model = "RKHS"),
-  list(K = GAKW, model = "RKHS"),
-  list(K = PAKW, model = "RKHS")
-)
+Eta_list[[18]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = GAK,  model = "RKHS"),
+                       list(K = PAK,  model = "RKHS"),
+                       list(K = GAKE, model = "RKHS"),
+                       list(K = PAKE, model = "RKHS"),
+                       list(K = GAKW, model = "RKHS"),
+                       list(K = PAKW, model = "RKHS"))
 ```
 
 ### 6.6 Final integrity check of the ETA list
 
 Before moving to the validation design, it is useful to verify that the computational representation of the models is complete. This final check confirms that the number of ETA objects matches the number of models listed in the catalog. Keeping these two structures aligned is essential, because later steps assume that model labels, model numbers, and ETA specifications refer to the same ordered set of 18 models.
-
-This chunk verifies that the ETA catalog contains the expected number of models and that each
-position is filled. It is a simple structural check before moving to the validation design.
 
 ```{r eta-list-check}
 stopifnot(length(Eta_list) == nrow(model_catalog))
@@ -395,9 +383,6 @@ This section clarifies what is hidden in each validation scheme and what scienti
 ### 7.1 Validation scenarios and their scientific meaning
 
 The four validation schemes adopted in this study are summarized below. Each one corresponds to a different prediction target and therefore evaluates a different notion of generalization. Read this table as a map of the prediction questions that will later be implemented in the execution submodule.
-
-This chunk summarizes the validation scenarios used later in the execution module. The table helps
-the reader connect each scenario to the question it is designed to answer.
 
 ```{r cv-scenarios-table}
 cv_scenarios <- data.frame(
@@ -424,10 +409,6 @@ cv_scenarios
 
 The first two schemes focus on genotype-level uncertainty, but they are produced from the same fit. In `CV1`, all observations from the held-out genotypes are removed before fitting and the evaluation is performed on those omitted genotypes. In `CV2`, no additional masking is introduced; instead, the same fit is evaluated on the genotypes that remained in training. This difference matters because `CV1` measures extrapolation to unseen genotypes, whereas `CV2` measures in-sample recovery under exactly the same fold split.
 
-This chunk describes the first pair of validation schemes, in which prediction is evaluated across
-genotype partitions while environments remain represented in the training process. The code records
-the operational design that will later be executed.
-
 ```{r cv1-cv2-design}
 cv12_design <- data.frame(
   Scenario = c("CV1", "CV2"),
@@ -448,10 +429,6 @@ cv12_design
 ### 7.3 Prediction in environments that are not fully available during training
 
 The schemes `CV0` and `CV00` shift the difficulty from the genotype axis to the environment axis, but they are also generated from the same fit. First, the training response keeps only the genotypes assigned to the training portion of the fold. Then, an entire environment is masked and the model is refit under that leave-one-environment-out rule. `CV0` evaluates the genotypes that were already seen in other environments, whereas `CV00` evaluates the genotypes that were held out by the fold split. This distinction is essential because the second target combines both genotype novelty and environment novelty.
-
-This chunk describes the leave-one-environment-out pair of validation schemes. Here the emphasis
-shifts from genotype partitions to environmental extrapolation, which is a stricter prediction
-challenge.
 
 ```{r cv0-cv00-design}
 cvloo_design <- data.frame(
@@ -474,10 +451,6 @@ cvloo_design
 
 The prediction workflow now uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Final CSV summaries are written inside `output/results/` under scenario-specific folders, and the persistent `BGLR` fitting artifacts are written inside `output/results/bglr_runs/` using the same logical structure. Keeping this pattern explicit is important because the next modules use these paths to inventory, summarize, and visualize the results.
 
-This chunk documents the naming rules that will be used to save prediction outputs and BGLR
-artifacts. Keeping these patterns explicit helps maintain consistency across execution, inventory,
-and visualization.
-
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(
   Scenario = c("CV1", "CV2", "CV0", "CV00"),
@@ -488,10 +461,10 @@ prediction_file_patterns <- data.frame(
     "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
   ),
   ExampleBGLR = c(
-    "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GE_RKHS_varU.dat",
-    "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PW_RKHS_varU.dat",
-    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_GY_CS11_WS_Eta10_rep01_fold04_GW_RKHS_varU.dat",
-    "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_KW_CS12_WW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+    "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GxE_RKHS_varU.dat",
+    "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PxW_RKHS_varU.dat",
+    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_CS11_WS_GY_Eta10_rep01_fold04_GxW_RKHS_varU.dat",
+    "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
   ),
   stringsAsFactors = FALSE
 )

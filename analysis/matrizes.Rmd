@@ -18,9 +18,6 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 The knitting options below keep code, messages, and figures under a single presentation standard.
 
-This chunk initializes the document options used in the matrix-construction module. It prepares the
-session so that the remaining steps focus on the logic of building the analytical objects.
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -83,10 +80,6 @@ We first load the packages required for data handling, kernel construction, visu
 
 The packages below support matrix construction, data wrangling, kernel calculations, optimization, and plotting.
 
-This chunk loads the packages required for data manipulation, kernel construction, and matrix
-diagnostics. Bringing the dependencies together at the beginning clarifies the computational tools
-used throughout the module.
-
 ```{r load-libraries}
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -123,9 +116,6 @@ The `NIR.csv` file contains identifiers, environments, phenotypic traits, and th
 
 The code below reads the NIR data and prepares the phenomic input that will later be matched to the phenotypic and genomic records.
 
-This chunk reads the NIR data set that will support the phenomic representation of the genotypes. It
-establishes one of the main information sources used later in the kernels.
-
 ```{r load-nir-data}
 NIR <- fread("data/NIR.csv") %>% as.data.frame()
 
@@ -138,10 +128,6 @@ unique(NIR$Env)
 The genotype file contains one row per genotype and one column per marker. The first column (`taxa`) is the genotype identifier used to align genomic and phenotypic information.
 
 The code below reads the genomic marker data that provide the basis for the genomic kernels used in the downstream models.
-
-This chunk reads the genotypic data that will support the genomic representation of the same
-materials. Together with the NIR data, it forms the basis for parallel genomic and phenomic
-comparisons.
 
 ```{r load-genotypic-data}
 Geno <- fread("data/GAPIT.Genotype.Numerical.txt") %>% as.data.frame()
@@ -157,9 +143,6 @@ We also create an **observation identifier** (`ObsID`) combining environment and
 
 The code below assembles the phenotypic table that serves as the observation-level backbone for the aligned matrices.
 
-This chunk builds the phenotypic table that links observations, genotypes, environments, and traits.
-The resulting table acts as the central alignment structure for the matrices created below.
-
 ```{r build-pheno-table}
 Pheno <- NIR %>%
   dplyr::select(Pedigree, Env, GY, KW) %>%
@@ -174,10 +157,6 @@ head(Pheno)
 This is a critical validation step. The genomic file and the NIR/phenotypic file must refer to the same genotypes. If the IDs are not harmonized before matrix construction, every downstream kernel will be misaligned.
 
 The code below harmonizes genotype identifiers across data sources so that genomic, phenomic, and phenotypic information refer to the same materials.
-
-This chunk harmonizes the identifiers across phenotypic, genomic, and NIR sources. This alignment
-step is essential to ensure that all subsequent matrices refer to the same individuals in the same
-order.
 
 ```{r harmonize-genotypes}
 Pedigree <- intersect(Geno$taxa, NIR$Pedigree)
@@ -211,9 +190,6 @@ The kernel construction later uses environment-specific blocks. For that reason,
 
 The code below organizes the harmonized data by environment to support later checks of balance, overlap, and kernel construction.
 
-This chunk organizes the phenotypic records by environment. This makes it easier to create
-environment-aware matrices and to verify that the later interaction structures are well indexed.
-
 ```{r split-by-environment}
 a <- NIR %>% filter(Env == "CS11_WS") %>% arrange(Pedigree)
 b <- NIR %>% filter(Env == "CS11_WW") %>% arrange(Pedigree)
@@ -231,10 +207,6 @@ rownames(d) <- d$ObsID
 This object is informative for balanced-data checks and for interpreting the overlap across trials.
 
 The code below identifies the genotypes shared across environments, which is important for stable cross-environment alignment.
-
-This chunk identifies the genotypes shared across the environments considered in the study. This
-shared subset is important because several downstream matrices rely on common support across
-environments.
 
 ```{r shared-genotypes-all-envs}
 Pedigree_communs <- Reduce(
@@ -260,9 +232,6 @@ The practical steps are:
 5. Compute the linear kernel by the cross-product of the standardized marker matrix.
 
 The code below constructs the linear genomic kernel used as the basic genomic relationship representation in the pipeline.
-
-This chunk constructs the linear genomic incidence or relationship structure used in the prediction
-models. It provides the first explicit genomic matrix used downstream.
 
 ```{r build-zg}
 Geno <- Geno[order(Geno$taxa), ]
@@ -296,9 +265,6 @@ The phenomic kernel uses the NIR spectral bands. The same blockwise logic is use
 This kernel is useful because it summarizes spectral similarity among observations. At the same time, it should be interpreted with caution. NIR spectra can reflect strong physiological responses to the field conditions, so the phenomic kernel may capture part of the environmental signal in addition to genotype-related information.
 
 The code below constructs the linear phenomic kernel from the NIR information so it can be compared with the genomic and weather-based structures.
-
-This chunk constructs the linear phenomic incidence or relationship structure based on the NIR
-information. It mirrors the genomic pathway and allows direct genomic-versus-phenomic comparisons.
 
 ```{r build-zp}
 # Identify spectral variables defensively: keep only numeric columns and remove
@@ -349,9 +315,6 @@ This kernel assigns full environmental similarity to observations from the same 
 
 The code below builds the categorical environment matrix that represents the macro-environment effect separately from the weather-derived kernel.
 
-This chunk builds the environment design structure used to encode categorical environmental effects.
-This matrix provides the baseline environmental representation used in several models.
-
 ```{r build-ze}
 Pheno <- Pheno %>% arrange(match(ObsID, rownames(ZG)))
 
@@ -386,9 +349,6 @@ In the final reduced pipeline, `ZW` is used mainly in models `Eta10`-`Eta18`, to
 ### 9.1 Load climate files
 
 The code below reads the engineered climate outputs produced by the climate module so that the weather kernel can be constructed from saved files.
-
-This chunk reads the processed climatic files produced in the climate module. These files provide
-the environmental time-series summaries needed to build weather-derived covariates.
 
 ```{r load-climate-files}
 annual_ec_file <- "output/climate_results/environmental_covariates.csv"
@@ -460,10 +420,6 @@ The purpose of this step is to place heterogeneous environmental variables on a 
 
 The code below standardizes the climate covariates so that the weather variables are on a comparable scale before kernel construction.
 
-This chunk standardizes the climatic inputs before weather signatures are created. Standardization
-keeps the variables on comparable scales and avoids dominance by variables with larger numerical
-ranges.
-
 ```{r standardize-climate-data}
 annual_scaled <- ECs_annual %>%
   dplyr::select(all_of(annual_cols)) %>%
@@ -487,9 +443,6 @@ daily_scaled <- ECs_expanded %>%
 For each year, we transform the daily weather trajectories into a single wide-row signature. This gives each year a reproducible vector representing its within-season weather profile.
 
 The code below derives the year-level weather signatures that summarize the standardized climate information for kernel building.
-
-This chunk aggregates the standardized climatic records into year-level or season-level signatures.
-These signatures are the basis for the weather structure used later in the pipeline.
 
 ```{r create-year-signatures}
 daily_signature_2011 <- daily_scaled %>%
@@ -522,9 +475,6 @@ annual_signature_2012 <- annual_scaled %>%
 Each observation inherits the climatic signature of the year associated with its environment. The 2011 environments receive the 2011 daily and annual signatures; the 2012 environments receive the 2012 signatures. Missing year-specific blocks are filled with `NA` and later replaced with zero so that the final matrix can be used in a cross-product.
 
 The code below constructs the weather kernel `W`, which complements rather than replaces the categorical environment structure.
-
-This chunk builds the weather matrix from the engineered climatic signatures. This object introduces
-an explicit weather-derived source of information into the model comparison.
 
 ```{r build-w}
 ids_a <- a$ObsID
@@ -633,9 +583,6 @@ Before building interactions and nonlinear kernels, we summarize the main linear
 
 The output below summarizes the basic linear kernels so the reader can verify dimensions, ranges, and general behavior before moving on.
 
-This chunk summarizes the dimensions and basic properties of the linear matrices constructed so far.
-It provides a compact checkpoint before moving to interaction and nonlinear kernels.
-
 ```{r kernel-summary-linear}
 reference_ids <- Pheno$ObsID
 
@@ -686,9 +633,6 @@ We inspect the same pedigree across matrices to verify that the stacked observat
 
 The checks below examine selected entries directly to confirm that the aligned matrices are behaving as expected.
 
-This chunk performs direct spot checks on selected matrices to verify ordering, dimensions, and
-basic consistency. These small inspections help catch structural problems before they propagate.
-
 ```{r spot-check}
 Geno.all[str_detect(rownames(Geno.all), "A188"), 1:5]
 W[str_detect(rownames(W), "A188"), 1:5]
@@ -700,10 +644,6 @@ NIR.all[str_detect(rownames(NIR.all), "A188"), 1:5]
 All checks below should return `TRUE`.
 
 The checks below test alignment among matrices and metadata so mismatches can be caught before the nonlinear kernels are built.
-
-This chunk runs additional alignment checks to confirm that the matrices and identifiers remain
-synchronized across data sources. It is an important quality-control step before interaction kernels
-are formed.
 
 ```{r alignment-tests}
 all(rownames(ZW) == colnames(ZW))
@@ -730,10 +670,6 @@ The interaction kernels are obtained through the Hadamard product (element-wise 
 
 The code below constructs the linear interaction kernels that link genomic or phenomic information with environment and weather structures.
 
-This chunk constructs the interaction matrices that connect genomic or phenomic information to
-environment and weather. These products are required to represent context-dependent biological
-effects in the prediction models.
-
 ```{r build-interactions}
 ZGZE <- ZG * ZEZE
 ZPZE <- ZP * ZEZE
@@ -755,17 +691,12 @@ The linear kernels above capture additive similarity. To explore nonlinear relat
 
 ### 12.1 Core mathematical function for the Gaussian kernel
 
-The next function is kept because it is part of the Gaussian-kernel method itself. To keep the tutorial readable, the code is written with explicit intermediate objects (`Kh`, `Uh`, `Sh`, `d`) so the reader can follow how the marginal-likelihood objective is built.
+The next function is kept because it is part of the Gaussian kernel estimation itself. We use it to optimize the bandwidth parameter by maximizing the marginal likelihood.
 
-Although it appears as a function, it is not a programming shortcut. It is the mathematical objective used to choose the Gaussian-kernel bandwidth.
-
-This chunk defines the Gaussian kernel functions used to generate nonlinear genomic and phenomic
-similarity structures. The goal is to make the kernel construction explicit before applying it to
-the data.
+The helper functions below are used to optimize and generate the nonlinear genomic and phenomic Gaussian kernels.
 
 ```{r gk-functions}
-# The objective below is the marginal-likelihood criterion used to select the Gaussian-kernel bandwidth.
-gaussian_kernel_objective <- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
+margh.fun <- function(theta, y, D, q, nu = 0.0001, Sc = 0.0001,
                       nuh = NULL, Sch = NULL, prior = NULL) {
   h <- theta[1]
   phi <- theta[2]
@@ -798,9 +729,6 @@ We first compute genomic distances among unique genotypes, then project them int
 
 The code below computes candidate genomic Gaussian-kernel values before the final bandwidth is fixed.
 
-This chunk prepares the genomic Gaussian kernel workflow and its tuning pathway. It establishes the
-nonlinear genomic similarity structure before the final version is fixed.
-
 ```{r ggk}
 DG <- (as.matrix(dist(Geno)))^2
 q05G <- quantile(DG, 0.05)
@@ -821,13 +749,10 @@ colnames(DG_proj) <- Pheno$ObsID
 
 The search below identifies the genomic Gaussian-kernel parameter that best matches the intended kernel behavior.
 
-This chunk identifies the tuning value used to obtain the final genomic Gaussian kernel. The tuning
-step is separated conceptually from the final object to keep the calibration process transparent.
-
 ```{r ggk-optimize, eval=FALSE}
 solG <- optim(
   c(1, 1),
-  gaussian_kernel_objective,
+  margh.fun,
   y = Pheno$GY,
   D = DG_proj,
   q = q05G,
@@ -839,18 +764,11 @@ solG <- optim(
 
 The code below reads and inspects the selected genomic Gaussian-kernel solution so the final object can be built explicitly.
 
-This chunk restores the selected genomic Gaussian kernel solution so the remainder of the document
-can work with the finalized object. This keeps the final workflow aligned with the chosen tuning
-result.
-
 ```{r ggk-read-solution, include=FALSE}
 solG <- readRDS("output/Matrizes/solG.RDS")
 ```
 
 The code below constructs the final genomic Gaussian kernel using the selected parameter value.
-
-This chunk stores the final genomic Gaussian kernel that will be used downstream. From this point
-onward, the nonlinear genomic similarity is treated as a stable analytical input.
 
 ```{r ggk-final}
 hG <- solG$par[1]
@@ -870,9 +788,6 @@ The phenomic Gaussian kernel uses Euclidean distances derived from the standardi
 As in the genomic Gaussian kernel, the optimization step in the current pipeline uses **GY as the reference trait**, and the resulting phenomic Gaussian kernel is then reused for both GY and KW.
 
 The code below computes candidate phenomic Gaussian-kernel values before the final bandwidth is selected.
-
-This chunk prepares the phenomic Gaussian kernel workflow and its tuning pathway. It mirrors the
-genomic Gaussian construction using the NIR-based representation.
 
 ```{r pgk}
 DP <- (as.matrix(dist(NIR.all)))^2
@@ -894,13 +809,10 @@ colnames(DP_proj) <- IDs
 
 The search below identifies the phenomic Gaussian-kernel parameter used to define the final phenomic nonlinear kernel.
 
-This chunk identifies the tuning value used to obtain the final phenomic Gaussian kernel. The
-calibration step is kept explicit so the reader can distinguish tuning from the final kernel object.
-
 ```{r pgk-optimize, eval=FALSE}
 solP <- optim(
   c(1, 1),
-  gaussian_kernel_objective,
+  margh.fun,
   y = Pheno$GY,
   D = DP_proj,
   q = q05P,
@@ -912,17 +824,11 @@ solP <- optim(
 
 The code below reads and checks the selected phenomic Gaussian-kernel solution before final construction.
 
-This chunk restores the selected phenomic Gaussian kernel solution for downstream use. This allows
-the workflow to continue from the finalized phenomic kernel rather than from the tuning search.
-
 ```{r pgk-read-solution, include=FALSE}
 solP <- readRDS("output/Matrizes/solP.RDS")
 ```
 
 The code below builds the final phenomic Gaussian kernel with the chosen bandwidth.
-
-This chunk stores the final phenomic Gaussian kernel used in the remaining modules. It closes the
-Gaussian-kernel branch of the matrix-building workflow.
 
 ```{r pgk-final}
 hP <- solP$par[1]
@@ -939,10 +845,6 @@ PGK[1:5, 1:5]
 
 The code below generates the Gaussian-kernel interaction structures so the nonlinear kernels can also be combined with environment and weather information.
 
-This chunk builds the interaction kernels that combine the Gaussian similarities with environment
-and weather structures. These objects extend the nonlinear representation to context-specific
-relationships.
-
 ```{r interactions-gk}
 GGKE <- GGK * ZEZE
 PGKE <- PGK * ZEZE
@@ -958,11 +860,7 @@ In this tutorial we keep the mathematical functions below explicitly in the scri
 
 ### 13.1 Core mathematical functions for arc-cosine kernels
 
-The functions below define the arc-cosine kernels used to compute the additive nonlinear structures. They are kept explicit because they are part of the method itself. The goal here is to show each mathematical step with clearer names, not to hide the procedure in programming shortcuts.
-
-This chunk defines the arc-cosine kernel functions used to generate an alternative family of
-nonlinear similarities. Presenting the functions here makes the construction of the arc-cosine
-matrices easier to follow.
+The functions below define the arc-cosine kernels used to compute the additive nonlinear structures.
 
 ```{r ak-functions}
 AK1.fun <- function(X) {
@@ -1045,9 +943,6 @@ The arc-cosine kernels follow the same practical rule adopted for the Gaussian k
 
 The code below constructs the genomic arc-cosine kernel candidate used in the nonlinear genomic pathway.
 
-This chunk builds the genomic arc-cosine kernel from the genomic data source. It introduces a second
-nonlinear genomic representation to compare against the Gaussian alternative.
-
 ```{r gak}
 GAK1 <- AK1.fun(Geno)
 dim(GAK1)
@@ -1075,9 +970,6 @@ colnames(GAK) <- Pheno$ObsID
 
 The checks below verify that the genomic arc-cosine kernel is numerically well formed.
 
-This chunk checks the genomic arc-cosine kernel after construction. The aim is to confirm that the
-final object has the expected dimensions and numerical behavior.
-
 ```{r gak-check}
 dim(GAK)
 GAK[1:5, 1:5]
@@ -1088,9 +980,6 @@ GAK[1:5, 1:5]
 The phenomic arc-cosine kernel is also calibrated **once using GY as the reference trait**, and the final kernel is reused for both GY and KW in the downstream models.
 
 The code below constructs the phenomic arc-cosine kernel candidate used in the nonlinear phenomic pathway.
-
-This chunk builds the phenomic arc-cosine kernel from the NIR data source. It parallels the genomic
-arc-cosine pathway and completes the phenomic nonlinear representation.
 
 ```{r pak}
 PAK1 <- AK1.fun(NIR.all)
@@ -1121,9 +1010,6 @@ colnames(PAK) <- rownames(NIR.all)
 
 The checks below confirm that the phenomic arc-cosine kernel is coherent.
 
-This chunk checks the phenomic arc-cosine kernel after construction. These inspections help confirm
-that the final matrix is ready for downstream interaction building.
-
 ```{r pak-check}
 dim(PAK)
 PAK[1:5, 1:5]
@@ -1132,9 +1018,6 @@ PAK[1:5, 1:5]
 ### 13.4 Arc-cosine interaction kernels
 
 The code below builds the interaction kernels associated with the arc-cosine structures so they can be used in the downstream models.
-
-This chunk creates the interaction kernels that combine the arc-cosine similarities with environment
-and weather structures. These matrices complete the nonlinear interaction branch of the workflow.
 
 ```{r interaction-ak}
 GAKE <- GAK * ZEZE
@@ -1153,9 +1036,6 @@ PAKW[1:5, 1:5]
 The table below provides a final integrity check for the nonlinear kernels before export.
 
 The output below summarizes the nonlinear kernels and their interactions to provide a final diagnostic view of the constructed objects.
-
-This chunk summarizes the nonlinear kernels created in the Gaussian and arc-cosine branches. The
-summary provides a compact view of the main nonlinear objects before saving them.
 
 ```{r kernel-summary-nonlinear}
 kernel_inventory_nonlinear <- data.frame(
@@ -1215,9 +1095,6 @@ The same clustering order is then applied to the rows and columns of the matrix.
 Because these are square matrices, each heatmap is displayed with `coord_fixed()` and exported with `width = height` so that the visual aspect ratio matches the mathematical structure of the matrix.
 
 The figure below compares the behavior of the main kernels.
-
-This chunk assembles a diagnostic figure that compares the major kernel structures visually. The
-figure helps the reader assess general similarity patterns across the constructed matrices.
 
 ```{r kernel-diagnostic-figure-square, fig.width=8, fig.height=8}
 kernel_plot_info <- data.frame(
@@ -1311,9 +1188,6 @@ The kernel objects created in this tutorial are computationally expensive to rep
 This last section is also written in a direct way: we list which objects will be saved, write them to disk, export the diagnostic tables, remove the remaining temporary objects, and then reload the saved matrices.
 
 The final code block saves all matrices and kernels to disk and then performs basic cleanup so that later modules can load the artifacts directly.
-
-This chunk writes the final matrices and kernels to disk for use in the prediction and variance
-modules. Saving these objects closes the matrix-construction stage of the pipeline.
 
 ```{r save-and-clean, message=FALSE}
 keep_names <- c(
