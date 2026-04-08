@@ -20,6 +20,10 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 As opções de renderização abaixo mantêm código, mensagens e figuras sob um único padrão de apresentação.
 
+Este chunk inicializa as opções do documento usadas no módulo de construção das matrizes. Ele
+prepara a sessão para que as etapas seguintes se concentrem na lógica de criação dos objetos
+analíticos.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -79,6 +83,10 @@ Primeiro carregamos os pacotes necessários para manipulação de dados, constru
 
 Os pacotes abaixo dão suporte à construção de matrizes, manipulação de dados, cálculo de kernels, otimização e visualização.
 
+Este chunk carrega os pacotes necessários para manipulação de dados, construção de kernels e
+diagnósticos das matrizes. Reunir as dependências no início torna mais claro quais ferramentas
+sustentam o módulo.
+
 ```{r load-libraries}
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -114,6 +122,9 @@ O arquivo `NIR.csv` contém identificadores, ambientes, caracteres fenotípicos 
 
 O código abaixo lê os dados NIR e prepara a entrada fenômica que depois será alinhada aos registros fenotípicos e genômicos.
 
+Este chunk lê o conjunto de dados NIR que dará suporte à representação fenômica dos genótipos. Ele
+estabelece uma das principais fontes de informação usadas posteriormente nos kernels.
+
 ```{r load-nir-data, eval=FALSE}
 NIR <- fread("data/NIR.csv") %>% as.data.frame()
 
@@ -126,6 +137,10 @@ unique(NIR$Env)
 O arquivo genotípico contém uma linha por genótipo e uma coluna por marcador. A primeira coluna (`taxa`) é o identificador do genótipo usado para alinhar a informação genômica e fenotípica.
 
 O código abaixo lê os dados de marcadores genômicos que formam a base dos kernels genômicos usados no pipeline.
+
+Este chunk lê os dados genotípicos que darão suporte à representação genômica dos mesmos materiais.
+Em conjunto com os dados NIR, ele forma a base para as comparações paralelas entre informação
+genômica e fenômica.
 
 ```{r load-genotypic-data, eval=FALSE}
 Geno <- fread("data/GAPIT.Genotype.Numerical.txt") %>% as.data.frame()
@@ -141,6 +156,10 @@ Também criamos um **identificador de observação** (`ObsID`) combinando ambien
 
 O código abaixo monta a tabela fenotípica que funciona como espinha dorsal, em nível de observação, para as matrizes alinhadas.
 
+Este chunk constrói a tabela fenotípica que liga observações, genótipos, ambientes e traits. A
+tabela resultante funciona como a estrutura central de alinhamento para as matrizes construídas
+adiante.
+
 ```{r build-pheno-table, eval=FALSE}
 Pheno <- NIR %>%
   dplyr::select(Pedigree, Env, GY, KW) %>%
@@ -155,6 +174,10 @@ head(Pheno)
 Esta é uma etapa crítica de validação. O arquivo genômico e o arquivo NIR/fenotípico devem se referir aos mesmos genótipos. Se os IDs não forem harmonizados antes da construção das matrizes, todo kernel posterior ficará desalinhado.
 
 O código abaixo harmoniza os identificadores de genótipo entre as diferentes fontes para garantir que as mesmas unidades sejam comparadas corretamente.
+
+Este chunk harmoniza os identificadores entre as fontes fenotípica, genômica e NIR. Esse alinhamento
+é essencial para garantir que todas as matrizes seguintes se refiram aos mesmos indivíduos na mesma
+ordem.
 
 ```{r harmonize-genotypes, eval=FALSE}
 Pedigree <- intersect(Geno$taxa, NIR$Pedigree)
@@ -188,6 +211,9 @@ A construção dos kernels usa depois blocos específicos por ambiente. Por isso
 
 O código abaixo organiza os dados harmonizados por ambiente, preparando as verificações posteriores de balanceamento, sobreposição e construção dos kernels.
 
+Este chunk organiza os registros fenotípicos por ambiente. Isso facilita a criação de matrizes
+sensíveis ao ambiente e a verificação das estruturas de interação formadas mais adiante.
+
 ```{r split-by-environment, eval=FALSE}
 a <- NIR %>% filter(Env == "CS11_WS") %>% arrange(Pedigree)
 b <- NIR %>% filter(Env == "CS11_WW") %>% arrange(Pedigree)
@@ -204,6 +230,10 @@ rownames(d) <- d$ObsID
 Este objeto é informativo para checagens de dados balanceados e para interpretar a sobreposição entre ensaios.
 
 O código abaixo identifica os genótipos compartilhados entre ambientes, passo importante para a estabilidade do alinhamento entre ambientes.
+
+Este chunk identifica os genótipos compartilhados entre os ambientes considerados no estudo. Esse
+subconjunto comum é importante porque várias matrizes downstream dependem desse suporte
+compartilhado.
 
 ```{r shared-genotypes-all-envs, eval=FALSE}
 Pedigree_communs <- Reduce(
@@ -229,6 +259,9 @@ As etapas práticas são:
 5. Calcular o kernel linear pelo produto cruzado da matriz padronizada de marcadores.
 
 O código abaixo constrói o kernel genômico linear que representa a relação genômica básica entre as observações.
+
+Este chunk constrói a estrutura linear genômica de incidência ou relacionamento usada nos modelos de
+predição. Ele fornece a primeira matriz genômica explícita empregada downstream.
 
 ```{r build-zg, eval=FALSE}
 Geno <- Geno[order(Geno$taxa), ]
@@ -262,6 +295,9 @@ O kernel fenômico usa as bandas espectrais NIR. A mesma lógica em blocos é us
 Esse kernel é útil porque resume a similaridade espectral entre observações. Ao mesmo tempo, deve ser interpretado com cautela. Os espectros NIR podem refletir respostas fisiológicas fortes às condições de campo, de modo que o kernel fenômico pode capturar parte do sinal ambiental além de informação relacionada ao genótipo.
 
 O código abaixo constrói o kernel fenômico linear a partir dos dados NIR para compará-lo às estruturas genômicas e climáticas.
+
+Este chunk constrói a estrutura linear fenômica de incidência ou relacionamento a partir da
+informação NIR. Ela espelha o caminho genômico e permite comparações diretas entre as abordagens.
 
 ```{r build-zp, eval=FALSE}
 # Identify spectral variables defensively: keep only numeric columns and remove
@@ -312,6 +348,9 @@ Esse kernel atribui similaridade ambiental completa a observações do mesmo amb
 
 O código abaixo constrói a matriz categórica de ambiente, separando explicitamente o efeito macroambiental da informação derivada do clima.
 
+Este chunk constrói a estrutura de desenho ambiental usada para codificar os efeitos categóricos de
+ambiente. Essa matriz fornece a representação ambiental básica usada em vários modelos.
+
 ```{r build-ze, eval=FALSE}
 Pheno <- Pheno %>% arrange(match(ObsID, rownames(ZG)))
 
@@ -346,6 +385,9 @@ No pipeline reduzido final, `ZW` é usado principalmente nos modelos `Eta10`-`Et
 ### 9.1 Carregar os arquivos climáticos
 
 O código abaixo lê as saídas climáticas produzidas pelo módulo anterior para que o kernel climático seja construído a partir de arquivos já salvos.
+
+Este chunk lê os arquivos climáticos processados no módulo de clima. Esses arquivos fornecem os
+resumos ambientais necessários para construir as covariáveis derivadas do clima.
 
 ```{r load-climate-files, eval=FALSE}
 annual_ec_file <- "output/climate_results/environmental_covariates.csv"
@@ -416,6 +458,10 @@ O objetivo desta etapa é colocar variáveis ambientais heterogêneas em escala 
 
 O código abaixo padroniza as covariáveis climáticas para colocar as variáveis meteorológicas em escala comparável antes da construção do kernel.
 
+Este chunk padroniza as entradas climáticas antes da criação das assinaturas ambientais. A
+padronização mantém as variáveis em escalas comparáveis e evita dominância de variáveis
+numericamente maiores.
+
 ```{r standardize-climate-data, eval=FALSE}
 annual_scaled <- ECs_annual %>%
   dplyr::select(all_of(annual_cols)) %>%
@@ -438,6 +484,9 @@ daily_scaled <- ECs_expanded %>%
 Para cada ano, transformamos as trajetórias diárias de clima em uma única assinatura larga por linha. Isso dá a cada ano um vetor reprodutível que representa seu perfil climático intrassazonal.
 
 O código abaixo deriva as assinaturas climáticas por ano que resumem a informação padronizada e servem de base para o kernel climático.
+
+Este chunk agrega os registros climáticos padronizados em assinaturas por ano ou safra. Essas
+assinaturas são a base da estrutura climática usada depois no pipeline.
 
 ```{r create-year-signatures, eval=FALSE}
 daily_signature_2011 <- daily_scaled %>%
@@ -469,6 +518,9 @@ annual_signature_2012 <- annual_scaled %>%
 Cada observação herda a assinatura climática do ano associado ao seu ambiente. Os ambientes de 2011 recebem as assinaturas diárias e anuais de 2011; os ambientes de 2012 recebem as assinaturas de 2012. Blocos específicos de outro ano são preenchidos com `NA` e depois substituídos por zero, para que a matriz final possa ser usada em um produto cruzado.
 
 O código abaixo constrói o kernel climático `W`, que complementa a estrutura categórica de ambiente em vez de substituí-la.
+
+Este chunk constrói a matriz climática a partir das assinaturas ambientais derivadas. Esse objeto
+introduz uma fonte explícita de informação de clima na comparação entre modelos.
 
 ```{r build-w, eval=FALSE}
 ids_a <- a$ObsID
@@ -571,6 +623,10 @@ print(paste("ZW and ZG aligned:", identical(rownames(ZW), rownames(ZG))))
 print(paste("ZW and ZP aligned:", identical(rownames(ZW), rownames(ZP))))
 ```
 
+Este chunk restaura as matrizes já geradas para que a versão em português possa se concentrar na
+interpretação e nos diagnósticos. Assim, o documento permanece alinhado ao fluxo principal sem
+repetir todo o processamento.
+
 ```{r load-generated-matrices, include=FALSE}
 required_matrix_objects <- c(
   "ZE", "ZEZE", "ZG", "ZP", "ZGZE", "ZPZE", "ZW", "ZGZW", "ZPZW",
@@ -604,6 +660,9 @@ for (obj_name in required_matrix_objects) {
 Antes de construir interações e kernels não lineares, resumimos os principais kernels lineares. Essa tabela é útil tanto para controle de qualidade quanto para fins didáticos.
 
 A saída abaixo resume os kernels lineares básicos para que o leitor confira dimensões, amplitudes e comportamento geral antes dos kernels não lineares.
+
+Este chunk resume as dimensões e as propriedades básicas das matrizes lineares construídas até aqui.
+Ele oferece um checkpoint compacto antes de avançar para interações e kernels não lineares.
 
 ```{r kernel-summary-linear}
 reference_ids <- Pheno$ObsID
@@ -654,6 +713,10 @@ Inspecionamos o mesmo pedigree entre matrizes para verificar se a ordem empilhad
 
 As verificações abaixo examinam entradas selecionadas para confirmar que as matrizes alinhadas estão se comportando como esperado.
 
+Este chunk realiza verificações pontuais em matrizes selecionadas para confirmar ordem, dimensões e
+consistência básica. Essas inspeções simples ajudam a detectar problemas estruturais antes que se
+propaguem.
+
 ```{r spot-check}
 Geno.all[str_detect(rownames(Geno.all), "A188"), 1:5]
 W[str_detect(rownames(W), "A188"), 1:5]
@@ -664,6 +727,10 @@ NIR.all[str_detect(rownames(NIR.all), "A188"), 1:5]
 Todas as checagens abaixo devem retornar `TRUE`.
 
 As verificações abaixo testam o alinhamento entre matrizes e metadados para detectar incompatibilidades antes dos kernels não lineares.
+
+Este chunk executa testes adicionais de alinhamento para confirmar que matrizes e identificadores
+continuam sincronizados entre as fontes de dados. É uma etapa importante de controle de qualidade
+antes da formação dos kernels de interação.
 
 ```{r alignment-tests}
 all(rownames(ZW) == colnames(ZW))
@@ -687,6 +754,10 @@ Mesmo que `ZW` não apareça no mapa de calor integrado, ele continua sendo um o
 Os kernels de interação são obtidos pelo produto de Hadamard (multiplicação elemento a elemento). Essa operação restringe a similaridade genômica ou fenômica ao contexto ambiental representado por `ZEZE` ou `ZW`.
 
 O código abaixo constrói os kernels lineares de interação que combinam informação genômica ou fenômica com ambiente e clima.
+
+Este chunk constrói as matrizes de interação que conectam informação genômica ou fenômica a ambiente
+e clima. Esses produtos são necessários para representar efeitos biológicos dependentes de contexto
+nos modelos de predição.
 
 ```{r build-interactions, eval=FALSE}
 ZGZE <- ZG * ZEZE
@@ -712,6 +783,10 @@ Os kernels lineares acima capturam similaridade aditiva. Para explorar relaçõe
 A função a seguir é mantida porque faz parte do próprio método do kernel Gaussiano. Para manter o tutorial legível, o código é escrito com objetos intermediários explícitos (`Kh`, `Uh`, `Sh`, `d`), de modo que o leitor consiga acompanhar como a função-objetivo da verossimilhança marginal é construída.
 
 Mesmo aparecendo como função, ela não é um atalho de programação. Ela é a própria função matemática usada para escolher a largura do kernel Gaussiano.
+
+Este chunk define as funções do kernel Gaussiano usadas para gerar estruturas não lineares de
+similaridade genômica e fenômica. O objetivo é tornar explícita a construção do kernel antes de
+aplicá-lo aos dados.
 
 ```{r gk-functions}
 # The objective below is the marginal-likelihood criterion used to select the Gaussian-kernel bandwidth.
@@ -747,6 +822,9 @@ Primeiro calculamos distâncias genômicas entre genótipos únicos e depois as 
 
 O código abaixo calcula os valores candidatos do kernel Gaussiano genômico antes da definição final da largura.
 
+Este chunk prepara o fluxo do kernel Gaussiano genômico e sua etapa de calibração. Ele estabelece a
+estrutura de similaridade genômica não linear antes da fixação da versão final.
+
 ```{r ggk, eval=FALSE}
 DG <- (as.matrix(dist(Geno)))^2
 q05G <- quantile(DG, 0.05)
@@ -767,6 +845,10 @@ colnames(DG_proj) <- Pheno$ObsID
 
 A busca abaixo identifica o parâmetro do kernel Gaussiano genômico que melhor atende ao comportamento desejado.
 
+Este chunk identifica o valor de calibração usado para obter o kernel Gaussiano genômico final. A
+etapa de ajuste fica separada conceitualmente do objeto final para manter o processo de escolha
+transparente.
+
 ```{r ggk-optimize, eval=FALSE}
 solG <- optim(
   c(1, 1),
@@ -782,11 +864,17 @@ solG <- optim(
 
 O código abaixo lê e inspeciona a solução escolhida para o kernel Gaussiano genômico antes da construção final do objeto.
 
+Este chunk restaura a solução selecionada do kernel Gaussiano genômico para que o restante do
+documento trabalhe com o objeto final. Assim, o fluxo permanece alinhado ao resultado calibrado.
+
 ```{r ggk-read-solution, include=FALSE, eval=FALSE}
 solG <- readRDS("output/Matrizes/solG.RDS")
 ```
 
 O código abaixo constrói o kernel Gaussiano genômico final usando o parâmetro selecionado.
+
+Este chunk registra o kernel Gaussiano genômico final que será usado downstream. A partir daqui, a
+similaridade genômica não linear é tratada como uma entrada analítica estável.
 
 ```{r ggk-final, eval=FALSE}
 hG <- solG$par[1]
@@ -806,6 +894,9 @@ O kernel Gaussiano fenômico usa distâncias euclidianas derivadas da matriz NIR
 Como no kernel Gaussiano genômico, a etapa de otimização no pipeline atual usa **GY como caráter de referência**, e o kernel Gaussiano fenômico resultante é então reutilizado tanto para GY quanto para KW.
 
 O código abaixo calcula os valores candidatos do kernel Gaussiano fenômico antes da definição final da largura.
+
+Este chunk prepara o fluxo do kernel Gaussiano fenômico e sua etapa de calibração. Ele espelha a
+construção Gaussiana genômica usando a representação baseada em NIR.
 
 ```{r pgk, eval=FALSE}
 DP <- (as.matrix(dist(NIR.all)))^2
@@ -827,6 +918,9 @@ colnames(DP_proj) <- IDs
 
 A busca abaixo identifica o parâmetro do kernel Gaussiano fenômico usado na definição do objeto final.
 
+Este chunk identifica o valor de calibração usado para obter o kernel Gaussiano fenômico final. A
+etapa de ajuste permanece explícita para distinguir calibração do objeto final.
+
 ```{r pgk-optimize, eval=FALSE}
 solP <- optim(
   c(1, 1),
@@ -842,11 +936,17 @@ solP <- optim(
 
 O código abaixo lê e verifica a solução escolhida para o kernel Gaussiano fenômico antes da construção final.
 
+Este chunk restaura a solução selecionada do kernel Gaussiano fenômico para uso downstream. Isso
+permite que o fluxo continue a partir do kernel fenômico finalizado, e não da busca de calibração.
+
 ```{r pgk-read-solution, include=FALSE, eval=FALSE}
 solP <- readRDS("output/Matrizes/solP.RDS")
 ```
 
 O código abaixo constrói o kernel Gaussiano fenômico final com a largura escolhida.
+
+Este chunk registra o kernel Gaussiano fenômico final usado nos módulos seguintes. Ele encerra o
+ramo Gaussiano do fluxo de construção das matrizes.
 
 ```{r pgk-final, eval=FALSE}
 hP <- solP$par[1]
@@ -863,6 +963,10 @@ PGK[1:5, 1:5]
 
 O código abaixo gera as estruturas de interação associadas aos kernels Gaussianos para combiná-las com ambiente e clima.
 
+Este chunk constrói os kernels de interação que combinam as similaridades Gaussianas com as
+estruturas de ambiente e clima. Esses objetos estendem a representação não linear para relações
+dependentes de contexto.
+
 ```{r interactions-gk, eval=FALSE}
 GGKE <- GGK * ZEZE
 PGKE <- PGK * ZEZE
@@ -878,6 +982,10 @@ Neste tutorial mantemos explicitamente as funções matemáticas abaixo porque e
 ### 13.1 Funções matemáticas centrais para os kernels arc-cosine
 
 As funções abaixo definem os kernels arc-cosine usados para construir as estruturas não lineares aditivas. Elas são mantidas de forma explícita porque fazem parte do método. O objetivo aqui é mostrar cada etapa matemática com nomes mais claros, e não esconder o procedimento em atalhos de programação.
+
+Este chunk define as funções do kernel arc-cosine usadas para gerar uma família alternativa de
+similaridades não lineares. Apresentar as funções aqui facilita acompanhar a construção das matrizes
+arc-cosine.
 
 ```{r ak-functions}
 AK1.fun <- function(X) {
@@ -959,6 +1067,9 @@ Os kernels arc-cosine seguem a mesma regra prática adotada para os kernels Gaus
 
 O código abaixo constrói o kernel arc-cosine genômico usado na via genômica não linear.
 
+Este chunk constrói o kernel arc-cosine genômico a partir da fonte genômica. Ele introduz uma
+segunda representação genômica não linear para comparação com a alternativa Gaussiana.
+
 ```{r gak, eval=FALSE}
 GAK1 <- AK1.fun(Geno)
 dim(GAK1)
@@ -986,6 +1097,9 @@ colnames(GAK) <- Pheno$ObsID
 
 As verificações abaixo confirmam que o kernel arc-cosine genômico está numericamente consistente.
 
+Este chunk verifica o kernel arc-cosine genômico após sua construção. O objetivo é confirmar que o
+objeto final possui as dimensões e o comportamento numérico esperados.
+
 ```{r gak-check}
 dim(GAK)
 GAK[1:5, 1:5]
@@ -995,6 +1109,9 @@ GAK[1:5, 1:5]
 O kernel arc-cosine fenômico também é calibrado **uma vez usando GY como caráter de referência**, e o kernel final é reutilizado para GY e KW nos modelos posteriores.
 
 O código abaixo constrói o kernel arc-cosine fenômico usado na via fenômica não linear.
+
+Este chunk constrói o kernel arc-cosine fenômico a partir da fonte NIR. Ele faz o paralelo com o
+caminho arc-cosine genômico e completa a representação fenômica não linear.
 
 ```{r pak, eval=FALSE}
 PAK1 <- AK1.fun(NIR.all)
@@ -1025,6 +1142,9 @@ colnames(PAK) <- rownames(NIR.all)
 
 As verificações abaixo confirmam que o kernel arc-cosine fenômico está coerente.
 
+Este chunk verifica o kernel arc-cosine fenômico após sua construção. Essas inspeções ajudam a
+confirmar que a matriz final está pronta para a formação das interações downstream.
+
 ```{r pak-check}
 dim(PAK)
 PAK[1:5, 1:5]
@@ -1032,6 +1152,9 @@ PAK[1:5, 1:5]
 ### 13.4 Kernels de interação arc-cosine
 
 O código abaixo constrói os kernels de interação associados às estruturas arc-cosine para uso nos modelos posteriores.
+
+Este chunk cria os kernels de interação que combinam as similaridades arc-cosine com as estruturas
+de ambiente e clima. Essas matrizes completam o ramo não linear de interações do workflow.
 
 ```{r interaction-ak, eval=FALSE}
 GAKE <- GAK * ZEZE
@@ -1050,6 +1173,9 @@ PAKW[1:5, 1:5]
 A tabela abaixo fornece uma checagem final de integridade dos kernels não lineares antes da exportação.
 
 A saída abaixo resume os kernels não lineares e suas interações, oferecendo uma visão diagnóstica final desses objetos.
+
+Este chunk resume os kernels não lineares produzidos nos ramos Gaussiano e arc-cosine. O resumo
+oferece uma visão compacta dos principais objetos não lineares antes do salvamento.
 
 ```{r kernel-summary-nonlinear}
 kernel_inventory_nonlinear <- data.frame(
@@ -1108,6 +1234,9 @@ A mesma ordem de clustering é então aplicada às linhas e colunas da matriz. I
 Como essas matrizes são quadradas, cada mapa de calor é exibido com `coord_fixed()` e exportado com `width = height` para que a razão visual corresponda à estrutura matemática da matriz.
 
 A figura abaixo compara visualmente o comportamento dos principais kernels.
+
+Este chunk monta uma figura diagnóstica que compara visualmente as principais estruturas de kernel.
+A figura ajuda o leitor a avaliar padrões gerais de similaridade entre as matrizes construídas.
 
 ```{r kernel-diagnostic-figure-square, fig.width=8, fig.height=8}
 kernel_plot_info <- data.frame(
@@ -1201,6 +1330,9 @@ Os objetos de kernel criados neste tutorial são computacionalmente caros para r
 Esta última seção também é escrita de forma direta: listamos quais objetos serão salvos, escrevemos tudo em disco, exportamos as tabelas diagnósticas, removemos os objetos temporários restantes e então recarregamos as matrizes salvas.
 
 O bloco final de código grava todas as matrizes e kernels em disco e faz uma limpeza básica para que os módulos seguintes possam carregar os artefatos diretamente.
+
+Este chunk grava em disco as matrizes e os kernels finais para uso nos módulos de predição e
+variância. Salvar esses objetos encerra a etapa de construção das matrizes no pipeline.
 
 ```{r save-and-clean, message=FALSE, eval=FALSE}
 keep_names <- c(

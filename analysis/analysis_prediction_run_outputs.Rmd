@@ -64,6 +64,7 @@ if (!dir.exists(file.path(project_root, "output"))) {
 }
 
 results_dir <- file.path(project_root, "output", "results")
+matrices_dir <- file.path(project_root, "output", "Matrizes")
 analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction")
 bglr_runs_dir <- file.path(results_dir, "bglr_runs")
 

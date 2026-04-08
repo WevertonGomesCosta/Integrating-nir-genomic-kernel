@@ -19,6 +19,9 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 **Language / Idioma:** [English](variance_components.html) | [Português](variance_components_pt.html)
 
 
+Este chunk inicializa a sessão e as opções padrão do documento para o módulo de componentes de
+variância. Assim, as análises seguintes partem de um ambiente controlado e reprodutível.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -70,6 +73,9 @@ Uma grande proporção de variância associada a uma dada fonte não deve ser in
 
 Primeiro, carregamos os pacotes usados para manipular os dados, ajustar os modelos Bayesianos e gerar as figuras finais em padrão de artigo.
 
+Este chunk carrega os pacotes usados para ajuste de modelos, manipulação de dados, tabelas e
+gráficos. Reunir esses pacotes aqui facilita entender a estrutura do módulo.
+
 ```{r load-packages}
 library(dplyr)
 library(tidyr)
@@ -93,6 +99,10 @@ library(kableExtra)
 
 Todos os kernels e objetos fenotípicos devem estar disponíveis em `output/Matrizes/`, que é o diretório de saída criado em `matrizes.Rmd`. Os resultados de componentes de variância gerados aqui são armazenados em `output/variance_components/`.
 
+Este chunk define as pastas usadas para ler as matrizes e salvar as saídas do módulo de componentes
+de variância. Deixar os caminhos explícitos ajuda a entender de onde vêm as entradas e para onde vão
+os resultados.
+
 ```{r define-paths}
 kernel_dir <- "output/Matrizes"
 results_dir <- "output/variance_components"
@@ -107,6 +117,10 @@ dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
 ### 2.2. Checagem das entradas
 
 Antes de ler os arquivos, verificamos se os objetos `.rds` esperados estão presentes na pasta de saídas das matrizes. Isso deixa o tutorial mais robusto porque o script para imediatamente se algum objeto necessário estiver ausente.
+
+Este chunk verifica se todas as matrizes e arquivos de apoio necessários estão disponíveis. O
+objetivo é interromper cedo caso os módulos anteriores ainda não tenham produzido os objetos
+exigidos por esta etapa.
 
 ```{r input-checks}
 required_files <- c(
@@ -132,6 +146,10 @@ if (length(missing_files) > 0) {
 ### 2.3. Rótulos usados nas tabelas e figuras finais
 
 Esses vetores definem como os componentes de variância aparecerão nas saídas finais. Manter esses rótulos visíveis no script principal ajuda o leitor a entender como os nomes internos do modelo são traduzidos para rótulos prontos para artigo.
+
+Este chunk define os rótulos usados para traduzir os componentes dos modelos em nomes de saída mais
+legíveis. Esses rótulos são importantes porque tornam os resumos de variância mais fáceis de
+interpretar.
 
 ```{r labels-for-output}
 component_display <- c(
@@ -190,6 +208,10 @@ component_order[component_order == "PAKW × W"] <- "PAK × W"
 
 Esta seção carrega as matrizes geradas em `matrizes.Rmd`. Esses objetos são as entradas centrais da análise de componentes de variância.
 
+Este chunk restaura as matrizes e os kernels que entram nos modelos de componentes de variância. Uma
+vez carregados, esses objetos fornecem o conjunto completo de fontes cuja contribuição será
+resumida.
+
 ```{r load-matrices, include=FALSE}
 ZG    <- readRDS(file.path(kernel_dir, "ZG.rds"))
 ZP    <- readRDS(file.path(kernel_dir, "ZP.rds"))
@@ -228,6 +250,10 @@ cat("Number of pedigrees:", length(Pedigree), "\n")
 ### 3.1. Diagnósticos de alinhamento
 
 Antes de ajustar os modelos, é importante verificar se os kernels são quadrados e alinhados à mesma ordem de observações usada em `Pheno`. Em um contexto tutorial, essa é uma checagem importante porque muitos erros posteriores são causados por ordens incompatíveis entre linhas e colunas.
+
+Este chunk realiza verificações estruturais para confirmar que as matrizes carregadas estão
+dimensionalmente alinhadas. Essas checagens ajudam a garantir que os componentes possam ser
+combinados sem problemas ocultos de indexação.
 
 ```{r kernel-alignment-check}
 reference_ids <- Pheno$ObsID
@@ -311,6 +337,10 @@ kernel_inventory %>%
 ## 4. Definição dos 18 modelos preditivos
 
 Cada modelo é definido como uma lista no formato exigido pelo argumento `ETA` de `BGLR`. O termo de ambiente (`E`) é incluído como uma matriz de efeitos fixos com `model = "BRR"`, enquanto os kernels são ajustados como efeitos aleatórios com `model = "RKHS"`.
+
+Este chunk define as 18 estruturas de modelo usadas na decomposição de variância. Ele espelha o
+catálogo empregado na predição para que a interpretação dos componentes permaneça consistente entre
+os módulos.
 
 ```{r define-models}
 models <- list()
@@ -473,6 +503,9 @@ model_component_lookup <- bind_rows(
 
 Esta tabela é útil tanto para verificações internas quanto para vincular os rótulos das figuras à descrição formal de cada modelo.
 
+Este chunk constrói uma descrição tabular do catálogo de modelos usado na análise de variância. A
+tabela serve como guia ao interpretar os resumos e figuras produzidos adiante.
+
 ```{r model-catalog}
 model_info <- tibble(
   ModelID = 1:18,
@@ -524,6 +557,9 @@ model_info %>%
 
 Esses valores definem o amostrador de Gibbs usado pelo `BGLR`. Ajuste-os aqui se uma cadeia mais longa for necessária para diagnósticos de convergência ou análises de sensibilidade.
 
+Este chunk registra as configurações de MCMC e os controles de repetição usados nos ajustes de
+componentes de variância. Esses valores definem o plano computacional da etapa de decomposição.
+
 ```{r mcmc-parameters}
 nIter   <- 5000
 burnIn  <- 1000
@@ -537,6 +573,9 @@ traits  <- c("GY", "KW")
 Este é o passo computacionalmente mais caro do fluxo.
 
 O bloco seguinte contém a etapa paralela de estimação que ajusta os modelos de componentes de variância, preserva os artefatos iterativos do BGLR em pastas persistentes e salva os resumos posteriores brutos.
+
+Este chunk ajusta os modelos de componentes de variância e salva os artefatos brutos do BGLR
+necessários para a consolidação posterior. Ele é o núcleo computacional do módulo.
 
 ```{r parallel-run, eval=FALSE}
 numCores <- parallel::detectCores()
@@ -674,6 +713,9 @@ saveRDS(all_variance, file.path(results_dir, "variance_components_raw.rds"))
 
 Na versão atual do fluxo, esta é a seção usada com mais frequência. Em vez de reajustar todos os modelos a cada execução, o script lê os arquivos `_metrics.rds` previamente salvos e os consolida em um único objeto. Isso mantém o tutorial prático e reprodutível, ao mesmo tempo que deixa claro que esta página é principalmente uma **etapa de consolidação de resultados**, a menos que o usuário decida rerodar intencionalmente a etapa completa de ajuste no BGLR.
 
+Este chunk reúne as saídas salvas durante os ajustes e as reorganiza em tabelas prontas para
+análise. O objetivo é fazer a ponte entre os artefatos brutos e os resumos finais.
+
 ```{r consolidate-saved-results}
 rds_files <- list.files(
   path = bglr_runs_dir,
@@ -754,6 +796,10 @@ if (length(rds_files) > 0) {
 
 Esta seção carrega os resultados consolidados e os prepara para o resumo. Se o arquivo não existir, o script interrompe a execução e instrui o usuário a executar a etapa de ajuste dos modelos primeiro.
 
+Este chunk restaura os resultados consolidados de variância para que as seções seguintes se
+concentrem no processamento e na interpretação. Assim, a parte explicativa do documento permanece
+centrada nas saídas finais.
+
 ```{r load-results, include=FALSE}
 raw_file <- file.path(results_dir, "variance_components_all.rds")
 
@@ -779,6 +825,10 @@ cat("Number of rows in consolidated variance object:", nrow(all_variance), "\n")
 ## 9. Resumo dos componentes de variância
 
 Agora calculamos a média dos valores posteriores ao longo das repetições para cada modelo, caráter e componente. Em seguida, convertemos os resultados em **percentuais da variância total**, o que torna os modelos diretamente comparáveis.
+
+Este chunk calcula os resumos processados que expressam quanto da variância é atribuído a cada
+componente do modelo. Esses resumos transformam as quantidades brutas salvas em resultados de
+decomposição interpretáveis.
 
 ```{r process-variance-components}
 variance_summary <- all_variance %>%
@@ -827,6 +877,9 @@ readr::write_csv(variance_summary, file.path(results_dir, "variance_components_p
 
 Esta tabela é útil quando você precisa de um resumo numérico compacto para o manuscrito ou para material suplementar.
 
+Este chunk monta a tabela principal de resumo da decomposição de variância. A tabela oferece uma
+visão numérica compacta da contribuição dos componentes ao longo dos modelos.
+
 ```{r summary-table}
 variance_table <- variance_summary %>%
   dplyr::select(Model, Trait, ComponentLabel, Percentage) %>%
@@ -853,6 +906,9 @@ head(variance_table, 12) %>%
 A figura abaixo resume a contribuição percentual de cada componente de variância nos 18 modelos para ambos os caracteres. Para manter o eixo x legível, os modelos são exibidos como `Eta1` a `Eta18`, e as descrições detalhadas permanecem disponíveis no catálogo de modelos salvo acima.
 
 Essa figura deve ser lida como um resumo estrutural dos modelos ajustados, e não como prova direta de que combinar mais fontes de dados leva automaticamente a maior complementaridade biológica ou melhor desempenho preditivo.
+
+Este chunk constrói a figura final que compara as contribuições de variância entre modelos e traits.
+O gráfico ajuda a interpretar como a estrutura de cada modelo redistribui a variância explicada.
 
 ```{r variance-figure, fig.cap="Figura 3. Percentual médio posterior da variância total atribuído a cada componente do modelo nos 18 modelos preditivos para produtividade de grãos (GY) e peso de grãos (KW). Cada barra empilhada representa um modelo (Eta1-Eta18), com média ao longo das repetições, e as cores identificam os componentes de variância incluídos na estrutura do modelo. O kernel climático (W) e seus termos de interação associados aparecem principalmente nos modelos Eta10-Eta18. A decomposição da variância deve ser interpretada como uma descrição da estrutura do modelo, e não automaticamente como evidência de maior complementaridade biológica entre as fontes de informação.", fig.height=10, fig.width=13}
 trait_labels <- c(

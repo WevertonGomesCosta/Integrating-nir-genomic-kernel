@@ -18,6 +18,9 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 O documento começa definindo opções globais de renderização para que figuras, mensagens e blocos de código apareçam de forma consistente ao longo do tutorial.
 
+Este chunk configura o documento e mantém consistentes as opções gráficas e de relatório ao longo do
+módulo. Assim, as etapas seguintes podem se concentrar apenas no fluxo de processamento climático.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -79,6 +82,9 @@ Também criamos o diretório de saída no início do script. Isso evita erros ao
 
 A próxima etapa carrega os pacotes necessários para download de dados, manipulação, visualização e composição de painéis antes do início do processamento climático.
 
+Este chunk carrega os pacotes necessários para obtenção, reorganização, resumo e visualização dos
+dados climáticos. Reunir as dependências aqui torna as etapas seguintes mais fáceis de acompanhar.
+
 ```{r packages}
 # Uncomment if installation is required
 # install.packages(c("nasapower", "tidyverse", "lubridate", "patchwork", "ggthemes", "kableExtra"))
@@ -105,6 +111,10 @@ As coordenadas geográficas identificam o local experimental. As datas inicial e
 Essas variáveis foram escolhidas porque permitem derivar descritores climáticos com interpretação agronômica direta, como precipitação acumulada, graus-dia, estresse térmico e déficit de pressão de vapor.
 
 Em seguida, definimos locais, anos e metadados básicos que controlam quais séries meteorológicas serão usadas e como os resultados serão identificados.
+
+Este chunk define a janela temporal, a localização e os controles gerais usados para consultar a
+NASA POWER e organizar os registros climáticos. Esses parâmetros determinam o escopo dos dados
+ambientais descritos no módulo.
 
 ```{r parameters}
 # Experimental site coordinates (College Station, TX)
@@ -145,6 +155,9 @@ O código abaixo envia duas requisições independentes ao serviço NASA POWER, 
 
 A etapa a seguir documenta o download principal dos dados meteorológicos diários da NASA POWER e a construção da tabela bruta usada nas etapas seguintes.
 
+Este chunk realiza o primeiro bloco de download dos dados climáticos da NASA POWER. Ele estabelece a
+base de dados diária bruta que depois será limpa e harmonizada entre as safras.
+
 ```{r get_data, eval=FALSE}
 data_tx_2011 <- get_power(
   community = "AG",
@@ -172,6 +185,9 @@ Depois que as duas tabelas anuais estão disponíveis, nós as reunimos em um ú
 Também salvamos o conjunto bruto diário como arquivo CSV. Isso é importante para reprodutibilidade porque preserva a versão exata dos dados recuperados usada na análise.
 
 Na sequência, reunimos as tabelas anuais e completamos as variáveis meteorológicas necessárias para formar o conjunto climático final do pipeline.
+
+Este chunk completa o download climático para o período restante e combina os resultados em uma
+tabela diária unificada. O objetivo é obter um registro contínuo cobrindo as safras estudadas.
 
 ```{r get_data2, eval=FALSE}
 texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012) %>%
@@ -222,6 +238,10 @@ write.csv(
 )
 ```
 
+Este chunk restaura os dados climáticos já obtidos para que a versão em português apresente a mesma
+sequência analítica sem depender de um novo download. Dessa forma, a interpretação fica alinhada ao
+fluxo principal.
+
 ```{r load_downloaded_data, include=FALSE}
 raw_climate_path <- "output/climate_results/texas_climate_data_raw.csv"
 
@@ -258,6 +278,9 @@ daily_preview_table <- texas_climate_data %>%
   )
 ```
 
+Este chunk mostra uma prévia organizada dos registros diários que serão usados nas figuras e nos
+resumos seguintes. A tabela ajuda a visualizar a estrutura dos dados antes das agregações.
+
 ```{r daily_preview_table_pt, echo=FALSE}
 knitr::kable(
   daily_preview_table,
@@ -289,6 +312,9 @@ Neste tutorial, as configurações gráficas são escritas diretamente dentro de
 
 As configurações gráficas compartilhadas abaixo garantem que as figuras de precipitação e temperatura sigam o mesmo padrão visual.
 
+Este chunk define configurações gráficas reutilizadas nas figuras seguintes. Centralizar essas
+opções ajuda a manter comparabilidade visual entre as variáveis.
+
 ```{r figure_settings}
 month_levels <- 5:9
 
@@ -319,6 +345,9 @@ daily_data_with_parts <- texas_climate_data %>%
 Esta primeira figura fornece uma visão direta da chuva diária ao longo do tempo. Ela é útil para identificar períodos secos, concentração de chuvas e diferenças amplas entre os dois anos.
 
 A primeira visualização de precipitação oferece um resumo amplo do comportamento da chuva nas condições avaliadas.
+
+Este chunk constrói o primeiro gráfico de precipitação, enfatizando o perfil diário ao longo das
+safras. Ele oferece a visão mais ampla da dinâmica de chuva no período estudado.
 
 ```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figura 1. Precipitação diária ao longo das safras de milho de 2011 e 2012 em College Station, Texas. As barras representam a precipitação diária corrigida obtida da NASA POWER."}
 p_precip_daily <- ggplot(
@@ -370,6 +399,9 @@ Esse layout é especialmente útil quando o objetivo é verificar se uma safra f
 
 Em seguida, a precipitação é reorganizada em visualizações agrupadas para facilitar a comparação entre ambientes.
 
+Este chunk reorganiza a precipitação por mês e dia para facilitar a comparação entre anos dentro da
+safra. A figura resultante evidencia melhor o posicionamento temporal dos eventos de chuva.
+
 ```{r plot_precipitation_grouped, fig.width=12, fig.height=6.4, fig.align="center", fig.cap="Figura 2. Precipitação diária organizada por dia do mês dentro de cada mês para facilitar a comparação entre anos durante a safra."}
 p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill = Year)) +
   geom_col(position = position_dodge(width = 0.85), alpha = 0.85, width = 0.8) +
@@ -415,6 +447,9 @@ p1
 A precipitação diária é informativa, mas os totais mensais fornecem um resumo sazonal mais simples. Esta figura agrega a série diária e permite uma comparação mais limpa da entrada cumulativa de água entre anos e meses.
 
 Depois disso, a precipitação é resumida em nível mensal para destacar com mais clareza os contrastes sazonais.
+
+Este chunk agrega a precipitação diária em totais mensais. Esse resumo ajuda a destacar padrões
+sazonais mais amplos que podem passar despercebidos nos valores diários.
 
 ```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figura 3. Totais mensais de precipitação durante as safras de milho de 2011 e 2012 em College Station, Texas."}
 monthly_precip <- texas_climate_data %>%
@@ -469,6 +504,9 @@ A temperatura é outro descritor central do ambiente de cultivo. Nesta figura, c
 As linhas suavizadas tracejadas não substituem os dados originais. Seu papel é apenas ajudar a visualizar as tendências sazonais gerais para cada métrica de temperatura.
 
 A figura de temperatura abaixo é usada para comparar o perfil térmico dos ambientes ao longo do tempo.
+
+Este chunk resume as temperaturas mínima, média e máxima diárias observadas durante as safras. Ele
+ajuda a descrever contrastes térmicos que podem influenciar as etapas analíticas posteriores.
 
 ```{r plot_temperature, fig.width=10, fig.height=6, fig.align="center", fig.cap="Figura 4. Temperatura mínima, média e máxima diária do ar durante as safras de milho de 2011 e 2012. As linhas tracejadas indicam tendências LOESS usadas apenas para auxiliar a interpretação visual."}
 temperature_data <- texas_climate_data %>%
@@ -542,6 +580,9 @@ A figura também é exportada como um arquivo TIFF de alta resolução, que é u
 
 Os principais painéis de precipitação e temperatura são combinados abaixo em um único arranjo, pronto para inspeção ou uso em relatórios.
 
+Este chunk reúne em uma única figura os principais painéis de precipitação e temperatura. A visão
+conjunta oferece um resumo compacto das diferenças climáticas entre as safras.
+
 ```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 5. Resumo em múltiplos painéis dos principais contrastes climáticos entre os anos, incluindo precipitação diária por mês, totais mensais de precipitação e perfis diários de temperatura do ar."}
 main_layout <- "
 AA
@@ -580,6 +621,9 @@ ggsave(
 Além de precipitação e temperatura, o script também examina radiação solar, velocidade do vento e umidade relativa. Essas variáveis são importantes porque ajudam a descrever demanda evaporativa, secura atmosférica e disponibilidade de energia ao longo do ciclo da cultura.
 
 As figuras complementares abaixo documentam padrões climáticos secundários que não aparecem no painel principal.
+
+Este chunk gera gráficos diários complementares para radiação solar, velocidade do vento e umidade
+relativa. Essas variáveis ampliam a caracterização ambiental além de precipitação e temperatura.
 
 ```{r additional_plots, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 6. Variáveis climáticas diárias adicionais monitoradas durante as safras de milho, incluindo radiação solar, velocidade do vento e umidade relativa."}
 p4 <- ggplot(
@@ -706,6 +750,9 @@ Como na subseção anterior, combinamos os gráficos individuais em uma única f
 
 As figuras climáticas complementares são organizadas abaixo em um painel compacto de múltiplos gráficos.
 
+Este chunk combina as variáveis climáticas adicionais em um resumo multipainel. Apresentar essas
+séries em conjunto facilita comparar seu comportamento sazonal de forma rápida.
+
 ```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 7. Resumo em múltiplos painéis das variáveis climáticas adicionais entre os anos, incluindo radiação solar de ondas curtas, velocidade do vento e umidade relativa."}
 additional_layout <- "
 AB
@@ -752,6 +799,10 @@ Algumas covariáveis derivadas do clima dependem de quantidades que não são fo
 Essas variáveis intermediárias são calculadas dia a dia e depois resumidas no nível anual na próxima subseção.
 
 A etapa a seguir documenta o cálculo das covariáveis climáticas anuais e expandidas que serão usadas depois na construção das entradas derivadas do clima.
+
+Este chunk deriva as covariáveis climáticas que serão usadas posteriormente nos módulos de matrizes,
+kernels e predição. Ele converte as séries diárias brutas em variáveis estruturadas para o pipeline
+analítico.
 
 ```{r feature_engineering, eval=FALSE}
 texas_climate_data <- texas_climate_data %>%
@@ -890,6 +941,10 @@ knitr::kable(
   kableExtra::scroll_box(width = "100%", height = "320px")
 ```
 
+Este chunk restaura as saídas climáticas já processadas para que a versão em português possa
+continuar a apresentação a partir dos objetos finais. Assim, a ênfase permanece na interpretação do
+resultado climático.
+
 ```{r load_engineered_climate_outputs, include=FALSE}
 weather_covariates_path <- "output/climate_results/environmental_covariates.csv"
 ecs_expanded_path <- "output/climate_results/environmental_covariates_expanded.csv"
@@ -939,6 +994,9 @@ weather_covariates_display <- weather_covariates %>%
   mutate(across(-year, ~ round(.x, 2))) %>%
   rename(Ano = year)
 ```
+
+Este chunk apresenta tabelas-resumo das covariáveis climáticas derivadas. Essas tabelas ajudam a
+verificar como os registros diários foram condensados para uso analítico posterior.
 
 ```{r climate_covariate_tables_pt, echo=FALSE}
 knitr::kable(
@@ -998,6 +1056,9 @@ Três arquivos são exportados:
 Os dois últimos arquivos mantêm seus nomes históricos para compatibilidade com os scripts posteriores, embora agora representem covariáveis derivadas do clima.
 
 Por fim, o tutorial documenta a gravação das saídas climáticas brutas e derivadas em disco, para que os módulos posteriores reutilizem esses arquivos sem refazer o processamento.
+
+Este chunk grava as saídas climáticas processadas para uso downstream. Com isso, o módulo climático
+é encerrado e fornece entradas estáveis para as etapas seguintes do workflow.
 
 ```{r save_csv, eval=FALSE}
 write.csv(

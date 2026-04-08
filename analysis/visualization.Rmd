@@ -51,6 +51,9 @@ To make interpretation easier, the models are ordered to help answer three pract
 
 The document begins by defining a consistent rendering style for code, tables, and figures. This helps the tutorial remain readable when it is inspected in HTML and keeps the visual presentation stable across the different outputs produced in this stage.
 
+This chunk starts a clean session and defines the project root used by the visualization module. The
+aim is to make the reading and summarization of prediction outputs reproducible from the beginning.
+
 ```{r setup}
 knitr::opts_chunk$set( echo = TRUE,
  warning = FALSE,
@@ -65,6 +68,9 @@ knitr::opts_chunk$set( echo = TRUE,
 The visualization stage depends on a small set of packages for data manipulation, figure construction, and table formatting. It also needs to locate the project folders correctly, because the summaries generated here must be written in stable output paths that can later be reused by the site and by manuscript-oriented materials.
 
 This section standardizes the project root, locates the folders that contain the prediction outputs, and prepares the directories in which the final tables and figures will be written.
+
+This chunk loads the packages needed for reading, summarizing, and plotting the prediction results.
+It also defines the folders where raw outputs and derived tables are stored.
 
 ```{r packages-and-paths}
 rm(list = ls())
@@ -117,6 +123,10 @@ The visualization stage uses the same reduced catalog of 18 models adopted in th
 
 This organization is important because the comparisons shown later in the document are not arbitrary. They are designed to help the reader understand where predictive gains come from and whether those gains are associated with weather information, kernel choice, or integration between genomic and phenomic sources.
 
+This chunk recreates a compact model catalog so the summaries and figures can be interpreted with
+stable labels. Keeping the catalog close to the visualization stage makes comparisons easier to
+follow.
+
 ```{r model-catalog}
 model_catalog <- tibble( ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
  Model = paste0("Eta", c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
@@ -135,6 +145,9 @@ A central question in this project is whether adding the weather kernel (`W`) im
 
 The comparison pairs defined below provide exactly that structure. They are later used to build tables that quantify how much predictive performance changes when `W` is introduced within the same pathway and kernel family.
 
+This chunk defines the model pairs and families that will be contrasted in the summary tables. These
+pairings provide the analytical structure used to interpret prediction performance.
+
 ```{r comparison-pairs}
 comparison_pairs <- tibble( Comparison = c( "Genomic linear", "Genomic Gaussian", "Genomic arc-cosine", "Phenomic linear", "Phenomic Gaussian", "Phenomic arc-cosine", "Combined linear", "Combined Gaussian", "Combined arc-cosine" ),
  WithoutW = c("Eta1", "Eta3", "Eta5", "Eta2", "Eta4", "Eta6", "Eta7", "Eta8", "Eta9"),
@@ -147,6 +160,9 @@ comparison_pairs
 The first operational step of the visualization stage is to locate the raw prediction files produced by the previous module. Under the current pipeline standard, these files are saved recursively inside `output/results/`, with an explicit directory hierarchy by validation scheme, trait, repetition, and fold.
 
 At this stage, the script reads the results folder recursively, keeps only the prediction CSVs stored inside the structured `CV1`, `CV2`, `CV0`, and `CV00` branches, and ignores other artifacts such as `bglr_runs`. This makes the downstream summaries compatible with the new `Rep/Fold` contract while preserving the distinction between genotype-based and leave-one-environment-out validation problems.
+
+This chunk scans the results folders and records the CSV files available for the visualization
+stage. The resulting inventory establishes exactly which prediction outputs will be summarized.
 
 ```{r locate-files}
 all_result_rel_paths <- list.files(
@@ -187,6 +203,10 @@ if (length(cv12_files) == 0 && length(cvloo_files) == 0) {
 The `CV1` and `CV2` files contain the raw outputs needed to summarize prediction performance when the challenge is defined on the genotype axis. In the current workflow, repetition and fold are encoded both in the directory hierarchy and in the filename, so the script reconstructs those metadata explicitly before building the summaries.
 
 This design is useful because it keeps the file system organized for quick inspection while still allowing the visualization stage to rebuild unified tables across repetitions and folds.
+
+This chunk reads the CV1 and CV2 result files and converts their file paths into structured
+identifiers such as trait, repetition, fold, and model. This transformation is essential for
+downstream aggregation.
 
 ```{r read-cv12}
 cv12_list <- vector("list", length(cv12_files))
@@ -276,6 +296,10 @@ readr::write_csv(cv12_raw, file.path(tables_dir, "prediction_cv1_cv2_raw.csv"))
 The `CV0` and `CV00` files represent the most demanding prediction problems in the study because they involve a held-out environment. Under the current pipeline standard, the held-out environment is encoded both in the directory hierarchy and in the filename, so the script reconstructs that information explicitly before the leave-one-environment-out summaries are built.
 
 This section reads those files, checks the consistency of the structured paths, and prepares the metadata needed to keep `Env_leave` explicit throughout the summaries.
+
+This chunk reads the CV0 and CV00 result files and extracts the environment-aware identifiers stored
+in their paths and file names. The output provides the long-format data frame used for leave-one-
+environment summaries.
 
 ```{r read-cvloo}
 cvloo_list <- vector("list", length(cvloo_files))
@@ -373,6 +397,9 @@ Once the raw `CV1` and `CV2` files have been assembled, the next goal is to summ
 
 This hierarchy is important because raw prediction files are too granular for interpretation. What matters at this stage is the stable performance pattern of each model under each validation scenario.
 
+This chunk aggregates the CV1 and CV2 results into model-level summaries. These tables quantify
+average prediction behavior across repetitions and folds for the genotype-partition scenarios.
+
 ```{r summarize-cv12}
 cv12_env_fold <- cv12_raw %>%
   group_by( ModelNumber,
@@ -458,6 +485,10 @@ The summaries for `CV0` and `CV00` follow the same general logic as the `CV1/CV2
 
 By preserving `Env_leave` in the final tables, the script allows the reader to see not only which models perform well on average, but also whether that behavior is stable across the different environmental contexts.
 
+This chunk aggregates the CV0 and CV00 results into environment-aware summaries. The goal is to
+describe how prediction behaves when the validation problem is centered on environmental
+extrapolation.
+
 ```{r summarize-cvloo}
 cvloo_env_filtered <- cvloo_raw %>%
   filter(Env == Env_leave)
@@ -529,6 +560,9 @@ The summary tables describe model performance, but they do not yet answer the co
 
 The tables built in this section reorganize the summaries into analytical comparisons that are easier to interpret and easier to carry into manuscript-oriented outputs.
 
+This chunk builds the derived comparison tables that will support model ranking and interpretation.
+These tables translate raw summaries into focused analytical contrasts.
+
 ```{r comparison-tables}
 cv12_w_effect <- comparison_pairs %>%
   left_join( cv12_summary %>% select(Trait, CV, Model, MeanCorrelation, SDCorrelation),
@@ -575,6 +609,9 @@ readr::write_csv(cvloo_kernel_family_compare,
 The full summaries are useful for traceability, but they are often too dense for quick inspection. For that reason, this stage also produces compact display tables that preserve the main analytical information while making the results easier to read in reports, supplementary material, or classroom discussion.
 
 These reduced tables are especially useful when the reader wants to compare pathways, kernel families, or the relative position of the best-performing models without scanning the full outputs.
+
+This chunk formats and saves the main tables used later in the report. It provides a readable
+presentation of the numerical summaries before the figures are drawn.
 
 ```{r display-tables}
 cv12_table_display <- cv12_summary %>%
@@ -632,6 +669,9 @@ A compact ranking is often the easiest way to communicate the strongest results 
 
 The first table focuses on `CV1` and `CV2`, where the challenge is defined around new or partially observed genotypes.
 
+This chunk displays the top-performing models for the CV1 and CV2 scenarios. It is intended to
+highlight the strongest candidates under genotype-partition validation.
+
 ```{r table-cv12-top3}
 cv12_top3 %>%
   knitr::kable( caption = "Top 3 models for each trait and validation scheme in CV1 and CV2.",
@@ -642,6 +682,9 @@ cv12_top3 %>%
 ```
 
 The second table focuses on `CV0` and `CV00`, where performance is also conditioned by the held-out environment.
+
+This chunk displays the top-performing models for the CV0 and CV00 scenarios. It emphasizes the best
+performers under leave-one-environment-out validation.
 
 ```{r table-cvloo-top3}
 cvloo_top3 %>%
@@ -658,6 +701,9 @@ These tables isolate one of the main scientific questions of the project: whethe
 
 The first table presents the effect of adding `W` under `CV1` and `CV2`.
 
+This chunk summarizes how the inclusion of the weather effect changes performance in CV1 and CV2.
+The comparison helps interpret the contribution of weather-informed model extensions.
+
 ```{r table-cv12-w-effect}
 cv12_w_effect %>%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
@@ -672,6 +718,9 @@ cv12_w_effect %>%
 ```
 
 The second table presents the same type of contrast under `CV0` and `CV00`, where generalization to new environments becomes part of the prediction problem.
+
+This chunk summarizes how the inclusion of the weather effect changes performance in CV0 and CV00.
+This is especially informative for understanding prediction across environments.
 
 ```{r table-cvloo-w-effect}
 cvloo_w_effect %>%
@@ -692,6 +741,9 @@ Kernel choice is another central analytical decision in this project. Rather tha
 
 The first table reports these comparisons for `CV1` and `CV2`.
 
+This chunk compares the main kernel families in the CV1 and CV2 summaries. It helps distinguish
+whether linear, Gaussian, or arc-cosine structures tend to perform better in these scenarios.
+
 ```{r table-cv12-kernel-family}
 cv12_kernel_family_compare %>%
   mutate( Linear = round(Linear, 3),
@@ -709,6 +761,10 @@ cv12_kernel_family_compare %>%
 ```
 
 The second table reports the same comparisons for `CV0` and `CV00`, where the results must be read together with the held-out environment structure.
+
+This chunk compares the main kernel families in the CV0 and CV00 summaries. The goal is to
+understand whether the preferred kernel structure changes when the prediction problem becomes
+environmentally stricter.
 
 ```{r table-cvloo-kernel-family}
 cvloo_kernel_family_compare %>%
@@ -731,6 +787,9 @@ cvloo_kernel_family_compare %>%
 The figures produced in this stage are visual summaries of the final model catalog. Their role is to condense the numerical tables into patterns that can be recognized quickly, especially when the reader wants to compare pathways, kernel families, and the presence or absence of `W`.
 
 The first figure summarizes predictive ability under `CV1` and `CV2`, combining mean predictive correlations with uncertainty bars across models.
+
+This chunk creates the figure that summarizes model performance for CV1 and CV2. The graphic
+provides a compact visual ranking for the genotype-partition scenarios.
 
 ```{r figure-cv12}
 cv12_plot_data <- cv12_summary %>%
@@ -768,6 +827,9 @@ ggsave(file.path(figures_dir, "prediction_cv1_cv2.tiff"),
 ```
 
 The second figure summarizes predictive ability under `CV0` and `CV00`, keeping the held-out environments explicit in the layout so that environmental differences remain visible.
+
+This chunk creates the figure that summarizes model performance for CV0 and CV00. The graphic
+highlights how model ranking changes under leave-one-environment-out validation.
 
 ```{r figure-cvloo}
 cvloo_plot_data <- cvloo_summary %>%

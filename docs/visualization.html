@@ -553,15 +553,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree527ffca4a2503d211359e79ad10d616c6037b174targetblank527ffcaa">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree7a972722f8348c11eef46aafa30c4dfd3dcb1f07targetblank7a97272a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/527ffca4a2503d211359e79ad10d616c6037b174" target="_blank">527ffca</a>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/7a972722f8348c11eef46aafa30c4dfd3dcb1f07" target="_blank">7a97272</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree527ffca4a2503d211359e79ad10d616c6037b174targetblank527ffcaa"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree7a972722f8348c11eef46aafa30c4dfd3dcb1f07targetblank7a97272a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -571,7 +571,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/527ffca4a2503d211359e79ad10d616c6037b174" target="_blank">527ffca</a>.
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/7a972722f8348c11eef46aafa30c4dfd3dcb1f07" target="_blank">7a97272</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -592,6 +592,7 @@ Ignored files:
     Ignored:    analysis/run_cv0_cv00_only.R
     Ignored:    analysis/run_cv1_cv2_only.R
     Ignored:    analysis/script_tabelas_resultados_pipeline_v2.R
+    Ignored:    analysis/site_libs/
     Ignored:    data/Article_documents/
     Ignored:    data/Maize-NIRS-GBS-main/
     Ignored:    output/Matrizes/Geno.all.rds
@@ -603,6 +604,7 @@ Ignored files:
     Ignored:    output/climate_results/combined_climate_plot.tiff
     Ignored:    output/cv-schemes.tiff
     Ignored:    output/figures/
+    Ignored:    output/results/
     Ignored:    output/tables/pipeline_review/
     Ignored:    output/tables/prediction_cv0_cv00_raw.csv
     Ignored:    output/tables/prediction_cv1_cv2_by_rep_fold_env.csv
@@ -3070,10 +3072,22 @@ Ignored files:
     Ignored:    output/variance_components/figures/
 
 Untracked files:
-    Untracked:  analysis/site_libs/
-    Untracked:  output/results/
+    Untracked:  analysis_final_round_ready.zip
+    Untracked:  analysis_text_guided_chunks.zip
+    Untracked:  output/tables/pipeline_review.zip
+    Untracked:  results_text_revision_notes.md
 
 Unstaged changes:
+    Modified:   analysis/analysis_prediction.Rmd
+    Modified:   analysis/analysis_prediction_pt.Rmd
+    Modified:   analysis/analysis_prediction_run_outputs.Rmd
+    Modified:   analysis/analysis_prediction_run_outputs_pt.Rmd
+    Modified:   analysis/climate_data.Rmd
+    Modified:   analysis/climate_data_pt.Rmd
+    Modified:   analysis/matrizes.Rmd
+    Modified:   analysis/matrizes_pt.Rmd
+    Modified:   analysis/variance_components.Rmd
+    Modified:   analysis/variance_components_pt.Rmd
     Modified:   analysis/visualization.Rmd
     Modified:   analysis/visualization_pt.Rmd
 
@@ -3120,6 +3134,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/a4afda3089600ded336b79ede63672a54bab86c1/analysis/visualization.Rmd" target="_blank">a4afda3</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-08
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/a4afda3089600ded336b79ede63672a54bab86c1/docs/visualization.html" target="_blank">a4afda3</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-08
+</td>
+<td>
+update
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -3710,6 +3758,9 @@ project results.</p>
 code, tables, and figures. This helps the tutorial remain readable when
 it is inspected in HTML and keeps the visual presentation stable across
 the different outputs produced in this stage.</p>
+<p>This chunk starts a clean session and defines the project root used
+by the visualization module. The aim is to make the reading and
+summarization of prediction outputs reproducible from the beginning.</p>
 <pre class="r"><code>knitr::opts_chunk$set( echo = TRUE,
  warning = FALSE,
  message = FALSE,
@@ -3728,6 +3779,9 @@ the site and by manuscript-oriented materials.</p>
 <p>This section standardizes the project root, locates the folders that
 contain the prediction outputs, and prepares the directories in which
 the final tables and figures will be written.</p>
+<p>This chunk loads the packages needed for reading, summarizing, and
+plotting the prediction results. It also defines the folders where raw
+outputs and derived tables are stored.</p>
 <pre class="r"><code>rm(list = ls())
 options(scipen = 999)
 packages_needed &lt;- c( &quot;dplyr&quot;,
@@ -3785,6 +3839,9 @@ the document are not arbitrary. They are designed to help the reader
 understand where predictive gains come from and whether those gains are
 associated with weather information, kernel choice, or integration
 between genomic and phenomic sources.</p>
+<p>This chunk recreates a compact model catalog so the summaries and
+figures can be interpreted with stable labels. Keeping the catalog close
+to the visualization stage makes comparisons easier to follow.</p>
 <pre class="r"><code>model_catalog &lt;- tibble( ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
  Model = paste0(&quot;Eta&quot;, c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
  Pathway = c( rep(&quot;Genomic pathway&quot;, 6), rep(&quot;Phenomic pathway&quot;, 6), rep(&quot;Combined G + P pathway&quot;, 6) ),
@@ -3812,6 +3869,9 @@ information.</p>
 They are later used to build tables that quantify how much predictive
 performance changes when <code>W</code> is introduced within the same
 pathway and kernel family.</p>
+<p>This chunk defines the model pairs and families that will be
+contrasted in the summary tables. These pairings provide the analytical
+structure used to interpret prediction performance.</p>
 <pre class="r"><code>comparison_pairs &lt;- tibble( Comparison = c( &quot;Genomic linear&quot;, &quot;Genomic Gaussian&quot;, &quot;Genomic arc-cosine&quot;, &quot;Phenomic linear&quot;, &quot;Phenomic Gaussian&quot;, &quot;Phenomic arc-cosine&quot;, &quot;Combined linear&quot;, &quot;Combined Gaussian&quot;, &quot;Combined arc-cosine&quot; ),
  WithoutW = c(&quot;Eta1&quot;, &quot;Eta3&quot;, &quot;Eta5&quot;, &quot;Eta2&quot;, &quot;Eta4&quot;, &quot;Eta6&quot;, &quot;Eta7&quot;, &quot;Eta8&quot;, &quot;Eta9&quot;),
   WithW = c(&quot;Eta10&quot;, &quot;Eta13&quot;, &quot;Eta16&quot;, &quot;Eta11&quot;, &quot;Eta14&quot;, &quot;Eta17&quot;, &quot;Eta12&quot;, &quot;Eta15&quot;, &quot;Eta18&quot;) )
@@ -3836,6 +3896,9 @@ ignores other artifacts such as <code>bglr_runs</code>. This makes the
 downstream summaries compatible with the new <code>Rep/Fold</code>
 contract while preserving the distinction between genotype-based and
 leave-one-environment-out validation problems.</p>
+<p>This chunk scans the results folders and records the CSV files
+available for the visualization stage. The resulting inventory
+establishes exactly which prediction outputs will be summarized.</p>
 <pre class="r"><code>all_result_rel_paths &lt;- list.files(
   results_dir,
   pattern = &quot;\\.csv$&quot;,
@@ -3883,6 +3946,9 @@ summaries.</p>
 <p>This design is useful because it keeps the file system organized for
 quick inspection while still allowing the visualization stage to rebuild
 unified tables across repetitions and folds.</p>
+<p>This chunk reads the CV1 and CV2 result files and converts their file
+paths into structured identifiers such as trait, repetition, fold, and
+model. This transformation is essential for downstream aggregation.</p>
 <pre class="r"><code>cv12_list &lt;- vector(&quot;list&quot;, length(cv12_files))
 
 for (i in seq_along(cv12_files)) {
@@ -3978,6 +4044,10 @@ the leave-one-environment-out summaries are built.</p>
 <p>This section reads those files, checks the consistency of the
 structured paths, and prepares the metadata needed to keep
 <code>Env_leave</code> explicit throughout the summaries.</p>
+<p>This chunk reads the CV0 and CV00 result files and extracts the
+environment-aware identifiers stored in their paths and file names. The
+output provides the long-format data frame used for leave-one-
+environment summaries.</p>
 <pre class="r"><code>cvloo_list &lt;- vector(&quot;list&quot;, length(cvloo_files))
 
 for (i in seq_along(cvloo_files)) {
@@ -4079,6 +4149,9 @@ across repetitions, folds, and environments.</p>
 <p>This hierarchy is important because raw prediction files are too
 granular for interpretation. What matters at this stage is the stable
 performance pattern of each model under each validation scenario.</p>
+<p>This chunk aggregates the CV1 and CV2 results into model-level
+summaries. These tables quantify average prediction behavior across
+repetitions and folds for the genotype-partition scenarios.</p>
 <pre class="r"><code>cv12_env_fold &lt;- cv12_raw %&gt;%
   group_by( ModelNumber,
    Model,
@@ -4169,6 +4242,9 @@ strongly across environments.</p>
 allows the reader to see not only which models perform well on average,
 but also whether that behavior is stable across the different
 environmental contexts.</p>
+<p>This chunk aggregates the CV0 and CV00 results into environment-aware
+summaries. The goal is to describe how prediction behaves when the
+validation problem is centered on environmental extrapolation.</p>
 <pre class="r"><code>cvloo_env_filtered &lt;- cvloo_raw %&gt;%
   filter(Env == Env_leave)
 cvloo_env_fold &lt;- cvloo_env_filtered %&gt;%
@@ -4242,6 +4318,9 @@ within the same pathway.</p>
 <p>The tables built in this section reorganize the summaries into
 analytical comparisons that are easier to interpret and easier to carry
 into manuscript-oriented outputs.</p>
+<p>This chunk builds the derived comparison tables that will support
+model ranking and interpretation. These tables translate raw summaries
+into focused analytical contrasts.</p>
 <pre class="r"><code>cv12_w_effect &lt;- comparison_pairs %&gt;%
   left_join( cv12_summary %&gt;% select(Trait, CV, Model, MeanCorrelation, SDCorrelation),
     by = c(&quot;WithoutW&quot; = &quot;Model&quot;) ) %&gt;%
@@ -4291,6 +4370,9 @@ supplementary material, or classroom discussion.</p>
 <p>These reduced tables are especially useful when the reader wants to
 compare pathways, kernel families, or the relative position of the
 best-performing models without scanning the full outputs.</p>
+<p>This chunk formats and saves the main tables used later in the
+report. It provides a readable presentation of the numerical summaries
+before the figures are drawn.</p>
 <pre class="r"><code>cv12_table_display &lt;- cv12_summary %&gt;%
   arrange(Trait, CV, Pathway, KernelFamily, WeatherStatus) %&gt;%
   mutate( MeanCorrelation = round(MeanCorrelation, 3),
@@ -4349,6 +4431,9 @@ problem.</p>
 <p>The first table focuses on <code>CV1</code> and <code>CV2</code>,
 where the challenge is defined around new or partially observed
 genotypes.</p>
+<p>This chunk displays the top-performing models for the CV1 and CV2
+scenarios. It is intended to highlight the strongest candidates under
+genotype-partition validation.</p>
 <pre class="r"><code>cv12_top3 %&gt;%
   knitr::kable( caption = &quot;Top 3 models for each trait and validation scheme in CV1 and CV2.&quot;,
     align = &quot;llccc&quot; ) %&gt;%
@@ -4587,6 +4672,9 @@ G+P + E
 </table>
 <p>The second table focuses on <code>CV0</code> and <code>CV00</code>,
 where performance is also conditioned by the held-out environment.</p>
+<p>This chunk displays the top-performing models for the CV0 and CV00
+scenarios. It emphasizes the best performers under
+leave-one-environment-out validation.</p>
 <pre class="r"><code>cvloo_top3 %&gt;%
   knitr::kable( caption = &quot;Top 3 models for each trait, validation scheme, and held-out environment in CV0 and CV00.&quot;,
     align = &quot;lllccc&quot; ) %&gt;%
@@ -5593,6 +5681,9 @@ resulting contrasts are easier to interpret than raw model-by-model
 inspection.</p>
 <p>The first table presents the effect of adding <code>W</code> under
 <code>CV1</code> and <code>CV2</code>.</p>
+<p>This chunk summarizes how the inclusion of the weather effect changes
+performance in CV1 and CV2. The comparison helps interpret the
+contribution of weather-informed model extensions.</p>
 <pre class="r"><code>cv12_w_effect %&gt;%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
    MeanWithW = round(MeanWithW, 3),
@@ -6803,6 +6894,9 @@ CV2
 <p>The second table presents the same type of contrast under
 <code>CV0</code> and <code>CV00</code>, where generalization to new
 environments becomes part of the prediction problem.</p>
+<p>This chunk summarizes how the inclusion of the weather effect changes
+performance in CV0 and CV00. This is especially informative for
+understanding prediction across environments.</p>
 <pre class="r"><code>cvloo_w_effect %&gt;%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
    MeanWithW = round(MeanWithW, 3),
@@ -11910,6 +12004,9 @@ as isolated models, this section compares them within each pathway so
 that the effect of kernel family can be interpreted directly.</p>
 <p>The first table reports these comparisons for <code>CV1</code> and
 <code>CV2</code>.</p>
+<p>This chunk compares the main kernel families in the CV1 and CV2
+summaries. It helps distinguish whether linear, Gaussian, or arc-cosine
+structures tend to perform better in these scenarios.</p>
 <pre class="r"><code>cv12_kernel_family_compare %&gt;%
   mutate( Linear = round(Linear, 3),
    Gaussian = round(Gaussian, 3),
@@ -12739,6 +12836,10 @@ Without W
 <p>The second table reports the same comparisons for <code>CV0</code>
 and <code>CV00</code>, where the results must be read together with the
 held-out environment structure.</p>
+<p>This chunk compares the main kernel families in the CV0 and CV00
+summaries. The goal is to understand whether the preferred kernel
+structure changes when the prediction problem becomes environmentally
+stricter.</p>
 <pre class="r"><code>cvloo_kernel_family_compare %&gt;%
   mutate( Linear = round(Linear, 3),
    Gaussian = round(Gaussian, 3),
@@ -16171,6 +16272,9 @@ of <code>W</code>.</p>
 <p>The first figure summarizes predictive ability under <code>CV1</code>
 and <code>CV2</code>, combining mean predictive correlations with
 uncertainty bars across models.</p>
+<p>This chunk creates the figure that summarizes model performance for
+CV1 and CV2. The graphic provides a compact visual ranking for the
+genotype-partition scenarios.</p>
 <pre class="r"><code>cv12_plot_data &lt;- cv12_summary %&gt;%
   mutate( ShortDescription = factor(ShortDescription, levels = model_catalog$ShortDescription) )
 lower_limit_cv12 &lt;- min(cv12_plot_data$MeanCorrelation - cv12_plot_data$SDCorrelation, na.rm = TRUE)
@@ -16289,6 +16393,9 @@ WevertonGomesCosta
 <code>CV0</code> and <code>CV00</code>, keeping the held-out
 environments explicit in the layout so that environmental differences
 remain visible.</p>
+<p>This chunk creates the figure that summarizes model performance for
+CV0 and CV00. The graphic highlights how model ranking changes under
+leave-one-environment-out validation.</p>
 <pre class="r"><code>cvloo_plot_data &lt;- cvloo_summary %&gt;%
   mutate( ShortDescription = factor(ShortDescription, levels = model_catalog$ShortDescription),
     Env_leave = factor(Env_leave, levels = c(&quot;CS11_WS&quot;, &quot;CS11_WW&quot;, &quot;CS12_WS&quot;, &quot;CS12_WW&quot;)) )

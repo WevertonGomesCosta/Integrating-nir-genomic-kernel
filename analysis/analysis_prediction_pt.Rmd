@@ -59,6 +59,10 @@ Antes de definir qualquer modelo de predição, é útil começar de uma sessão
 
 Nesta etapa, a ênfase ainda está na organização e não na execução. Os modelos de predição são apresentados, comparados e traduzidos para suas estruturas ETA, mas a rotina cara de ajuste fica reservada ao módulo de execução. Por essa razão, a configuração inicial aqui é intencionalmente mínima. A notação científica é desligada para melhorar a legibilidade dos valores impressos, o ambiente de trabalho é limpo para que os objetos usados adiante no arquivo sejam aqueles explicitamente carregados a partir das saídas do pipeline, e o pacote `parallel` é declarado porque o número de núcleos de processamento já é definido nesta etapa.
 
+Este chunk inicia uma sessão limpa de R e carrega o pacote básico usado para definir os recursos
+computacionais. O objetivo é garantir que a preparação da predição parta de entradas explícitas, e
+não de objetos remanescentes na memória.
+
 ```{r setup}
 rm(list = ls())
 options(scipen = 999)
@@ -73,6 +77,10 @@ A análise preditiva começa a partir das matrizes e kernels já gerados em `mat
 Esses objetos representam partes diferentes do problema. `Pheno` contém a estrutura em nível de observação do estudo, incluindo traits, genótipos e ambientes. `ZG` e `ZP` representam as relações lineares genômicas e fenômicas. `ZE` representa a estrutura categórica de ambiente, enquanto `ZW` carrega a informação derivada do clima. Os objetos restantes correspondem a interações e kernels não lineares que permitem comparar modelos de predição mais simples e mais flexíveis.
 
 Ler esses objetos diretamente de `output/Matrizes/` é importante por duas razões. Primeiro, isso mantém o fluxo reprodutível, fazendo a predição depender de artefatos já criados na etapa anterior. Segundo, isso permite ao leitor ver como o módulo de predição está conectado ao módulo de harmonização e construção de kernels.
+
+Este chunk lê as matrizes e os kernels produzidos no módulo anterior. Em conjunto, esses objetos
+fornecem o conjunto completo de entradas necessário para descrever os modelos de predição sem
+reconstruí-los do zero.
 
 ```{r load-inputs}
 Pheno <- readRDS("output/Matrizes/Pheno.rds")
@@ -111,6 +119,10 @@ Uma vez que as entradas estejam disponíveis, o próximo passo é definir as con
 
 As configurações do MCMC (`nIter`, `burnIn` e `thin`) definem como a estimação Bayesiana será conduzida. O número de repetições (`num_rep`) controla quantas partições independentes serão mais adiante usadas nos esquemas de validação. O número de núcleos de processamento (`n_cores`) é registrado aqui porque o módulo de execução pode usar computação paralela quando a etapa cara de predição for ativada.
 
+Este chunk registra os controles de MCMC e a estrutura de repetições que governarão a etapa de
+execução. Esses valores definem o escopo computacional do fluxo de predição antes que qualquer
+modelo seja ajustado.
+
 ```{r mcmc-settings}
 nIter <- 5000
 burnIn <- 1000
@@ -131,6 +143,9 @@ n_cores
 A etapa de predição não compara uma única especificação. Em vez disso, ela avalia um catálogo reduzido de 18 modelos que representam diferentes formas de combinar ambiente (`E`), informação genômica (`G`), informação fenômica (`P`), informação derivada do clima (`W`) e suas correspondentes estruturas de interação. Esse catálogo é útil porque permite ao leitor ver, em um único lugar, como a comparação analítica está organizada antes que os modelos sejam ajustados.
 
 A tabela abaixo deve ser lida como um mapa da estratégia de modelagem adotada no estudo. Cada linha identifica um modelo, fornece um rótulo estável e resume sua composição principal. Esses rótulos serão usados novamente na etapa de execução, nos arquivos de saída e, mais adiante, no módulo de visualização. Por isso, entender o catálogo aqui torna o restante do fluxo de predição muito mais fácil de acompanhar.
+
+Este chunk cria um catálogo compacto dos 18 modelos comparados no estudo. A tabela funciona como um
+mapa que liga cada rótulo Eta à sua composição biológica e estatística.
 
 ```{r model-catalog}
 model_catalog <- data.frame(
@@ -172,6 +187,9 @@ Esta parte do tutorial é importante porque conecta o significado biológico dos
 
 Antes de preencher as especificações dos 18 modelos, é útil criar um contêiner vazio que armazenará essas estruturas de forma organizada. A partir daí, cada grupo de modelos é adicionado à lista na mesma ordem em que aparece no catálogo.
 
+Este chunk cria o objeto que armazenará todas as especificações ETA. Começar com um contêiner vazio
+facilita adicionar os modelos em pequenos grupos e manter a estrutura final alinhada ao catálogo.
+
 ```{r eta-list-initialize}
 Eta_list <- list()
 ```
@@ -179,6 +197,10 @@ Eta_list <- list()
 ### 6.2 Modelos 1 a 6: vias de fonte única com `E`
 
 Os primeiros seis modelos representam as comparações mais simples do catálogo. Cada um combina o efeito categórico de ambiente com uma única fonte principal de informação — linear ou baseada em kernel — juntamente com sua interação correspondente. Esses modelos são úteis como ponto de partida porque permitem ao leitor ver como cada fonte de informação se comporta quando considerada de maneira relativamente isolada.
+
+Este chunk define os seis primeiros modelos, cada um combinando a linha de base ambiental com uma
+fonte principal de informação e sua interação com ambiente. Esses modelos estabelecem os caminhos
+comparativos mais simples do estudo.
 
 ```{r eta-list-models-1-6}
 Eta_list[[1]] <- list(
@@ -222,6 +244,9 @@ Eta_list[[6]] <- list(
 
 O grupo seguinte combina simultaneamente duas fontes principais de informação, mas ainda sem introduzir o componente climático. Esses modelos são importantes porque permitem comparar o ganho potencial obtido ao integrar estruturas genômicas e fenômicas na mesma formulação.
 
+Este chunk define os modelos integrados que combinam informação genômica e fenômica sem o kernel
+climático. Eles ampliam a comparação de modelos de fonte única para vias biológicas conjuntas.
+
 ```{r eta-list-models-7-9}
 Eta_list[[7]] <- list(
   list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
@@ -251,6 +276,10 @@ Eta_list[[9]] <- list(
 ### 6.4 Modelos 10 a 12: vias lineares enriquecidas com clima
 
 Aqui o catálogo passa a incorporar explicitamente a informação derivada do clima. Esses modelos mantêm estruturas lineares para os componentes genômicos ou fenômicos, mas acrescentam `W` e suas interações correspondentes. Em termos didáticos, este é o ponto em que a comparação deixa de ser apenas entre fontes biológicas e passa a incluir também a contribuição potencial do clima para a predição.
+
+Este chunk adiciona modelos que incluem o kernel derivado do clima juntamente com informação
+genômica e fenômica linear. Essas especificações ajudam a avaliar se o clima melhora a predição além
+dos principais efeitos biológicos.
 
 ```{r eta-list-models-10-12}
 Eta_list[[10]] <- list(
@@ -284,6 +313,9 @@ Eta_list[[12]] <- list(
 ### 6.5 Modelos 13 a 18: vias não lineares enriquecidas com clima
 
 Os seis modelos finais estendem a comparação anterior ao combinar informação derivada do clima com estruturas de kernel não lineares. Esses modelos são importantes porque representam as especificações mais flexíveis do catálogo. Em termos práticos, eles permitem ao fluxo comparar formulações lineares mais simples com alternativas não lineares mais ricas, que podem capturar padrões de similaridade mais complexos entre genótipos, perfis fenômicos e ambientes.
+
+Este chunk completa o catálogo com kernels não lineares acrescidos de clima e suas interações. Esses
+modelos representam as estruturas mais flexíveis consideradas no estudo de predição.
 
 ```{r eta-list-models-13-18}
 Eta_list[[13]] <- list(
@@ -345,6 +377,9 @@ Eta_list[[18]] <- list(
 
 Antes de avançar para o desenho da validação, é útil verificar se a representação computacional dos modelos está completa. Essa checagem final confirma que o número de objetos ETA coincide com o número de modelos listados no catálogo. Manter essas duas estruturas alinhadas é essencial, porque as etapas seguintes assumem que rótulos de modelos, números de modelos e especificações ETA se referem ao mesmo conjunto ordenado de 18 modelos.
 
+Este chunk verifica se o catálogo ETA contém o número esperado de modelos e se cada posição foi
+preenchida. Trata-se de uma checagem estrutural simples antes de passar ao desenho de validação.
+
 ```{r eta-list-check}
 stopifnot(length(Eta_list) == nrow(model_catalog))
 length(Eta_list)
@@ -359,6 +394,9 @@ Esta seção esclarece o que é escondido em cada esquema de validação e qual 
 ### 7.1 Cenários de validação e seu significado científico
 
 Os quatro esquemas de validação adotados neste estudo são resumidos abaixo. Cada um corresponde a um alvo de predição diferente e, portanto, avalia uma noção diferente de generalização. Leia esta tabela como um mapa das perguntas preditivas que serão mais adiante implementadas no submódulo de execução.
+
+Este chunk resume os cenários de validação usados posteriormente no módulo de execução. A tabela
+ajuda a relacionar cada cenário à pergunta analítica que ele procura responder.
 
 ```{r cv-scenarios-table}
 cv_scenarios <- data.frame(
@@ -385,6 +423,10 @@ cv_scenarios
 
 Os dois primeiros esquemas são gerados a partir do mesmo ajuste por folds. Em `CV1`, o modelo é avaliado em genótipos que foram completamente excluídos do treinamento naquele fold. Em `CV2`, o modelo é avaliado nos genótipos que permaneceram no treinamento sob esse mesmo ajuste. Portanto, `CV2` não é um segundo desenho de mascaramento; ele é a acurácia de referência dentro do fold para os genótipos de treinamento produzida pelo mesmo ajuste usado em `CV1`. O resumo abaixo deixa essa distinção explícita.
 
+Este chunk descreve o primeiro par de esquemas de validação, em que a predição é avaliada em
+partições de genótipos enquanto os ambientes permanecem representados no treino. O código registra o
+desenho operacional que será executado mais adiante.
+
 ```{r cv1-cv2-design}
 cv12_design <- data.frame(
   Scenario = c("CV1", "CV2"),
@@ -406,6 +448,9 @@ cv12_design
 
 Os esquemas `CV0` e `CV00` deslocam a dificuldade para o eixo dos ambientes e são derivados do mesmo ajuste com ambiente mascarado dentro de cada fold. Em `CV0`, o alvo de avaliação é o conjunto de genótipos que já foram vistos em outros ambientes e precisam ser previstos no ambiente retirado. Em `CV00`, o alvo é mais restritivo: novos genótipos nesse mesmo ambiente retirado. Essa distinção é essencial porque `CV0` e `CV00` respondem a perguntas de generalização diferentes, embora nasçam do mesmo passo de mascaramento.
 
+Este chunk descreve o par leave-one-environment-out. Aqui o foco sai das partições genotípicas e
+passa para a extrapolação entre ambientes, que é um desafio preditivo mais rigoroso.
+
 ```{r cv0-cv00-design}
 cvloo_design <- data.frame(
   Scenario = c("CV0", "CV00"),
@@ -426,6 +471,10 @@ cvloo_design
 ### 7.4 Nomes de arquivos e reprodutibilidade nas etapas posteriores
 
 O fluxo de predição produz muitos arquivos de saída, e seus nomes precisam carregar informação suficiente para identificar o cenário de validação, o trait, o modelo ajustado, a repetição e o fold ou ambiente deixado de fora. Manter esse padrão explícito é importante porque os módulos seguintes usam esses nomes para inventariar, resumir e visualizar os resultados. A tabela abaixo mostra a convenção de nomes que conecta a etapa de execução aos resumos posteriores.
+
+Este chunk documenta as regras de nomenclatura usadas para salvar as saídas de predição e os
+artefatos do BGLR. Deixar esses padrões explícitos ajuda a manter consistência entre execução,
+inventário e visualização.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(
