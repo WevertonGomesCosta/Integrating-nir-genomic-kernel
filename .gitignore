@@ -13,7 +13,6 @@
 /output/tables/prediction_cv1_cv2_raw.csv
 /output/tables/prediction_cv0_cv00_raw.csv
 /output/tables/prediction_cv1_cv2_by_rep_fold_env.csv
+/output/tables/prediction_cv0_cv00_by_rep_fold_env.csv
 /output/tables/pipeline_review
-/output/variance_components/bglr_runs/*.dat
 /output/results/*.csv
-/output/results/bglr_runs/*.dat
