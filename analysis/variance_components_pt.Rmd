@@ -77,6 +77,7 @@ library(readr)
 library(stringr)
 library(tibble)
 library(ggplot2)
+library(patchwork)
 library(BGLR)
 library(parallel)
 library(doParallel)
@@ -178,11 +179,11 @@ component_order <- c(
   "GGK × W",
   "PGK × W",
   "GAK × W",
-  "PAKW × W",
+  "PAK × W",
   "Residual"
 )
 
-component_order[component_order == "PAKW × W"] <- "PAK × W"
+component_order[component_order == "PAK × W"] <- "PAK × W"
 
 ```
 
@@ -852,54 +853,74 @@ A figura abaixo resume a contribuição percentual de cada componente de variân
 
 Essa figura deve ser lida como um resumo estrutural dos modelos ajustados, e não como prova direta de que combinar mais fontes de dados leva automaticamente a maior complementaridade biológica ou melhor desempenho preditivo.
 
-```{r variance-figure, fig.cap="Figura 3. Percentual médio posterior da variância total atribuído a cada componente do modelo nos 18 modelos preditivos para produtividade de grãos (GY) e peso de grãos (KW). Cada barra empilhada representa um modelo (Eta1-Eta18), com média ao longo das repetições, e as cores identificam os componentes de variância incluídos na estrutura do modelo. O kernel climático (W) e seus termos de interação associados aparecem principalmente nos modelos Eta10-Eta18. A decomposição da variância deve ser interpretada como uma descrição da estrutura do modelo, e não automaticamente como evidência de maior complementaridade biológica entre as fontes de informação.", fig.height=10, fig.width=13}
-trait_labels <- c(
-  GY = "A. Produtividade de grãos (GY)",
-  KW = "B. Peso de grãos (KW)"
+```{r variance-figure, fig.cap="Figura 3. Percentual médio posterior da variância total atribuído a cada componente do modelo nos 18 modelos preditivos para produtividade de grãos (GY) e peso de grãos (KW). Cada barra empilhada representa uma composição completa de modelo, com média ao longo das repetições, e as cores identificam os componentes de variância incluídos na estrutura do modelo. O kernel climático (W) e seus termos de interação associados aparecem principalmente nos modelos com clima. A decomposição da variância deve ser interpretada como uma descrição estrutural dos modelos ajustados, e não automaticamente como evidência de maior complementaridade biológica entre as fontes de informação.", fig.height=12, fig.width=14}
+component_codes_for_figure <- c(
+  "E", "G", "P", "W",
+  "GE", "PE", "GW", "PW",
+  "GGK", "PGK", "GAK", "PAK",
+  "GGKE", "PGKE", "GAKE", "PAKE",
+  "GGKW", "PGKW", "GAKW", "PAKW",
+  "Residual"
 )
 
-variance_plot <- variance_summary %>%
-  ggplot(aes(x = Model, y = Percentage, fill = ComponentLabel)) +
-  geom_col(color = "white", linewidth = 0.15, width = 0.82) +
-  facet_wrap(~ Trait, ncol = 1, labeller = as_labeller(trait_labels)) +
-  ggthemes::scale_fill_gdocs(name = "Componente de variância", drop = FALSE) +
-  scale_y_continuous(
-    labels = scales::percent_format(accuracy = 1),
-    expand = expansion(mult = c(0, 0.02))
-  ) +
-  labs(
-    x = "Identificador do modelo",
-    y = "Proporção da variância total"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 13, hjust = 0.5),
-    strip.text = element_text(face = "bold", size = 11),
-    axis.title = element_text(face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
-    axis.text.y = element_text(size = 9),
-    legend.position = "right",
-    legend.box = "vertical",
-    legend.title = element_text(face = "bold", size = 10),
-    legend.text = element_text(size = 8),
-    legend.key.height = unit(0.45, "cm"),
-    legend.key.width = unit(0.55, "cm"),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor = element_blank()
-  ) +
-  guides(fill = guide_legend(ncol = 2, byrow = TRUE))
+model_axis_labels <- stats::setNames(
+  stringr::str_wrap(model_info$Description, width = 24),
+  model_info$Model
+)
+
+variance_plot_data <- variance_summary %>%
+  dplyr::mutate(
+    ComponentFigure = factor(Component, levels = component_codes_for_figure)
+  )
+
+build_variance_panel <- function(trait_code, trait_title, show_x_axis = TRUE) {
+  variance_plot_data %>%
+    dplyr::filter(Trait == trait_code) %>%
+    ggplot(aes(x = Model, y = Percentage, fill = ComponentFigure)) +
+    geom_col(color = "white", linewidth = 0.15, width = 0.82) +
+    ggthemes::scale_fill_gdocs(name = "Componente de variância", drop = FALSE) +
+    scale_x_discrete(labels = model_axis_labels) +
+    scale_y_continuous(
+      labels = scales::percent_format(accuracy = 1),
+      expand = expansion(mult = c(0, 0.02))
+    ) +
+    labs(
+      title = trait_title,
+      x = if (show_x_axis) "Composição completa do modelo" else NULL,
+      y = "Proporção da variância total"
+    ) +
+    theme_minimal(base_size = 11) +
+    theme(
+      plot.title = element_text(face = "bold", size = 12, hjust = 0),
+      axis.title = element_text(face = "bold"),
+      axis.text.x = if (show_x_axis) element_text(angle = 45, hjust = 1, vjust = 1, size = 8) else element_blank(),
+      axis.title.x = if (show_x_axis) element_text(face = "bold") else element_blank(),
+      axis.ticks.x = if (show_x_axis) element_line() else element_blank(),
+      axis.text.y = element_text(size = 9),
+      legend.position = "right",
+      legend.box = "vertical",
+      legend.title = element_text(face = "bold", size = 10),
+      legend.text = element_text(size = 8),
+      legend.key.height = unit(0.40, "cm"),
+      legend.key.width = unit(0.55, "cm"),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor = element_blank()
+    ) +
+    guides(fill = guide_legend(ncol = 1, byrow = TRUE))
+}
+
+variance_plot_gy <- build_variance_panel("GY", "Produtividade de grãos (GY)", show_x_axis = FALSE)
+variance_plot_kw <- build_variance_panel("KW", "Peso de grãos (KW)", show_x_axis = TRUE)
+
+variance_plot <- patchwork::wrap_plots(
+  variance_plot_gy,
+  variance_plot_kw,
+  ncol = 1,
+  guides = "collect"
+) +
+  patchwork::plot_annotation(tag_levels = "A")
 
 print(variance_plot)
-
-ggsave(
-  filename = file.path(figure_dir, "variance_components_article.tiff"),
-  plot = variance_plot,
-  width = 14,
-  height = 10,
-  dpi = 300,
-  compression = "lzw",
-  bg = "white"
-)
 ```
 
 ## 11. Guia de interpretação

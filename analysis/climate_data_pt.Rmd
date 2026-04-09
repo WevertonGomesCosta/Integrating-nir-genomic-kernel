@@ -80,7 +80,7 @@ Também criamos o diretório de saída no início do script. Isso evita erros ao
 A próxima etapa carrega os pacotes necessários para download de dados, manipulação, visualização e composição de painéis antes do início do processamento climático.
 
 ```{r packages}
-# Uncomment if installation is required
+# Descomente se a instalação for necessária
 # install.packages(c("nasapower", "tidyverse", "lubridate", "patchwork", "ggthemes", "kableExtra"))
 
 library(nasapower)
@@ -107,22 +107,22 @@ Essas variáveis foram escolhidas porque permitem derivar descritores climático
 Em seguida, definimos locais, anos e metadados básicos que controlam quais séries meteorológicas serão usadas e como os resultados serão identificados.
 
 ```{r parameters}
-# Experimental site coordinates (College Station, TX)
+# Coordenadas do local experimental (College Station, TX)
 coords_texas <- c(lon = -96.3344, lat = 30.6282)
 
-# Growing season intervals
+# Intervalos das safras
 start_date_2011 <- "2011-05-01"
 end_date_2011   <- "2011-09-30"
 
 start_date_2012 <- "2012-05-01"
 end_date_2012   <- "2012-09-30"
 
-# NASA POWER variables
-# PRECTOTCORR      = Corrected total precipitation (mm/day)
-# T2M_MAX, T2M_MIN = Maximum and minimum air temperature at 2 m (°C)
-# RH2M             = Relative humidity at 2 m (%)
-# ALLSKY_SFC_SW_DWN= All-sky shortwave downward radiation (MJ m^-2 day^-1)
-# WS2M             = Wind speed at 2 m (m/s)
+# Variáveis da NASA POWER
+# PRECTOTCORR      = Precipitação total corrigida (mm/dia)
+# T2M_MAX, T2M_MIN = Temperatura máxima e mínima do ar a 2 m (°C)
+# RH2M             = Umidade relativa a 2 m (%)
+# ALLSKY_SFC_SW_DWN= Radiação solar de onda curta incidente (MJ m^-2 dia^-1)
+# WS2M             = Velocidade do vento a 2 m (m/s)
 params <- c(
   "PRECTOTCORR",
   "T2M_MAX",
@@ -193,13 +193,13 @@ daily_preview_table <- texas_climate_data %>%
   ) %>%
   rename(
     Date = date,
-    Year = year,
-    `Precipitation` = PRECTOTCORR,
+    Ano = year,
+    `Precipitação` = PRECTOTCORR,
     `Tmax` = T2M_MAX,
     `Tmin` = T2M_MIN,
-    `Relative humidity` = RH2M,
-    `Solar radiation` = ALLSKY_SFC_SW_DWN,
-    `Wind speed` = WS2M
+    `Umidade relativa` = RH2M,
+    `Radiação solar` = ALLSKY_SFC_SW_DWN,
+    `Velocidade do vento` = WS2M
   )
 
 knitr::kable(
@@ -292,9 +292,9 @@ As configurações gráficas compartilhadas abaixo garantem que as figuras de pr
 ```{r figure_settings}
 month_levels <- 5:9
 
-# Month labels are fixed explicitly here so the whole script always uses
-# the same format with an uppercase initial, regardless of local settings.
-month_labels <- c("May", "Jun", "Jul", "Aug", "Sep")
+# Os rótulos dos meses são definidos explicitamente aqui para que todo o script use
+# o mesmo formato com inicial maiúscula, independentemente das configurações locais.
+month_labels <- c("Mai", "Jun", "Jul", "Ago", "Set")
 
 month_breaks <- as.Date(c(
   "2011-05-01", "2011-06-01", "2011-07-01", "2011-08-01", "2011-09-01",
@@ -302,8 +302,8 @@ month_breaks <- as.Date(c(
 ))
 
 month_break_labels <- c(
-  "May", "Jun", "Jul", "Aug", "Sep",
-  "May", "Jun", "Jul", "Aug", "Sep"
+  "Mai", "Jun", "Jul", "Ago", "Set",
+  "Mai", "Jun", "Jul", "Ago", "Set"
 )
 
 daily_data_with_parts <- texas_climate_data %>%
@@ -331,7 +331,7 @@ p_precip_daily <- ggplot(
     title = "Precipitação diária",
     subtitle = "College Station, Texas, EUA, 2011-2012",
     x = "Mês",
-    y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
+    y = expression("Precipitação (" * mm ~ day^{-1} * ")"),
     caption = "As barras representam a precipitação total diária corrigida obtida da NASA POWER."
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
@@ -378,7 +378,7 @@ p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill 
     title = "Precipitação diária por mês e ano",
     subtitle = "Agrupada por dia do mês dentro de cada painel mensal",
     x = "Dia do mês",
-    y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
+    y = expression("Precipitação (" * mm ~ day^{-1} * ")"),
     fill = "Ano",
     caption = "Essa organização facilita a comparação, dentro da safra, dos padrões de chuva entre os anos."
   ) +
@@ -502,7 +502,7 @@ p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperatur
     title = "Temperatura diária do ar",
     subtitle = "Valores mínimos, médios e máximos; linhas tracejadas indicam tendências LOESS",
     x = "Mês",
-    y = expression("Air temperature (" * degree * "C)"),
+    y = expression("Temperatura do ar (" * degree * "C)"),
     color = "Métrica de temperatura",
     caption = "As curvas LOESS tracejadas são incluídas apenas para resumir as trajetórias sazonais de cada métrica de temperatura."
   ) +
@@ -538,8 +538,6 @@ p3
 
 Depois de criar os gráficos principais de precipitação e temperatura, nós os combinamos em uma única figura multipainel. Isso é útil quando a saída final se destina a relatórios, manuscritos ou material suplementar.
 
-A figura também é exportada como um arquivo TIFF de alta resolução, que é uma exigência comum para submissão a periódicos.
-
 Os principais painéis de precipitação e temperatura são combinados abaixo em um único arranjo, pronto para inspeção ou uso em relatórios.
 
 ```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 5. Resumo em múltiplos painéis dos principais contrastes climáticos entre os anos, incluindo precipitação diária por mês, totais mensais de precipitação e perfis diários de temperatura do ar."}
@@ -556,23 +554,13 @@ combined_plot <- patchwork::wrap_plots(
 ) +
   patchwork::plot_annotation(
     tag_levels = "A",
-    title = "Main climatic contrasts between growing seasons",
+    title = "Principais contrastes climáticos entre as safras",
     theme = theme(
       plot.title = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 8))
     )
   )
 
 print(combined_plot)
-
-ggsave(
-  filename = "output/climate_results/combined_climate_plot.tiff",
-  plot = combined_plot,
-  width = 14,
-  height = 10,
-  dpi = 300,
-  compression = "lzw",
-  bg = "white"
-)
 ```
 
 ### 5.7 Variáveis climáticas diárias adicionais
@@ -593,7 +581,7 @@ p4 <- ggplot(
     title = "Radiação solar de ondas curtas diária",
     subtitle = "A linha tracejada indica a tendência LOESS",
     x = "Mês",
-    y = expression("Shortwave solar radiation (" * MJ ~ m^{-2} ~ day^{-1} * ")"),
+    y = expression("Radiação solar de ondas curtas (" * MJ ~ m^{-2} ~ day^{-1} * ")"),
     caption = "Radiação solar de ondas curtas incidente diariamente durante a safra."
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
@@ -632,7 +620,7 @@ p5 <- ggplot(
     title = "Velocidade diária do vento a 2 m",
     subtitle = "A linha tracejada indica a tendência LOESS",
     x = "Mês",
-    y = expression("Wind speed (" * m ~ s^{-1} * ")"),
+    y = expression("Velocidade do vento (" * m ~ s^{-1} * ")"),
     caption = "Velocidade diária do vento medida a 2 m acima do solo."
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
@@ -720,23 +708,13 @@ combined_additional_plots <- patchwork::wrap_plots(
 ) +
   patchwork::plot_annotation(
     tag_levels = "A",
-    title = "Additional climatic contrasts between growing seasons",
+    title = "Contrastes climáticos adicionais entre as safras",
     theme = theme(
       plot.title = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 8))
     )
   )
 
 print(combined_additional_plots)
-
-ggsave(
-  filename = "output/climate_results/combined_additional_climate_plots.tiff",
-  plot = combined_additional_plots,
-  width = 14,
-  height = 10,
-  dpi = 300,
-  compression = "lzw",
-  bg = "white"
-)
 ```
 
 ## 6. Covariáveis derivadas do clima
@@ -765,7 +743,7 @@ texas_climate_data <- texas_climate_data %>%
     DTR = T2M_MAX - T2M_MIN,
     T_AVG_DAILY = (T2M_MAX + T2M_MIN) / 2,
 
-    # Tetens equation, resulting in kPa
+    # Equação de Tetens, resultando em kPa
     SAT_VAP_PRES = 0.6108 * exp((17.27 * T_AVG_DAILY) / (T_AVG_DAILY + 237.3)),
     ACT_VAP_PRES = SAT_VAP_PRES * (RH2M / 100),
     VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES
@@ -801,10 +779,10 @@ weather_covariates <- texas_climate_data %>%
   ) %>%
   rename(year = year_numeric)
 
-# Optional expanded table: daily weather data plus annual weather summaries
-# The output file names keep the historical term "environmental_covariates"
-# only to preserve compatibility with the downstream scripts already used in
-# the project pipeline.
+# Tabela expandida opcional: dados meteorológicos diários mais resumos anuais do clima
+# Os nomes dos arquivos de saída mantêm o termo histórico "environmental_covariates"
+# apenas para preservar compatibilidade com os scripts posteriores já usados em
+# no pipeline do projeto.
 ecs_expanded <- texas_climate_data %>%
   transmute(
     year = as.integer(as.character(year)),
@@ -825,36 +803,36 @@ ecs_expanded <- texas_climate_data %>%
   left_join(weather_covariates, by = "year")
 
 weather_covariates_dictionary <- tibble::tibble(
-  Variable = c(
+  Variável = c(
     "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS", "PRECTOT",
     "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM", "T_AVG",
     "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS", "PREC_INTENSITY",
     "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"
   ),
-  Unit = c(
+  Unidade = c(
     "°C", "°C", "°C day", "days", "mm",
     "days", "%", "m s^-1", "MJ m^-2", "°C",
     "°C", "days", "days", "mm day^-1",
     "days", "kPa", "days"
   ),
-  Description = c(
-    "Average maximum temperature during the season",
-    "Average minimum temperature during the season",
-    "Accumulated growing degree days",
-    "Number of heat stress days",
-    "Total precipitation during the season",
-    "Number of dry days",
-    "Average relative humidity",
-    "Average wind speed at 2 m",
-    "Accumulated shortwave radiation",
-    "Average mean temperature",
-    "Average daily temperature range",
-    "Number of cold stress days",
-    "Number of rainy days",
-    "Average rainfall intensity on rainy days",
-    "Number of low-humidity days",
-    "Average vapor pressure deficit",
-    "Number of vapor pressure deficit stress days"
+  Descrição = c(
+    "Temperatura máxima média durante a safra",
+    "Temperatura mínima média durante a safra",
+    "Graus-dia acumulados",
+    "Número de dias com estresse térmico",
+    "Precipitação total durante a safra",
+    "Número de dias secos",
+    "Umidade relativa média",
+    "Velocidade média do vento a 2 m",
+    "Radiação de onda curta acumulada",
+    "Temperatura média",
+    "Amplitude térmica diária média",
+    "Número de dias com estresse por frio",
+    "Número de dias chuvosos",
+    "Intensidade média de chuva em dias chuvosos",
+    "Número de dias com baixa umidade",
+    "Déficit de pressão de vapor médio",
+    "Número de dias com estresse por déficit de pressão de vapor"
   )
 )
 
@@ -873,7 +851,7 @@ knitr::kable(
 
 weather_covariates_display <- weather_covariates %>%
   mutate(across(-year, ~ round(.x, 2))) %>%
-  rename(Year = year)
+  rename(Ano = year)
 
 knitr::kable(
   weather_covariates_display,
@@ -902,19 +880,19 @@ weather_covariates <- readr::read_csv(weather_covariates_path, show_col_types = 
 ecs_expanded <- readr::read_csv(ecs_expanded_path, show_col_types = FALSE)
 
 weather_covariates_dictionary <- tibble::tibble(
-  Variable = c(
+  Variável = c(
     "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS", "PRECTOT",
     "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM", "T_AVG",
     "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS", "PREC_INTENSITY",
     "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"
   ),
-  Unit = c(
+  Unidade = c(
     "°C", "°C", "°C day", "days", "mm",
     "days", "%", "m s^-1", "MJ m^-2", "°C",
     "°C", "days", "days", "mm day^-1",
     "days", "kPa", "days"
   ),
-  Description = c(
+  Descrição = c(
     "Temperatura máxima média durante a safra",
     "Temperatura mínima média durante a safra",
     "Graus-dia acumulados",

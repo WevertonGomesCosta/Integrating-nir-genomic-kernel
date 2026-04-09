@@ -510,7 +510,9 @@ combined_plot <- patchwork::wrap_plots(
   )
 
 print(combined_plot)
+```
 
+```{r save_combined_main_plot, include=FALSE}
 ggsave(
   filename = "output/climate_results/combined_climate_plot.tiff",
   plot = combined_plot,
@@ -674,7 +676,9 @@ combined_additional_plots <- patchwork::wrap_plots(
   )
 
 print(combined_additional_plots)
+```
 
+```{r save_combined_additional_plot, include=FALSE}
 ggsave(
   filename = "output/climate_results/combined_additional_climate_plots.tiff",
   plot = combined_additional_plots,
