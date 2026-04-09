@@ -80,7 +80,13 @@ packages_needed <- c( "dplyr",
   "stringr" )
 packages_missing <- packages_needed[!(packages_needed %in% installed.packages()[, "Package"])]
 if (length(packages_missing) > 0) {
-  install.packages(packages_missing)
+  stop(
+    paste0(
+      "Os seguintes pacotes são necessários para este módulo, mas não estão instalados: ",
+      paste(packages_missing, collapse = ", "),
+      ". Instale-os antes de renderizar visualization_pt.Rmd."
+    )
+  )
 }
 library(dplyr)
 library(tidyr)
@@ -112,128 +118,38 @@ A etapa de visualização usa o mesmo catálogo reduzido de 18 modelos adotado n
 Essa organização é importante porque as comparações mostradas mais adiante no documento não são arbitrárias. Elas foram desenhadas para ajudar o leitor a entender de onde vêm os ganhos preditivos e se esses ganhos estão associados à informação climática, à escolha do kernel ou à integração entre fontes genômicas e fenômicas.
 
 ```{r model-catalog}
-model_catalog <- tibble::tibble(
+model_catalog <- tibble(
   ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
   Model = paste0("Eta", c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
   Pathway = c(
-    "Via genômica",
-    "Via genômica",
-    "Via genômica",
-    "Via genômica",
-    "Via genômica",
-    "Via genômica",
-    "Via fenômica",
-    "Via fenômica",
-    "Via fenômica",
-    "Via fenômica",
-    "Via fenômica",
-    "Via fenômica",
-    "Via combinada G + P",
-    "Via combinada G + P",
-    "Via combinada G + P",
-    "Via combinada G + P",
-    "Via combinada G + P",
-    "Via combinada G + P"
+    rep("Genomic pathway", 6),
+    rep("Phenomic pathway", 6),
+    rep("Combined G + P pathway", 6)
   ),
   KernelFamily = c(
-    "Linear",
-    "Linear",
-    "Gaussiano",
-    "Gaussiano",
-    "Arc-cosine",
-    "Arc-cosine",
-    "Linear",
-    "Linear",
-    "Gaussiano",
-    "Gaussiano",
-    "Arc-cosine",
-    "Arc-cosine",
-    "Linear",
-    "Linear",
-    "Gaussiano",
-    "Gaussiano",
-    "Arc-cosine",
-    "Arc-cosine"
+    "Linear", "Linear", "Gaussian", "Gaussian", "Arc-cosine", "Arc-cosine",
+    "Linear", "Linear", "Gaussian", "Gaussian", "Arc-cosine", "Arc-cosine",
+    "Linear", "Linear", "Gaussian", "Gaussian", "Arc-cosine", "Arc-cosine"
   ),
   WeatherStatus = c(
-    "Sem W",
-    "Com W",
-    "Sem W",
-    "Com W",
-    "Sem W",
-    "Com W",
-    "Sem W",
-    "Com W",
-    "Sem W",
-    "Com W",
-    "Sem W",
-    "Com W",
-    "Sem W",
-    "Com W",
-    "Sem W",
-    "Com W",
-    "Sem W",
-    "Com W"
+    "Without W", "With W", "Without W", "With W", "Without W", "With W",
+    "Without W", "With W", "Without W", "With W", "Without W", "With W",
+    "Without W", "With W", "Without W", "With W", "Without W", "With W"
   ),
   Group = c(
-    "Base genômica",
-    "Clima fonte única",
-    "Base genômica",
-    "Clima fonte única",
-    "Base genômica",
-    "Clima fonte única",
-    "Base fenômica",
-    "Clima fonte única",
-    "Base fenômica",
-    "Clima fonte única",
-    "Base fenômica",
-    "Clima fonte única",
-    "Base combinada",
-    "Clima combinado",
-    "Base combinada",
-    "Clima combinado",
-    "Base combinada",
-    "Clima combinado"
+    "Genomic baseline", "Weather single-source", "Genomic baseline", "Weather single-source", "Genomic baseline", "Weather single-source",
+    "Phenomic baseline", "Weather single-source", "Phenomic baseline", "Weather single-source", "Phenomic baseline", "Weather single-source",
+    "Combined baseline", "Weather combined", "Combined baseline", "Weather combined", "Combined baseline", "Weather combined"
   ),
   Description = c(
-    "Genômico linear + E",
-    "Genômico linear + W",
-    "Genômico Gaussiano + E",
-    "Genômico Gaussiano + W",
-    "Genômico arc-cosine + E",
-    "Genômico arc-cosine + W",
-    "Fenômico linear + E",
-    "Fenômico linear + W",
-    "Fenômico Gaussiano + E",
-    "Fenômico Gaussiano + W",
-    "Fenômico arc-cosine + E",
-    "Fenômico arc-cosine + W",
-    "Combinado linear + E",
-    "Combinado linear + W",
-    "Combinado Gaussiano + E",
-    "Combinado Gaussiano + W",
-    "Combinado arc-cosine + E",
-    "Combinado arc-cosine + W"
+    "Genomic linear + E", "Genomic linear + W", "Genomic Gaussian + E", "Genomic Gaussian + W", "Genomic arc-cosine + E", "Genomic arc-cosine + W",
+    "Phenomic linear + E", "Phenomic linear + W", "Phenomic Gaussian + E", "Phenomic Gaussian + W", "Phenomic arc-cosine + E", "Phenomic arc-cosine + W",
+    "Combined linear + E", "Combined linear + W", "Combined Gaussian + E", "Combined Gaussian + W", "Combined arc-cosine + E", "Combined arc-cosine + W"
   ),
   ShortDescription = c(
-    "G + E",
-    "G + W",
-    "GGK + E",
-    "GGK + W",
-    "GAK + E",
-    "GAK + W",
-    "P + E",
-    "P + W",
-    "PGK + E",
-    "PGK + W",
-    "PAK + E",
-    "PAK + W",
-    "G+P + E",
-    "G+P + W",
-    "GGK+PGK + E",
-    "GGK+PGK + W",
-    "GAK+PAK + E",
-    "GAK+PAK + W"
+    "G + E", "G + W", "GGK + E", "GGK + W", "GAK + E", "GAK + W",
+    "P + E", "P + W", "PGK + E", "PGK + W", "PAK + E", "PAK + W",
+    "G+P + E", "G+P + W", "GGK+PGK + E", "GGK+PGK + W", "GAK+PAK + E", "GAK+PAK + W"
   ),
   FullEffects = c(
     "E + G + GE",
@@ -256,26 +172,27 @@ model_catalog <- tibble::tibble(
     "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
   ),
   InterpretiveDescription = c(
-    "Modelo genômico linear com ambiente e interação G × E",
-    "Modelo genômico linear com ambiente, clima, GE e GW",
-    "Modelo genômico Gaussiano com ambiente e interação GGK × E",
-    "Modelo genômico Gaussiano com ambiente, clima, GGKE e GGKW",
-    "Modelo genômico arc-cosine com ambiente e interação GAK × E",
-    "Modelo genômico arc-cosine com ambiente, clima, GAKE e GAKW",
-    "Modelo fenômico linear com ambiente e interação P × E",
-    "Modelo fenômico linear com ambiente, clima, PE e PW",
-    "Modelo fenômico Gaussiano com ambiente e interação PGK × E",
-    "Modelo fenômico Gaussiano com ambiente, clima, PGKE e PGKW",
-    "Modelo fenômico arc-cosine com ambiente e interação PAK × E",
-    "Modelo fenômico arc-cosine com ambiente, clima, PAKE e PAKW",
-    "Modelo combinado linear com ambiente, GE e PE",
-    "Modelo combinado linear com ambiente, clima, GE, PE, GW e PW",
-    "Modelo combinado Gaussiano com ambiente, GGKE e PGKE",
-    "Modelo combinado Gaussiano com ambiente, clima, GGKE, PGKE, GGKW e PGKW",
-    "Modelo combinado arc-cosine com ambiente, GAKE e PAKE",
-    "Modelo combinado arc-cosine com ambiente, clima, GAKE, PAKE, GAKW e PAKW"
+    "Linear genomic model with environment and G×E interaction.",
+    "Linear genomic-weather model with environment, weather, G×E, and G×W interaction.",
+    "Gaussian genomic model with environment and genomic-by-environment interaction.",
+    "Gaussian genomic-weather model with environment, weather, genomic-by-environment, and genomic-by-weather interaction.",
+    "Arc-cosine genomic model with environment and genomic-by-environment interaction.",
+    "Arc-cosine genomic-weather model with environment, weather, genomic-by-environment, and genomic-by-weather interaction.",
+    "Linear phenomic model with environment and P×E interaction.",
+    "Linear phenomic-weather model with environment, weather, P×E, and P×W interaction.",
+    "Gaussian phenomic model with environment and phenomic-by-environment interaction.",
+    "Gaussian phenomic-weather model with environment, weather, phenomic-by-environment, and phenomic-by-weather interaction.",
+    "Arc-cosine phenomic model with environment and phenomic-by-environment interaction.",
+    "Arc-cosine phenomic-weather model with environment, weather, phenomic-by-environment, and phenomic-by-weather interaction.",
+    "Linear combined genomic-phenomic model with environment and both G×E and P×E interaction terms.",
+    "Linear combined genomic-phenomic-weather model with environment, weather, G×E, P×E, G×W, and P×W interaction terms.",
+    "Gaussian combined genomic-phenomic model with environment and both genomic and phenomic interaction terms.",
+    "Gaussian combined genomic-phenomic-weather model with environment, weather, and the full set of genomic and phenomic interaction terms.",
+    "Arc-cosine combined genomic-phenomic model with environment and both genomic and phenomic interaction terms.",
+    "Arc-cosine combined genomic-phenomic-weather model with environment, weather, and the full set of genomic and phenomic interaction terms."
   )
 )
+
 model_catalog
 ```
 
@@ -300,7 +217,6 @@ Nesta etapa, o script lê a pasta de resultados de forma recursiva, mantém apen
 
 ```{r load-generated-visualization-outputs, include=FALSE}
 required_tables <- c(
-  "prediction_model_catalog.csv",
   "prediction_cv1_cv2_summary.csv",
   "prediction_cv0_cv00_summary.csv",
   "prediction_cv1_cv2_w_effect_pairs.csv",
@@ -319,57 +235,344 @@ missing_tables <- required_tables[
 
 if (length(missing_tables) > 0) {
   stop(
-    "O arquivo de visualização em português depende de tabelas já geradas por visualization.Rmd.
-",
-    "Arquivos ausentes em output/tables/: ",
+    "Este arquivo de visualização depende de tabelas já geradas em output/tables/.\n",
+    "Arquivos ausentes: ",
     paste(missing_tables, collapse = ", ")
   )
 }
 
-model_catalog <- readr::read_csv(
-  file.path(tables_dir, "prediction_model_catalog.csv"),
-  show_col_types = FALSE
+model_catalog <- model_catalog %>%
+  dplyr::select(
+    ModelNumber,
+    Model,
+    Pathway,
+    KernelFamily,
+    WeatherStatus,
+    Group,
+    Description,
+    ShortDescription,
+    FullEffects,
+    InterpretiveDescription
+  )
+
+required_model_catalog_cols <- c(
+  "ModelNumber",
+  "Model",
+  "Pathway",
+  "KernelFamily",
+  "WeatherStatus",
+  "Group",
+  "Description",
+  "ShortDescription",
+  "FullEffects",
+  "InterpretiveDescription"
 )
+
+missing_model_catalog_cols <- setdiff(required_model_catalog_cols, names(model_catalog))
+if (length(missing_model_catalog_cols) > 0) {
+  stop(
+    "O objeto model_catalog foi criado sem as colunas obrigatórias: ",
+    paste(missing_model_catalog_cols, collapse = ", "),
+    "."
+  )
+}
+
 cv12_summary <- readr::read_csv(
   file.path(tables_dir, "prediction_cv1_cv2_summary.csv"),
   show_col_types = FALSE
 )
+
+if (!all(c("ModelNumber", "Model") %in% names(cv12_summary))) {
+  stop(
+    "prediction_cv1_cv2_summary.csv precisa conter ModelNumber e Model para reanexar FullEffects e InterpretiveDescription."
+  )
+}
+
+cv12_summary <- cv12_summary %>%
+  dplyr::select(
+    -dplyr::any_of(
+      c(
+        "FullEffects",
+        "InterpretiveDescription",
+        "FullEffects.x",
+        "FullEffects.y",
+        "InterpretiveDescription.x",
+        "InterpretiveDescription.y"
+      )
+    )
+  ) %>%
+  left_join(
+    model_catalog %>% dplyr::select(ModelNumber, Model, FullEffects, InterpretiveDescription),
+    by = c("ModelNumber", "Model")
+  )
+
+required_cv12_summary_cols <- c(
+  "Trait",
+  "CV",
+  "Group",
+  "MeanCorrelation",
+  "SDCorrelation",
+  "FullEffects"
+)
+
+missing_cv12_summary_cols <- setdiff(required_cv12_summary_cols, names(cv12_summary))
+if (length(missing_cv12_summary_cols) > 0) {
+  stop(
+    "cv12_summary ficou sem colunas obrigatórias após a carga: ",
+    paste(missing_cv12_summary_cols, collapse = ", "),
+    "."
+  )
+}
+
 cvloo_summary <- readr::read_csv(
   file.path(tables_dir, "prediction_cv0_cv00_summary.csv"),
   show_col_types = FALSE
 )
+
+if (!all(c("ModelNumber", "Model") %in% names(cvloo_summary))) {
+  stop(
+    "prediction_cv0_cv00_summary.csv precisa conter ModelNumber e Model para reanexar FullEffects e InterpretiveDescription."
+  )
+}
+
+cvloo_summary <- cvloo_summary %>%
+  dplyr::select(
+    -dplyr::any_of(
+      c(
+        "FullEffects",
+        "InterpretiveDescription",
+        "FullEffects.x",
+        "FullEffects.y",
+        "InterpretiveDescription.x",
+        "InterpretiveDescription.y"
+      )
+    )
+  ) %>%
+  left_join(
+    model_catalog %>% dplyr::select(ModelNumber, Model, FullEffects, InterpretiveDescription),
+    by = c("ModelNumber", "Model")
+  )
+
+required_cvloo_summary_cols <- c(
+  "Trait",
+  "CV",
+  "Env_leave",
+  "Group",
+  "MeanCorrelation",
+  "SDCorrelation",
+  "FullEffects"
+)
+
+missing_cvloo_summary_cols <- setdiff(required_cvloo_summary_cols, names(cvloo_summary))
+if (length(missing_cvloo_summary_cols) > 0) {
+  stop(
+    "cvloo_summary ficou sem colunas obrigatórias após a carga: ",
+    paste(missing_cvloo_summary_cols, collapse = ", "),
+    "."
+  )
+}
+
 cv12_w_effect <- readr::read_csv(
   file.path(tables_dir, "prediction_cv1_cv2_w_effect_pairs.csv"),
   show_col_types = FALSE
 )
+
+required_cv12_w_effect_cols <- c(
+  "Comparison",
+  "Trait",
+  "CV",
+  "MeanWithoutW",
+  "MeanWithW",
+  "DeltaWithW"
+)
+
+missing_cv12_w_effect_cols <- setdiff(required_cv12_w_effect_cols, names(cv12_w_effect))
+if (length(missing_cv12_w_effect_cols) > 0) {
+  stop(
+    "prediction_cv1_cv2_w_effect_pairs.csv ficou sem colunas obrigatórias: ",
+    paste(missing_cv12_w_effect_cols, collapse = ", "),
+    "."
+  )
+}
+
 cvloo_w_effect <- readr::read_csv(
   file.path(tables_dir, "prediction_cv0_cv00_w_effect_pairs.csv"),
   show_col_types = FALSE
 )
+
+required_cvloo_w_effect_cols <- c(
+  "Comparison",
+  "Trait",
+  "CV",
+  "Env_leave",
+  "MeanWithoutW",
+  "MeanWithW",
+  "DeltaWithW"
+)
+
+missing_cvloo_w_effect_cols <- setdiff(required_cvloo_w_effect_cols, names(cvloo_w_effect))
+if (length(missing_cvloo_w_effect_cols) > 0) {
+  stop(
+    "prediction_cv0_cv00_w_effect_pairs.csv ficou sem colunas obrigatórias: ",
+    paste(missing_cvloo_w_effect_cols, collapse = ", "),
+    "."
+  )
+}
+
 cv12_kernel_family_compare <- readr::read_csv(
   file.path(tables_dir, "prediction_cv1_cv2_kernel_family_compare.csv"),
   show_col_types = FALSE
 )
+
+required_cv12_kernel_cols <- c(
+  "Trait",
+  "CV",
+  "Pathway",
+  "WeatherStatus",
+  "Linear",
+  "Gaussian",
+  "Arc-cosine",
+  "Delta_Gaussian_vs_Linear",
+  "Delta_ArcCos_vs_Linear",
+  "Delta_ArcCos_vs_Gaussian"
+)
+
+missing_cv12_kernel_cols <- setdiff(required_cv12_kernel_cols, names(cv12_kernel_family_compare))
+if (length(missing_cv12_kernel_cols) > 0) {
+  stop(
+    "prediction_cv1_cv2_kernel_family_compare.csv ficou sem colunas obrigatórias: ",
+    paste(missing_cv12_kernel_cols, collapse = ", "),
+    "."
+  )
+}
+
 cvloo_kernel_family_compare <- readr::read_csv(
   file.path(tables_dir, "prediction_cv0_cv00_kernel_family_compare.csv"),
   show_col_types = FALSE
 )
+
+required_cvloo_kernel_cols <- c(
+  "Trait",
+  "CV",
+  "Env_leave",
+  "Pathway",
+  "WeatherStatus",
+  "Linear",
+  "Gaussian",
+  "Arc-cosine",
+  "Delta_Gaussian_vs_Linear",
+  "Delta_ArcCos_vs_Linear",
+  "Delta_ArcCos_vs_Gaussian"
+)
+
+missing_cvloo_kernel_cols <- setdiff(required_cvloo_kernel_cols, names(cvloo_kernel_family_compare))
+if (length(missing_cvloo_kernel_cols) > 0) {
+  stop(
+    "prediction_cv0_cv00_kernel_family_compare.csv ficou sem colunas obrigatórias: ",
+    paste(missing_cvloo_kernel_cols, collapse = ", "),
+    "."
+  )
+}
+
 cv12_table_display <- readr::read_csv(
   file.path(tables_dir, "prediction_cv1_cv2_display_table.csv"),
   show_col_types = FALSE
 )
+
+required_cv12_display_cols <- c(
+  "Trait",
+  "CV",
+  "Pathway",
+  "KernelFamily",
+  "WeatherStatus",
+  "ShortDescription",
+  "MeanCorrelation",
+  "SDCorrelation",
+  "NumberOfRepetitions",
+  "MeanRuntimeSec"
+)
+
+missing_cv12_display_cols <- setdiff(required_cv12_display_cols, names(cv12_table_display))
+if (length(missing_cv12_display_cols) > 0) {
+  stop(
+    "prediction_cv1_cv2_display_table.csv ficou sem colunas obrigatórias: ",
+    paste(missing_cv12_display_cols, collapse = ", "),
+    "."
+  )
+}
+
 cvloo_table_display <- readr::read_csv(
   file.path(tables_dir, "prediction_cv0_cv00_display_table.csv"),
   show_col_types = FALSE
 )
+
+required_cvloo_display_cols <- c(
+  "Trait",
+  "CV",
+  "Env_leave",
+  "Pathway",
+  "KernelFamily",
+  "WeatherStatus",
+  "ShortDescription",
+  "MeanCorrelation",
+  "SDCorrelation",
+  "NumberOfRuns",
+  "MeanRuntimeSec"
+)
+
+missing_cvloo_display_cols <- setdiff(required_cvloo_display_cols, names(cvloo_table_display))
+if (length(missing_cvloo_display_cols) > 0) {
+  stop(
+    "prediction_cv0_cv00_display_table.csv ficou sem colunas obrigatórias: ",
+    paste(missing_cvloo_display_cols, collapse = ", "),
+    "."
+  )
+}
+
 cv12_top3 <- readr::read_csv(
   file.path(tables_dir, "prediction_cv1_cv2_top3.csv"),
   show_col_types = FALSE
 )
+
+required_cv12_top3_cols <- c(
+  "Trait",
+  "CV",
+  "ShortDescription",
+  "MeanCorrelation",
+  "SDCorrelation"
+)
+
+missing_cv12_top3_cols <- setdiff(required_cv12_top3_cols, names(cv12_top3))
+if (length(missing_cv12_top3_cols) > 0) {
+  stop(
+    "prediction_cv1_cv2_top3.csv ficou sem colunas obrigatórias: ",
+    paste(missing_cv12_top3_cols, collapse = ", "),
+    "."
+  )
+}
+
 cvloo_top3 <- readr::read_csv(
   file.path(tables_dir, "prediction_cv0_cv00_top3.csv"),
   show_col_types = FALSE
 )
+
+required_cvloo_top3_cols <- c(
+  "Trait",
+  "CV",
+  "Env_leave",
+  "ShortDescription",
+  "MeanCorrelation",
+  "SDCorrelation"
+)
+
+missing_cvloo_top3_cols <- setdiff(required_cvloo_top3_cols, names(cvloo_top3))
+if (length(missing_cvloo_top3_cols) > 0) {
+  stop(
+    "prediction_cv0_cv00_top3.csv ficou sem colunas obrigatórias: ",
+    paste(missing_cvloo_top3_cols, collapse = ", "),
+    "."
+  )
+}
 
 model_catalog <- model_catalog %>%
   dplyr::mutate(
@@ -584,6 +787,7 @@ cvloo_table_display <- cvloo_table_display %>%
 
 ```{r locate-files, eval=FALSE}
 all_result_rel_paths <- list.files(results_dir, pattern = "\\.csv$", full.names = FALSE, recursive = TRUE)
+all_result_rel_paths <- gsub("\\\\", "/", all_result_rel_paths)
 structured_idx <- grepl("^CV1/|^CV2/|^CV0/|^CV00/", all_result_rel_paths)
 all_result_rel_paths <- all_result_rel_paths[structured_idx]
 all_result_files <- file.path(results_dir, all_result_rel_paths)
@@ -620,8 +824,7 @@ for (i in seq_along(cv12_files)) {
     stop(
       "Estrutura de diretórios inesperada para arquivo CV1/CV2: ",
       current_rel_path,
-      ".
-Padrão esperado: CV1/<trait>/repXX/foldXX/<file>.csv ou CV2/<trait>/repXX/foldXX/<file>.csv"
+      ".\nPadrão esperado: CV1/<trait>/repXX/foldXX/<file>.csv ou CV2/<trait>/repXX/foldXX/<file>.csv"
     )
   }
 
@@ -637,8 +840,7 @@ Padrão esperado: CV1/<trait>/repXX/foldXX/<file>.csv ou CV2/<trait>/repXX/foldX
     stop(
       "Nome de arquivo inesperado para CV1/CV2: ",
       file_name,
-      ".
-Padrão esperado: CV1_<trait>_Eta<model>_repXX_foldXX.csv ou CV2_<trait>_Eta<model>_repXX_foldXX.csv"
+      ".\nPadrão esperado: CV1_<trait>_Eta<model>_repXX_foldXX.csv ou CV2_<trait>_Eta<model>_repXX_foldXX.csv"
     )
   }
 
@@ -658,8 +860,7 @@ Padrão esperado: CV1_<trait>_Eta<model>_repXX_foldXX.csv ou CV2_<trait>_Eta<mod
     stop(
       "Estrutura de colunas inesperada no arquivo: ",
       file_name,
-      ".
-O script final de predição deve exportar colunas incluindo Env e cor."
+      ".\nO script final de predição deve exportar colunas incluindo Env e cor."
     )
   }
 
@@ -701,8 +902,7 @@ for (i in seq_along(cvloo_files)) {
     stop(
       "Estrutura de diretórios inesperada para arquivo CV0/CV00: ",
       current_rel_path,
-      ".
-Padrão esperado: CV0/<Env_leave>/<trait>/repXX/foldXX/<file>.csv ou CV00/<Env_leave>/<trait>/repXX/foldXX/<file>.csv"
+      ".\nPadrão esperado: CV0/<Env_leave>/<trait>/repXX/foldXX/<file>.csv ou CV00/<Env_leave>/<trait>/repXX/foldXX/<file>.csv"
     )
   }
 
@@ -719,8 +919,7 @@ Padrão esperado: CV0/<Env_leave>/<trait>/repXX/foldXX/<file>.csv ou CV00/<Env_l
     stop(
       "Nome de arquivo inesperado para CV0/CV00: ",
       file_name,
-      ".
-Padrão esperado: CV0_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv ou CV00_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv"
+      ".\nPadrão esperado: CV0_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv ou CV00_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv"
     )
   }
 
@@ -741,8 +940,7 @@ Padrão esperado: CV0_<trait>_<Env_leave>_Eta<model>_repXX_foldXX.csv ou CV00_<t
     stop(
       "Estrutura de colunas inesperada no arquivo: ",
       file_name,
-      ".
-O script final de predição deve exportar colunas incluindo Env e cor."
+      ".\nO script final de predição deve exportar colunas incluindo Env e cor."
     )
   }
 
@@ -780,8 +978,6 @@ cv12_env_fold <- cv12_raw %>%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -803,8 +999,6 @@ cv12_env_rep <- cv12_env_fold %>%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -822,8 +1016,6 @@ cv12_rep_summary <- cv12_env_rep %>%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -839,8 +1031,6 @@ cv12_summary <- cv12_rep_summary %>%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
     CV ) %>%
@@ -849,7 +1039,11 @@ cv12_summary <- cv12_rep_summary %>%
    NumberOfRepetitions = n(),
    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
     .groups = "drop" ) %>%
-  mutate( SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation) )
+  mutate( SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation) ) %>%
+  left_join(
+    model_catalog %>% select(ModelNumber, Model, FullEffects, InterpretiveDescription),
+    by = c("ModelNumber", "Model")
+  )
 readr::write_csv(cv12_env_fold, file.path(tables_dir, "prediction_cv1_cv2_by_rep_fold_env.csv"))
 readr::write_csv(cv12_env_rep, file.path(tables_dir, "prediction_cv1_cv2_by_rep_env.csv"))
 readr::write_csv(cv12_rep_summary, file.path(tables_dir, "prediction_cv1_cv2_by_rep.csv"))
@@ -871,8 +1065,6 @@ cvloo_env_fold <- cvloo_env_filtered %>%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -895,8 +1087,6 @@ cvloo_rep_summary <- cvloo_env_fold %>%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -914,8 +1104,6 @@ cvloo_summary <- cvloo_rep_summary %>%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -925,7 +1113,11 @@ cvloo_summary <- cvloo_rep_summary %>%
    NumberOfRuns = n(),
    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
     .groups = "drop" ) %>%
-  mutate( SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation) )
+  mutate( SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation) ) %>%
+  left_join(
+    model_catalog %>% select(ModelNumber, Model, FullEffects, InterpretiveDescription),
+    by = c("ModelNumber", "Model")
+  )
 readr::write_csv(cvloo_env_fold, file.path(tables_dir, "prediction_cv0_cv00_by_rep_fold_env.csv"))
 readr::write_csv(cvloo_rep_summary, file.path(tables_dir, "prediction_cv0_cv00_by_run.csv"))
 readr::write_csv(cvloo_summary, file.path(tables_dir, "prediction_cv0_cv00_summary.csv"))
@@ -1017,13 +1209,13 @@ cv12_top3 <- cv12_summary %>%
   slice_max(order_by = MeanCorrelation, n = 3, with_ties = FALSE) %>%
   ungroup() %>%
   mutate( MeanCorrelation = round(MeanCorrelation, 3), SDCorrelation = round(SDCorrelation, 3) ) %>%
-  select(Trait, CV, ShortDescription, FullEffects, InterpretiveDescription, MeanCorrelation, SDCorrelation)
+  select(Trait, CV, ShortDescription, MeanCorrelation, SDCorrelation)
 cvloo_top3 <- cvloo_summary %>%
   group_by(Trait, CV, Env_leave) %>%
   slice_max(order_by = MeanCorrelation, n = 3, with_ties = FALSE) %>%
   ungroup() %>%
   mutate( MeanCorrelation = round(MeanCorrelation, 3), SDCorrelation = round(SDCorrelation, 3) ) %>%
-  select(Trait, CV, Env_leave, ShortDescription, FullEffects, InterpretiveDescription, MeanCorrelation, SDCorrelation)
+  select(Trait, CV, Env_leave, ShortDescription, MeanCorrelation, SDCorrelation)
 readr::write_csv(cv12_table_display, file.path(tables_dir, "prediction_cv1_cv2_display_table.csv"))
 readr::write_csv(cvloo_table_display, file.path(tables_dir, "prediction_cv0_cv00_display_table.csv"))
 readr::write_csv(cv12_top3, file.path(tables_dir, "prediction_cv1_cv2_top3.csv"))
@@ -1032,9 +1224,16 @@ readr::write_csv(cvloo_top3, file.path(tables_dir, "prediction_cv0_cv00_top3.csv
 
 ## 12. Tabelas Top-3
 
-Os dois chunks seguintes exibem os três modelos com melhor desempenho em cada esquema de validação.
+As duas tabelas seguintes exibem os três modelos com melhor desempenho em cada esquema de validação.
 
 ```{r table-cv12-top3}
+if (!exists("cv12_top3")) {
+  stop("O objeto cv12_top3 não foi carregado antes do chunk table-cv12-top3.")
+}
+if (!all(c("Trait", "CV", "ShortDescription", "MeanCorrelation", "SDCorrelation") %in% names(cv12_top3))) {
+  stop("cv12_top3 não contém as colunas exigidas pelo chunk table-cv12-top3.")
+}
+
 cv12_top3 %>%
   knitr::kable( caption = "Top 3 modelos para cada traço e esquema de validação em CV1 e CV2.",
     align = "llccc" ) %>%
@@ -1044,6 +1243,13 @@ cv12_top3 %>%
 ```
 
 ```{r table-cvloo-top3}
+if (!exists("cvloo_top3")) {
+  stop("O objeto cvloo_top3 não foi carregado antes do chunk table-cvloo-top3.")
+}
+if (!all(c("Trait", "CV", "Env_leave", "ShortDescription", "MeanCorrelation", "SDCorrelation") %in% names(cvloo_top3))) {
+  stop("cvloo_top3 não contém as colunas exigidas pelo chunk table-cvloo-top3.")
+}
+
 cvloo_top3 %>%
   knitr::kable( caption = "Top 3 modelos para cada traço, esquema de validação e ambiente deixado de fora em CV0 e CV00.",
     align = "lllccc" ) %>%
@@ -1057,6 +1263,13 @@ cvloo_top3 %>%
 Essas tabelas apresentam as comparações pareadas entre modelos sem e com informação climática.
 
 ```{r table-cv12-w-effect}
+if (!exists("cv12_w_effect")) {
+  stop("O objeto cv12_w_effect não foi carregado antes do chunk table-cv12-w-effect.")
+}
+if (!all(c("Comparison", "Trait", "CV", "MeanWithoutW", "MeanWithW", "DeltaWithW") %in% names(cv12_w_effect))) {
+  stop("cv12_w_effect não contém as colunas exigidas pelo chunk table-cv12-w-effect.")
+}
+
 cv12_w_effect %>%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
    MeanWithW = round(MeanWithW, 3),
@@ -1070,6 +1283,13 @@ cv12_w_effect %>%
 ```
 
 ```{r table-cvloo-w-effect}
+if (!exists("cvloo_w_effect")) {
+  stop("O objeto cvloo_w_effect não foi carregado antes do chunk table-cvloo-w-effect.")
+}
+if (!all(c("Comparison", "Trait", "CV", "Env_leave", "MeanWithoutW", "MeanWithW", "DeltaWithW") %in% names(cvloo_w_effect))) {
+  stop("cvloo_w_effect não contém as colunas exigidas pelo chunk table-cvloo-w-effect.")
+}
+
 cvloo_w_effect %>%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
    MeanWithW = round(MeanWithW, 3),
@@ -1087,6 +1307,13 @@ cvloo_w_effect %>%
 Aqui o script contrasta os kernels linear, Gaussiano e arc-cosine dentro de cada via analítica.
 
 ```{r table-cv12-kernel-family}
+if (!exists("cv12_kernel_family_compare")) {
+  stop("O objeto cv12_kernel_family_compare não foi carregado antes do chunk table-cv12-kernel-family.")
+}
+if (!all(c("Trait", "CV", "Pathway", "WeatherStatus", "Linear", "Gaussian", "Arc-cosine") %in% names(cv12_kernel_family_compare))) {
+  stop("cv12_kernel_family_compare não contém as colunas exigidas pelo chunk table-cv12-kernel-family.")
+}
+
 cv12_kernel_family_compare %>%
   mutate( Linear = round(Linear, 3),
    Gaussian = round(Gaussian, 3),
@@ -1103,6 +1330,13 @@ cv12_kernel_family_compare %>%
 ```
 
 ```{r table-cvloo-kernel-family}
+if (!exists("cvloo_kernel_family_compare")) {
+  stop("O objeto cvloo_kernel_family_compare não foi carregado antes do chunk table-cvloo-kernel-family.")
+}
+if (!all(c("Trait", "CV", "Env_leave", "Pathway", "WeatherStatus", "Linear", "Gaussian", "Arc-cosine") %in% names(cvloo_kernel_family_compare))) {
+  stop("cvloo_kernel_family_compare não contém as colunas exigidas pelo chunk table-cvloo-kernel-family.")
+}
+
 cvloo_kernel_family_compare %>%
   mutate( Linear = round(Linear, 3),
    Gaussian = round(Gaussian, 3),
@@ -1120,110 +1354,182 @@ cvloo_kernel_family_compare %>%
 
 ## 15. Figuras
 
-As figuras finais resumem a capacidade preditiva para o catálogo completo de modelos em `CV1/CV2` e `CV0/CV00`. Para evitar ambiguidades na interpretação e em futuras revisões, os gráficos passam a exibir a composição completa dos efeitos de cada modelo, e não apenas rótulos curtos.
+As figuras finais resumem a capacidade preditiva para o catálogo completo de modelos em `CV1/CV2` e `CV0/CV00`.
 
 ```{r figure-cv12}
+if (!exists("cv12_summary")) {
+  stop("O objeto cv12_summary não foi carregado antes do chunk figure-cv12.")
+}
+if (!all(c("Trait", "CV", "MeanCorrelation", "SDCorrelation", "FullEffects", "Group") %in% names(cv12_summary))) {
+  stop("cv12_summary não contém as colunas exigidas pelo chunk figure-cv12.")
+}
+
 cv12_plot_data <- cv12_summary %>%
   mutate(
-    ModelLabel = stringr::str_wrap(FullEffects, width = 30),
-    ModelLabel = factor(
-      ModelLabel,
-      levels = stringr::str_wrap(model_catalog$FullEffects, width = 30)
-    )
+    FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 22)
   )
 
-lower_limit_cv12 <- min(cv12_plot_data$MeanCorrelation - cv12_plot_data$SDCorrelation, na.rm = TRUE)
-upper_limit_cv12 <- max(cv12_plot_data$MeanCorrelation + cv12_plot_data$SDCorrelation, na.rm = TRUE)
+cv12_traits <- unique(cv12_plot_data$Trait)
+cv12_schemes <- unique(cv12_plot_data$CV)
 
-p_cv12 <- ggplot(cv12_plot_data, aes(x = ModelLabel, y = MeanCorrelation, fill = Group)) +
-  geom_col(width = 0.75, color = "grey30") +
-  geom_errorbar(
-    aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation),
-    width = 0.20,
-    linewidth = 0.35
-  ) +
-  facet_grid(Trait ~ CV) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
-  coord_flip(ylim = c(lower_limit_cv12 - 0.03, upper_limit_cv12 + 0.03)) +
-  scale_x_discrete(name = "Efeitos completos do modelo") +
-  scale_y_continuous(name = "Correlação preditiva") +
-  ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
-  theme_bw() +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    strip.text = element_text(face = "bold", size = 10),
-    axis.text.y = element_text(size = 6.5),
-    axis.text.x = element_text(size = 8),
-    axis.title = element_text(size = 10),
-    legend.position = "top",
-    legend.title = element_text(size = 9),
-    legend.text = element_text(size = 8)
-  ) +
-  labs(title = "Capacidade preditiva em CV1 e CV2")
+for (current_trait in cv12_traits) {
+  for (current_cv in cv12_schemes) {
+    trait_cv_data <- cv12_plot_data %>%
+      filter(Trait == current_trait, CV == current_cv) %>%
+      arrange(MeanCorrelation) %>%
+      mutate(
+        FullEffectsWrapped = factor(
+          FullEffectsWrapped,
+          levels = unique(FullEffectsWrapped)
+        )
+      )
 
-p_cv12
+    if (nrow(trait_cv_data) == 0) next
 
-ggsave(
-  file.path(figures_dir, "prediction_cv1_cv2.tiff"),
-  plot = p_cv12,
-  width = 16,
-  height = 10,
-  dpi = 300,
-  bg = "white"
-)
+    lower_limit_trait_cv <- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
+    upper_limit_trait_cv <- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+
+    p_trait_cv12 <- ggplot(
+      trait_cv_data,
+      aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = Group)
+    ) +
+      geom_col(width = 0.75, color = "grey30", na.rm = TRUE) +
+      geom_errorbar(
+        aes(
+          ymin = MeanCorrelation - SDCorrelation,
+          ymax = MeanCorrelation + SDCorrelation
+        ),
+        width = 0.20,
+        linewidth = 0.35,
+        na.rm = TRUE
+      ) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+      scale_x_discrete(name = "Efeitos completos do modelo") +
+      scale_y_continuous(
+        name = "Correlação preditiva",
+        limits = c(lower_limit_trait_cv - 0.03, upper_limit_trait_cv + 0.03),
+        expand = expansion(mult = c(0, 0.02))
+      ) +
+      ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
+      theme_bw() +
+      theme(
+        plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+        axis.text.x = element_text(size = 7, angle = 60, hjust = 1, vjust = 1),
+        axis.text.y = element_text(size = 8),
+        axis.title = element_text(size = 10),
+        legend.position = "top",
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 8)
+      ) +
+      labs(
+        title = paste("Habilidade preditiva em", current_cv, "para", current_trait)
+      )
+
+    print(p_trait_cv12)
+
+    ggsave(
+      file.path(figures_dir, paste0("prediction_", current_trait, "_", tolower(current_cv), ".tiff")),
+      plot = p_trait_cv12,
+      width = 18,
+      height = 11,
+      dpi = 300,
+      bg = "white"
+    )
+  }
+}
 ```
 
 ```{r figure-cvloo}
+if (!exists("cvloo_summary")) {
+  stop("O objeto cvloo_summary não foi carregado antes do chunk figure-cvloo.")
+}
+if (!all(c("Trait", "CV", "Env_leave", "MeanCorrelation", "SDCorrelation", "FullEffects", "Group") %in% names(cvloo_summary))) {
+  stop("cvloo_summary não contém as colunas exigidas pelo chunk figure-cvloo.")
+}
+
 cvloo_plot_data <- cvloo_summary %>%
   mutate(
-    ModelLabel = stringr::str_wrap(FullEffects, width = 30),
-    ModelLabel = factor(
-      ModelLabel,
-      levels = stringr::str_wrap(model_catalog$FullEffects, width = 30)
-    ),
+    FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 22),
     Env_leave = factor(Env_leave, levels = c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW"))
   )
 
-lower_limit_cvloo <- min(cvloo_plot_data$MeanCorrelation - cvloo_plot_data$SDCorrelation, na.rm = TRUE)
-upper_limit_cvloo <- max(cvloo_plot_data$MeanCorrelation + cvloo_plot_data$SDCorrelation, na.rm = TRUE)
+cvloo_traits <- unique(cvloo_plot_data$Trait)
+cvloo_schemes <- unique(cvloo_plot_data$CV)
 
-p_cvloo <- ggplot(cvloo_plot_data, aes(x = ModelLabel, y = MeanCorrelation, fill = Group)) +
-  geom_col(width = 0.75, color = "grey30") +
-  geom_errorbar(
-    aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation),
-    width = 0.20,
-    linewidth = 0.35,
-    na.rm = TRUE
-  ) +
-  facet_grid(Env_leave ~ Trait + CV) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
-  coord_flip(ylim = c(lower_limit_cvloo - 0.03, upper_limit_cvloo + 0.03)) +
-  scale_x_discrete(name = "Efeitos completos do modelo") +
-  scale_y_continuous(name = "Correlação preditiva") +
-  ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
-  theme_bw() +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    strip.text = element_text(face = "bold", size = 8.5),
-    axis.text.y = element_text(size = 5.5),
-    axis.text.x = element_text(size = 7.5),
-    axis.title = element_text(size = 10),
-    legend.position = "top",
-    legend.title = element_text(size = 9),
-    legend.text = element_text(size = 8)
-  ) +
-  labs(title = "Capacidade preditiva em CV0 e CV00")
+for (current_trait in cvloo_traits) {
+  for (current_cv in cvloo_schemes) {
+    trait_cv_data <- cvloo_plot_data %>%
+      filter(Trait == current_trait, CV == current_cv)
 
-p_cvloo
+    if (nrow(trait_cv_data) == 0) next
 
-ggsave(
-  file.path(figures_dir, "prediction_cv0_cv00.tiff"),
-  plot = p_cvloo,
-  width = 18,
-  height = 14,
-  dpi = 300,
-  bg = "white"
-)
+    model_order <- trait_cv_data %>%
+      group_by(FullEffectsWrapped) %>%
+      summarise(OrderMean = mean(MeanCorrelation, na.rm = TRUE), .groups = "drop") %>%
+      arrange(OrderMean) %>%
+      pull(FullEffectsWrapped)
+
+    trait_cv_data <- trait_cv_data %>%
+      mutate(
+        FullEffectsWrapped = factor(
+          FullEffectsWrapped,
+          levels = model_order
+        )
+      )
+
+    lower_limit_trait_cv <- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
+    upper_limit_trait_cv <- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+
+    p_trait_cvloo <- ggplot(
+      trait_cv_data,
+      aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = Group)
+    ) +
+      geom_col(width = 0.75, color = "grey30", na.rm = TRUE) +
+      geom_errorbar(
+        aes(
+          ymin = MeanCorrelation - SDCorrelation,
+          ymax = MeanCorrelation + SDCorrelation
+        ),
+        width = 0.20,
+        linewidth = 0.35,
+        na.rm = TRUE
+      ) +
+      facet_wrap(~ Env_leave, ncol = 2) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+      scale_x_discrete(name = "Efeitos completos do modelo") +
+      scale_y_continuous(
+        name = "Correlação preditiva",
+        limits = c(lower_limit_trait_cv - 0.03, upper_limit_trait_cv + 0.03),
+        expand = expansion(mult = c(0, 0.02))
+      ) +
+      ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
+      theme_bw() +
+      theme(
+        plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+        strip.text = element_text(face = "bold", size = 9),
+        axis.text.x = element_text(size = 6.5, angle = 60, hjust = 1, vjust = 1),
+        axis.text.y = element_text(size = 8),
+        axis.title = element_text(size = 10),
+        legend.position = "top",
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 8)
+      ) +
+      labs(
+        title = paste("Habilidade preditiva em", current_cv, "para", current_trait)
+      )
+
+    print(p_trait_cvloo)
+
+    ggsave(
+      file.path(figures_dir, paste0("prediction_", current_trait, "_", current_cv, ".tiff")),
+      plot = p_trait_cvloo,
+      width = 18,
+      height = 12,
+      dpi = 300,
+      bg = "white"
+    )
+  }
+}
 ```
 
 ## 16. Nota final

@@ -553,15 +553,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree88e9ac3f4dcbc59438c10e3449b4ae5c1df55482targetblank88e9ac3a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33targetblank3ecd781a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/88e9ac3f4dcbc59438c10e3449b4ae5c1df55482" target="_blank">88e9ac3</a>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33" target="_blank">3ecd781</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree88e9ac3f4dcbc59438c10e3449b4ae5c1df55482targetblank88e9ac3a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33targetblank3ecd781a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -571,7 +571,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/88e9ac3f4dcbc59438c10e3449b4ae5c1df55482" target="_blank">88e9ac3</a>.
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33" target="_blank">3ecd781</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -3072,21 +3072,25 @@ Ignored files:
     Ignored:    output/variance_components/figures/
 
 Untracked files:
-    Untracked:  analysis_definitive_results_hub.zip
-    Untracked:  pipeline_review_definitive_hub.zip
+    Untracked:  output/tables/pipeline_review.zip
 
 Unstaged changes:
     Modified:   analysis/visualization.Rmd
     Modified:   analysis/visualization_pt.Rmd
-    Modified:   output/tables/analysis_prediction/analysis_prediction_output_examples.csv
     Modified:   output/tables/prediction_cv0_cv00_by_rep_fold_env.csv
     Modified:   output/tables/prediction_cv0_cv00_by_run.csv
+    Modified:   output/tables/prediction_cv0_cv00_display_table.csv
+    Modified:   output/tables/prediction_cv0_cv00_kernel_family_compare.csv
     Modified:   output/tables/prediction_cv0_cv00_summary.csv
     Modified:   output/tables/prediction_cv0_cv00_top3.csv
+    Modified:   output/tables/prediction_cv0_cv00_w_effect_pairs.csv
     Modified:   output/tables/prediction_cv1_cv2_by_rep.csv
     Modified:   output/tables/prediction_cv1_cv2_by_rep_env.csv
+    Modified:   output/tables/prediction_cv1_cv2_display_table.csv
+    Modified:   output/tables/prediction_cv1_cv2_kernel_family_compare.csv
     Modified:   output/tables/prediction_cv1_cv2_summary.csv
     Modified:   output/tables/prediction_cv1_cv2_top3.csv
+    Modified:   output/tables/prediction_cv1_cv2_w_effect_pairs.csv
     Modified:   output/tables/prediction_model_catalog.csv
 
 </code></pre>
@@ -3132,6 +3136,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33/analysis/visualization_pt.Rmd" target="_blank">3ecd781</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-08
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33/docs/visualization_pt.html" target="_blank">3ecd781</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-08
+</td>
+<td>
+update
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -3739,7 +3777,13 @@ packages_needed &lt;- c( &quot;dplyr&quot;,
   &quot;stringr&quot; )
 packages_missing &lt;- packages_needed[!(packages_needed %in% installed.packages()[, &quot;Package&quot;])]
 if (length(packages_missing) &gt; 0) {
-  install.packages(packages_missing)
+  stop(
+    paste0(
+      &quot;Os seguintes pacotes são necessários para este módulo, mas não estão instalados: &quot;,
+      paste(packages_missing, collapse = &quot;, &quot;),
+      &quot;. Instale-os antes de renderizar visualization_pt.Rmd.&quot;
+    )
+  )
 }
 library(dplyr)
 library(tidyr)
@@ -3777,174 +3821,18 @@ adiante no documento não são arbitrárias. Elas foram desenhadas para
 ajudar o leitor a entender de onde vêm os ganhos preditivos e se esses
 ganhos estão associados à informação climática, à escolha do kernel ou à
 integração entre fontes genômicas e fenômicas.</p>
-<pre class="r"><code>model_catalog &lt;- tibble::tibble(
-  ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
-  Model = paste0(&quot;Eta&quot;, c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
-  Pathway = c(
-    &quot;Via genômica&quot;,
-    &quot;Via genômica&quot;,
-    &quot;Via genômica&quot;,
-    &quot;Via genômica&quot;,
-    &quot;Via genômica&quot;,
-    &quot;Via genômica&quot;,
-    &quot;Via fenômica&quot;,
-    &quot;Via fenômica&quot;,
-    &quot;Via fenômica&quot;,
-    &quot;Via fenômica&quot;,
-    &quot;Via fenômica&quot;,
-    &quot;Via fenômica&quot;,
-    &quot;Via combinada G + P&quot;,
-    &quot;Via combinada G + P&quot;,
-    &quot;Via combinada G + P&quot;,
-    &quot;Via combinada G + P&quot;,
-    &quot;Via combinada G + P&quot;,
-    &quot;Via combinada G + P&quot;
-  ),
-  KernelFamily = c(
-    &quot;Linear&quot;,
-    &quot;Linear&quot;,
-    &quot;Gaussiano&quot;,
-    &quot;Gaussiano&quot;,
-    &quot;Arc-cosine&quot;,
-    &quot;Arc-cosine&quot;,
-    &quot;Linear&quot;,
-    &quot;Linear&quot;,
-    &quot;Gaussiano&quot;,
-    &quot;Gaussiano&quot;,
-    &quot;Arc-cosine&quot;,
-    &quot;Arc-cosine&quot;,
-    &quot;Linear&quot;,
-    &quot;Linear&quot;,
-    &quot;Gaussiano&quot;,
-    &quot;Gaussiano&quot;,
-    &quot;Arc-cosine&quot;,
-    &quot;Arc-cosine&quot;
-  ),
-  WeatherStatus = c(
-    &quot;Sem W&quot;,
-    &quot;Com W&quot;,
-    &quot;Sem W&quot;,
-    &quot;Com W&quot;,
-    &quot;Sem W&quot;,
-    &quot;Com W&quot;,
-    &quot;Sem W&quot;,
-    &quot;Com W&quot;,
-    &quot;Sem W&quot;,
-    &quot;Com W&quot;,
-    &quot;Sem W&quot;,
-    &quot;Com W&quot;,
-    &quot;Sem W&quot;,
-    &quot;Com W&quot;,
-    &quot;Sem W&quot;,
-    &quot;Com W&quot;,
-    &quot;Sem W&quot;,
-    &quot;Com W&quot;
-  ),
-  Group = c(
-    &quot;Base genômica&quot;,
-    &quot;Clima fonte única&quot;,
-    &quot;Base genômica&quot;,
-    &quot;Clima fonte única&quot;,
-    &quot;Base genômica&quot;,
-    &quot;Clima fonte única&quot;,
-    &quot;Base fenômica&quot;,
-    &quot;Clima fonte única&quot;,
-    &quot;Base fenômica&quot;,
-    &quot;Clima fonte única&quot;,
-    &quot;Base fenômica&quot;,
-    &quot;Clima fonte única&quot;,
-    &quot;Base combinada&quot;,
-    &quot;Clima combinado&quot;,
-    &quot;Base combinada&quot;,
-    &quot;Clima combinado&quot;,
-    &quot;Base combinada&quot;,
-    &quot;Clima combinado&quot;
-  ),
-  Description = c(
-    &quot;Genômico linear + E&quot;,
-    &quot;Genômico linear + W&quot;,
-    &quot;Genômico Gaussiano + E&quot;,
-    &quot;Genômico Gaussiano + W&quot;,
-    &quot;Genômico arc-cosine + E&quot;,
-    &quot;Genômico arc-cosine + W&quot;,
-    &quot;Fenômico linear + E&quot;,
-    &quot;Fenômico linear + W&quot;,
-    &quot;Fenômico Gaussiano + E&quot;,
-    &quot;Fenômico Gaussiano + W&quot;,
-    &quot;Fenômico arc-cosine + E&quot;,
-    &quot;Fenômico arc-cosine + W&quot;,
-    &quot;Combinado linear + E&quot;,
-    &quot;Combinado linear + W&quot;,
-    &quot;Combinado Gaussiano + E&quot;,
-    &quot;Combinado Gaussiano + W&quot;,
-    &quot;Combinado arc-cosine + E&quot;,
-    &quot;Combinado arc-cosine + W&quot;
-  ),
-  ShortDescription = c(
-    &quot;G + E&quot;,
-    &quot;G + W&quot;,
-    &quot;GGK + E&quot;,
-    &quot;GGK + W&quot;,
-    &quot;GAK + E&quot;,
-    &quot;GAK + W&quot;,
-    &quot;P + E&quot;,
-    &quot;P + W&quot;,
-    &quot;PGK + E&quot;,
-    &quot;PGK + W&quot;,
-    &quot;PAK + E&quot;,
-    &quot;PAK + W&quot;,
-    &quot;G+P + E&quot;,
-    &quot;G+P + W&quot;,
-    &quot;GGK+PGK + E&quot;,
-    &quot;GGK+PGK + W&quot;,
-    &quot;GAK+PAK + E&quot;,
-    &quot;GAK+PAK + W&quot;
-  ),
-  FullEffects = c(
-    &quot;E + G + GE&quot;,
-    &quot;E + W + G + GE + GW&quot;,
-    &quot;E + GGK + GGKE&quot;,
-    &quot;E + W + GGK + GGKE + GGKW&quot;,
-    &quot;E + GAK + GAKE&quot;,
-    &quot;E + W + GAK + GAKE + GAKW&quot;,
-    &quot;E + P + PE&quot;,
-    &quot;E + W + P + PE + PW&quot;,
-    &quot;E + PGK + PGKE&quot;,
-    &quot;E + W + PGK + PGKE + PGKW&quot;,
-    &quot;E + PAK + PAKE&quot;,
-    &quot;E + W + PAK + PAKE + PAKW&quot;,
-    &quot;E + G + P + GE + PE&quot;,
-    &quot;E + W + G + P + GE + PE + GW + PW&quot;,
-    &quot;E + GGK + PGK + GGKE + PGKE&quot;,
-    &quot;E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW&quot;,
-    &quot;E + GAK + PAK + GAKE + PAKE&quot;,
-    &quot;E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW&quot;
-  ),
-  InterpretiveDescription = c(
-    &quot;Modelo genômico linear com ambiente e interação G × E&quot;,
-    &quot;Modelo genômico linear com ambiente, clima, GE e GW&quot;,
-    &quot;Modelo genômico Gaussiano com ambiente e interação GGK × E&quot;,
-    &quot;Modelo genômico Gaussiano com ambiente, clima, GGKE e GGKW&quot;,
-    &quot;Modelo genômico arc-cosine com ambiente e interação GAK × E&quot;,
-    &quot;Modelo genômico arc-cosine com ambiente, clima, GAKE e GAKW&quot;,
-    &quot;Modelo fenômico linear com ambiente e interação P × E&quot;,
-    &quot;Modelo fenômico linear com ambiente, clima, PE e PW&quot;,
-    &quot;Modelo fenômico Gaussiano com ambiente e interação PGK × E&quot;,
-    &quot;Modelo fenômico Gaussiano com ambiente, clima, PGKE e PGKW&quot;,
-    &quot;Modelo fenômico arc-cosine com ambiente e interação PAK × E&quot;,
-    &quot;Modelo fenômico arc-cosine com ambiente, clima, PAKE e PAKW&quot;,
-    &quot;Modelo combinado linear com ambiente, GE e PE&quot;,
-    &quot;Modelo combinado linear com ambiente, clima, GE, PE, GW e PW&quot;,
-    &quot;Modelo combinado Gaussiano com ambiente, GGKE e PGKE&quot;,
-    &quot;Modelo combinado Gaussiano com ambiente, clima, GGKE, PGKE, GGKW e PGKW&quot;,
-    &quot;Modelo combinado arc-cosine com ambiente, GAKE e PAKE&quot;,
-    &quot;Modelo combinado arc-cosine com ambiente, clima, GAKE, PAKE, GAKW e PAKW&quot;
-  )
-)
+<pre class="r"><code>model_catalog &lt;- tibble( ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
+ Model = paste0(&quot;Eta&quot;, c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
+ Pathway = c( rep(&quot;Via genômica&quot;, 6), rep(&quot;Via fenômica&quot;, 6), rep(&quot;Via combinada G + P&quot;, 6) ),
+ KernelFamily = c( &quot;Linear&quot;, &quot;Linear&quot;, &quot;Gaussiano&quot;, &quot;Gaussiano&quot;, &quot;Arc-cosine&quot;, &quot;Arc-cosine&quot;, &quot;Linear&quot;, &quot;Linear&quot;, &quot;Gaussiano&quot;, &quot;Gaussiano&quot;, &quot;Arc-cosine&quot;, &quot;Arc-cosine&quot;, &quot;Linear&quot;, &quot;Linear&quot;, &quot;Gaussiano&quot;, &quot;Gaussiano&quot;, &quot;Arc-cosine&quot;, &quot;Arc-cosine&quot; ),
+ WeatherStatus = c( &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot; ),
+ Group = c( &quot;Base genômica&quot;, &quot;Clima fonte única&quot;, &quot;Base genômica&quot;, &quot;Clima fonte única&quot;, &quot;Base genômica&quot;, &quot;Clima fonte única&quot;, &quot;Base fenômica&quot;, &quot;Clima fonte única&quot;, &quot;Base fenômica&quot;, &quot;Clima fonte única&quot;, &quot;Base fenômica&quot;, &quot;Clima fonte única&quot;, &quot;Base combinada&quot;, &quot;Clima combinado&quot;, &quot;Base combinada&quot;, &quot;Clima combinado&quot;, &quot;Base combinada&quot;, &quot;Clima combinado&quot; ),
+ Description = c( &quot;Genômico linear + E&quot;, &quot;Genômico linear + W&quot;, &quot;Genômico Gaussiano + E&quot;, &quot;Genômico Gaussiano + W&quot;, &quot;Genômico arc-cosine + E&quot;, &quot;Genômico arc-cosine + W&quot;, &quot;Fenômico linear + E&quot;, &quot;Fenômico linear + W&quot;, &quot;Fenômico Gaussiano + E&quot;, &quot;Fenômico Gaussiano + W&quot;, &quot;Fenômico arc-cosine + E&quot;, &quot;Fenômico arc-cosine + W&quot;, &quot;Combinado linear + E&quot;, &quot;Combinado linear + W&quot;, &quot;Combinado Gaussiano + E&quot;, &quot;Combinado Gaussiano + W&quot;, &quot;Combinado arc-cosine + E&quot;, &quot;Combinado arc-cosine + W&quot; ),
+  ShortDescription = c( &quot;G + E&quot;, &quot;G + W&quot;, &quot;GGK + E&quot;, &quot;GGK + W&quot;, &quot;GAK + E&quot;, &quot;GAK + W&quot;, &quot;P + E&quot;, &quot;P + W&quot;, &quot;PGK + E&quot;, &quot;PGK + W&quot;, &quot;PAK + E&quot;, &quot;PAK + W&quot;, &quot;G+P + E&quot;, &quot;G+P + W&quot;, &quot;GGK+PGK + E&quot;, &quot;GGK+PGK + W&quot;, &quot;GAK+PAK + E&quot;, &quot;GAK+PAK + W&quot; ) )
 model_catalog</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["ModelNumber"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["Model"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Pathway"],"name":[3],"type":["chr"],"align":["left"]},{"label":["KernelFamily"],"name":[4],"type":["chr"],"align":["left"]},{"label":["WeatherStatus"],"name":[5],"type":["chr"],"align":["left"]},{"label":["Group"],"name":[6],"type":["chr"],"align":["left"]},{"label":["Description"],"name":[7],"type":["chr"],"align":["left"]},{"label":["ShortDescription"],"name":[8],"type":["chr"],"align":["left"]},{"label":["FullEffects"],"name":[9],"type":["chr"],"align":["left"]},{"label":["InterpretiveDescription"],"name":[10],"type":["chr"],"align":["left"]}],"data":[{"1":"1","2":"Eta1","3":"Via genômica","4":"Linear","5":"Sem W","6":"Base genômica","7":"Genômico linear + E","8":"G + E","9":"E + G + GE","10":"Modelo genômico linear com ambiente e interação G × E"},{"1":"10","2":"Eta10","3":"Via genômica","4":"Linear","5":"Com W","6":"Clima fonte única","7":"Genômico linear + W","8":"G + W","9":"E + W + G + GE + GW","10":"Modelo genômico linear com ambiente, clima, GE e GW"},{"1":"3","2":"Eta3","3":"Via genômica","4":"Gaussiano","5":"Sem W","6":"Base genômica","7":"Genômico Gaussiano + E","8":"GGK + E","9":"E + GGK + GGKE","10":"Modelo genômico Gaussiano com ambiente e interação GGK × E"},{"1":"13","2":"Eta13","3":"Via genômica","4":"Gaussiano","5":"Com W","6":"Clima fonte única","7":"Genômico Gaussiano + W","8":"GGK + W","9":"E + W + GGK + GGKE + GGKW","10":"Modelo genômico Gaussiano com ambiente, clima, GGKE e GGKW"},{"1":"5","2":"Eta5","3":"Via genômica","4":"Arc-cosine","5":"Sem W","6":"Base genômica","7":"Genômico arc-cosine + E","8":"GAK + E","9":"E + GAK + GAKE","10":"Modelo genômico arc-cosine com ambiente e interação GAK × E"},{"1":"16","2":"Eta16","3":"Via genômica","4":"Arc-cosine","5":"Com W","6":"Clima fonte única","7":"Genômico arc-cosine + W","8":"GAK + W","9":"E + W + GAK + GAKE + GAKW","10":"Modelo genômico arc-cosine com ambiente, clima, GAKE e GAKW"},{"1":"2","2":"Eta2","3":"Via fenômica","4":"Linear","5":"Sem W","6":"Base fenômica","7":"Fenômico linear + E","8":"P + E","9":"E + P + PE","10":"Modelo fenômico linear com ambiente e interação P × E"},{"1":"11","2":"Eta11","3":"Via fenômica","4":"Linear","5":"Com W","6":"Clima fonte única","7":"Fenômico linear + W","8":"P + W","9":"E + W + P + PE + PW","10":"Modelo fenômico linear com ambiente, clima, PE e PW"},{"1":"4","2":"Eta4","3":"Via fenômica","4":"Gaussiano","5":"Sem W","6":"Base fenômica","7":"Fenômico Gaussiano + E","8":"PGK + E","9":"E + PGK + PGKE","10":"Modelo fenômico Gaussiano com ambiente e interação PGK × E"},{"1":"14","2":"Eta14","3":"Via fenômica","4":"Gaussiano","5":"Com W","6":"Clima fonte única","7":"Fenômico Gaussiano + W","8":"PGK + W","9":"E + W + PGK + PGKE + PGKW","10":"Modelo fenômico Gaussiano com ambiente, clima, PGKE e PGKW"},{"1":"6","2":"Eta6","3":"Via fenômica","4":"Arc-cosine","5":"Sem W","6":"Base fenômica","7":"Fenômico arc-cosine + E","8":"PAK + E","9":"E + PAK + PAKE","10":"Modelo fenômico arc-cosine com ambiente e interação PAK × E"},{"1":"17","2":"Eta17","3":"Via fenômica","4":"Arc-cosine","5":"Com W","6":"Clima fonte única","7":"Fenômico arc-cosine + W","8":"PAK + W","9":"E + W + PAK + PAKE + PAKW","10":"Modelo fenômico arc-cosine com ambiente, clima, PAKE e PAKW"},{"1":"7","2":"Eta7","3":"Via combinada G + P","4":"Linear","5":"Sem W","6":"Base combinada","7":"Combinado linear + E","8":"G+P + E","9":"E + G + P + GE + PE","10":"Modelo combinado linear com ambiente, GE e PE"},{"1":"12","2":"Eta12","3":"Via combinada G + P","4":"Linear","5":"Com W","6":"Clima combinado","7":"Combinado linear + W","8":"G+P + W","9":"E + W + G + P + GE + PE + GW + PW","10":"Modelo combinado linear com ambiente, clima, GE, PE, GW e PW"},{"1":"8","2":"Eta8","3":"Via combinada G + P","4":"Gaussiano","5":"Sem W","6":"Base combinada","7":"Combinado Gaussiano + E","8":"GGK+PGK + E","9":"E + GGK + PGK + GGKE + PGKE","10":"Modelo combinado Gaussiano com ambiente, GGKE e PGKE"},{"1":"15","2":"Eta15","3":"Via combinada G + P","4":"Gaussiano","5":"Com W","6":"Clima combinado","7":"Combinado Gaussiano + W","8":"GGK+PGK + W","9":"E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW","10":"Modelo combinado Gaussiano com ambiente, clima, GGKE, PGKE, GGKW e PGKW"},{"1":"9","2":"Eta9","3":"Via combinada G + P","4":"Arc-cosine","5":"Sem W","6":"Base combinada","7":"Combinado arc-cosine + E","8":"GAK+PAK + E","9":"E + GAK + PAK + GAKE + PAKE","10":"Modelo combinado arc-cosine com ambiente, GAKE e PAKE"},{"1":"18","2":"Eta18","3":"Via combinada G + P","4":"Arc-cosine","5":"Com W","6":"Clima combinado","7":"Combinado arc-cosine + W","8":"GAK+PAK + W","9":"E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW","10":"Modelo combinado arc-cosine com ambiente, clima, GAKE, PAKE, GAKW e PAKW"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["ModelNumber"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["Model"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Pathway"],"name":[3],"type":["chr"],"align":["left"]},{"label":["KernelFamily"],"name":[4],"type":["chr"],"align":["left"]},{"label":["WeatherStatus"],"name":[5],"type":["chr"],"align":["left"]},{"label":["Group"],"name":[6],"type":["chr"],"align":["left"]},{"label":["Description"],"name":[7],"type":["chr"],"align":["left"]},{"label":["ShortDescription"],"name":[8],"type":["chr"],"align":["left"]}],"data":[{"1":"1","2":"Eta1","3":"Via genômica","4":"Linear","5":"Sem W","6":"Base genômica","7":"Genômico linear + E","8":"G + E"},{"1":"10","2":"Eta10","3":"Via genômica","4":"Linear","5":"Com W","6":"Clima fonte única","7":"Genômico linear + W","8":"G + W"},{"1":"3","2":"Eta3","3":"Via genômica","4":"Gaussiano","5":"Sem W","6":"Base genômica","7":"Genômico Gaussiano + E","8":"GGK + E"},{"1":"13","2":"Eta13","3":"Via genômica","4":"Gaussiano","5":"Com W","6":"Clima fonte única","7":"Genômico Gaussiano + W","8":"GGK + W"},{"1":"5","2":"Eta5","3":"Via genômica","4":"Arc-cosine","5":"Sem W","6":"Base genômica","7":"Genômico arc-cosine + E","8":"GAK + E"},{"1":"16","2":"Eta16","3":"Via genômica","4":"Arc-cosine","5":"Com W","6":"Clima fonte única","7":"Genômico arc-cosine + W","8":"GAK + W"},{"1":"2","2":"Eta2","3":"Via fenômica","4":"Linear","5":"Sem W","6":"Base fenômica","7":"Fenômico linear + E","8":"P + E"},{"1":"11","2":"Eta11","3":"Via fenômica","4":"Linear","5":"Com W","6":"Clima fonte única","7":"Fenômico linear + W","8":"P + W"},{"1":"4","2":"Eta4","3":"Via fenômica","4":"Gaussiano","5":"Sem W","6":"Base fenômica","7":"Fenômico Gaussiano + E","8":"PGK + E"},{"1":"14","2":"Eta14","3":"Via fenômica","4":"Gaussiano","5":"Com W","6":"Clima fonte única","7":"Fenômico Gaussiano + W","8":"PGK + W"},{"1":"6","2":"Eta6","3":"Via fenômica","4":"Arc-cosine","5":"Sem W","6":"Base fenômica","7":"Fenômico arc-cosine + E","8":"PAK + E"},{"1":"17","2":"Eta17","3":"Via fenômica","4":"Arc-cosine","5":"Com W","6":"Clima fonte única","7":"Fenômico arc-cosine + W","8":"PAK + W"},{"1":"7","2":"Eta7","3":"Via combinada G + P","4":"Linear","5":"Sem W","6":"Base combinada","7":"Combinado linear + E","8":"G+P + E"},{"1":"12","2":"Eta12","3":"Via combinada G + P","4":"Linear","5":"Com W","6":"Clima combinado","7":"Combinado linear + W","8":"G+P + W"},{"1":"8","2":"Eta8","3":"Via combinada G + P","4":"Gaussiano","5":"Sem W","6":"Base combinada","7":"Combinado Gaussiano + E","8":"GGK+PGK + E"},{"1":"15","2":"Eta15","3":"Via combinada G + P","4":"Gaussiano","5":"Com W","6":"Clima combinado","7":"Combinado Gaussiano + W","8":"GGK+PGK + W"},{"1":"9","2":"Eta9","3":"Via combinada G + P","4":"Arc-cosine","5":"Sem W","6":"Base combinada","7":"Combinado arc-cosine + E","8":"GAK+PAK + E"},{"1":"18","2":"Eta18","3":"Via combinada G + P","4":"Arc-cosine","5":"Com W","6":"Clima combinado","7":"Combinado arc-cosine + W","8":"GAK+PAK + W"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -3987,6 +3875,7 @@ com o novo contrato <code>Rep/Fold</code> e preserva a separação entre
 os problemas de validação baseados em genótipos e os problemas
 leave-one-environment-out.</p>
 <pre class="r"><code>all_result_rel_paths &lt;- list.files(results_dir, pattern = &quot;\\.csv$&quot;, full.names = FALSE, recursive = TRUE)
+all_result_rel_paths &lt;- gsub(&quot;\\&quot;, &quot;/&quot;, all_result_rel_paths)
 structured_idx &lt;- grepl(&quot;^CV1/|^CV2/|^CV0/|^CV00/&quot;, all_result_rel_paths)
 all_result_rel_paths &lt;- all_result_rel_paths[structured_idx]
 all_result_files &lt;- file.path(results_dir, all_result_rel_paths)
@@ -4040,7 +3929,7 @@ Padrão esperado: CV1/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.csv ou CV2/&lt;tra
   rep_from_path &lt;- as.numeric(gsub(&quot;^rep&quot;, &quot;&quot;, path_parts[3]))
   fold_from_path &lt;- as.numeric(gsub(&quot;^fold&quot;, &quot;&quot;, path_parts[4]))
 
-  file_name &lt;- sub(&quot;\\.csv$&quot;, &quot;&quot;, basename(current_file))
+  file_name &lt;- sub(&quot;\.csv$&quot;, &quot;&quot;, basename(current_file))
   file_parts &lt;- strsplit(file_name, &quot;_&quot;)[[1]]
 
   if (length(file_parts) != 5) {
@@ -4128,7 +4017,7 @@ Padrão esperado: CV0/&lt;Env_leave&gt;/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.
   rep_from_path &lt;- as.numeric(gsub(&quot;^rep&quot;, &quot;&quot;, path_parts[4]))
   fold_from_path &lt;- as.numeric(gsub(&quot;^fold&quot;, &quot;&quot;, path_parts[5]))
 
-  file_name &lt;- sub(&quot;\\.csv$&quot;, &quot;&quot;, basename(current_file))
+  file_name &lt;- sub(&quot;\.csv$&quot;, &quot;&quot;, basename(current_file))
   file_parts &lt;- strsplit(file_name, &quot;_&quot;)[[1]]
 
   if (length(file_parts) &lt; 6) {
@@ -4197,8 +4086,6 @@ repetições.</p>
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -4220,8 +4107,6 @@ cv12_env_rep &lt;- cv12_env_fold %&gt;%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -4239,8 +4124,6 @@ cv12_rep_summary &lt;- cv12_env_rep %&gt;%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -4256,8 +4139,6 @@ cv12_summary &lt;- cv12_rep_summary %&gt;%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
     CV ) %&gt;%
@@ -4288,8 +4169,6 @@ cvloo_env_fold &lt;- cvloo_env_filtered %&gt;%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -4312,8 +4191,6 @@ cvloo_rep_summary &lt;- cvloo_env_fold %&gt;%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -4331,8 +4208,6 @@ cvloo_summary &lt;- cvloo_rep_summary %&gt;%
    KernelFamily,
    WeatherStatus,
    Description,
-   FullEffects,
-   InterpretiveDescription,
    ShortDescription,
    Trait,
    CV,
@@ -4432,13 +4307,13 @@ cv12_top3 &lt;- cv12_summary %&gt;%
   slice_max(order_by = MeanCorrelation, n = 3, with_ties = FALSE) %&gt;%
   ungroup() %&gt;%
   mutate( MeanCorrelation = round(MeanCorrelation, 3), SDCorrelation = round(SDCorrelation, 3) ) %&gt;%
-  select(Trait, CV, ShortDescription, FullEffects, InterpretiveDescription, MeanCorrelation, SDCorrelation)
+  select(Trait, CV, ShortDescription, MeanCorrelation, SDCorrelation)
 cvloo_top3 &lt;- cvloo_summary %&gt;%
   group_by(Trait, CV, Env_leave) %&gt;%
   slice_max(order_by = MeanCorrelation, n = 3, with_ties = FALSE) %&gt;%
   ungroup() %&gt;%
   mutate( MeanCorrelation = round(MeanCorrelation, 3), SDCorrelation = round(SDCorrelation, 3) ) %&gt;%
-  select(Trait, CV, Env_leave, ShortDescription, FullEffects, InterpretiveDescription, MeanCorrelation, SDCorrelation)
+  select(Trait, CV, Env_leave, ShortDescription, MeanCorrelation, SDCorrelation)
 readr::write_csv(cv12_table_display, file.path(tables_dir, &quot;prediction_cv1_cv2_display_table.csv&quot;))
 readr::write_csv(cvloo_table_display, file.path(tables_dir, &quot;prediction_cv0_cv00_display_table.csv&quot;))
 readr::write_csv(cv12_top3, file.path(tables_dir, &quot;prediction_cv1_cv2_top3.csv&quot;))
@@ -4446,8 +4321,8 @@ readr::write_csv(cvloo_top3, file.path(tables_dir, &quot;prediction_cv0_cv00_top
 </div>
 <div id="tabelas-top-3" class="section level2">
 <h2>12. Tabelas Top-3</h2>
-<p>Os dois chunks seguintes exibem os três modelos com melhor desempenho
-em cada esquema de validação.</p>
+<p>As duas tabelas seguintes exibem os três modelos com melhor
+desempenho em cada esquema de validação.</p>
 <pre class="r"><code>cv12_top3 %&gt;%
   knitr::kable( caption = &quot;Top 3 modelos para cada traço e esquema de validação em CV1 e CV2.&quot;,
     align = &quot;llccc&quot; ) %&gt;%
@@ -4470,15 +4345,9 @@ CV
 ShortDescription
 </th>
 <th style="text-align:center;">
-FullEffects
-</th>
-<th style="text-align:center;">
-InterpretiveDescription
-</th>
-<th style="text-align:left;">
 MeanCorrelation
 </th>
-<th style="text-align:left;">
+<th style="text-align:center;">
 SDCorrelation
 </th>
 </tr>
@@ -4495,16 +4364,10 @@ CV1
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.727
 </td>
-<td style="text-align:left;">
-0.012
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4518,16 +4381,10 @@ CV1
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.725
 </td>
-<td style="text-align:left;">
-0.011
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4541,17 +4398,10 @@ CV1
 GGK+PGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
-</td>
-<td style="text-align:center;">
-Gaussian combined genomic + phenomic + weather model with GGKE, PGKE,
-GGKW, and PGKW
-</td>
-<td style="text-align:left;">
 0.723
 </td>
-<td style="text-align:left;">
-0.011
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4565,17 +4415,10 @@ CV2
 GGK+PGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
-</td>
-<td style="text-align:center;">
-Gaussian combined genomic + phenomic + weather model with GGKE, PGKE,
-GGKW, and PGKW
-</td>
-<td style="text-align:left;">
 0.991
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4589,17 +4432,10 @@ CV2
 GGK+PGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + PGK + GGKE + PGKE
-</td>
-<td style="text-align:center;">
-Gaussian combined genomic + phenomic model with environment, GGKE, and
-PGKE
-</td>
-<td style="text-align:left;">
 0.989
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4613,16 +4449,10 @@ CV2
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.984
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4636,16 +4466,10 @@ CV1
 P + E
 </td>
 <td style="text-align:center;">
-E + P + PE
-</td>
-<td style="text-align:center;">
-Linear phenomic model with environment and P × E interaction
-</td>
-<td style="text-align:left;">
 0.762
 </td>
-<td style="text-align:left;">
-0.010
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4659,16 +4483,10 @@ CV1
 P + W
 </td>
 <td style="text-align:center;">
-E + W + P + PE + PW
-</td>
-<td style="text-align:center;">
-Linear phenomic-weather model with environment, weather, PE, and PW
-</td>
-<td style="text-align:left;">
 0.761
 </td>
-<td style="text-align:left;">
-0.005
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4682,16 +4500,10 @@ CV1
 G+P + E
 </td>
 <td style="text-align:center;">
-E + G + P + GE + PE
-</td>
-<td style="text-align:center;">
-Linear combined genomic + phenomic model with environment, GE, and PE
-</td>
-<td style="text-align:left;">
 0.728
 </td>
-<td style="text-align:left;">
-0.015
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4705,17 +4517,10 @@ CV2
 G+P + W
 </td>
 <td style="text-align:center;">
-E + W + G + P + GE + PE + GW + PW
-</td>
-<td style="text-align:center;">
-Linear combined genomic + phenomic + weather model with GE, PE, GW, and
-PW
-</td>
-<td style="text-align:left;">
 0.994
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4729,17 +4534,10 @@ CV2
 GGK+PGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
-</td>
-<td style="text-align:center;">
-Gaussian combined genomic + phenomic + weather model with GGKE, PGKE,
-GGKW, and PGKW
-</td>
-<td style="text-align:left;">
 0.994
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4753,16 +4551,10 @@ CV2
 G+P + E
 </td>
 <td style="text-align:center;">
-E + G + P + GE + PE
-</td>
-<td style="text-align:center;">
-Linear combined genomic + phenomic model with environment, GE, and PE
-</td>
-<td style="text-align:left;">
 0.994
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 </tbody>
@@ -4793,15 +4585,9 @@ Env_leave
 ShortDescription
 </th>
 <th style="text-align:center;">
-FullEffects
-</th>
-<th style="text-align:center;">
-InterpretiveDescription
-</th>
-<th style="text-align:left;">
 MeanCorrelation
 </th>
-<th style="text-align:left;">
+<th style="text-align:center;">
 SDCorrelation
 </th>
 </tr>
@@ -4821,16 +4607,10 @@ CS11_WS
 GAK + E
 </td>
 <td style="text-align:center;">
-E + GAK + GAKE
-</td>
-<td style="text-align:center;">
-Arc-cosine genomic model with environment and GAK × E interaction
-</td>
-<td style="text-align:left;">
 0.926
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4847,17 +4627,10 @@ CS11_WS
 GAK + W
 </td>
 <td style="text-align:center;">
-E + W + GAK + GAKE + GAKW
-</td>
-<td style="text-align:center;">
-Arc-cosine genomic-weather model with environment, weather, GAKE, and
-GAKW
-</td>
-<td style="text-align:left;">
 0.924
 </td>
-<td style="text-align:left;">
-0.003
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4874,16 +4647,10 @@ CS11_WS
 GGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + GGKE
-</td>
-<td style="text-align:center;">
-Gaussian genomic model with environment and GGK × E interaction
-</td>
-<td style="text-align:left;">
 0.923
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4900,16 +4667,10 @@ CS11_WW
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.896
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4926,16 +4687,10 @@ CS11_WW
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.896
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4952,16 +4707,10 @@ CS11_WW
 GGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + GGKE
-</td>
-<td style="text-align:center;">
-Gaussian genomic model with environment and GGK × E interaction
-</td>
-<td style="text-align:left;">
 0.894
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -4978,16 +4727,10 @@ CS12_WS
 GGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + GGKE
-</td>
-<td style="text-align:center;">
-Gaussian genomic model with environment and GGK × E interaction
-</td>
-<td style="text-align:left;">
 0.896
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5004,16 +4747,10 @@ CS12_WS
 G + E
 </td>
 <td style="text-align:center;">
-E + G + GE
-</td>
-<td style="text-align:center;">
-Linear genomic model with environment and G × E interaction
-</td>
-<td style="text-align:left;">
 0.894
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5030,16 +4767,10 @@ CS12_WS
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.893
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5056,16 +4787,10 @@ CS12_WW
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.909
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5082,16 +4807,10 @@ CS12_WW
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.907
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5108,16 +4827,10 @@ CS12_WW
 G + E
 </td>
 <td style="text-align:center;">
-E + G + GE
-</td>
-<td style="text-align:center;">
-Linear genomic model with environment and G × E interaction
-</td>
-<td style="text-align:left;">
 0.904
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5134,17 +4847,10 @@ CS11_WS
 GAK + W
 </td>
 <td style="text-align:center;">
-E + W + GAK + GAKE + GAKW
-</td>
-<td style="text-align:center;">
-Arc-cosine genomic-weather model with environment, weather, GAKE, and
-GAKW
-</td>
-<td style="text-align:left;">
 0.735
 </td>
-<td style="text-align:left;">
-0.014
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5161,16 +4867,10 @@ CS11_WS
 GAK + E
 </td>
 <td style="text-align:center;">
-E + GAK + GAKE
-</td>
-<td style="text-align:center;">
-Arc-cosine genomic model with environment and GAK × E interaction
-</td>
-<td style="text-align:left;">
 0.732
 </td>
-<td style="text-align:left;">
-0.013
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5187,16 +4887,10 @@ CS11_WS
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.720
 </td>
-<td style="text-align:left;">
-0.016
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5213,16 +4907,10 @@ CS11_WW
 G + E
 </td>
 <td style="text-align:center;">
-E + G + GE
-</td>
-<td style="text-align:center;">
-Linear genomic model with environment and G × E interaction
-</td>
-<td style="text-align:left;">
 0.741
 </td>
-<td style="text-align:left;">
-0.010
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5239,16 +4927,10 @@ CS11_WW
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.740
 </td>
-<td style="text-align:left;">
-0.013
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5265,16 +4947,10 @@ CS11_WW
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.738
 </td>
-<td style="text-align:left;">
-0.012
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5291,16 +4967,10 @@ CS12_WS
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.734
 </td>
-<td style="text-align:left;">
-0.007
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5317,16 +4987,10 @@ CS12_WS
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.733
 </td>
-<td style="text-align:left;">
-0.007
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5343,16 +5007,10 @@ CS12_WS
 GGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + GGKE
-</td>
-<td style="text-align:center;">
-Gaussian genomic model with environment and GGK × E interaction
-</td>
-<td style="text-align:left;">
 0.730
 </td>
-<td style="text-align:left;">
-0.011
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5369,17 +5027,10 @@ CS12_WW
 GGK+PGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
-</td>
-<td style="text-align:center;">
-Gaussian combined genomic + phenomic + weather model with GGKE, PGKE,
-GGKW, and PGKW
-</td>
-<td style="text-align:left;">
 0.714
 </td>
-<td style="text-align:left;">
-0.013
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5396,16 +5047,10 @@ CS12_WW
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.713
 </td>
-<td style="text-align:left;">
-0.009
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5422,16 +5067,10 @@ CS12_WW
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.710
 </td>
-<td style="text-align:left;">
-0.008
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5448,16 +5087,10 @@ CS11_WS
 GAK + E
 </td>
 <td style="text-align:center;">
-E + GAK + GAKE
-</td>
-<td style="text-align:center;">
-Arc-cosine genomic model with environment and GAK × E interaction
-</td>
-<td style="text-align:left;">
 0.961
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5474,16 +5107,10 @@ CS11_WS
 GGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + GGKE
-</td>
-<td style="text-align:center;">
-Gaussian genomic model with environment and GGK × E interaction
-</td>
-<td style="text-align:left;">
 0.960
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5500,16 +5127,10 @@ CS11_WS
 G + E
 </td>
 <td style="text-align:center;">
-E + G + GE
-</td>
-<td style="text-align:center;">
-Linear genomic model with environment and G × E interaction
-</td>
-<td style="text-align:left;">
 0.960
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5526,16 +5147,10 @@ CS11_WW
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.889
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5552,17 +5167,10 @@ CS11_WW
 GGK+PGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
-</td>
-<td style="text-align:center;">
-Gaussian combined genomic + phenomic + weather model with GGKE, PGKE,
-GGKW, and PGKW
-</td>
-<td style="text-align:left;">
 0.888
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5579,16 +5187,10 @@ CS11_WW
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.887
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5605,16 +5207,10 @@ CS12_WS
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.899
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5631,16 +5227,10 @@ CS12_WS
 GGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + GGKE
-</td>
-<td style="text-align:center;">
-Gaussian genomic model with environment and GGK × E interaction
-</td>
-<td style="text-align:left;">
 0.898
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5657,16 +5247,10 @@ CS12_WS
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.897
 </td>
-<td style="text-align:left;">
-0.001
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5683,16 +5267,10 @@ CS12_WW
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.949
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5709,17 +5287,10 @@ CS12_WW
 GGK+PGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
-</td>
-<td style="text-align:center;">
-Gaussian combined genomic + phenomic + weather model with GGKE, PGKE,
-GGKW, and PGKW
-</td>
-<td style="text-align:left;">
 0.948
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5736,16 +5307,10 @@ CS12_WW
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.948
 </td>
-<td style="text-align:left;">
-0.000
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5762,16 +5327,10 @@ CS11_WS
 P + E
 </td>
 <td style="text-align:center;">
-E + P + PE
-</td>
-<td style="text-align:center;">
-Linear phenomic model with environment and P × E interaction
-</td>
-<td style="text-align:left;">
 0.662
 </td>
-<td style="text-align:left;">
-0.074
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5788,16 +5347,10 @@ CS11_WS
 G+P + E
 </td>
 <td style="text-align:center;">
-E + G + P + GE + PE
-</td>
-<td style="text-align:center;">
-Linear combined genomic + phenomic model with environment, GE, and PE
-</td>
-<td style="text-align:left;">
 0.654
 </td>
-<td style="text-align:left;">
-0.036
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5814,16 +5367,10 @@ CS11_WS
 P + W
 </td>
 <td style="text-align:center;">
-E + W + P + PE + PW
-</td>
-<td style="text-align:center;">
-Linear phenomic-weather model with environment, weather, PE, and PW
-</td>
-<td style="text-align:left;">
 0.624
 </td>
-<td style="text-align:left;">
-0.068
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5840,16 +5387,10 @@ CS11_WW
 P + E
 </td>
 <td style="text-align:center;">
-E + P + PE
-</td>
-<td style="text-align:center;">
-Linear phenomic model with environment and P × E interaction
-</td>
-<td style="text-align:left;">
 0.656
 </td>
-<td style="text-align:left;">
-0.054
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5866,16 +5407,10 @@ CS11_WW
 GGK + W
 </td>
 <td style="text-align:center;">
-E + W + GGK + GGKE + GGKW
-</td>
-<td style="text-align:center;">
-Gaussian genomic-weather model with environment, weather, GGKE, and GGKW
-</td>
-<td style="text-align:left;">
 0.567
 </td>
-<td style="text-align:left;">
-0.023
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5892,17 +5427,10 @@ CS11_WW
 GGK+PGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + PGK + GGKE + PGKE
-</td>
-<td style="text-align:center;">
-Gaussian combined genomic + phenomic model with environment, GGKE, and
-PGKE
-</td>
-<td style="text-align:left;">
 0.566
 </td>
-<td style="text-align:left;">
-0.021
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5919,17 +5447,10 @@ CS12_WS
 GGK+PGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + PGK + GGKE + PGKE
-</td>
-<td style="text-align:center;">
-Gaussian combined genomic + phenomic model with environment, GGKE, and
-PGKE
-</td>
-<td style="text-align:left;">
 0.619
 </td>
-<td style="text-align:left;">
-0.013
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5946,16 +5467,10 @@ CS12_WS
 GGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + GGKE
-</td>
-<td style="text-align:center;">
-Gaussian genomic model with environment and GGK × E interaction
-</td>
-<td style="text-align:left;">
 0.616
 </td>
-<td style="text-align:left;">
-0.017
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5972,16 +5487,10 @@ CS12_WS
 G + W
 </td>
 <td style="text-align:center;">
-E + W + G + GE + GW
-</td>
-<td style="text-align:center;">
-Linear genomic-weather model with environment, weather, GE, and GW
-</td>
-<td style="text-align:left;">
 0.613
 </td>
-<td style="text-align:left;">
-0.009
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -5998,16 +5507,10 @@ CS12_WW
 P + E
 </td>
 <td style="text-align:center;">
-E + P + PE
-</td>
-<td style="text-align:center;">
-Linear phenomic model with environment and P × E interaction
-</td>
-<td style="text-align:left;">
 0.640
 </td>
-<td style="text-align:left;">
-0.061
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -6024,16 +5527,10 @@ CS12_WW
 G+P + E
 </td>
 <td style="text-align:center;">
-E + G + P + GE + PE
-</td>
-<td style="text-align:center;">
-Linear combined genomic + phenomic model with environment, GE, and PE
-</td>
-<td style="text-align:left;">
 0.636
 </td>
-<td style="text-align:left;">
-0.041
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 <tr>
@@ -6050,17 +5547,10 @@ CS12_WW
 GGK+PGK + E
 </td>
 <td style="text-align:center;">
-E + GGK + PGK + GGKE + PGKE
-</td>
-<td style="text-align:center;">
-Gaussian combined genomic + phenomic model with environment, GGKE, and
-PGKE
-</td>
-<td style="text-align:left;">
 0.617
 </td>
-<td style="text-align:left;">
-0.010
+<td style="text-align:center;">
+NA
 </td>
 </tr>
 </tbody>
@@ -6142,13 +5632,13 @@ CV1
 0.717
 </td>
 <td style="text-align:center;">
-0.0117158
+NA
 </td>
 <td style="text-align:center;">
 0.723
 </td>
 <td style="text-align:left;">
-0.0112130
+NA
 </td>
 <td style="text-align:left;">
 0.006
@@ -6174,13 +5664,13 @@ CV1
 0.703
 </td>
 <td style="text-align:center;">
-0.0100091
+NA
 </td>
 <td style="text-align:center;">
 0.706
 </td>
 <td style="text-align:left;">
-0.0087728
+NA
 </td>
 <td style="text-align:left;">
 0.003
@@ -6206,13 +5696,13 @@ CV1
 0.713
 </td>
 <td style="text-align:center;">
-0.0134212
+NA
 </td>
 <td style="text-align:center;">
 0.719
 </td>
 <td style="text-align:left;">
-0.0124435
+NA
 </td>
 <td style="text-align:left;">
 0.006
@@ -6238,13 +5728,13 @@ CV1
 0.719
 </td>
 <td style="text-align:center;">
-0.0106337
+NA
 </td>
 <td style="text-align:center;">
 0.727
 </td>
 <td style="text-align:left;">
-0.0120687
+NA
 </td>
 <td style="text-align:left;">
 0.008
@@ -6270,13 +5760,13 @@ CV1
 0.711
 </td>
 <td style="text-align:center;">
-0.0065960
+NA
 </td>
 <td style="text-align:center;">
 0.714
 </td>
 <td style="text-align:left;">
-0.0083470
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -6302,13 +5792,13 @@ CV1
 0.719
 </td>
 <td style="text-align:center;">
-0.0128201
+NA
 </td>
 <td style="text-align:center;">
 0.725
 </td>
 <td style="text-align:left;">
-0.0109925
+NA
 </td>
 <td style="text-align:left;">
 0.005
@@ -6334,13 +5824,13 @@ CV1
 0.134
 </td>
 <td style="text-align:center;">
-0.0274657
+NA
 </td>
 <td style="text-align:center;">
 0.147
 </td>
 <td style="text-align:left;">
-0.0191283
+NA
 </td>
 <td style="text-align:left;">
 0.013
@@ -6366,13 +5856,13 @@ CV1
 0.178
 </td>
 <td style="text-align:center;">
-0.0296188
+NA
 </td>
 <td style="text-align:center;">
 0.177
 </td>
 <td style="text-align:left;">
-0.0380569
+NA
 </td>
 <td style="text-align:left;">
 -0.001
@@ -6398,13 +5888,13 @@ CV1
 0.645
 </td>
 <td style="text-align:center;">
-0.0121966
+NA
 </td>
 <td style="text-align:center;">
 0.637
 </td>
 <td style="text-align:left;">
-0.0196734
+NA
 </td>
 <td style="text-align:left;">
 -0.008
@@ -6430,13 +5920,13 @@ CV2
 0.989
 </td>
 <td style="text-align:center;">
-0.0001216
+NA
 </td>
 <td style="text-align:center;">
 0.991
 </td>
 <td style="text-align:left;">
-0.0000983
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -6462,13 +5952,13 @@ CV2
 0.966
 </td>
 <td style="text-align:center;">
-0.0004052
+NA
 </td>
 <td style="text-align:center;">
 0.970
 </td>
 <td style="text-align:left;">
-0.0005673
+NA
 </td>
 <td style="text-align:left;">
 0.004
@@ -6494,13 +5984,13 @@ CV2
 0.980
 </td>
 <td style="text-align:center;">
-0.0002151
+NA
 </td>
 <td style="text-align:center;">
 0.982
 </td>
 <td style="text-align:left;">
-0.0001190
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -6526,13 +6016,13 @@ CV2
 0.973
 </td>
 <td style="text-align:center;">
-0.0001704
+NA
 </td>
 <td style="text-align:center;">
 0.974
 </td>
 <td style="text-align:left;">
-0.0001302
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -6558,13 +6048,13 @@ CV2
 0.964
 </td>
 <td style="text-align:center;">
-0.0005435
+NA
 </td>
 <td style="text-align:center;">
 0.968
 </td>
 <td style="text-align:left;">
-0.0003975
+NA
 </td>
 <td style="text-align:left;">
 0.004
@@ -6590,13 +6080,13 @@ CV2
 0.982
 </td>
 <td style="text-align:center;">
-0.0001184
+NA
 </td>
 <td style="text-align:center;">
 0.984
 </td>
 <td style="text-align:left;">
-0.0001054
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -6622,13 +6112,13 @@ CV2
 0.945
 </td>
 <td style="text-align:center;">
-0.0015159
+NA
 </td>
 <td style="text-align:center;">
 0.949
 </td>
 <td style="text-align:left;">
-0.0012284
+NA
 </td>
 <td style="text-align:left;">
 0.004
@@ -6654,13 +6144,13 @@ CV2
 0.695
 </td>
 <td style="text-align:center;">
-0.0090873
+NA
 </td>
 <td style="text-align:center;">
 0.692
 </td>
 <td style="text-align:left;">
-0.0137389
+NA
 </td>
 <td style="text-align:left;">
 -0.003
@@ -6686,13 +6176,13 @@ CV2
 0.967
 </td>
 <td style="text-align:center;">
-0.0067725
+NA
 </td>
 <td style="text-align:center;">
 0.933
 </td>
 <td style="text-align:left;">
-0.0773312
+NA
 </td>
 <td style="text-align:left;">
 -0.034
@@ -6718,13 +6208,13 @@ CV1
 0.603
 </td>
 <td style="text-align:center;">
-0.0099057
+NA
 </td>
 <td style="text-align:center;">
 0.595
 </td>
 <td style="text-align:left;">
-0.0156243
+NA
 </td>
 <td style="text-align:left;">
 -0.008
@@ -6750,13 +6240,13 @@ CV1
 0.555
 </td>
 <td style="text-align:center;">
-0.0239686
+NA
 </td>
 <td style="text-align:center;">
 0.548
 </td>
 <td style="text-align:left;">
-0.0173955
+NA
 </td>
 <td style="text-align:left;">
 -0.007
@@ -6782,13 +6272,13 @@ CV1
 0.728
 </td>
 <td style="text-align:center;">
-0.0145741
+NA
 </td>
 <td style="text-align:center;">
 0.708
 </td>
 <td style="text-align:left;">
-0.0150303
+NA
 </td>
 <td style="text-align:left;">
 -0.019
@@ -6814,13 +6304,13 @@ CV1
 0.602
 </td>
 <td style="text-align:center;">
-0.0147757
+NA
 </td>
 <td style="text-align:center;">
 0.595
 </td>
 <td style="text-align:left;">
-0.0149952
+NA
 </td>
 <td style="text-align:left;">
 -0.006
@@ -6846,13 +6336,13 @@ CV1
 0.555
 </td>
 <td style="text-align:center;">
-0.0199137
+NA
 </td>
 <td style="text-align:center;">
 0.555
 </td>
 <td style="text-align:left;">
-0.0168190
+NA
 </td>
 <td style="text-align:left;">
 0.000
@@ -6878,13 +6368,13 @@ CV1
 0.585
 </td>
 <td style="text-align:center;">
-0.0151765
+NA
 </td>
 <td style="text-align:center;">
 0.594
 </td>
 <td style="text-align:left;">
-0.0179071
+NA
 </td>
 <td style="text-align:left;">
 0.009
@@ -6910,13 +6400,13 @@ CV1
 0.218
 </td>
 <td style="text-align:center;">
-0.0160546
+NA
 </td>
 <td style="text-align:center;">
 0.203
 </td>
 <td style="text-align:left;">
-0.0203866
+NA
 </td>
 <td style="text-align:left;">
 -0.015
@@ -6942,13 +6432,13 @@ CV1
 0.271
 </td>
 <td style="text-align:center;">
-0.0271355
+NA
 </td>
 <td style="text-align:center;">
 0.243
 </td>
 <td style="text-align:left;">
-0.0285264
+NA
 </td>
 <td style="text-align:left;">
 -0.028
@@ -6974,13 +6464,13 @@ CV1
 0.762
 </td>
 <td style="text-align:center;">
-0.0099625
+NA
 </td>
 <td style="text-align:center;">
 0.761
 </td>
 <td style="text-align:left;">
-0.0053242
+NA
 </td>
 <td style="text-align:left;">
 0.000
@@ -7006,13 +6496,13 @@ CV2
 0.993
 </td>
 <td style="text-align:center;">
-0.0000316
+NA
 </td>
 <td style="text-align:center;">
 0.994
 </td>
 <td style="text-align:left;">
-0.0000388
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -7038,13 +6528,13 @@ CV2
 0.977
 </td>
 <td style="text-align:center;">
-0.0002182
+NA
 </td>
 <td style="text-align:center;">
 0.978
 </td>
 <td style="text-align:left;">
-0.0008926
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -7070,13 +6560,13 @@ CV2
 0.994
 </td>
 <td style="text-align:center;">
-0.0002515
+NA
 </td>
 <td style="text-align:center;">
 0.994
 </td>
 <td style="text-align:left;">
-0.0005010
+NA
 </td>
 <td style="text-align:left;">
 0.000
@@ -7102,13 +6592,13 @@ CV2
 0.982
 </td>
 <td style="text-align:center;">
-0.0001168
+NA
 </td>
 <td style="text-align:center;">
 0.983
 </td>
 <td style="text-align:left;">
-0.0001170
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -7134,13 +6624,13 @@ CV2
 0.974
 </td>
 <td style="text-align:center;">
-0.0001071
+NA
 </td>
 <td style="text-align:center;">
 0.975
 </td>
 <td style="text-align:left;">
-0.0003408
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -7166,13 +6656,13 @@ CV2
 0.989
 </td>
 <td style="text-align:center;">
-0.0000573
+NA
 </td>
 <td style="text-align:center;">
 0.990
 </td>
 <td style="text-align:left;">
-0.0000506
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -7198,13 +6688,13 @@ CV2
 0.955
 </td>
 <td style="text-align:center;">
-0.0008444
+NA
 </td>
 <td style="text-align:center;">
 0.958
 </td>
 <td style="text-align:left;">
-0.0010135
+NA
 </td>
 <td style="text-align:left;">
 0.003
@@ -7230,13 +6720,13 @@ CV2
 0.772
 </td>
 <td style="text-align:center;">
-0.0028779
+NA
 </td>
 <td style="text-align:center;">
 0.771
 </td>
 <td style="text-align:left;">
-0.0079429
+NA
 </td>
 <td style="text-align:left;">
 -0.001
@@ -7262,13 +6752,13 @@ CV2
 0.989
 </td>
 <td style="text-align:center;">
-0.0011764
+NA
 </td>
 <td style="text-align:center;">
 0.986
 </td>
 <td style="text-align:left;">
-0.0042936
+NA
 </td>
 <td style="text-align:left;">
 -0.003
@@ -7355,13 +6845,13 @@ CS11_WS
 0.922
 </td>
 <td style="text-align:center;">
-0.0006408
+NA
 </td>
 <td style="text-align:center;">
 0.921
 </td>
 <td style="text-align:left;">
-0.0005517
+NA
 </td>
 <td style="text-align:left;">
 -0.001
@@ -7390,13 +6880,13 @@ CS11_WS
 0.915
 </td>
 <td style="text-align:center;">
-0.0064663
+NA
 </td>
 <td style="text-align:center;">
 0.906
 </td>
 <td style="text-align:left;">
-0.0159762
+NA
 </td>
 <td style="text-align:left;">
 -0.008
@@ -7425,13 +6915,13 @@ CS11_WS
 0.884
 </td>
 <td style="text-align:center;">
-0.0160582
+NA
 </td>
 <td style="text-align:center;">
 0.878
 </td>
 <td style="text-align:left;">
-0.0198771
+NA
 </td>
 <td style="text-align:left;">
 -0.006
@@ -7460,13 +6950,13 @@ CS11_WS
 0.923
 </td>
 <td style="text-align:center;">
-0.0004691
+NA
 </td>
 <td style="text-align:center;">
 0.922
 </td>
 <td style="text-align:left;">
-0.0003833
+NA
 </td>
 <td style="text-align:left;">
 0.000
@@ -7495,13 +6985,13 @@ CS11_WS
 0.926
 </td>
 <td style="text-align:center;">
-0.0002212
+NA
 </td>
 <td style="text-align:center;">
 0.924
 </td>
 <td style="text-align:left;">
-0.0031137
+NA
 </td>
 <td style="text-align:left;">
 -0.001
@@ -7530,13 +7020,13 @@ CS11_WS
 0.921
 </td>
 <td style="text-align:center;">
-0.0005552
+NA
 </td>
 <td style="text-align:center;">
 0.916
 </td>
 <td style="text-align:left;">
-0.0004999
+NA
 </td>
 <td style="text-align:left;">
 -0.005
@@ -7565,13 +7055,13 @@ CS11_WS
 0.460
 </td>
 <td style="text-align:center;">
-0.0046790
+NA
 </td>
 <td style="text-align:center;">
 0.434
 </td>
 <td style="text-align:left;">
-0.0085978
+NA
 </td>
 <td style="text-align:left;">
 -0.026
@@ -7600,13 +7090,13 @@ CS11_WS
 0.421
 </td>
 <td style="text-align:center;">
-0.0327846
+NA
 </td>
 <td style="text-align:center;">
 0.398
 </td>
 <td style="text-align:left;">
-0.0327840
+NA
 </td>
 <td style="text-align:left;">
 -0.022
@@ -7635,13 +7125,13 @@ CS11_WS
 0.740
 </td>
 <td style="text-align:center;">
-0.0417897
+NA
 </td>
 <td style="text-align:center;">
 0.600
 </td>
 <td style="text-align:left;">
-0.0937367
+NA
 </td>
 <td style="text-align:left;">
 -0.140
@@ -7670,13 +7160,13 @@ CS11_WW
 0.889
 </td>
 <td style="text-align:center;">
-0.0007587
+NA
 </td>
 <td style="text-align:center;">
 0.891
 </td>
 <td style="text-align:left;">
-0.0012022
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -7705,13 +7195,13 @@ CS11_WW
 0.848
 </td>
 <td style="text-align:center;">
-0.0282177
+NA
 </td>
 <td style="text-align:center;">
 0.850
 </td>
 <td style="text-align:left;">
-0.0307368
+NA
 </td>
 <td style="text-align:left;">
 0.003
@@ -7740,13 +7230,13 @@ CS11_WW
 0.822
 </td>
 <td style="text-align:center;">
-0.0652425
+NA
 </td>
 <td style="text-align:center;">
 0.778
 </td>
 <td style="text-align:left;">
-0.0747105
+NA
 </td>
 <td style="text-align:left;">
 -0.043
@@ -7775,13 +7265,13 @@ CS11_WW
 0.894
 </td>
 <td style="text-align:center;">
-0.0005965
+NA
 </td>
 <td style="text-align:center;">
 0.896
 </td>
 <td style="text-align:left;">
-0.0004316
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -7810,13 +7300,13 @@ CS11_WW
 0.885
 </td>
 <td style="text-align:center;">
-0.0005851
+NA
 </td>
 <td style="text-align:center;">
 0.886
 </td>
 <td style="text-align:left;">
-0.0031297
+NA
 </td>
 <td style="text-align:left;">
 0.000
@@ -7845,13 +7335,13 @@ CS11_WW
 0.893
 </td>
 <td style="text-align:center;">
-0.0005283
+NA
 </td>
 <td style="text-align:center;">
 0.896
 </td>
 <td style="text-align:left;">
-0.0004761
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -7880,13 +7370,13 @@ CS11_WW
 0.323
 </td>
 <td style="text-align:center;">
-0.0079081
+NA
 </td>
 <td style="text-align:center;">
 0.318
 </td>
 <td style="text-align:left;">
-0.0074471
+NA
 </td>
 <td style="text-align:left;">
 -0.005
@@ -7915,13 +7405,13 @@ CS11_WW
 0.310
 </td>
 <td style="text-align:center;">
-0.0198619
+NA
 </td>
 <td style="text-align:center;">
 0.275
 </td>
 <td style="text-align:left;">
-0.0443295
+NA
 </td>
 <td style="text-align:left;">
 -0.034
@@ -7950,13 +7440,13 @@ CS11_WW
 0.615
 </td>
 <td style="text-align:center;">
-0.1492622
+NA
 </td>
 <td style="text-align:center;">
 0.578
 </td>
 <td style="text-align:left;">
-0.1292014
+NA
 </td>
 <td style="text-align:left;">
 -0.038
@@ -7985,13 +7475,13 @@ CS12_WS
 0.889
 </td>
 <td style="text-align:center;">
-0.0008715
+NA
 </td>
 <td style="text-align:center;">
 0.884
 </td>
 <td style="text-align:left;">
-0.0007198
+NA
 </td>
 <td style="text-align:left;">
 -0.005
@@ -8020,13 +7510,13 @@ CS12_WS
 0.861
 </td>
 <td style="text-align:center;">
-0.0164014
+NA
 </td>
 <td style="text-align:center;">
 0.855
 </td>
 <td style="text-align:left;">
-0.0214819
+NA
 </td>
 <td style="text-align:left;">
 -0.006
@@ -8055,13 +7545,13 @@ CS12_WS
 0.794
 </td>
 <td style="text-align:center;">
-0.0574106
+NA
 </td>
 <td style="text-align:center;">
 0.765
 </td>
 <td style="text-align:left;">
-0.0375478
+NA
 </td>
 <td style="text-align:left;">
 -0.029
@@ -8090,13 +7580,13 @@ CS12_WS
 0.896
 </td>
 <td style="text-align:center;">
-0.0007279
+NA
 </td>
 <td style="text-align:center;">
 0.893
 </td>
 <td style="text-align:left;">
-0.0011026
+NA
 </td>
 <td style="text-align:left;">
 -0.003
@@ -8125,13 +7615,13 @@ CS12_WS
 0.884
 </td>
 <td style="text-align:center;">
-0.0006309
+NA
 </td>
 <td style="text-align:center;">
 0.883
 </td>
 <td style="text-align:left;">
-0.0006255
+NA
 </td>
 <td style="text-align:left;">
 0.000
@@ -8160,13 +7650,13 @@ CS12_WS
 0.894
 </td>
 <td style="text-align:center;">
-0.0011375
+NA
 </td>
 <td style="text-align:center;">
 0.885
 </td>
 <td style="text-align:left;">
-0.0006739
+NA
 </td>
 <td style="text-align:left;">
 -0.010
@@ -8195,13 +7685,13 @@ CS12_WS
 0.342
 </td>
 <td style="text-align:center;">
-0.0078015
+NA
 </td>
 <td style="text-align:center;">
 0.323
 </td>
 <td style="text-align:left;">
-0.0078257
+NA
 </td>
 <td style="text-align:left;">
 -0.020
@@ -8230,13 +7720,13 @@ CS12_WS
 0.273
 </td>
 <td style="text-align:center;">
-0.0322555
+NA
 </td>
 <td style="text-align:center;">
 0.257
 </td>
 <td style="text-align:left;">
-0.0491397
+NA
 </td>
 <td style="text-align:left;">
 -0.016
@@ -8265,13 +7755,13 @@ CS12_WS
 0.634
 </td>
 <td style="text-align:center;">
-0.0757856
+NA
 </td>
 <td style="text-align:center;">
 0.454
 </td>
 <td style="text-align:left;">
-0.1025718
+NA
 </td>
 <td style="text-align:left;">
 -0.180
@@ -8300,13 +7790,13 @@ CS12_WW
 0.902
 </td>
 <td style="text-align:center;">
-0.0005695
+NA
 </td>
 <td style="text-align:center;">
 0.904
 </td>
 <td style="text-align:left;">
-0.0004415
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -8335,13 +7825,13 @@ CS12_WW
 0.892
 </td>
 <td style="text-align:center;">
-0.0095946
+NA
 </td>
 <td style="text-align:center;">
 0.894
 </td>
 <td style="text-align:left;">
-0.0083430
+NA
 </td>
 <td style="text-align:left;">
 0.003
@@ -8370,13 +7860,13 @@ CS12_WW
 0.881
 </td>
 <td style="text-align:center;">
-0.0134864
+NA
 </td>
 <td style="text-align:center;">
 0.887
 </td>
 <td style="text-align:left;">
-0.0098103
+NA
 </td>
 <td style="text-align:left;">
 0.006
@@ -8405,13 +7895,13 @@ CS12_WW
 0.904
 </td>
 <td style="text-align:center;">
-0.0004100
+NA
 </td>
 <td style="text-align:center;">
 0.907
 </td>
 <td style="text-align:left;">
-0.0004159
+NA
 </td>
 <td style="text-align:left;">
 0.004
@@ -8440,13 +7930,13 @@ CS12_WW
 0.902
 </td>
 <td style="text-align:center;">
-0.0004584
+NA
 </td>
 <td style="text-align:center;">
 0.904
 </td>
 <td style="text-align:left;">
-0.0005408
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -8475,13 +7965,13 @@ CS12_WW
 0.904
 </td>
 <td style="text-align:center;">
-0.0005270
+NA
 </td>
 <td style="text-align:center;">
 0.909
 </td>
 <td style="text-align:left;">
-0.0004207
+NA
 </td>
 <td style="text-align:left;">
 0.005
@@ -8510,13 +8000,13 @@ CS12_WW
 0.359
 </td>
 <td style="text-align:center;">
-0.0074689
+NA
 </td>
 <td style="text-align:center;">
 0.350
 </td>
 <td style="text-align:left;">
-0.0064624
+NA
 </td>
 <td style="text-align:left;">
 -0.009
@@ -8545,13 +8035,13 @@ CS12_WW
 0.347
 </td>
 <td style="text-align:center;">
-0.0265095
+NA
 </td>
 <td style="text-align:center;">
 0.332
 </td>
 <td style="text-align:left;">
-0.0285925
+NA
 </td>
 <td style="text-align:left;">
 -0.015
@@ -8580,13 +8070,13 @@ CS12_WW
 0.592
 </td>
 <td style="text-align:center;">
-0.1219799
+NA
 </td>
 <td style="text-align:center;">
 0.512
 </td>
 <td style="text-align:left;">
-0.1222827
+NA
 </td>
 <td style="text-align:left;">
 -0.081
@@ -8615,13 +8105,13 @@ CS11_WS
 0.719
 </td>
 <td style="text-align:center;">
-0.0156232
+NA
 </td>
 <td style="text-align:center;">
 0.716
 </td>
 <td style="text-align:left;">
-0.0232356
+NA
 </td>
 <td style="text-align:left;">
 -0.003
@@ -8650,13 +8140,13 @@ CS11_WS
 0.702
 </td>
 <td style="text-align:center;">
-0.0164750
+NA
 </td>
 <td style="text-align:center;">
 0.715
 </td>
 <td style="text-align:left;">
-0.0144928
+NA
 </td>
 <td style="text-align:left;">
 0.014
@@ -8685,13 +8175,13 @@ CS11_WS
 0.666
 </td>
 <td style="text-align:center;">
-0.0336890
+NA
 </td>
 <td style="text-align:center;">
 0.677
 </td>
 <td style="text-align:left;">
-0.0357095
+NA
 </td>
 <td style="text-align:left;">
 0.011
@@ -8720,13 +8210,13 @@ CS11_WS
 0.717
 </td>
 <td style="text-align:center;">
-0.0210367
+NA
 </td>
 <td style="text-align:center;">
 0.716
 </td>
 <td style="text-align:left;">
-0.0249825
+NA
 </td>
 <td style="text-align:left;">
 -0.002
@@ -8755,13 +8245,13 @@ CS11_WS
 0.732
 </td>
 <td style="text-align:center;">
-0.0133004
+NA
 </td>
 <td style="text-align:center;">
 0.735
 </td>
 <td style="text-align:left;">
-0.0139247
+NA
 </td>
 <td style="text-align:left;">
 0.003
@@ -8790,13 +8280,13 @@ CS11_WS
 0.710
 </td>
 <td style="text-align:center;">
-0.0164292
+NA
 </td>
 <td style="text-align:center;">
 0.720
 </td>
 <td style="text-align:left;">
-0.0158158
+NA
 </td>
 <td style="text-align:left;">
 0.011
@@ -8825,13 +8315,13 @@ CS11_WS
 0.192
 </td>
 <td style="text-align:center;">
-0.0265772
+NA
 </td>
 <td style="text-align:center;">
 0.207
 </td>
 <td style="text-align:left;">
-0.0534662
+NA
 </td>
 <td style="text-align:left;">
 0.014
@@ -8860,13 +8350,13 @@ CS11_WS
 0.176
 </td>
 <td style="text-align:center;">
-0.0470906
+NA
 </td>
 <td style="text-align:center;">
 0.160
 </td>
 <td style="text-align:left;">
-0.0463932
+NA
 </td>
 <td style="text-align:left;">
 -0.017
@@ -8895,13 +8385,13 @@ CS11_WS
 0.547
 </td>
 <td style="text-align:center;">
-0.0547123
+NA
 </td>
 <td style="text-align:center;">
 0.468
 </td>
 <td style="text-align:left;">
-0.0727954
+NA
 </td>
 <td style="text-align:left;">
 -0.079
@@ -8930,13 +8420,13 @@ CS11_WW
 0.734
 </td>
 <td style="text-align:center;">
-0.0147333
+NA
 </td>
 <td style="text-align:center;">
 0.734
 </td>
 <td style="text-align:left;">
-0.0146172
+NA
 </td>
 <td style="text-align:left;">
 0.000
@@ -8965,13 +8455,13 @@ CS11_WW
 0.648
 </td>
 <td style="text-align:center;">
-0.0420356
+NA
 </td>
 <td style="text-align:center;">
 0.643
 </td>
 <td style="text-align:left;">
-0.0355772
+NA
 </td>
 <td style="text-align:left;">
 -0.005
@@ -9000,13 +8490,13 @@ CS11_WW
 0.664
 </td>
 <td style="text-align:center;">
-0.0551344
+NA
 </td>
 <td style="text-align:center;">
 0.597
 </td>
 <td style="text-align:left;">
-0.0889922
+NA
 </td>
 <td style="text-align:left;">
 -0.067
@@ -9035,13 +8525,13 @@ CS11_WW
 0.738
 </td>
 <td style="text-align:center;">
-0.0106728
+NA
 </td>
 <td style="text-align:center;">
 0.740
 </td>
 <td style="text-align:left;">
-0.0125027
+NA
 </td>
 <td style="text-align:left;">
 0.003
@@ -9070,13 +8560,13 @@ CS11_WW
 0.724
 </td>
 <td style="text-align:center;">
-0.0092225
+NA
 </td>
 <td style="text-align:center;">
 0.725
 </td>
 <td style="text-align:left;">
-0.0099241
+NA
 </td>
 <td style="text-align:left;">
 0.000
@@ -9105,13 +8595,13 @@ CS11_WW
 0.741
 </td>
 <td style="text-align:center;">
-0.0102739
+NA
 </td>
 <td style="text-align:center;">
 0.738
 </td>
 <td style="text-align:left;">
-0.0121891
+NA
 </td>
 <td style="text-align:left;">
 -0.002
@@ -9140,13 +8630,13 @@ CS11_WW
 0.167
 </td>
 <td style="text-align:center;">
-0.0334714
+NA
 </td>
 <td style="text-align:center;">
 0.192
 </td>
 <td style="text-align:left;">
-0.0319594
+NA
 </td>
 <td style="text-align:left;">
 0.025
@@ -9175,13 +8665,13 @@ CS11_WW
 0.128
 </td>
 <td style="text-align:center;">
-0.0454014
+NA
 </td>
 <td style="text-align:center;">
 0.126
 </td>
 <td style="text-align:left;">
-0.0436496
+NA
 </td>
 <td style="text-align:left;">
 -0.002
@@ -9210,13 +8700,13 @@ CS11_WW
 0.444
 </td>
 <td style="text-align:center;">
-0.1253345
+NA
 </td>
 <td style="text-align:center;">
 0.453
 </td>
 <td style="text-align:left;">
-0.1196363
+NA
 </td>
 <td style="text-align:left;">
 0.009
@@ -9245,13 +8735,13 @@ CS12_WS
 0.722
 </td>
 <td style="text-align:center;">
-0.0106525
+NA
 </td>
 <td style="text-align:center;">
 0.727
 </td>
 <td style="text-align:left;">
-0.0110813
+NA
 </td>
 <td style="text-align:left;">
 0.005
@@ -9280,13 +8770,13 @@ CS12_WS
 0.624
 </td>
 <td style="text-align:center;">
-0.0366770
+NA
 </td>
 <td style="text-align:center;">
 0.620
 </td>
 <td style="text-align:left;">
-0.0290091
+NA
 </td>
 <td style="text-align:left;">
 -0.004
@@ -9315,13 +8805,13 @@ CS12_WS
 0.617
 </td>
 <td style="text-align:center;">
-0.0577406
+NA
 </td>
 <td style="text-align:center;">
 0.598
 </td>
 <td style="text-align:left;">
-0.0459783
+NA
 </td>
 <td style="text-align:left;">
 -0.019
@@ -9350,13 +8840,13 @@ CS12_WS
 0.730
 </td>
 <td style="text-align:center;">
-0.0105024
+NA
 </td>
 <td style="text-align:center;">
 0.734
 </td>
 <td style="text-align:left;">
-0.0068753
+NA
 </td>
 <td style="text-align:left;">
 0.004
@@ -9385,13 +8875,13 @@ CS12_WS
 0.693
 </td>
 <td style="text-align:center;">
-0.0081952
+NA
 </td>
 <td style="text-align:center;">
 0.690
 </td>
 <td style="text-align:left;">
-0.0113171
+NA
 </td>
 <td style="text-align:left;">
 -0.003
@@ -9420,13 +8910,13 @@ CS12_WS
 0.725
 </td>
 <td style="text-align:center;">
-0.0120592
+NA
 </td>
 <td style="text-align:center;">
 0.733
 </td>
 <td style="text-align:left;">
-0.0073064
+NA
 </td>
 <td style="text-align:left;">
 0.008
@@ -9455,13 +8945,13 @@ CS12_WS
 0.132
 </td>
 <td style="text-align:center;">
-0.0265251
+NA
 </td>
 <td style="text-align:center;">
 0.129
 </td>
 <td style="text-align:left;">
-0.0316274
+NA
 </td>
 <td style="text-align:left;">
 -0.003
@@ -9490,13 +8980,13 @@ CS12_WS
 0.086
 </td>
 <td style="text-align:center;">
-0.0531555
+NA
 </td>
 <td style="text-align:center;">
 0.101
 </td>
 <td style="text-align:left;">
-0.0517042
+NA
 </td>
 <td style="text-align:left;">
 0.015
@@ -9525,13 +9015,13 @@ CS12_WS
 0.517
 </td>
 <td style="text-align:center;">
-0.0691137
+NA
 </td>
 <td style="text-align:center;">
 0.369
 </td>
 <td style="text-align:left;">
-0.1174927
+NA
 </td>
 <td style="text-align:left;">
 -0.148
@@ -9560,13 +9050,13 @@ CS12_WW
 0.706
 </td>
 <td style="text-align:center;">
-0.0153052
+NA
 </td>
 <td style="text-align:center;">
 0.714
 </td>
 <td style="text-align:left;">
-0.0127669
+NA
 </td>
 <td style="text-align:left;">
 0.008
@@ -9595,13 +9085,13 @@ CS12_WW
 0.656
 </td>
 <td style="text-align:center;">
-0.0155661
+NA
 </td>
 <td style="text-align:center;">
 0.656
 </td>
 <td style="text-align:left;">
-0.0259759
+NA
 </td>
 <td style="text-align:left;">
 0.000
@@ -9630,13 +9120,13 @@ CS12_WW
 0.674
 </td>
 <td style="text-align:center;">
-0.0268594
+NA
 </td>
 <td style="text-align:center;">
 0.672
 </td>
 <td style="text-align:left;">
-0.0388784
+NA
 </td>
 <td style="text-align:left;">
 -0.001
@@ -9665,13 +9155,13 @@ CS12_WW
 0.701
 </td>
 <td style="text-align:center;">
-0.0098703
+NA
 </td>
 <td style="text-align:center;">
 0.713
 </td>
 <td style="text-align:left;">
-0.0086880
+NA
 </td>
 <td style="text-align:left;">
 0.012
@@ -9700,13 +9190,13 @@ CS12_WW
 0.691
 </td>
 <td style="text-align:center;">
-0.0100686
+NA
 </td>
 <td style="text-align:center;">
 0.682
 </td>
 <td style="text-align:left;">
-0.0124059
+NA
 </td>
 <td style="text-align:left;">
 -0.008
@@ -9735,13 +9225,13 @@ CS12_WW
 0.696
 </td>
 <td style="text-align:center;">
-0.0179032
+NA
 </td>
 <td style="text-align:center;">
 0.710
 </td>
 <td style="text-align:left;">
-0.0075409
+NA
 </td>
 <td style="text-align:left;">
 0.013
@@ -9770,13 +9260,13 @@ CS12_WW
 0.119
 </td>
 <td style="text-align:center;">
-0.0317911
+NA
 </td>
 <td style="text-align:center;">
 0.114
 </td>
 <td style="text-align:left;">
-0.0242938
+NA
 </td>
 <td style="text-align:left;">
 -0.005
@@ -9805,13 +9295,13 @@ CS12_WW
 0.098
 </td>
 <td style="text-align:center;">
-0.0427283
+NA
 </td>
 <td style="text-align:center;">
 0.096
 </td>
 <td style="text-align:left;">
-0.0740510
+NA
 </td>
 <td style="text-align:left;">
 -0.002
@@ -9840,13 +9330,13 @@ CS12_WW
 0.410
 </td>
 <td style="text-align:center;">
-0.1100689
+NA
 </td>
 <td style="text-align:center;">
 0.386
 </td>
 <td style="text-align:left;">
-0.0734259
+NA
 </td>
 <td style="text-align:left;">
 -0.024
@@ -9875,13 +9365,13 @@ CS11_WS
 0.959
 </td>
 <td style="text-align:center;">
-0.0004251
+NA
 </td>
 <td style="text-align:center;">
 0.955
 </td>
 <td style="text-align:left;">
-0.0004242
+NA
 </td>
 <td style="text-align:left;">
 -0.004
@@ -9910,13 +9400,13 @@ CS11_WS
 0.952
 </td>
 <td style="text-align:center;">
-0.0060164
+NA
 </td>
 <td style="text-align:center;">
 0.934
 </td>
 <td style="text-align:left;">
-0.0117906
+NA
 </td>
 <td style="text-align:left;">
 -0.018
@@ -9945,13 +9435,13 @@ CS11_WS
 0.928
 </td>
 <td style="text-align:center;">
-0.0303599
+NA
 </td>
 <td style="text-align:center;">
 0.904
 </td>
 <td style="text-align:left;">
-0.0373431
+NA
 </td>
 <td style="text-align:left;">
 -0.025
@@ -9980,13 +9470,13 @@ CS11_WS
 0.960
 </td>
 <td style="text-align:center;">
-0.0001845
+NA
 </td>
 <td style="text-align:center;">
 0.953
 </td>
 <td style="text-align:left;">
-0.0003107
+NA
 </td>
 <td style="text-align:left;">
 -0.008
@@ -10015,13 +9505,13 @@ CS11_WS
 0.961
 </td>
 <td style="text-align:center;">
-0.0001712
+NA
 </td>
 <td style="text-align:center;">
 0.955
 </td>
 <td style="text-align:left;">
-0.0059577
+NA
 </td>
 <td style="text-align:left;">
 -0.006
@@ -10050,13 +9540,13 @@ CS11_WS
 0.960
 </td>
 <td style="text-align:center;">
-0.0003318
+NA
 </td>
 <td style="text-align:center;">
 0.945
 </td>
 <td style="text-align:left;">
-0.0003220
+NA
 </td>
 <td style="text-align:left;">
 -0.015
@@ -10085,13 +9575,13 @@ CS11_WS
 0.488
 </td>
 <td style="text-align:center;">
-0.0064600
+NA
 </td>
 <td style="text-align:center;">
 0.459
 </td>
 <td style="text-align:left;">
-0.0053104
+NA
 </td>
 <td style="text-align:left;">
 -0.029
@@ -10120,13 +9610,13 @@ CS11_WS
 0.514
 </td>
 <td style="text-align:center;">
-0.0207448
+NA
 </td>
 <td style="text-align:center;">
 0.529
 </td>
 <td style="text-align:left;">
-0.0219561
+NA
 </td>
 <td style="text-align:left;">
 0.015
@@ -10155,13 +9645,13 @@ CS11_WS
 0.800
 </td>
 <td style="text-align:center;">
-0.0569121
+NA
 </td>
 <td style="text-align:center;">
 0.708
 </td>
 <td style="text-align:left;">
-0.0720481
+NA
 </td>
 <td style="text-align:left;">
 -0.093
@@ -10190,13 +9680,13 @@ CS11_WW
 0.886
 </td>
 <td style="text-align:center;">
-0.0008546
+NA
 </td>
 <td style="text-align:center;">
 0.888
 </td>
 <td style="text-align:left;">
-0.0008502
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -10225,13 +9715,13 @@ CS11_WW
 0.855
 </td>
 <td style="text-align:center;">
-0.0194615
+NA
 </td>
 <td style="text-align:center;">
 0.850
 </td>
 <td style="text-align:left;">
-0.0175722
+NA
 </td>
 <td style="text-align:left;">
 -0.005
@@ -10260,13 +9750,13 @@ CS11_WW
 0.829
 </td>
 <td style="text-align:center;">
-0.0365791
+NA
 </td>
 <td style="text-align:center;">
 0.780
 </td>
 <td style="text-align:left;">
-0.0736196
+NA
 </td>
 <td style="text-align:left;">
 -0.048
@@ -10295,13 +9785,13 @@ CS11_WW
 0.885
 </td>
 <td style="text-align:center;">
-0.0011692
+NA
 </td>
 <td style="text-align:center;">
 0.887
 </td>
 <td style="text-align:left;">
-0.0010117
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -10330,13 +9820,13 @@ CS11_WW
 0.874
 </td>
 <td style="text-align:center;">
-0.0006841
+NA
 </td>
 <td style="text-align:center;">
 0.873
 </td>
 <td style="text-align:left;">
-0.0064145
+NA
 </td>
 <td style="text-align:left;">
 -0.002
@@ -10365,13 +9855,13 @@ CS11_WW
 0.885
 </td>
 <td style="text-align:center;">
-0.0011861
+NA
 </td>
 <td style="text-align:center;">
 0.889
 </td>
 <td style="text-align:left;">
-0.0003511
+NA
 </td>
 <td style="text-align:left;">
 0.004
@@ -10400,13 +9890,13 @@ CS11_WW
 0.331
 </td>
 <td style="text-align:center;">
-0.0051097
+NA
 </td>
 <td style="text-align:center;">
 0.327
 </td>
 <td style="text-align:left;">
-0.0063766
+NA
 </td>
 <td style="text-align:left;">
 -0.004
@@ -10435,13 +9925,13 @@ CS11_WW
 0.399
 </td>
 <td style="text-align:center;">
-0.0311944
+NA
 </td>
 <td style="text-align:center;">
 0.429
 </td>
 <td style="text-align:left;">
-0.0314922
+NA
 </td>
 <td style="text-align:left;">
 0.029
@@ -10470,13 +9960,13 @@ CS11_WW
 0.787
 </td>
 <td style="text-align:center;">
-0.0671637
+NA
 </td>
 <td style="text-align:center;">
 0.591
 </td>
 <td style="text-align:left;">
-0.1578071
+NA
 </td>
 <td style="text-align:left;">
 -0.196
@@ -10505,13 +9995,13 @@ CS12_WS
 0.894
 </td>
 <td style="text-align:center;">
-0.0011841
+NA
 </td>
 <td style="text-align:center;">
 0.894
 </td>
 <td style="text-align:left;">
-0.0009434
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -10540,13 +10030,13 @@ CS12_WS
 0.860
 </td>
 <td style="text-align:center;">
-0.0250670
+NA
 </td>
 <td style="text-align:center;">
 0.880
 </td>
 <td style="text-align:left;">
-0.0136477
+NA
 </td>
 <td style="text-align:left;">
 0.020
@@ -10575,13 +10065,13 @@ CS12_WS
 0.797
 </td>
 <td style="text-align:center;">
-0.0640268
+NA
 </td>
 <td style="text-align:center;">
 0.816
 </td>
 <td style="text-align:left;">
-0.0478818
+NA
 </td>
 <td style="text-align:left;">
 0.018
@@ -10610,13 +10100,13 @@ CS12_WS
 0.898
 </td>
 <td style="text-align:center;">
-0.0011057
+NA
 </td>
 <td style="text-align:center;">
 0.899
 </td>
 <td style="text-align:left;">
-0.0005593
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -10645,13 +10135,13 @@ CS12_WS
 0.888
 </td>
 <td style="text-align:center;">
-0.0005409
+NA
 </td>
 <td style="text-align:center;">
 0.889
 </td>
 <td style="text-align:left;">
-0.0010068
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -10680,13 +10170,13 @@ CS12_WS
 0.896
 </td>
 <td style="text-align:center;">
-0.0008220
+NA
 </td>
 <td style="text-align:center;">
 0.897
 </td>
 <td style="text-align:left;">
-0.0010396
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -10715,13 +10205,13 @@ CS12_WS
 0.410
 </td>
 <td style="text-align:center;">
-0.0043472
+NA
 </td>
 <td style="text-align:center;">
 0.400
 </td>
 <td style="text-align:left;">
-0.0055684
+NA
 </td>
 <td style="text-align:left;">
 -0.010
@@ -10750,13 +10240,13 @@ CS12_WS
 0.385
 </td>
 <td style="text-align:center;">
-0.0316524
+NA
 </td>
 <td style="text-align:center;">
 0.407
 </td>
 <td style="text-align:left;">
-0.0309957
+NA
 </td>
 <td style="text-align:left;">
 0.022
@@ -10785,13 +10275,13 @@ CS12_WS
 0.735
 </td>
 <td style="text-align:center;">
-0.0917405
+NA
 </td>
 <td style="text-align:center;">
 0.638
 </td>
 <td style="text-align:left;">
-0.1303465
+NA
 </td>
 <td style="text-align:left;">
 -0.097
@@ -10820,13 +10310,13 @@ CS12_WW
 0.947
 </td>
 <td style="text-align:center;">
-0.0004264
+NA
 </td>
 <td style="text-align:center;">
 0.948
 </td>
 <td style="text-align:left;">
-0.0003331
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -10855,13 +10345,13 @@ CS12_WW
 0.938
 </td>
 <td style="text-align:center;">
-0.0061385
+NA
 </td>
 <td style="text-align:center;">
 0.935
 </td>
 <td style="text-align:left;">
-0.0105933
+NA
 </td>
 <td style="text-align:left;">
 -0.003
@@ -10890,13 +10380,13 @@ CS12_WW
 0.922
 </td>
 <td style="text-align:center;">
-0.0305936
+NA
 </td>
 <td style="text-align:center;">
 0.928
 </td>
 <td style="text-align:left;">
-0.0256338
+NA
 </td>
 <td style="text-align:left;">
 0.006
@@ -10925,13 +10415,13 @@ CS12_WW
 0.947
 </td>
 <td style="text-align:center;">
-0.0002290
+NA
 </td>
 <td style="text-align:center;">
 0.949
 </td>
 <td style="text-align:left;">
-0.0002453
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -10960,13 +10450,13 @@ CS12_WW
 0.947
 </td>
 <td style="text-align:center;">
-0.0002183
+NA
 </td>
 <td style="text-align:center;">
 0.946
 </td>
 <td style="text-align:left;">
-0.0021284
+NA
 </td>
 <td style="text-align:left;">
 -0.001
@@ -10995,13 +10485,13 @@ CS12_WW
 0.947
 </td>
 <td style="text-align:center;">
-0.0002957
+NA
 </td>
 <td style="text-align:center;">
 0.948
 </td>
 <td style="text-align:left;">
-0.0003126
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -11030,13 +10520,13 @@ CS12_WW
 0.431
 </td>
 <td style="text-align:center;">
-0.0074450
+NA
 </td>
 <td style="text-align:center;">
 0.429
 </td>
 <td style="text-align:left;">
-0.0085145
+NA
 </td>
 <td style="text-align:left;">
 -0.003
@@ -11065,13 +10555,13 @@ CS12_WW
 0.514
 </td>
 <td style="text-align:center;">
-0.0186631
+NA
 </td>
 <td style="text-align:center;">
 0.504
 </td>
 <td style="text-align:left;">
-0.0290988
+NA
 </td>
 <td style="text-align:left;">
 -0.010
@@ -11100,13 +10590,13 @@ CS12_WW
 0.824
 </td>
 <td style="text-align:center;">
-0.0658355
+NA
 </td>
 <td style="text-align:center;">
 0.746
 </td>
 <td style="text-align:left;">
-0.0805916
+NA
 </td>
 <td style="text-align:left;">
 -0.078
@@ -11135,13 +10625,13 @@ CS11_WS
 0.586
 </td>
 <td style="text-align:center;">
-0.0209643
+NA
 </td>
 <td style="text-align:center;">
 0.566
 </td>
 <td style="text-align:left;">
-0.0260974
+NA
 </td>
 <td style="text-align:left;">
 -0.020
@@ -11170,13 +10660,13 @@ CS11_WS
 0.508
 </td>
 <td style="text-align:center;">
-0.0472672
+NA
 </td>
 <td style="text-align:center;">
 0.484
 </td>
 <td style="text-align:left;">
-0.0409598
+NA
 </td>
 <td style="text-align:left;">
 -0.025
@@ -11205,13 +10695,13 @@ CS11_WS
 0.654
 </td>
 <td style="text-align:center;">
-0.0360532
+NA
 </td>
 <td style="text-align:center;">
 0.608
 </td>
 <td style="text-align:left;">
-0.0548281
+NA
 </td>
 <td style="text-align:left;">
 -0.045
@@ -11240,13 +10730,13 @@ CS11_WS
 0.578
 </td>
 <td style="text-align:center;">
-0.0220801
+NA
 </td>
 <td style="text-align:center;">
 0.573
 </td>
 <td style="text-align:left;">
-0.0223042
+NA
 </td>
 <td style="text-align:left;">
 -0.005
@@ -11275,13 +10765,13 @@ CS11_WS
 0.544
 </td>
 <td style="text-align:center;">
-0.0268564
+NA
 </td>
 <td style="text-align:center;">
 0.548
 </td>
 <td style="text-align:left;">
-0.0163422
+NA
 </td>
 <td style="text-align:left;">
 0.004
@@ -11310,13 +10800,13 @@ CS11_WS
 0.565
 </td>
 <td style="text-align:center;">
-0.0200134
+NA
 </td>
 <td style="text-align:center;">
 0.562
 </td>
 <td style="text-align:left;">
-0.0174611
+NA
 </td>
 <td style="text-align:left;">
 -0.003
@@ -11345,13 +10835,13 @@ CS11_WS
 0.218
 </td>
 <td style="text-align:center;">
-0.0243076
+NA
 </td>
 <td style="text-align:center;">
 0.202
 </td>
 <td style="text-align:left;">
-0.0472486
+NA
 </td>
 <td style="text-align:left;">
 -0.016
@@ -11380,13 +10870,13 @@ CS11_WS
 0.256
 </td>
 <td style="text-align:center;">
-0.0252293
+NA
 </td>
 <td style="text-align:center;">
 0.249
 </td>
 <td style="text-align:left;">
-0.0365030
+NA
 </td>
 <td style="text-align:left;">
 -0.007
@@ -11415,13 +10905,13 @@ CS11_WS
 0.662
 </td>
 <td style="text-align:center;">
-0.0743260
+NA
 </td>
 <td style="text-align:center;">
 0.624
 </td>
 <td style="text-align:left;">
-0.0680554
+NA
 </td>
 <td style="text-align:left;">
 -0.038
@@ -11450,13 +10940,13 @@ CS11_WW
 0.566
 </td>
 <td style="text-align:center;">
-0.0212727
+NA
 </td>
 <td style="text-align:center;">
 0.562
 </td>
 <td style="text-align:left;">
-0.0166412
+NA
 </td>
 <td style="text-align:left;">
 -0.004
@@ -11485,13 +10975,13 @@ CS11_WW
 0.460
 </td>
 <td style="text-align:center;">
-0.0504655
+NA
 </td>
 <td style="text-align:center;">
 0.451
 </td>
 <td style="text-align:left;">
-0.0487862
+NA
 </td>
 <td style="text-align:left;">
 -0.009
@@ -11520,13 +11010,13 @@ CS11_WW
 0.544
 </td>
 <td style="text-align:center;">
-0.0496768
+NA
 </td>
 <td style="text-align:center;">
 0.488
 </td>
 <td style="text-align:left;">
-0.0776466
+NA
 </td>
 <td style="text-align:left;">
 -0.056
@@ -11555,13 +11045,13 @@ CS11_WW
 0.565
 </td>
 <td style="text-align:center;">
-0.0197142
+NA
 </td>
 <td style="text-align:center;">
 0.567
 </td>
 <td style="text-align:left;">
-0.0234297
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -11590,13 +11080,13 @@ CS11_WW
 0.525
 </td>
 <td style="text-align:center;">
-0.0245290
+NA
 </td>
 <td style="text-align:center;">
 0.511
 </td>
 <td style="text-align:left;">
-0.0208822
+NA
 </td>
 <td style="text-align:left;">
 -0.014
@@ -11625,13 +11115,13 @@ CS11_WW
 0.563
 </td>
 <td style="text-align:center;">
-0.0179097
+NA
 </td>
 <td style="text-align:center;">
 0.565
 </td>
 <td style="text-align:left;">
-0.0130631
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -11660,13 +11150,13 @@ CS11_WW
 0.160
 </td>
 <td style="text-align:center;">
-0.0141550
+NA
 </td>
 <td style="text-align:center;">
 0.153
 </td>
 <td style="text-align:left;">
-0.0236371
+NA
 </td>
 <td style="text-align:left;">
 -0.007
@@ -11695,13 +11185,13 @@ CS11_WW
 0.222
 </td>
 <td style="text-align:center;">
-0.0454472
+NA
 </td>
 <td style="text-align:center;">
 0.172
 </td>
 <td style="text-align:left;">
-0.0459169
+NA
 </td>
 <td style="text-align:left;">
 -0.050
@@ -11730,13 +11220,13 @@ CS11_WW
 0.656
 </td>
 <td style="text-align:center;">
-0.0537020
+NA
 </td>
 <td style="text-align:center;">
 0.541
 </td>
 <td style="text-align:left;">
-0.1089787
+NA
 </td>
 <td style="text-align:left;">
 -0.115
@@ -11765,13 +11255,13 @@ CS12_WS
 0.619
 </td>
 <td style="text-align:center;">
-0.0125596
+NA
 </td>
 <td style="text-align:center;">
 0.607
 </td>
 <td style="text-align:left;">
-0.0129271
+NA
 </td>
 <td style="text-align:left;">
 -0.012
@@ -11800,13 +11290,13 @@ CS12_WS
 0.511
 </td>
 <td style="text-align:center;">
-0.0392188
+NA
 </td>
 <td style="text-align:center;">
 0.550
 </td>
 <td style="text-align:left;">
-0.0346599
+NA
 </td>
 <td style="text-align:left;">
 0.039
@@ -11835,13 +11325,13 @@ CS12_WS
 0.553
 </td>
 <td style="text-align:center;">
-0.0799328
+NA
 </td>
 <td style="text-align:center;">
 0.552
 </td>
 <td style="text-align:left;">
-0.0729139
+NA
 </td>
 <td style="text-align:left;">
 -0.001
@@ -11870,13 +11360,13 @@ CS12_WS
 0.616
 </td>
 <td style="text-align:center;">
-0.0174929
+NA
 </td>
 <td style="text-align:center;">
 0.611
 </td>
 <td style="text-align:left;">
-0.0169350
+NA
 </td>
 <td style="text-align:left;">
 -0.005
@@ -11905,13 +11395,13 @@ CS12_WS
 0.560
 </td>
 <td style="text-align:center;">
-0.0085485
+NA
 </td>
 <td style="text-align:center;">
 0.569
 </td>
 <td style="text-align:left;">
-0.0098365
+NA
 </td>
 <td style="text-align:left;">
 0.009
@@ -11940,13 +11430,13 @@ CS12_WS
 0.602
 </td>
 <td style="text-align:center;">
-0.0156413
+NA
 </td>
 <td style="text-align:center;">
 0.613
 </td>
 <td style="text-align:left;">
-0.0088231
+NA
 </td>
 <td style="text-align:left;">
 0.011
@@ -11975,13 +11465,13 @@ CS12_WS
 0.209
 </td>
 <td style="text-align:center;">
-0.0273382
+NA
 </td>
 <td style="text-align:center;">
 0.212
 </td>
 <td style="text-align:left;">
-0.0227339
+NA
 </td>
 <td style="text-align:left;">
 0.003
@@ -12010,13 +11500,13 @@ CS12_WS
 0.180
 </td>
 <td style="text-align:center;">
-0.0753962
+NA
 </td>
 <td style="text-align:center;">
 0.189
 </td>
 <td style="text-align:left;">
-0.0409106
+NA
 </td>
 <td style="text-align:left;">
 0.009
@@ -12045,13 +11535,13 @@ CS12_WS
 0.600
 </td>
 <td style="text-align:center;">
-0.0894934
+NA
 </td>
 <td style="text-align:center;">
 0.538
 </td>
 <td style="text-align:left;">
-0.0973559
+NA
 </td>
 <td style="text-align:left;">
 -0.062
@@ -12080,13 +11570,13 @@ CS12_WW
 0.617
 </td>
 <td style="text-align:center;">
-0.0102124
+NA
 </td>
 <td style="text-align:center;">
 0.615
 </td>
 <td style="text-align:left;">
-0.0248406
+NA
 </td>
 <td style="text-align:left;">
 -0.002
@@ -12115,13 +11605,13 @@ CS12_WW
 0.576
 </td>
 <td style="text-align:center;">
-0.0306078
+NA
 </td>
 <td style="text-align:center;">
 0.554
 </td>
 <td style="text-align:left;">
-0.0430405
+NA
 </td>
 <td style="text-align:left;">
 -0.022
@@ -12150,13 +11640,13 @@ CS12_WW
 0.636
 </td>
 <td style="text-align:center;">
-0.0411822
+NA
 </td>
 <td style="text-align:center;">
 0.614
 </td>
 <td style="text-align:left;">
-0.0398958
+NA
 </td>
 <td style="text-align:left;">
 -0.022
@@ -12185,13 +11675,13 @@ CS12_WW
 0.600
 </td>
 <td style="text-align:center;">
-0.0272165
+NA
 </td>
 <td style="text-align:center;">
 0.609
 </td>
 <td style="text-align:left;">
-0.0237787
+NA
 </td>
 <td style="text-align:left;">
 0.009
@@ -12220,13 +11710,13 @@ CS12_WW
 0.591
 </td>
 <td style="text-align:center;">
-0.0295687
+NA
 </td>
 <td style="text-align:center;">
 0.585
 </td>
 <td style="text-align:left;">
-0.0195874
+NA
 </td>
 <td style="text-align:left;">
 -0.006
@@ -12255,13 +11745,13 @@ CS12_WW
 0.601
 </td>
 <td style="text-align:center;">
-0.0150357
+NA
 </td>
 <td style="text-align:center;">
 0.603
 </td>
 <td style="text-align:left;">
-0.0329311
+NA
 </td>
 <td style="text-align:left;">
 0.001
@@ -12290,13 +11780,13 @@ CS12_WW
 0.197
 </td>
 <td style="text-align:center;">
-0.0414129
+NA
 </td>
 <td style="text-align:center;">
 0.198
 </td>
 <td style="text-align:left;">
-0.0328087
+NA
 </td>
 <td style="text-align:left;">
 0.002
@@ -12325,13 +11815,13 @@ CS12_WW
 0.239
 </td>
 <td style="text-align:center;">
-0.0433968
+NA
 </td>
 <td style="text-align:center;">
 0.256
 </td>
 <td style="text-align:left;">
-0.0392577
+NA
 </td>
 <td style="text-align:left;">
 0.017
@@ -12360,13 +11850,13 @@ CS12_WW
 0.640
 </td>
 <td style="text-align:center;">
-0.0608590
+NA
 </td>
 <td style="text-align:center;">
 0.602
 </td>
 <td style="text-align:left;">
-0.0751970
+NA
 </td>
 <td style="text-align:left;">
 -0.038
@@ -16632,49 +16122,80 @@ Sem W
 <div id="figuras" class="section level2">
 <h2>15. Figuras</h2>
 <p>As figuras finais resumem a capacidade preditiva para o catálogo
-completo de modelos em <code>CV1/CV2</code> e <code>CV0/CV00</code>.
-Para evitar ambiguidades na interpretação e em futuras revisões, os
-gráficos passam a exibir a composição completa dos efeitos de cada
-modelo, e não apenas rótulos curtos.</p>
+completo de modelos em <code>CV1/CV2</code> e <code>CV0/CV00</code>.</p>
 <pre class="r"><code>cv12_plot_data &lt;- cv12_summary %&gt;%
   mutate(
-    ModelLabel = stringr::str_wrap(FullEffects, width = 30),
-    ModelLabel = factor(
-      ModelLabel,
-      levels = stringr::str_wrap(model_catalog$FullEffects, width = 30)
-    )
+    FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 18)
   )
 
-lower_limit_cv12 &lt;- min(cv12_plot_data$MeanCorrelation - cv12_plot_data$SDCorrelation, na.rm = TRUE)
-upper_limit_cv12 &lt;- max(cv12_plot_data$MeanCorrelation + cv12_plot_data$SDCorrelation, na.rm = TRUE)
+cv12_traits &lt;- unique(cv12_plot_data$Trait)
+cv12_schemes &lt;- unique(cv12_plot_data$CV)
 
-p_cv12 &lt;- ggplot(cv12_plot_data, aes(x = ModelLabel, y = MeanCorrelation, fill = Group)) +
-  geom_col(width = 0.75, color = &quot;grey30&quot;) +
-  geom_errorbar(
-    aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation),
-    width = 0.20,
-    linewidth = 0.35
-  ) +
-  facet_grid(Trait ~ CV) +
-  geom_hline(yintercept = 0, linetype = &quot;dashed&quot;, color = &quot;grey40&quot;) +
-  coord_flip(ylim = c(lower_limit_cv12 - 0.03, upper_limit_cv12 + 0.03)) +
-  scale_x_discrete(name = &quot;Efeitos completos do modelo&quot;) +
-  scale_y_continuous(name = &quot;Correlação preditiva&quot;) +
-  ggthemes::scale_fill_gdocs(name = &quot;Grupo de comparação&quot;) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(face = &quot;bold&quot;, size = 12, hjust = 0.5),
-    strip.text = element_text(face = &quot;bold&quot;, size = 10),
-    axis.text.y = element_text(size = 6.5),
-    axis.text.x = element_text(size = 8),
-    axis.title = element_text(size = 10),
-    legend.position = &quot;top&quot;,
-    legend.title = element_text(size = 9),
-    legend.text = element_text(size = 8)
-  ) +
-  labs(title = &quot;Capacidade preditiva em CV1 e CV2&quot;)
+for (current_trait in cv12_traits) {
+  for (current_cv in cv12_schemes) {
+    trait_cv_data &lt;- cv12_plot_data %&gt;%
+      filter(Trait == current_trait, CV == current_cv) %&gt;%
+      arrange(MeanCorrelation) %&gt;%
+      mutate(
+        FullEffectsWrapped = factor(
+          FullEffectsWrapped,
+          levels = unique(FullEffectsWrapped)
+        )
+      )
 
-p_cv12</code></pre>
+    if (nrow(trait_cv_data) == 0) next
+
+    lower_limit_trait_cv &lt;- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
+    upper_limit_trait_cv &lt;- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+
+    p_trait_cv12 &lt;- ggplot(
+      trait_cv_data,
+      aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = Group)
+    ) +
+      geom_col(width = 0.75, color = &quot;grey30&quot;, na.rm = TRUE) +
+      geom_errorbar(
+        aes(
+          ymin = MeanCorrelation - SDCorrelation,
+          ymax = MeanCorrelation + SDCorrelation
+        ),
+        width = 0.20,
+        linewidth = 0.35,
+        na.rm = TRUE
+      ) +
+      geom_hline(yintercept = 0, linetype = &quot;dashed&quot;, color = &quot;grey40&quot;) +
+      scale_x_discrete(name = &quot;Efeitos completos do modelo&quot;) +
+      scale_y_continuous(
+        name = &quot;Correlação preditiva&quot;,
+        limits = c(lower_limit_trait_cv - 0.03, upper_limit_trait_cv + 0.03),
+        expand = expansion(mult = c(0, 0.02))
+      ) +
+      ggthemes::scale_fill_gdocs(name = &quot;Grupo de comparação&quot;) +
+      theme_bw() +
+      theme(
+        plot.title = element_text(face = &quot;bold&quot;, size = 12, hjust = 0.5),
+        axis.text.x = element_text(size = 7, angle = 55, hjust = 1, vjust = 1),
+        axis.text.y = element_text(size = 8),
+        axis.title = element_text(size = 10),
+        legend.position = &quot;top&quot;,
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 8)
+      ) +
+      labs(
+        title = paste(&quot;Habilidade preditiva em&quot;, current_cv, &quot;para&quot;, current_trait)
+      )
+
+    print(p_trait_cv12)
+
+    ggsave(
+      file.path(figures_dir, paste0(&quot;prediction_&quot;, current_trait, &quot;_&quot;, tolower(current_cv), &quot;.tiff&quot;)),
+      plot = p_trait_cv12,
+      width = 16,
+      height = 10,
+      dpi = 300,
+      bg = &quot;white&quot;
+    )
+  }
+}</code></pre>
 <p><img src="figure/visualization_pt.Rmd/figure-cv12-1.png" width="100%" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-figure-cv12-1">
@@ -16698,6 +16219,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33/docs/figure/visualization_pt.Rmd/figure-cv12-1.png" target="_blank">3ecd781</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/6ce48a319541b483b3ce82f6d6ae90154d06e453/docs/figure/visualization_pt.Rmd/figure-cv12-1.png" target="_blank">6ce48a3</a>
@@ -16724,55 +16256,90 @@ WevertonGomesCosta
 </table>
 </div>
 </div>
-<pre class="r"><code>ggsave(
-  file.path(figures_dir, &quot;prediction_cv1_cv2.tiff&quot;),
-  plot = p_cv12,
-  width = 16,
-  height = 10,
-  dpi = 300,
-  bg = &quot;white&quot;
-)</code></pre>
+<p><img src="figure/visualization_pt.Rmd/figure-cv12-2.png" width="100%" style="display: block; margin: auto;" /><img src="figure/visualization_pt.Rmd/figure-cv12-3.png" width="100%" style="display: block; margin: auto;" /><img src="figure/visualization_pt.Rmd/figure-cv12-4.png" width="100%" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>cvloo_plot_data &lt;- cvloo_summary %&gt;%
   mutate(
-    ModelLabel = stringr::str_wrap(FullEffects, width = 30),
-    ModelLabel = factor(
-      ModelLabel,
-      levels = stringr::str_wrap(model_catalog$FullEffects, width = 30)
-    ),
+    FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 18),
     Env_leave = factor(Env_leave, levels = c(&quot;CS11_WS&quot;, &quot;CS11_WW&quot;, &quot;CS12_WS&quot;, &quot;CS12_WW&quot;))
   )
 
-lower_limit_cvloo &lt;- min(cvloo_plot_data$MeanCorrelation - cvloo_plot_data$SDCorrelation, na.rm = TRUE)
-upper_limit_cvloo &lt;- max(cvloo_plot_data$MeanCorrelation + cvloo_plot_data$SDCorrelation, na.rm = TRUE)
+cvloo_traits &lt;- unique(cvloo_plot_data$Trait)
+cvloo_schemes &lt;- unique(cvloo_plot_data$CV)
 
-p_cvloo &lt;- ggplot(cvloo_plot_data, aes(x = ModelLabel, y = MeanCorrelation, fill = Group)) +
-  geom_col(width = 0.75, color = &quot;grey30&quot;) +
-  geom_errorbar(
-    aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation),
-    width = 0.20,
-    linewidth = 0.35,
-    na.rm = TRUE
-  ) +
-  facet_grid(Env_leave ~ Trait + CV) +
-  geom_hline(yintercept = 0, linetype = &quot;dashed&quot;, color = &quot;grey40&quot;) +
-  coord_flip(ylim = c(lower_limit_cvloo - 0.03, upper_limit_cvloo + 0.03)) +
-  scale_x_discrete(name = &quot;Efeitos completos do modelo&quot;) +
-  scale_y_continuous(name = &quot;Correlação preditiva&quot;) +
-  ggthemes::scale_fill_gdocs(name = &quot;Grupo de comparação&quot;) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(face = &quot;bold&quot;, size = 12, hjust = 0.5),
-    strip.text = element_text(face = &quot;bold&quot;, size = 8.5),
-    axis.text.y = element_text(size = 5.5),
-    axis.text.x = element_text(size = 7.5),
-    axis.title = element_text(size = 10),
-    legend.position = &quot;top&quot;,
-    legend.title = element_text(size = 9),
-    legend.text = element_text(size = 8)
-  ) +
-  labs(title = &quot;Capacidade preditiva em CV0 e CV00&quot;)
+for (current_trait in cvloo_traits) {
+  for (current_cv in cvloo_schemes) {
+    trait_cv_data &lt;- cvloo_plot_data %&gt;%
+      filter(Trait == current_trait, CV == current_cv)
 
-p_cvloo</code></pre>
+    if (nrow(trait_cv_data) == 0) next
+
+    model_order &lt;- trait_cv_data %&gt;%
+      group_by(FullEffectsWrapped) %&gt;%
+      summarise(OrderMean = mean(MeanCorrelation, na.rm = TRUE), .groups = &quot;drop&quot;) %&gt;%
+      arrange(OrderMean) %&gt;%
+      pull(FullEffectsWrapped)
+
+    trait_cv_data &lt;- trait_cv_data %&gt;%
+      mutate(
+        FullEffectsWrapped = factor(
+          FullEffectsWrapped,
+          levels = model_order
+        )
+      )
+
+    lower_limit_trait_cv &lt;- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
+    upper_limit_trait_cv &lt;- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+
+    p_trait_cvloo &lt;- ggplot(
+      trait_cv_data,
+      aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = Group)
+    ) +
+      geom_col(width = 0.75, color = &quot;grey30&quot;, na.rm = TRUE) +
+      geom_errorbar(
+        aes(
+          ymin = MeanCorrelation - SDCorrelation,
+          ymax = MeanCorrelation + SDCorrelation
+        ),
+        width = 0.20,
+        linewidth = 0.35,
+        na.rm = TRUE
+      ) +
+      facet_wrap(~ Env_leave, ncol = 2) +
+      geom_hline(yintercept = 0, linetype = &quot;dashed&quot;, color = &quot;grey40&quot;) +
+      scale_x_discrete(name = &quot;Efeitos completos do modelo&quot;) +
+      scale_y_continuous(
+        name = &quot;Correlação preditiva&quot;,
+        limits = c(lower_limit_trait_cv - 0.03, upper_limit_trait_cv + 0.03),
+        expand = expansion(mult = c(0, 0.02))
+      ) +
+      ggthemes::scale_fill_gdocs(name = &quot;Grupo de comparação&quot;) +
+      theme_bw() +
+      theme(
+        plot.title = element_text(face = &quot;bold&quot;, size = 12, hjust = 0.5),
+        strip.text = element_text(face = &quot;bold&quot;, size = 9),
+        axis.text.x = element_text(size = 6.5, angle = 55, hjust = 1, vjust = 1),
+        axis.text.y = element_text(size = 8),
+        axis.title = element_text(size = 10),
+        legend.position = &quot;top&quot;,
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 8)
+      ) +
+      labs(
+        title = paste(&quot;Habilidade preditiva em&quot;, current_cv, &quot;para&quot;, current_trait)
+      )
+
+    print(p_trait_cvloo)
+
+    ggsave(
+      file.path(figures_dir, paste0(&quot;prediction_&quot;, current_trait, &quot;_&quot;, current_cv, &quot;.tiff&quot;)),
+      plot = p_trait_cvloo,
+      width = 16,
+      height = 11,
+      dpi = 300,
+      bg = &quot;white&quot;
+    )
+  }
+}</code></pre>
 <p><img src="figure/visualization_pt.Rmd/figure-cvloo-1.png" width="100%" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-figure-cvloo-1">
@@ -16796,6 +16363,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33/docs/figure/visualization_pt.Rmd/figure-cvloo-1.png" target="_blank">3ecd781</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-08
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/6ce48a319541b483b3ce82f6d6ae90154d06e453/docs/figure/visualization_pt.Rmd/figure-cvloo-1.png" target="_blank">6ce48a3</a>
@@ -16822,14 +16400,7 @@ WevertonGomesCosta
 </table>
 </div>
 </div>
-<pre class="r"><code>ggsave(
-  file.path(figures_dir, &quot;prediction_cv0_cv00.tiff&quot;),
-  plot = p_cvloo,
-  width = 18,
-  height = 14,
-  dpi = 300,
-  bg = &quot;white&quot;
-)</code></pre>
+<p><img src="figure/visualization_pt.Rmd/figure-cvloo-2.png" width="100%" style="display: block; margin: auto;" /><img src="figure/visualization_pt.Rmd/figure-cvloo-3.png" width="100%" style="display: block; margin: auto;" /><img src="figure/visualization_pt.Rmd/figure-cvloo-4.png" width="100%" style="display: block; margin: auto;" /></p>
 </div>
 <div id="nota-final" class="section level2">
 <h2>16. Nota final</h2>
@@ -16908,8 +16479,8 @@ loaded via a namespace (and not attached):
 [41] ragg_1.5.0         pkgconfig_2.0.3    pillar_1.11.1      bslib_0.9.0       
 [45] later_1.4.4        gtable_0.3.6       glue_1.8.0         Rcpp_1.1.1        
 [49] systemfonts_1.3.1  xfun_0.54          tidyselect_1.2.1   rstudioapi_0.17.1 
-[53] farver_2.1.2       htmltools_0.5.9    labeling_0.4.3     rmarkdown_2.30    
-[57] svglite_2.2.2      compiler_4.5.1     S7_0.2.1          </code></pre>
+[53] farver_2.1.2       htmltools_0.5.9    rmarkdown_2.30     svglite_2.2.2     
+[57] compiler_4.5.1     S7_0.2.1          </code></pre>
 </div>
 </div>
 </div>

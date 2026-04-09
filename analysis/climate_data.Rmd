@@ -1,5 +1,5 @@
 ---
-title: "Tutorial: Climate Data Acquisition and Processing (NASA POWER)"
+title: "Climate Data Acquisition and Processing (NASA POWER)"
 author: 
   - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"

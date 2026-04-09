@@ -1,13 +1,13 @@
-Trait,CV,ShortDescription,FullEffects,InterpretiveDescription,MeanCorrelation,SDCorrelation
-GY,CV1,GGK + W,E + W + GGK + GGKE + GGKW,"Gaussian genomic-weather model with environment, weather, GGKE, and GGKW",0.727,0.012
-GY,CV1,G + W,E + W + G + GE + GW,"Linear genomic-weather model with environment, weather, GE, and GW",0.725,0.011
-GY,CV1,GGK+PGK + W,E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW,"Gaussian combined genomic + phenomic + weather model with GGKE, PGKE, GGKW, and PGKW",0.723,0.011
-GY,CV2,GGK+PGK + W,E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW,"Gaussian combined genomic + phenomic + weather model with GGKE, PGKE, GGKW, and PGKW",0.991,0
-GY,CV2,GGK+PGK + E,E + GGK + PGK + GGKE + PGKE,"Gaussian combined genomic + phenomic model with environment, GGKE, and PGKE",0.989,0
-GY,CV2,G + W,E + W + G + GE + GW,"Linear genomic-weather model with environment, weather, GE, and GW",0.984,0
-KW,CV1,P + E,E + P + PE,Linear phenomic model with environment and P × E interaction,0.762,0.01
-KW,CV1,P + W,E + W + P + PE + PW,"Linear phenomic-weather model with environment, weather, PE, and PW",0.761,0.005
-KW,CV1,G+P + E,E + G + P + GE + PE,"Linear combined genomic + phenomic model with environment, GE, and PE",0.728,0.015
-KW,CV2,G+P + W,E + W + G + P + GE + PE + GW + PW,"Linear combined genomic + phenomic + weather model with GE, PE, GW, and PW",0.994,0.001
-KW,CV2,GGK+PGK + W,E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW,"Gaussian combined genomic + phenomic + weather model with GGKE, PGKE, GGKW, and PGKW",0.994,0
-KW,CV2,G+P + E,E + G + P + GE + PE,"Linear combined genomic + phenomic model with environment, GE, and PE",0.994,0
+Trait,CV,ShortDescription,MeanCorrelation,SDCorrelation
+GY,CV1,GGK + W,0.727,0.012
+GY,CV1,G + W,0.725,0.011
+GY,CV1,GGK+PGK + W,0.723,0.011
+GY,CV2,GGK+PGK + W,0.991,0
+GY,CV2,GGK+PGK + E,0.989,0
+GY,CV2,G + W,0.984,0
+KW,CV1,P + E,0.762,0.01
+KW,CV1,P + W,0.761,0.005
+KW,CV1,G+P + E,0.728,0.015
+KW,CV2,G+P + W,0.994,0.001
+KW,CV2,GGK+PGK + W,0.994,0
+KW,CV2,G+P + E,0.994,0
