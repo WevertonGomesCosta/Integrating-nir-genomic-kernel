@@ -1,9 +1,19 @@
 ---
-title: "Resumos e figuras de predição - tutorial didático"
+title: "Resumos e figuras de predição"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
     toc: true
+    toc_depth: 3
     toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
 **Language / Idioma:** [English](visualization.html) | [Português](visualization_pt.html)
@@ -1378,15 +1388,7 @@ for (current_trait in cv12_traits) {
         expand = expansion(mult = c(0, 0.02))
       ) +
       coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
-      scale_fill_manual(
-        name = "Grupo de comparação",
-        values = c(
-          "Genômico" = "#3366CC",
-          "Fenômico" = "#DC3912",
-          "Combinado" = "#109618"
-        ),
-        drop = FALSE
-      ) +
+      ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
       theme_bw() +
       theme(
         plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
@@ -1477,15 +1479,7 @@ for (current_trait in cvloo_traits) {
         expand = expansion(mult = c(0, 0.02))
       ) +
       coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
-      scale_fill_manual(
-        name = "Grupo de comparação",
-        values = c(
-          "Genômico" = "#3366CC",
-          "Fenômico" = "#DC3912",
-          "Combinado" = "#109618"
-        ),
-        drop = FALSE
-      ) +
+      ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
       theme_bw() +
       theme(
         plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
