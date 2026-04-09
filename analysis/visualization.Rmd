@@ -110,9 +110,9 @@ model_catalog <- tibble(
     "Without W", "With W", "Without W", "With W", "Without W", "With W"
   ),
   Group = c(
-    "Genomic baseline", "Weather single-source", "Genomic baseline", "Weather single-source", "Genomic baseline", "Weather single-source",
-    "Phenomic baseline", "Weather single-source", "Phenomic baseline", "Weather single-source", "Phenomic baseline", "Weather single-source",
-    "Combined baseline", "Weather combined", "Combined baseline", "Weather combined", "Combined baseline", "Weather combined"
+    rep("Genomic", 6),
+    rep("Phenomic", 6),
+    rep("Combined", 6)
   ),
   Description = c(
     "Genomic linear + E", "Genomic linear + W", "Genomic Gaussian + E", "Genomic Gaussian + W", "Genomic arc-cosine + E", "Genomic arc-cosine + W",
@@ -257,7 +257,7 @@ cv12_summary <- readr::read_csv(
 
 if (!all(c("ModelNumber", "Model") %in% names(cv12_summary))) {
   stop(
-    "prediction_cv1_cv2_summary.csv precisa conter ModelNumber e Model para reanexar FullEffects e InterpretiveDescription."
+    "prediction_cv1_cv2_summary.csv must contain ModelNumber and Model to reattach FullEffects and InterpretiveDescription."
   )
 }
 
@@ -291,7 +291,7 @@ required_cv12_summary_cols <- c(
 missing_cv12_summary_cols <- setdiff(required_cv12_summary_cols, names(cv12_summary))
 if (length(missing_cv12_summary_cols) > 0) {
   stop(
-    "cv12_summary ficou sem colunas obrigatórias após a carga: ",
+    "cv12_summary is missing required columns after loading: ",
     paste(missing_cv12_summary_cols, collapse = ", "),
     "."
   )
@@ -304,7 +304,7 @@ cvloo_summary <- readr::read_csv(
 
 if (!all(c("ModelNumber", "Model") %in% names(cvloo_summary))) {
   stop(
-    "prediction_cv0_cv00_summary.csv precisa conter ModelNumber e Model para reanexar FullEffects e InterpretiveDescription."
+    "prediction_cv0_cv00_summary.csv must contain ModelNumber and Model to reattach FullEffects and InterpretiveDescription."
   )
 }
 
@@ -339,7 +339,7 @@ required_cvloo_summary_cols <- c(
 missing_cvloo_summary_cols <- setdiff(required_cvloo_summary_cols, names(cvloo_summary))
 if (length(missing_cvloo_summary_cols) > 0) {
   stop(
-    "cvloo_summary ficou sem colunas obrigatórias após a carga: ",
+    "cvloo_summary is missing required columns after loading: ",
     paste(missing_cvloo_summary_cols, collapse = ", "),
     "."
   )
@@ -362,7 +362,7 @@ required_cv12_w_effect_cols <- c(
 missing_cv12_w_effect_cols <- setdiff(required_cv12_w_effect_cols, names(cv12_w_effect))
 if (length(missing_cv12_w_effect_cols) > 0) {
   stop(
-    "prediction_cv1_cv2_w_effect_pairs.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv1_cv2_w_effect_pairs.csv is missing required columns: ",
     paste(missing_cv12_w_effect_cols, collapse = ", "),
     "."
   )
@@ -386,7 +386,7 @@ required_cvloo_w_effect_cols <- c(
 missing_cvloo_w_effect_cols <- setdiff(required_cvloo_w_effect_cols, names(cvloo_w_effect))
 if (length(missing_cvloo_w_effect_cols) > 0) {
   stop(
-    "prediction_cv0_cv00_w_effect_pairs.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv0_cv00_w_effect_pairs.csv is missing required columns: ",
     paste(missing_cvloo_w_effect_cols, collapse = ", "),
     "."
   )
@@ -413,7 +413,7 @@ required_cv12_kernel_cols <- c(
 missing_cv12_kernel_cols <- setdiff(required_cv12_kernel_cols, names(cv12_kernel_family_compare))
 if (length(missing_cv12_kernel_cols) > 0) {
   stop(
-    "prediction_cv1_cv2_kernel_family_compare.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv1_cv2_kernel_family_compare.csv is missing required columns: ",
     paste(missing_cv12_kernel_cols, collapse = ", "),
     "."
   )
@@ -441,7 +441,7 @@ required_cvloo_kernel_cols <- c(
 missing_cvloo_kernel_cols <- setdiff(required_cvloo_kernel_cols, names(cvloo_kernel_family_compare))
 if (length(missing_cvloo_kernel_cols) > 0) {
   stop(
-    "prediction_cv0_cv00_kernel_family_compare.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv0_cv00_kernel_family_compare.csv is missing required columns: ",
     paste(missing_cvloo_kernel_cols, collapse = ", "),
     "."
   )
@@ -468,7 +468,7 @@ required_cv12_display_cols <- c(
 missing_cv12_display_cols <- setdiff(required_cv12_display_cols, names(cv12_table_display))
 if (length(missing_cv12_display_cols) > 0) {
   stop(
-    "prediction_cv1_cv2_display_table.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv1_cv2_display_table.csv is missing required columns: ",
     paste(missing_cv12_display_cols, collapse = ", "),
     "."
   )
@@ -496,7 +496,7 @@ required_cvloo_display_cols <- c(
 missing_cvloo_display_cols <- setdiff(required_cvloo_display_cols, names(cvloo_table_display))
 if (length(missing_cvloo_display_cols) > 0) {
   stop(
-    "prediction_cv0_cv00_display_table.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv0_cv00_display_table.csv is missing required columns: ",
     paste(missing_cvloo_display_cols, collapse = ", "),
     "."
   )
@@ -518,7 +518,7 @@ required_cv12_top3_cols <- c(
 missing_cv12_top3_cols <- setdiff(required_cv12_top3_cols, names(cv12_top3))
 if (length(missing_cv12_top3_cols) > 0) {
   stop(
-    "prediction_cv1_cv2_top3.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv1_cv2_top3.csv is missing required columns: ",
     paste(missing_cv12_top3_cols, collapse = ", "),
     "."
   )
@@ -541,7 +541,7 @@ required_cvloo_top3_cols <- c(
 missing_cvloo_top3_cols <- setdiff(required_cvloo_top3_cols, names(cvloo_top3))
 if (length(missing_cvloo_top3_cols) > 0) {
   stop(
-    "prediction_cv0_cv00_top3.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv0_cv00_top3.csv is missing required columns: ",
     paste(missing_cvloo_top3_cols, collapse = ", "),
     "."
   )
@@ -551,13 +551,13 @@ model_catalog <- model_catalog %>%
   dplyr::mutate(
     Pathway = dplyr::recode(
       Pathway,
-      "Genomic pathway" = "Via genômica",
-      "Phenomic pathway" = "Via fenômica",
-      "Combined G + P pathway" = "Via combinada G + P"
+      "Genomic pathway" = "Genomic pathway",
+      "Phenomic pathway" = "Phenomic pathway",
+      "Combined G + P pathway" = "Combined G + P pathway"
     ),
     KernelFamily = dplyr::recode(
       KernelFamily,
-      "Gaussian" = "Gaussiano"
+      "Gaussian" = "Gaussian"
     )
   )
 
@@ -565,26 +565,24 @@ cv12_summary <- cv12_summary %>%
   dplyr::mutate(
     Pathway = dplyr::recode(
       Pathway,
-      "Genomic pathway" = "Via genômica",
-      "Phenomic pathway" = "Via fenômica",
-      "Combined G + P pathway" = "Via combinada G + P"
+      "Genomic pathway" = "Genomic pathway",
+      "Phenomic pathway" = "Phenomic pathway",
+      "Combined G + P pathway" = "Combined G + P pathway"
     ),
     KernelFamily = dplyr::recode(
       KernelFamily,
-      "Gaussian" = "Gaussiano"
+      "Gaussian" = "Gaussian"
     ),
     WeatherStatus = dplyr::recode(
       WeatherStatus,
-      "Without W" = "Sem W",
-      "With W" = "Com W"
+      "Without W" = "Without W",
+      "With W" = "With W"
     ),
-    Group = dplyr::recode(
-      Group,
-      "Genomic baseline" = "Base genômica",
-      "Phenomic baseline" = "Base fenômica",
-      "Combined baseline" = "Base combinada",
-      "Weather single-source" = "Clima fonte única",
-      "Weather combined" = "Clima combinado"
+    Group = dplyr::case_when(
+      Pathway == "Genomic pathway" ~ "Genomic",
+      Pathway == "Phenomic pathway" ~ "Phenomic",
+      Pathway == "Combined G + P pathway" ~ "Combined",
+      TRUE ~ as.character(Group)
     ),
     Description = dplyr::recode(
       Description,
@@ -613,26 +611,24 @@ cvloo_summary <- cvloo_summary %>%
   dplyr::mutate(
     Pathway = dplyr::recode(
       Pathway,
-      "Genomic pathway" = "Via genômica",
-      "Phenomic pathway" = "Via fenômica",
-      "Combined G + P pathway" = "Via combinada G + P"
+      "Genomic pathway" = "Genomic pathway",
+      "Phenomic pathway" = "Phenomic pathway",
+      "Combined G + P pathway" = "Combined G + P pathway"
     ),
     KernelFamily = dplyr::recode(
       KernelFamily,
-      "Gaussian" = "Gaussiano"
+      "Gaussian" = "Gaussian"
     ),
     WeatherStatus = dplyr::recode(
       WeatherStatus,
-      "Without W" = "Sem W",
-      "With W" = "Com W"
+      "Without W" = "Without W",
+      "With W" = "With W"
     ),
-    Group = dplyr::recode(
-      Group,
-      "Genomic baseline" = "Base genômica",
-      "Phenomic baseline" = "Base fenômica",
-      "Combined baseline" = "Base combinada",
-      "Weather single-source" = "Clima fonte única",
-      "Weather combined" = "Clima combinado"
+    Group = dplyr::case_when(
+      Pathway == "Genomic pathway" ~ "Genomic",
+      Pathway == "Phenomic pathway" ~ "Phenomic",
+      Pathway == "Combined G + P pathway" ~ "Combined",
+      TRUE ~ as.character(Group)
     ),
     Description = dplyr::recode(
       Description,
@@ -693,14 +689,14 @@ cv12_kernel_family_compare <- cv12_kernel_family_compare %>%
   dplyr::mutate(
     Pathway = dplyr::recode(
       Pathway,
-      "Genomic pathway" = "Via genômica",
-      "Phenomic pathway" = "Via fenômica",
-      "Combined G + P pathway" = "Via combinada G + P"
+      "Genomic pathway" = "Genomic pathway",
+      "Phenomic pathway" = "Phenomic pathway",
+      "Combined G + P pathway" = "Combined G + P pathway"
     ),
     WeatherStatus = dplyr::recode(
       WeatherStatus,
-      "Without W" = "Sem W",
-      "With W" = "Com W"
+      "Without W" = "Without W",
+      "With W" = "With W"
     )
   )
 
@@ -708,14 +704,14 @@ cvloo_kernel_family_compare <- cvloo_kernel_family_compare %>%
   dplyr::mutate(
     Pathway = dplyr::recode(
       Pathway,
-      "Genomic pathway" = "Via genômica",
-      "Phenomic pathway" = "Via fenômica",
-      "Combined G + P pathway" = "Via combinada G + P"
+      "Genomic pathway" = "Genomic pathway",
+      "Phenomic pathway" = "Phenomic pathway",
+      "Combined G + P pathway" = "Combined G + P pathway"
     ),
     WeatherStatus = dplyr::recode(
       WeatherStatus,
-      "Without W" = "Sem W",
-      "With W" = "Com W"
+      "Without W" = "Without W",
+      "With W" = "With W"
     )
   )
 
@@ -723,18 +719,18 @@ cv12_table_display <- cv12_table_display %>%
   dplyr::mutate(
     Pathway = dplyr::recode(
       Pathway,
-      "Genomic pathway" = "Via genômica",
-      "Phenomic pathway" = "Via fenômica",
-      "Combined G + P pathway" = "Via combinada G + P"
+      "Genomic pathway" = "Genomic pathway",
+      "Phenomic pathway" = "Phenomic pathway",
+      "Combined G + P pathway" = "Combined G + P pathway"
     ),
     KernelFamily = dplyr::recode(
       KernelFamily,
-      "Gaussian" = "Gaussiano"
+      "Gaussian" = "Gaussian"
     ),
     WeatherStatus = dplyr::recode(
       WeatherStatus,
-      "Without W" = "Sem W",
-      "With W" = "Com W"
+      "Without W" = "Without W",
+      "With W" = "With W"
     )
   )
 
@@ -742,18 +738,18 @@ cvloo_table_display <- cvloo_table_display %>%
   dplyr::mutate(
     Pathway = dplyr::recode(
       Pathway,
-      "Genomic pathway" = "Via genômica",
-      "Phenomic pathway" = "Via fenômica",
-      "Combined G + P pathway" = "Via combinada G + P"
+      "Genomic pathway" = "Genomic pathway",
+      "Phenomic pathway" = "Phenomic pathway",
+      "Combined G + P pathway" = "Combined G + P pathway"
     ),
     KernelFamily = dplyr::recode(
       KernelFamily,
-      "Gaussian" = "Gaussiano"
+      "Gaussian" = "Gaussian"
     ),
     WeatherStatus = dplyr::recode(
       WeatherStatus,
-      "Without W" = "Sem W",
-      "With W" = "Com W"
+      "Without W" = "Without W",
+      "With W" = "With W"
     )
   )
 ```
@@ -1337,23 +1333,35 @@ if (!all(c("Trait", "CV", "MeanCorrelation", "SDCorrelation", "FullEffects", "Gr
   stop("cv12_summary does not contain the columns required by the figure-cv12 chunk.")
 }
 
+group_levels_en <- c("Genomic", "Phenomic", "Combined")
+model_order_wrapped_en <- stringr::str_wrap(model_catalog$FullEffects, width = 22)
+
 cv12_plot_data <- cv12_summary %>%
   mutate(
-    FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 22)
+    FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 22),
+    PlotOrder = match(FullEffects, model_catalog$FullEffects),
+    Group = dplyr::case_when(
+      Pathway == "Genomic pathway" ~ "Genomic",
+      Pathway == "Phenomic pathway" ~ "Phenomic",
+      Pathway == "Combined G + P pathway" ~ "Combined",
+      TRUE ~ as.character(Group)
+    ),
+    Group = factor(Group, levels = group_levels_en)
   )
 
 cv12_traits <- unique(cv12_plot_data$Trait)
 cv12_schemes <- unique(cv12_plot_data$CV)
+cv12_plot_objects <- list()
 
 for (current_trait in cv12_traits) {
   for (current_cv in cv12_schemes) {
     trait_cv_data <- cv12_plot_data %>%
       filter(Trait == current_trait, CV == current_cv) %>%
-      arrange(MeanCorrelation) %>%
+      arrange(PlotOrder) %>%
       mutate(
         FullEffectsWrapped = factor(
           FullEffectsWrapped,
-          levels = unique(FullEffectsWrapped)
+          levels = model_order_wrapped_en
         )
       )
 
@@ -1364,7 +1372,9 @@ for (current_trait in cv12_traits) {
     plot_lower_limit_trait_cv <- min(0, lower_limit_trait_cv - 0.03)
     plot_upper_limit_trait_cv <- upper_limit_trait_cv + 0.03
 
-    p_trait_cv12 <- ggplot(
+    plot_key <- paste(current_trait, tolower(current_cv), sep = "__")
+
+    cv12_plot_objects[[plot_key]] <- ggplot(
       trait_cv_data,
       aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = Group)
     ) +
@@ -1400,17 +1410,29 @@ for (current_trait in cv12_traits) {
         title = paste("Predictive ability in", current_cv, "for", current_trait)
       )
 
-    print(p_trait_cv12)
-
-    ggsave(
-      file.path(figures_dir, paste0("prediction_", current_trait, "_", tolower(current_cv), ".tiff")),
-      plot = p_trait_cv12,
-      width = 18,
-      height = 11,
-      dpi = 300,
-      bg = "white"
-    )
+    print(cv12_plot_objects[[plot_key]])
   }
+}
+```
+
+```{r save-figure-cv12, include=FALSE}
+if (!exists("cv12_plot_objects")) {
+  stop("The object cv12_plot_objects was not created before the save-figure-cv12 chunk.")
+}
+
+for (plot_key in names(cv12_plot_objects)) {
+  plot_parts <- strsplit(plot_key, "__", fixed = TRUE)[[1]]
+  current_trait <- plot_parts[1]
+  current_cv <- plot_parts[2]
+
+  ggsave(
+    file.path(figures_dir, paste0("prediction_", current_trait, "_", current_cv, ".tiff")),
+    plot = cv12_plot_objects[[plot_key]],
+    width = 18,
+    height = 11,
+    dpi = 300,
+    bg = "white"
+  )
 }
 ```
 
@@ -1422,14 +1444,26 @@ if (!all(c("Trait", "CV", "Env_leave", "MeanCorrelation", "SDCorrelation", "Full
   stop("cvloo_summary does not contain the columns required by the figure-cvloo chunk.")
 }
 
+group_levels_en <- c("Genomic", "Phenomic", "Combined")
+model_order_wrapped_en <- stringr::str_wrap(model_catalog$FullEffects, width = 22)
+
 cvloo_plot_data <- cvloo_summary %>%
   mutate(
     FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 22),
-    Env_leave = factor(Env_leave, levels = c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW"))
+    Env_leave = factor(Env_leave, levels = c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")),
+    PlotOrder = match(FullEffects, model_catalog$FullEffects),
+    Group = dplyr::case_when(
+      Pathway == "Genomic pathway" ~ "Genomic",
+      Pathway == "Phenomic pathway" ~ "Phenomic",
+      Pathway == "Combined G + P pathway" ~ "Combined",
+      TRUE ~ as.character(Group)
+    ),
+    Group = factor(Group, levels = group_levels_en)
   )
 
 cvloo_traits <- unique(cvloo_plot_data$Trait)
 cvloo_schemes <- unique(cvloo_plot_data$CV)
+cvloo_plot_objects <- list()
 
 for (current_trait in cvloo_traits) {
   for (current_cv in cvloo_schemes) {
@@ -1438,17 +1472,12 @@ for (current_trait in cvloo_traits) {
 
     if (nrow(trait_cv_data) == 0) next
 
-    model_order <- trait_cv_data %>%
-      group_by(FullEffectsWrapped) %>%
-      summarise(OrderMean = mean(MeanCorrelation, na.rm = TRUE), .groups = "drop") %>%
-      arrange(OrderMean) %>%
-      pull(FullEffectsWrapped)
-
     trait_cv_data <- trait_cv_data %>%
+      arrange(Env_leave, PlotOrder) %>%
       mutate(
         FullEffectsWrapped = factor(
           FullEffectsWrapped,
-          levels = model_order
+          levels = model_order_wrapped_en
         )
       )
 
@@ -1457,7 +1486,9 @@ for (current_trait in cvloo_traits) {
     plot_lower_limit_trait_cv <- min(0, lower_limit_trait_cv - 0.03)
     plot_upper_limit_trait_cv <- upper_limit_trait_cv + 0.03
 
-    p_trait_cvloo <- ggplot(
+    plot_key <- paste(current_trait, current_cv, sep = "__")
+
+    cvloo_plot_objects[[plot_key]] <- ggplot(
       trait_cv_data,
       aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = Group)
     ) +
@@ -1495,17 +1526,29 @@ for (current_trait in cvloo_traits) {
         title = paste("Predictive ability in", current_cv, "for", current_trait)
       )
 
-    print(p_trait_cvloo)
-
-    ggsave(
-      file.path(figures_dir, paste0("prediction_", current_trait, "_", current_cv, ".tiff")),
-      plot = p_trait_cvloo,
-      width = 18,
-      height = 12,
-      dpi = 300,
-      bg = "white"
-    )
+    print(cvloo_plot_objects[[plot_key]])
   }
+}
+```
+
+```{r save-figure-cvloo, include=FALSE}
+if (!exists("cvloo_plot_objects")) {
+  stop("The object cvloo_plot_objects was not created before the save-figure-cvloo chunk.")
+}
+
+for (plot_key in names(cvloo_plot_objects)) {
+  plot_parts <- strsplit(plot_key, "__", fixed = TRUE)[[1]]
+  current_trait <- plot_parts[1]
+  current_cv <- plot_parts[2]
+
+  ggsave(
+    file.path(figures_dir, paste0("prediction_", current_trait, "_", current_cv, ".tiff")),
+    plot = cvloo_plot_objects[[plot_key]],
+    width = 18,
+    height = 12,
+    dpi = 300,
+    bg = "white"
+  )
 }
 ```
 
