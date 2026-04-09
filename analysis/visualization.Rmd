@@ -1,55 +1,28 @@
 ---
-title: "Resumos e figuras de predição - tutorial didático"
+title: "Prediction summaries and figures"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
     toc: true
+    toc_depth: 3
     toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
 **Language / Idioma:** [English](visualization.html) | [Português](visualization_pt.html)
 
-Este arquivo é a versão didática da etapa de visualização. Sua finalidade é tomar as saídas brutas de predição produzidas em `analysis_prediction_run_outputs.Rmd`, reorganizá-las em tabelas-resumo interpretáveis e depois traduzir esses resumos em comparações compactas e figuras finais.
+The purpose of this step is to take the raw prediction outputs produced in `analysis_prediction_run_outputs.Rmd`, reorganize them into interpretable summary tables, and then translate these summaries into compact comparisons and final figures.
 
-Neste ponto do pipeline, a principal pergunta analítica já não é mais como cada modelo é especificado, mas como os modelos ajustados se comportam sob diferentes problemas de predição. Por essa razão, a etapa de visualização desloca o foco da construção dos modelos para a interpretação dos modelos. Ela reúne resumos de desempenho para `CV1`, `CV2`, `CV0` e `CV00`, destaca contrastes entre modelos com e sem o kernel climático (`W`) e organiza os resultados em tabelas e figuras que são mais fáceis de inspecionar do que os próprios arquivos brutos de predição.
+## 1. Setup
 
-O fluxo atual de predição grava saídas brutas em `output/results/` usando nomes de arquivo que codificam o cenário de validação, o traço, o modelo ajustado, a repetição e o fold. Para `CV0` e `CV00`, o rótulo do ambiente deixado de fora também é registrado no nome do arquivo e depois é associado a `Env` pelo filtro `Env == Env_leave`. Essa estrutura de nomes é essencial porque conecta a etapa de execução à etapa de interpretação.
-
-Ao longo deste tutorial, o **kernel climático (`W`)** deve ser interpretado como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente (`E`). O componente fenômico (`P`) também deve ser interpretado com cuidado, porque a similaridade baseada em NIRS pode refletir forte resposta ambiental além de sinal preditivo potencialmente útil.
-
-### O que este script faz
-
-O fluxo é organizado em quatro tarefas práticas:
-
-1. localizar e ler os arquivos CSV de predição;
-2. interpretar os nomes dos arquivos e recuperar as informações de traço, modelo, repetição e leave-one-environment-out;
-3. resumir os resultados para `CV1`, `CV2`, `CV0` e `CV00`;
-4. exportar tabelas limpas e figuras para a próxima etapa orientada ao manuscrito.
-
-Para tornar a interpretação mais fácil, os modelos são ordenados para ajudar a responder três perguntas práticas:
-
-1. passar de kernels lineares para kernels Gaussianos ou arc-cosine melhora a capacidade preditiva?
-2. adicionar o kernel climático (`W`) melhora a capacidade preditiva?
-3. combinar informação genômica e fenômica melhora a capacidade preditiva?
-
-## Entradas, saídas e próxima etapa
-
-**Entradas desta etapa**
-- saídas brutas de predição gravadas por `analysis_prediction_run_outputs.Rmd`
-- tabelas leves de metadados da predição geradas na etapa anterior
-
-**Saídas desta etapa**
-- tabelas-resumo finais
-- rankings de modelos
-- comparações do efeito de `W`
-- comparações entre famílias de kernel
-- figuras finais para interpretação posterior
-
-**Próxima etapa**
-- as saídas geradas aqui alimentam os resumos orientados ao manuscrito e a interpretação final dos resultados do projeto.
-
-## 1. Configuração
-
-O documento começa definindo um estilo consistente de renderização para código, tabelas e figuras. Isso ajuda o tutorial a permanecer legível quando é inspecionado em HTML e mantém estável a apresentação visual entre os diferentes outputs produzidos nesta etapa.
+The document starts by defining a consistent rendering style for code, tables, and figures. This helps the tutorial remain readable when inspected in HTML and keeps the visual presentation stable across the outputs produced in this step.
 
 ```{r setup}
 knitr::opts_chunk$set( echo = TRUE,
@@ -60,11 +33,11 @@ knitr::opts_chunk$set( echo = TRUE,
   out.width = "100%" )
 ```
 
-## 2. Carregar pacotes e localizar as pastas do projeto
+## 2. Load packages and locate project folders
 
-A etapa de visualização depende de um pequeno conjunto de pacotes para manipulação de dados, construção de figuras e formatação de tabelas. Ela também precisa localizar corretamente as pastas do projeto, porque os resumos gerados aqui devem ser gravados em caminhos de saída estáveis que depois podem ser reutilizados pelo site e por materiais orientados ao manuscrito.
+The visualization step depends on a small set of packages for data manipulation, figure construction, and table formatting. It also needs to locate the project folders correctly, because the summaries generated here must be written to stable output paths that can later be reused by the site and by manuscript-oriented materials.
 
-Esta seção padroniza a raiz do projeto, localiza as pastas que contêm as saídas de predição e prepara os diretórios nos quais as tabelas e figuras finais serão gravadas.
+This section standardizes the project root, locates the folders that contain the prediction outputs, and prepares the directories where the final tables and figures will be written.
 
 ```{r packages-and-paths}
 rm(list = ls())
@@ -82,9 +55,9 @@ packages_missing <- packages_needed[!(packages_needed %in% installed.packages()[
 if (length(packages_missing) > 0) {
   stop(
     paste0(
-      "Os seguintes pacotes são necessários para este módulo, mas não estão instalados: ",
+      "The following packages are required for this module, but are not installed: ",
       paste(packages_missing, collapse = ", "),
-      ". Instale-os antes de renderizar visualization_pt.Rmd."
+      ". Install them before rendering visualization.Rmd."
     )
   )
 }
@@ -102,7 +75,7 @@ if (!dir.exists(file.path(project_root, "output")) && dir.exists(file.path(proje
   project_root <- normalizePath(file.path(project_root, ".."))
 }
 if (!dir.exists(file.path(project_root, "output"))) {
-  stop("Não foi possível localizar a pasta 'output/'.\nExecute este script a partir da raiz do projeto ou de analysis/.")
+  stop("Could not locate the 'output/' directory.\nRun this script from the project root or from analysis/.")
 }
 results_dir <- file.path(project_root, "output", "results")
 figures_dir <- file.path(project_root, "output", "figures")
@@ -111,11 +84,11 @@ dir.create(figures_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
 ```
 
-## 3. Catálogo de modelos usado no pipeline reduzido
+## 3. Model catalog used in the reduced pipeline
 
-A etapa de visualização usa o mesmo catálogo reduzido de 18 modelos adotado no fluxo de predição. Aqui esse catálogo é reorganizado para que os resumos se tornem mais fáceis de interpretar em termos analíticos. Em vez de mostrar apenas números de modelo, a tabela enfatiza a via representada, a família de kernel utilizada e se a informação climática está presente.
+The visualization step uses the same reduced catalog of 18 models adopted in the prediction workflow. Here, this catalog is reorganized so that the summaries become easier to interpret analytically. Instead of showing only model numbers, the table emphasizes the represented pathway, the kernel family used, and whether climatic information is present.
 
-Essa organização é importante porque as comparações mostradas mais adiante no documento não são arbitrárias. Elas foram desenhadas para ajudar o leitor a entender de onde vêm os ganhos preditivos e se esses ganhos estão associados à informação climática, à escolha do kernel ou à integração entre fontes genômicas e fenômicas.
+This organization is important because the comparisons shown later in the document are not arbitrary. They were designed to help the reader understand where predictive gains come from and whether these gains are associated with climatic information, kernel choice, or integration between genomic and phenomic sources.
 
 ```{r model-catalog}
 model_catalog <- tibble(
@@ -196,24 +169,24 @@ model_catalog <- tibble(
 model_catalog
 ```
 
-## 4. Pares de comparação usados para contrastes entre com W e sem W
+## 4. Comparison pairs used for contrasts between without W and with W
 
-Uma pergunta central neste projeto é se adicionar o kernel climático (`W`) melhora a capacidade preditiva. Para responder a essa pergunta de forma justa, a comparação deve sempre ser feita entre modelos estruturalmente semelhantes e que diferem apenas pela inclusão da informação climática.
+A central question in this project is whether adding the climatic kernel (`W`) improves predictive ability. To answer this question fairly, the comparison must always be made between structurally similar models that differ only by the inclusion of climatic information.
 
-Os pares de comparação definidos abaixo fornecem exatamente essa estrutura. Eles são usados mais adiante para construir tabelas que quantificam quanto o desempenho preditivo muda quando `W` é introduzido dentro da mesma via e da mesma família de kernel.
+The comparison pairs defined below provide exactly this structure. They are used later to build tables that quantify how predictive performance changes when `W` is introduced within the same pathway and the same kernel family.
 
 ```{r comparison-pairs}
-comparison_pairs <- tibble( Comparison = c( "Genômico linear", "Genômico Gaussiano", "Genômico arc-cosine", "Fenômico linear", "Fenômico Gaussiano", "Fenômico arc-cosine", "Combinado linear", "Combinado Gaussiano", "Combinado arc-cosine" ),
+comparison_pairs <- tibble( Comparison = c( "Genomic linear", "Genomic Gaussian", "Genomic arc-cosine", "Phenomic linear", "Phenomic Gaussian", "Phenomic arc-cosine", "Combined linear", "Combined Gaussian", "Combined arc-cosine" ),
  WithoutW = c("Eta1", "Eta3", "Eta5", "Eta2", "Eta4", "Eta6", "Eta7", "Eta8", "Eta9"),
   WithW = c("Eta10", "Eta13", "Eta16", "Eta11", "Eta14", "Eta17", "Eta12", "Eta15", "Eta18") )
 comparison_pairs
 ```
 
-## 5. Localizar arquivos de predição
+## 5. Locate prediction files
 
-O primeiro passo operacional da etapa de visualização é localizar os arquivos brutos de predição produzidos pelo módulo anterior. No padrão atual do pipeline, esses arquivos são gravados recursivamente em `output/results/`, com uma hierarquia explícita por esquema de validação, traço, repetição e fold.
+The first operational step of the visualization stage is to locate the raw prediction files produced by the previous module. In the current pipeline standard, these files are written recursively to `output/results/`, with an explicit hierarchy by validation scheme, trait, repetition, and fold.
 
-Nesta etapa, o script lê a pasta de resultados de forma recursiva, mantém apenas os CSVs de predição armazenados dentro dos ramos estruturados `CV1`, `CV2`, `CV0` e `CV00`, e ignora outros artefatos, como `bglr_runs`. Isso torna os resumos posteriores compatíveis com o novo contrato `Rep/Fold` e preserva a separação entre os problemas de validação baseados em genótipos e os problemas leave-one-environment-out.
+At this stage, the script reads the results folder recursively, keeps only prediction CSVs stored inside the structured `CV1`, `CV2`, `CV0`, and `CV00` branches, and ignores other artifacts such as `bglr_runs`. This makes the later summaries compatible with the new `Rep/Fold` contract and preserves the separation between genotype-based validation problems and leave-one-environment-out problems.
 
 ```{r load-generated-visualization-outputs, include=FALSE}
 required_tables <- c(
@@ -235,8 +208,8 @@ missing_tables <- required_tables[
 
 if (length(missing_tables) > 0) {
   stop(
-    "Este arquivo de visualização depende de tabelas já geradas em output/tables/.\n",
-    "Arquivos ausentes: ",
+    "This visualization file depends on tables already generated in output/tables/.\n",
+    "Missing files: ",
     paste(missing_tables, collapse = ", ")
   )
 }
@@ -615,24 +588,24 @@ cv12_summary <- cv12_summary %>%
     ),
     Description = dplyr::recode(
       Description,
-      "Genomic linear + E" = "Genômico linear + E",
-      "Genomic linear + W" = "Genômico linear + W",
-      "Genomic Gaussian + E" = "Genômico Gaussiano + E",
-      "Genomic Gaussian + W" = "Genômico Gaussiano + W",
-      "Genomic arc-cosine + E" = "Genômico arc-cosine + E",
-      "Genomic arc-cosine + W" = "Genômico arc-cosine + W",
-      "Phenomic linear + E" = "Fenômico linear + E",
-      "Phenomic linear + W" = "Fenômico linear + W",
-      "Phenomic Gaussian + E" = "Fenômico Gaussiano + E",
-      "Phenomic Gaussian + W" = "Fenômico Gaussiano + W",
-      "Phenomic arc-cosine + E" = "Fenômico arc-cosine + E",
-      "Phenomic arc-cosine + W" = "Fenômico arc-cosine + W",
-      "Combined linear + E" = "Combinado linear + E",
-      "Combined linear + W" = "Combinado linear + W",
-      "Combined Gaussian + E" = "Combinado Gaussiano + E",
-      "Combined Gaussian + W" = "Combinado Gaussiano + W",
-      "Combined arc-cosine + E" = "Combinado arc-cosine + E",
-      "Combined arc-cosine + W" = "Combinado arc-cosine + W"
+      "Genomic linear + E" = "Genomic linear + E",
+      "Genomic linear + W" = "Genomic linear + W",
+      "Genomic Gaussian + E" = "Genomic Gaussian + E",
+      "Genomic Gaussian + W" = "Genomic Gaussian + W",
+      "Genomic arc-cosine + E" = "Genomic arc-cosine + E",
+      "Genomic arc-cosine + W" = "Genomic arc-cosine + W",
+      "Phenomic linear + E" = "Phenomic linear + E",
+      "Phenomic linear + W" = "Phenomic linear + W",
+      "Phenomic Gaussian + E" = "Phenomic Gaussian + E",
+      "Phenomic Gaussian + W" = "Phenomic Gaussian + W",
+      "Phenomic arc-cosine + E" = "Phenomic arc-cosine + E",
+      "Phenomic arc-cosine + W" = "Phenomic arc-cosine + W",
+      "Combined linear + E" = "Combined linear + E",
+      "Combined linear + W" = "Combined linear + W",
+      "Combined Gaussian + E" = "Combined Gaussian + E",
+      "Combined Gaussian + W" = "Combined Gaussian + W",
+      "Combined arc-cosine + E" = "Combined arc-cosine + E",
+      "Combined arc-cosine + W" = "Combined arc-cosine + W"
     )
   )
 
@@ -663,24 +636,24 @@ cvloo_summary <- cvloo_summary %>%
     ),
     Description = dplyr::recode(
       Description,
-      "Genomic linear + E" = "Genômico linear + E",
-      "Genomic linear + W" = "Genômico linear + W",
-      "Genomic Gaussian + E" = "Genômico Gaussiano + E",
-      "Genomic Gaussian + W" = "Genômico Gaussiano + W",
-      "Genomic arc-cosine + E" = "Genômico arc-cosine + E",
-      "Genomic arc-cosine + W" = "Genômico arc-cosine + W",
-      "Phenomic linear + E" = "Fenômico linear + E",
-      "Phenomic linear + W" = "Fenômico linear + W",
-      "Phenomic Gaussian + E" = "Fenômico Gaussiano + E",
-      "Phenomic Gaussian + W" = "Fenômico Gaussiano + W",
-      "Phenomic arc-cosine + E" = "Fenômico arc-cosine + E",
-      "Phenomic arc-cosine + W" = "Fenômico arc-cosine + W",
-      "Combined linear + E" = "Combinado linear + E",
-      "Combined linear + W" = "Combinado linear + W",
-      "Combined Gaussian + E" = "Combinado Gaussiano + E",
-      "Combined Gaussian + W" = "Combinado Gaussiano + W",
-      "Combined arc-cosine + E" = "Combinado arc-cosine + E",
-      "Combined arc-cosine + W" = "Combinado arc-cosine + W"
+      "Genomic linear + E" = "Genomic linear + E",
+      "Genomic linear + W" = "Genomic linear + W",
+      "Genomic Gaussian + E" = "Genomic Gaussian + E",
+      "Genomic Gaussian + W" = "Genomic Gaussian + W",
+      "Genomic arc-cosine + E" = "Genomic arc-cosine + E",
+      "Genomic arc-cosine + W" = "Genomic arc-cosine + W",
+      "Phenomic linear + E" = "Phenomic linear + E",
+      "Phenomic linear + W" = "Phenomic linear + W",
+      "Phenomic Gaussian + E" = "Phenomic Gaussian + E",
+      "Phenomic Gaussian + W" = "Phenomic Gaussian + W",
+      "Phenomic arc-cosine + E" = "Phenomic arc-cosine + E",
+      "Phenomic arc-cosine + W" = "Phenomic arc-cosine + W",
+      "Combined linear + E" = "Combined linear + E",
+      "Combined linear + W" = "Combined linear + W",
+      "Combined Gaussian + E" = "Combined Gaussian + E",
+      "Combined Gaussian + W" = "Combined Gaussian + W",
+      "Combined arc-cosine + E" = "Combined arc-cosine + E",
+      "Combined arc-cosine + W" = "Combined arc-cosine + W"
     )
   )
 
@@ -688,15 +661,15 @@ cv12_w_effect <- cv12_w_effect %>%
   dplyr::mutate(
     Comparison = dplyr::recode(
       Comparison,
-      "Genomic linear" = "Genômico linear",
-      "Genomic Gaussian" = "Genômico Gaussiano",
-      "Genomic arc-cosine" = "Genômico arc-cosine",
-      "Phenomic linear" = "Fenômico linear",
-      "Phenomic Gaussian" = "Fenômico Gaussiano",
-      "Phenomic arc-cosine" = "Fenômico arc-cosine",
-      "Combined linear" = "Combinado linear",
-      "Combined Gaussian" = "Combinado Gaussiano",
-      "Combined arc-cosine" = "Combinado arc-cosine"
+      "Genomic linear" = "Genomic linear",
+      "Genomic Gaussian" = "Genomic Gaussian",
+      "Genomic arc-cosine" = "Genomic arc-cosine",
+      "Phenomic linear" = "Phenomic linear",
+      "Phenomic Gaussian" = "Phenomic Gaussian",
+      "Phenomic arc-cosine" = "Phenomic arc-cosine",
+      "Combined linear" = "Combined linear",
+      "Combined Gaussian" = "Combined Gaussian",
+      "Combined arc-cosine" = "Combined arc-cosine"
     )
   )
 
@@ -704,15 +677,15 @@ cvloo_w_effect <- cvloo_w_effect %>%
   dplyr::mutate(
     Comparison = dplyr::recode(
       Comparison,
-      "Genomic linear" = "Genômico linear",
-      "Genomic Gaussian" = "Genômico Gaussiano",
-      "Genomic arc-cosine" = "Genômico arc-cosine",
-      "Phenomic linear" = "Fenômico linear",
-      "Phenomic Gaussian" = "Fenômico Gaussiano",
-      "Phenomic arc-cosine" = "Fenômico arc-cosine",
-      "Combined linear" = "Combinado linear",
-      "Combined Gaussian" = "Combinado Gaussiano",
-      "Combined arc-cosine" = "Combinado arc-cosine"
+      "Genomic linear" = "Genomic linear",
+      "Genomic Gaussian" = "Genomic Gaussian",
+      "Genomic arc-cosine" = "Genomic arc-cosine",
+      "Phenomic linear" = "Phenomic linear",
+      "Phenomic Gaussian" = "Phenomic Gaussian",
+      "Phenomic arc-cosine" = "Phenomic arc-cosine",
+      "Combined linear" = "Combined linear",
+      "Combined Gaussian" = "Combined Gaussian",
+      "Combined arc-cosine" = "Combined arc-cosine"
     )
   )
 
@@ -802,16 +775,16 @@ cat("Número de arquivos CV1/CV2:", length(cv12_files), "
 cat("Número de arquivos CV0/CV00:", length(cvloo_files), "
 ")
 if (length(cv12_files) == 0 && length(cvloo_files) == 0) {
-  stop("Nenhum arquivo CSV de predição foi encontrado em output/results/.
+  stop("No prediction CSV file was found in output/results/.
 Execute analysis_prediction_run_outputs primeiro.")
 }
 ```
 
-## 6. Ler os arquivos CV1 e CV2 gerados pelo script final de predição
+## 6. Read CV1 and CV2 files generated by the final prediction script
 
-Os arquivos `CV1` e `CV2` contêm as saídas brutas necessárias para resumir o desempenho preditivo quando o desafio é definido no eixo dos genótipos. No fluxo atual, repetição e fold ficam codificados tanto na hierarquia de pastas quanto no nome do arquivo, então o script reconstrói esses metadados explicitamente antes de montar os resumos.
+The `CV1` and `CV2` files contain the raw outputs needed to summarize predictive performance when the challenge is defined along the genotype axis. In the current workflow, repetition and fold are encoded both in the folder hierarchy and in the file name, so the script reconstructs these metadata explicitly before building the summaries.
 
-Esse desenho é útil porque mantém o sistema de arquivos organizado para inspeção rápida e, ao mesmo tempo, permite que a etapa de visualização reconstrua tabelas unificadas ao longo de repetições e folds.
+This design is useful because it keeps the file system organized for quick inspection and, at the same time, allows the visualization step to rebuild unified tables across repetitions and folds.
 
 ```{r read-cv12, eval=FALSE}
 cv12_list <- vector("list", length(cv12_files))
@@ -851,7 +824,7 @@ for (i in seq_along(cv12_files)) {
   current_fold <- as.numeric(gsub("^fold", "", file_parts[5]))
 
   if (!identical(current_cv, file_parts[1]) || !identical(trait_from_path, current_trait) || !identical(rep_from_path, current_rep) || !identical(fold_from_path, current_fold)) {
-    stop("Inconsistência entre metadados do caminho e do nome do arquivo em: ", current_rel_path)
+    stop("Mismatch between path metadata and file name metadata in: ", current_rel_path)
   }
 
   current_data <- readr::read_csv(current_file, show_col_types = FALSE)
@@ -885,11 +858,11 @@ if (!("Runtime_sec" %in% names(cv12_raw))) cv12_raw$Runtime_sec <- NA_real_
 readr::write_csv(cv12_raw, file.path(tables_dir, "prediction_cv1_cv2_raw.csv"))
 ```
 
-## 7. Ler os arquivos CV0 e CV00 gerados pelo script final de predição
+## 7. Read CV0 and CV00 files generated by the final prediction script
 
-Os arquivos `CV0` e `CV00` representam os problemas de predição mais exigentes deste estudo porque envolvem um ambiente retirado do ajuste. No padrão atual do pipeline, o ambiente leave-one-environment-out é codificado tanto na hierarquia de pastas quanto no nome do arquivo, então o script reconstrói essa informação explicitamente antes de montar os resumos leave-one-environment-out.
+The `CV0` and `CV00` files represent the most demanding prediction problems in this study because they involve an environment left out from model fitting. In the current pipeline standard, the leave-one-environment-out label is encoded both in the folder hierarchy and in the file name, so the script reconstructs this information explicitly before building the leave-one-environment-out summaries.
 
-Esta seção lê esses arquivos, verifica a consistência dos caminhos estruturados e prepara os metadados necessários para manter `Env_leave` explícito ao longo dos resumos.
+This section reads these files, checks the consistency of the structured paths, and prepares the metadata needed to keep `Env_leave` explicit throughout the summaries.
 
 ```{r read-cvloo, eval=FALSE}
 cvloo_list <- vector("list", length(cvloo_files))
@@ -931,7 +904,7 @@ for (i in seq_along(cvloo_files)) {
   current_env_leave <- paste(file_parts[3:(length(file_parts) - 3)], collapse = "_")
 
   if (!identical(current_cv, file_parts[1]) || !identical(env_from_path, current_env_leave) || !identical(trait_from_path, current_trait) || !identical(rep_from_path, current_rep) || !identical(fold_from_path, current_fold)) {
-    stop("Inconsistência entre metadados do caminho e do nome do arquivo em: ", current_rel_path)
+    stop("Mismatch between path metadata and file name metadata in: ", current_rel_path)
   }
 
   current_data <- readr::read_csv(current_file, show_col_types = FALSE)
@@ -965,9 +938,9 @@ readr::write_csv(cvloo_raw, file.path(tables_dir, "prediction_cv0_cv00_raw.csv")
 readr::write_csv(model_catalog, file.path(tables_dir, "prediction_model_catalog.csv"))
 ```
 
-## 8. Resumir CV1 e CV2
+## 8. Summarize CV1 and CV2
 
-Esta etapa constrói os resumos para `CV1` e `CV2` de forma sequencial: primeiro por ambiente e fold, depois por ambiente dentro da repetição, depois por repetição e finalmente por médias e desvios-padrão em nível de modelo ao longo das repetições.
+This step builds the summaries for `CV1` and `CV2` sequentially: first by environment and fold, then by environment within repetition, then by repetition, and finally by model-level means and standard deviations across repetitions.
 
 ```{r summarize-cv12, eval=FALSE}
 cv12_env_fold <- cv12_raw %>%
@@ -1050,9 +1023,9 @@ readr::write_csv(cv12_rep_summary, file.path(tables_dir, "prediction_cv1_cv2_by_
 readr::write_csv(cv12_summary, file.path(tables_dir, "prediction_cv1_cv2_summary.csv"))
 ```
 
-## 9. Resumir CV0 e CV00
+## 9. Summarize CV0 and CV00
 
-Para cenários leave-one-environment-out, o script primeiro restringe os resumos às linhas em que `Env == Env_leave`. Isso mantém apenas o componente do ambiente deixado de fora que é conceitualmente relevante para `CV0` e `CV00`.
+For leave-one-environment-out scenarios, the script first restricts the summaries to rows in which `Env == Env_leave`. This keeps only the component of the left-out environment that is conceptually relevant for `CV0` and `CV00`.
 
 ```{r summarize-cvloo, eval=FALSE}
 cvloo_env_filtered <- cvloo_raw %>%
@@ -1123,9 +1096,9 @@ readr::write_csv(cvloo_rep_summary, file.path(tables_dir, "prediction_cv0_cv00_b
 readr::write_csv(cvloo_summary, file.path(tables_dir, "prediction_cv0_cv00_summary.csv"))
 ```
 
-## 10. Tabelas de comparação
+## 10. Comparison tables
 
-Esta seção deriva tabelas analíticas secundárias, especialmente o contraste entre modelos com e sem `W` e a comparação entre famílias de kernel dentro de cada via.
+This section derives secondary analytical tables, especially the contrast between models with and without `W` and the comparison among kernel families within each pathway.
 
 ```{r comparison-tables, eval=FALSE}
 cv12_w_effect <- comparison_pairs %>%
@@ -1168,9 +1141,9 @@ readr::write_csv(cvloo_kernel_family_compare,
   file.path(tables_dir, "prediction_cv0_cv00_kernel_family_compare.csv"))
 ```
 
-## 11. Tabelas compactas de display
+## 11. Compact display tables
 
-Esses objetos são versões simplificadas dos resumos completos. Eles são úteis para tabelas do manuscrito, material suplementar e inspeção rápida dos modelos com melhor desempenho.
+These objects are simplified versions of the full summaries. They are useful for manuscript tables, supplementary material, and quick inspection of the best-performing models.
 
 ```{r display-tables, eval=FALSE}
 cv12_table_display <- cv12_summary %>%
@@ -1222,20 +1195,20 @@ readr::write_csv(cv12_top3, file.path(tables_dir, "prediction_cv1_cv2_top3.csv")
 readr::write_csv(cvloo_top3, file.path(tables_dir, "prediction_cv0_cv00_top3.csv"))
 ```
 
-## 12. Tabelas Top-3
+## 12. Top-3 tables
 
-As duas tabelas seguintes exibem os três modelos com melhor desempenho em cada esquema de validação.
+The next two tables display the three best-performing models in each validation scheme.
 
 ```{r table-cv12-top3}
 if (!exists("cv12_top3")) {
-  stop("O objeto cv12_top3 não foi carregado antes do chunk table-cv12-top3.")
+  stop("The object cv12_top3 was not loaded before the table-cv12-top3 chunk.")
 }
 if (!all(c("Trait", "CV", "ShortDescription", "MeanCorrelation", "SDCorrelation") %in% names(cv12_top3))) {
-  stop("cv12_top3 não contém as colunas exigidas pelo chunk table-cv12-top3.")
+  stop("cv12_top3 does not contain the columns required by the table-cv12-top3 chunk.")
 }
 
 cv12_top3 %>%
-  knitr::kable( caption = "Top 3 modelos para cada traço e esquema de validação em CV1 e CV2.",
+  knitr::kable( caption = "Top 3 models for each trait and validation scheme in CV1 and CV2.",
     align = "llccc" ) %>%
   kableExtra::kable_styling( bootstrap_options = c("striped", "hover", "condensed", "responsive"),
    full_width = FALSE,
@@ -1244,37 +1217,37 @@ cv12_top3 %>%
 
 ```{r table-cvloo-top3}
 if (!exists("cvloo_top3")) {
-  stop("O objeto cvloo_top3 não foi carregado antes do chunk table-cvloo-top3.")
+  stop("The object cvloo_top3 was not loaded before the table-cvloo-top3 chunk.")
 }
 if (!all(c("Trait", "CV", "Env_leave", "ShortDescription", "MeanCorrelation", "SDCorrelation") %in% names(cvloo_top3))) {
-  stop("cvloo_top3 não contém as colunas exigidas pelo chunk table-cvloo-top3.")
+  stop("cvloo_top3 does not contain the columns required by the table-cvloo-top3 chunk.")
 }
 
 cvloo_top3 %>%
-  knitr::kable( caption = "Top 3 modelos para cada traço, esquema de validação e ambiente deixado de fora em CV0 e CV00.",
+  knitr::kable( caption = "Top 3 models for each trait, validation scheme, and left-out environment in CV0 and CV00.",
     align = "lllccc" ) %>%
   kableExtra::kable_styling( bootstrap_options = c("striped", "hover", "condensed", "responsive"),
    full_width = FALSE,
     position = "left" )
 ```
 
-## 13. Tabelas do efeito de W
+## 13. W-effect tables
 
-Essas tabelas apresentam as comparações pareadas entre modelos sem e com informação climática.
+These tables present the paired comparisons between models without and with climatic information.
 
 ```{r table-cv12-w-effect}
 if (!exists("cv12_w_effect")) {
-  stop("O objeto cv12_w_effect não foi carregado antes do chunk table-cv12-w-effect.")
+  stop("The object cv12_w_effect was not loaded before the table-cv12-w-effect chunk.")
 }
 if (!all(c("Comparison", "Trait", "CV", "MeanWithoutW", "MeanWithW", "DeltaWithW") %in% names(cv12_w_effect))) {
-  stop("cv12_w_effect não contém as colunas exigidas pelo chunk table-cv12-w-effect.")
+  stop("cv12_w_effect does not contain the columns required by the table-cv12-w-effect chunk.")
 }
 
 cv12_w_effect %>%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
    MeanWithW = round(MeanWithW, 3),
     DeltaWithW = round(DeltaWithW, 3) ) %>%
-  knitr::kable( caption = "Comparação pareada entre modelos sem e com o kernel climático (W) em CV1 e CV2.",
+  knitr::kable( caption = "Paired comparison between models without and with the climatic kernel (W) in CV1 and CV2.",
     align = "lllccccc" ) %>%
   kableExtra::kable_styling( bootstrap_options = c("striped", "hover", "condensed", "responsive"),
    full_width = FALSE,
@@ -1284,17 +1257,17 @@ cv12_w_effect %>%
 
 ```{r table-cvloo-w-effect}
 if (!exists("cvloo_w_effect")) {
-  stop("O objeto cvloo_w_effect não foi carregado antes do chunk table-cvloo-w-effect.")
+  stop("The object cvloo_w_effect was not loaded before the table-cvloo-w-effect chunk.")
 }
 if (!all(c("Comparison", "Trait", "CV", "Env_leave", "MeanWithoutW", "MeanWithW", "DeltaWithW") %in% names(cvloo_w_effect))) {
-  stop("cvloo_w_effect não contém as colunas exigidas pelo chunk table-cvloo-w-effect.")
+  stop("cvloo_w_effect does not contain the columns required by the table-cvloo-w-effect chunk.")
 }
 
 cvloo_w_effect %>%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
    MeanWithW = round(MeanWithW, 3),
     DeltaWithW = round(DeltaWithW, 3) ) %>%
-  knitr::kable( caption = "Comparação pareada entre modelos sem e com o kernel climático (W) em CV0 e CV00.",
+  knitr::kable( caption = "Paired comparison between models without and with the climatic kernel (W) in CV0 and CV00.",
     align = "llllccccc" ) %>%
   kableExtra::kable_styling( bootstrap_options = c("striped", "hover", "condensed", "responsive"),
    full_width = FALSE,
@@ -1302,16 +1275,16 @@ cvloo_w_effect %>%
   kableExtra::scroll_box(width = "100%", height = "320px")
 ```
 
-## 14. Tabelas de comparação entre famílias de kernel
+## 14. Kernel-family comparison tables
 
-Aqui o script contrasta os kernels linear, Gaussiano e arc-cosine dentro de cada via analítica.
+Here the script contrasts linear, Gaussian, and arc-cosine kernels within each analytical pathway.
 
 ```{r table-cv12-kernel-family}
 if (!exists("cv12_kernel_family_compare")) {
-  stop("O objeto cv12_kernel_family_compare não foi carregado antes do chunk table-cv12-kernel-family.")
+  stop("The object cv12_kernel_family_compare was not loaded before the table-cv12-kernel-family chunk.")
 }
 if (!all(c("Trait", "CV", "Pathway", "WeatherStatus", "Linear", "Gaussian", "Arc-cosine") %in% names(cv12_kernel_family_compare))) {
-  stop("cv12_kernel_family_compare não contém as colunas exigidas pelo chunk table-cv12-kernel-family.")
+  stop("cv12_kernel_family_compare does not contain the columns required by the table-cv12-kernel-family chunk.")
 }
 
 cv12_kernel_family_compare %>%
@@ -1321,7 +1294,7 @@ cv12_kernel_family_compare %>%
    Delta_Gaussian_vs_Linear = round(Delta_Gaussian_vs_Linear, 3),
    Delta_ArcCos_vs_Linear = round(Delta_ArcCos_vs_Linear, 3),
     Delta_ArcCos_vs_Gaussian = round(Delta_ArcCos_vs_Gaussian, 3) ) %>%
-  knitr::kable( caption = "Comparação entre famílias de kernel dentro de cada via analítica em CV1 e CV2.",
+  knitr::kable( caption = "Comparison among kernel families within each analytical pathway in CV1 and CV2.",
     align = "llllcccccc" ) %>%
   kableExtra::kable_styling( bootstrap_options = c("striped", "hover", "condensed", "responsive"),
    full_width = FALSE,
@@ -1331,10 +1304,10 @@ cv12_kernel_family_compare %>%
 
 ```{r table-cvloo-kernel-family}
 if (!exists("cvloo_kernel_family_compare")) {
-  stop("O objeto cvloo_kernel_family_compare não foi carregado antes do chunk table-cvloo-kernel-family.")
+  stop("The object cvloo_kernel_family_compare was not loaded before the table-cvloo-kernel-family chunk.")
 }
 if (!all(c("Trait", "CV", "Env_leave", "Pathway", "WeatherStatus", "Linear", "Gaussian", "Arc-cosine") %in% names(cvloo_kernel_family_compare))) {
-  stop("cvloo_kernel_family_compare não contém as colunas exigidas pelo chunk table-cvloo-kernel-family.")
+  stop("cvloo_kernel_family_compare does not contain the columns required by the table-cvloo-kernel-family chunk.")
 }
 
 cvloo_kernel_family_compare %>%
@@ -1344,7 +1317,7 @@ cvloo_kernel_family_compare %>%
    Delta_Gaussian_vs_Linear = round(Delta_Gaussian_vs_Linear, 3),
    Delta_ArcCos_vs_Linear = round(Delta_ArcCos_vs_Linear, 3),
     Delta_ArcCos_vs_Gaussian = round(Delta_ArcCos_vs_Gaussian, 3) ) %>%
-  knitr::kable( caption = "Comparação entre famílias de kernel dentro de cada via analítica em CV0 e CV00.",
+  knitr::kable( caption = "Comparison among kernel families within each analytical pathway in CV0 and CV00.",
     align = "lllllcccccc" ) %>%
   kableExtra::kable_styling( bootstrap_options = c("striped", "hover", "condensed", "responsive"),
    full_width = FALSE,
@@ -1352,16 +1325,16 @@ cvloo_kernel_family_compare %>%
   kableExtra::scroll_box(width = "100%", height = "320px")
 ```
 
-## 15. Figuras
+## 15. Figures
 
-As figuras finais resumem a capacidade preditiva para o catálogo completo de modelos em `CV1/CV2` e `CV0/CV00`.
+The final figures summarize predictive ability for the full model catalog in `CV1/CV2` and `CV0/CV00`.
 
 ```{r figure-cv12}
 if (!exists("cv12_summary")) {
-  stop("O objeto cv12_summary não foi carregado antes do chunk figure-cv12.")
+  stop("The object cv12_summary was not loaded before the figure-cv12 chunk.")
 }
 if (!all(c("Trait", "CV", "MeanCorrelation", "SDCorrelation", "FullEffects", "Group") %in% names(cv12_summary))) {
-  stop("cv12_summary não contém as colunas exigidas pelo chunk figure-cv12.")
+  stop("cv12_summary does not contain the columns required by the figure-cv12 chunk.")
 }
 
 cv12_plot_data <- cv12_summary %>%
@@ -1388,6 +1361,8 @@ for (current_trait in cv12_traits) {
 
     lower_limit_trait_cv <- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
     upper_limit_trait_cv <- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+    plot_lower_limit_trait_cv <- min(0, lower_limit_trait_cv - 0.03)
+    plot_upper_limit_trait_cv <- upper_limit_trait_cv + 0.03
 
     p_trait_cv12 <- ggplot(
       trait_cv_data,
@@ -1404,13 +1379,13 @@ for (current_trait in cv12_traits) {
         na.rm = TRUE
       ) +
       geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
-      scale_x_discrete(name = "Efeitos completos do modelo") +
+      scale_x_discrete(name = "Full model effects") +
       scale_y_continuous(
-        name = "Correlação preditiva",
-        limits = c(lower_limit_trait_cv - 0.03, upper_limit_trait_cv + 0.03),
+        name = "Predictive correlation",
         expand = expansion(mult = c(0, 0.02))
       ) +
-      ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
+      coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
+      ggthemes::scale_fill_gdocs(name = "Comparison group") +
       theme_bw() +
       theme(
         plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
@@ -1422,7 +1397,7 @@ for (current_trait in cv12_traits) {
         legend.text = element_text(size = 8)
       ) +
       labs(
-        title = paste("Habilidade preditiva em", current_cv, "para", current_trait)
+        title = paste("Predictive ability in", current_cv, "for", current_trait)
       )
 
     print(p_trait_cv12)
@@ -1441,10 +1416,10 @@ for (current_trait in cv12_traits) {
 
 ```{r figure-cvloo}
 if (!exists("cvloo_summary")) {
-  stop("O objeto cvloo_summary não foi carregado antes do chunk figure-cvloo.")
+  stop("The object cvloo_summary was not loaded before the figure-cvloo chunk.")
 }
 if (!all(c("Trait", "CV", "Env_leave", "MeanCorrelation", "SDCorrelation", "FullEffects", "Group") %in% names(cvloo_summary))) {
-  stop("cvloo_summary não contém as colunas exigidas pelo chunk figure-cvloo.")
+  stop("cvloo_summary does not contain the columns required by the figure-cvloo chunk.")
 }
 
 cvloo_plot_data <- cvloo_summary %>%
@@ -1479,6 +1454,8 @@ for (current_trait in cvloo_traits) {
 
     lower_limit_trait_cv <- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
     upper_limit_trait_cv <- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+    plot_lower_limit_trait_cv <- min(0, lower_limit_trait_cv - 0.03)
+    plot_upper_limit_trait_cv <- upper_limit_trait_cv + 0.03
 
     p_trait_cvloo <- ggplot(
       trait_cv_data,
@@ -1496,13 +1473,13 @@ for (current_trait in cvloo_traits) {
       ) +
       facet_wrap(~ Env_leave, ncol = 2) +
       geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
-      scale_x_discrete(name = "Efeitos completos do modelo") +
+      scale_x_discrete(name = "Full model effects") +
       scale_y_continuous(
-        name = "Correlação preditiva",
-        limits = c(lower_limit_trait_cv - 0.03, upper_limit_trait_cv + 0.03),
+        name = "Predictive correlation",
         expand = expansion(mult = c(0, 0.02))
       ) +
-      ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
+      coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
+      ggthemes::scale_fill_gdocs(name = "Comparison group") +
       theme_bw() +
       theme(
         plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
@@ -1515,7 +1492,7 @@ for (current_trait in cvloo_traits) {
         legend.text = element_text(size = 8)
       ) +
       labs(
-        title = paste("Habilidade preditiva em", current_cv, "para", current_trait)
+        title = paste("Predictive ability in", current_cv, "for", current_trait)
       )
 
     print(p_trait_cvloo)
@@ -1532,20 +1509,21 @@ for (current_trait in cvloo_traits) {
 }
 ```
 
-## 16. Nota final
+## 16. Final note
 
-Esta versão didática está alinhada ao fluxo atual de predição baseado em `analysis_prediction_run_outputs.Rmd`. Ela espera arquivos nos quais:
+This didactic version is aligned with the current prediction workflow based on `analysis_prediction_run_outputs.Rmd`. It expects files in which:
 
-- a repetição e o fold estão codificados tanto na hierarquia de pastas quanto no nome do arquivo;
-- `CV0` e `CV00` carregam o rótulo do ambiente deixado de fora tanto na hierarquia de pastas quanto no nome do arquivo;
-- os CSVs de predição são lidos recursivamente a partir de `output/results/`;
-- `CV0` e `CV00` ainda exigem o filtro `Env == Env_leave` para os resumos do ambiente deixado de fora.
+- repetition and fold are encoded both in the folder hierarchy and in the file name;
+- `CV0` and `CV00` carry the left-out environment label both in the folder hierarchy and in the file name;
+- prediction CSVs are read recursively from `output/results/`;
+- `CV0` and `CV00` still require the filter `Env == Env_leave` for the left-out-environment summaries.
 
-Depois de executar este arquivo, a próxima etapa no repositório é rodar o script orientado ao manuscrito que consome as tabelas-resumo gravadas em `output/tables/`.
+After running this file, the next step in the repository is to run the manuscript-oriented script that consumes the summary tables written to `output/tables/`.
 
-## Navegação entre etapas
+## Step navigation
 
-**Etapa anterior:** [Predição — Parte II](analysis_prediction_run_outputs_pt.html)  
-**Próxima referência no site:** [Home](index.html)
+**Previous step:** [Prediction — Part II](analysis_prediction_run_outputs.html)  
+**Next site reference:** [Home](index.html)
 
-Fora do menu do site, a próxima etapa analítica é gerar os resumos orientados ao manuscrito e as tabelas de revisão a partir das saídas criadas aqui.
+Outside the site menu, the next analytical step is to generate manuscript-oriented summaries and review tables from the outputs created here.
+

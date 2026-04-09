@@ -9,9 +9,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
+<meta name="author" content="Costa, W. G." />
 
+<meta name="date" content="2026-04-09" />
 
-<title>Resumos e figuras de predição - tutorial didático</title>
+<title>Resumos e figuras de predição</title>
 
 <script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -33,6 +35,8 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
@@ -75,6 +79,11 @@ if (window.hljs) {
 
 
 
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
 
 
 
@@ -235,6 +244,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -386,10 +398,19 @@ div.tocify {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
+</ul>
+</div>
 
 
-<h1 class="title toc-ignore">Resumos e figuras de predição - tutorial
-didático</h1>
+
+<h1 class="title toc-ignore">Resumos e figuras de predição</h1>
+<h4 class="author">Costa, W. G.<a href="#fn1" class="footnote-ref"
+id="fnref1"><sup>1</sup></a></h4>
+<h4 class="date">2026-04-09</h4>
 
 </div>
 
@@ -418,7 +439,7 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-04-08
+<strong>Last updated:</strong> 2026-04-09
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -553,15 +574,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33targetblank3ecd781a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltreeb01788b36d696af665e3d06f20f7bac2161c1d92targetblankb01788ba">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33" target="_blank">3ecd781</a>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/b01788b36d696af665e3d06f20f7bac2161c1d92" target="_blank">b01788b</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33targetblank3ecd781a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltreeb01788b36d696af665e3d06f20f7bac2161c1d92targetblankb01788ba"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -571,7 +592,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33" target="_blank">3ecd781</a>.
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/b01788b36d696af665e3d06f20f7bac2161c1d92" target="_blank">b01788b</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -3072,26 +3093,12 @@ Ignored files:
     Ignored:    output/variance_components/figures/
 
 Untracked files:
-    Untracked:  output/tables/pipeline_review.zip
+    Untracked:  analysis/visualization (1).Rmd
+    Untracked:  analysis/visualization_pt (1).Rmd
 
 Unstaged changes:
     Modified:   analysis/visualization.Rmd
     Modified:   analysis/visualization_pt.Rmd
-    Modified:   output/tables/prediction_cv0_cv00_by_rep_fold_env.csv
-    Modified:   output/tables/prediction_cv0_cv00_by_run.csv
-    Modified:   output/tables/prediction_cv0_cv00_display_table.csv
-    Modified:   output/tables/prediction_cv0_cv00_kernel_family_compare.csv
-    Modified:   output/tables/prediction_cv0_cv00_summary.csv
-    Modified:   output/tables/prediction_cv0_cv00_top3.csv
-    Modified:   output/tables/prediction_cv0_cv00_w_effect_pairs.csv
-    Modified:   output/tables/prediction_cv1_cv2_by_rep.csv
-    Modified:   output/tables/prediction_cv1_cv2_by_rep_env.csv
-    Modified:   output/tables/prediction_cv1_cv2_display_table.csv
-    Modified:   output/tables/prediction_cv1_cv2_kernel_family_compare.csv
-    Modified:   output/tables/prediction_cv1_cv2_summary.csv
-    Modified:   output/tables/prediction_cv1_cv2_top3.csv
-    Modified:   output/tables/prediction_cv1_cv2_w_effect_pairs.csv
-    Modified:   output/tables/prediction_model_catalog.csv
 
 </code></pre>
 <p>
@@ -3136,6 +3143,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/b01788b36d696af665e3d06f20f7bac2161c1d92/analysis/visualization_pt.Rmd" target="_blank">b01788b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-09
+</td>
+<td>
+update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/b01788b36d696af665e3d06f20f7bac2161c1d92/docs/visualization_pt.html" target="_blank">b01788b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-09
+</td>
+<td>
+update
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -3673,72 +3714,10 @@ update
 <p><strong>Language / Idioma:</strong> <a
 href="visualization.html">English</a> | <a
 href="visualization_pt.html">Português</a></p>
-<p>Este arquivo é a versão didática da etapa de visualização. Sua
-finalidade é tomar as saídas brutas de predição produzidas em
-<code>analysis_prediction_run_outputs.Rmd</code>, reorganizá-las em
-tabelas-resumo interpretáveis e depois traduzir esses resumos em
-comparações compactas e figuras finais.</p>
-<p>Neste ponto do pipeline, a principal pergunta analítica já não é mais
-como cada modelo é especificado, mas como os modelos ajustados se
-comportam sob diferentes problemas de predição. Por essa razão, a etapa
-de visualização desloca o foco da construção dos modelos para a
-interpretação dos modelos. Ela reúne resumos de desempenho para
-<code>CV1</code>, <code>CV2</code>, <code>CV0</code> e
-<code>CV00</code>, destaca contrastes entre modelos com e sem o kernel
-climático (<code>W</code>) e organiza os resultados em tabelas e figuras
-que são mais fáceis de inspecionar do que os próprios arquivos brutos de
-predição.</p>
-<p>O fluxo atual de predição grava saídas brutas em
-<code>output/results/</code> usando nomes de arquivo que codificam o
-cenário de validação, o traço, o modelo ajustado, a repetição e o fold.
-Para <code>CV0</code> e <code>CV00</code>, o rótulo do ambiente deixado
-de fora também é registrado no nome do arquivo e depois é associado a
-<code>Env</code> pelo filtro <code>Env == Env_leave</code>. Essa
-estrutura de nomes é essencial porque conecta a etapa de execução à
-etapa de interpretação.</p>
-<p>Ao longo deste tutorial, o <strong>kernel climático
-(<code>W</code>)</strong> deve ser interpretado como uma fonte de
-similaridade derivada do clima que complementa, mas não substitui, o
-efeito categórico de ambiente (<code>E</code>). O componente fenômico
-(<code>P</code>) também deve ser interpretado com cuidado, porque a
-similaridade baseada em NIRS pode refletir forte resposta ambiental além
-de sinal preditivo potencialmente útil.</p>
-<div id="o-que-este-script-faz" class="section level3">
-<h3>O que este script faz</h3>
-<p>O fluxo é organizado em quatro tarefas práticas:</p>
-<ol style="list-style-type: decimal">
-<li>localizar e ler os arquivos CSV de predição;</li>
-<li>interpretar os nomes dos arquivos e recuperar as informações de
-traço, modelo, repetição e leave-one-environment-out;</li>
-<li>resumir os resultados para <code>CV1</code>, <code>CV2</code>,
-<code>CV0</code> e <code>CV00</code>;</li>
-<li>exportar tabelas limpas e figuras para a próxima etapa orientada ao
-manuscrito.</li>
-</ol>
-<p>Para tornar a interpretação mais fácil, os modelos são ordenados para
-ajudar a responder três perguntas práticas:</p>
-<ol style="list-style-type: decimal">
-<li>passar de kernels lineares para kernels Gaussianos ou arc-cosine
-melhora a capacidade preditiva?</li>
-<li>adicionar o kernel climático (<code>W</code>) melhora a capacidade
-preditiva?</li>
-<li>combinar informação genômica e fenômica melhora a capacidade
-preditiva?</li>
-</ol>
-</div>
-<div id="entradas-saídas-e-próxima-etapa" class="section level2">
-<h2>Entradas, saídas e próxima etapa</h2>
-<p><strong>Entradas desta etapa</strong> - saídas brutas de predição
-gravadas por <code>analysis_prediction_run_outputs.Rmd</code> - tabelas
-leves de metadados da predição geradas na etapa anterior</p>
-<p><strong>Saídas desta etapa</strong> - tabelas-resumo finais -
-rankings de modelos - comparações do efeito de <code>W</code> -
-comparações entre famílias de kernel - figuras finais para interpretação
-posterior</p>
-<p><strong>Próxima etapa</strong> - as saídas geradas aqui alimentam os
-resumos orientados ao manuscrito e a interpretação final dos resultados
-do projeto.</p>
-</div>
+<p>A finalidade dessa etapa é tomar as saídas brutas de predição
+produzidas em <code>analysis_prediction_run_outputs.Rmd</code>,
+reorganizá-las em tabelas-resumo interpretáveis e depois traduzir esses
+resumos em comparações compactas e figuras finais.</p>
 <div id="configuração" class="section level2">
 <h2>1. Configuração</h2>
 <p>O documento começa definindo um estilo consistente de renderização
@@ -3821,18 +3800,85 @@ adiante no documento não são arbitrárias. Elas foram desenhadas para
 ajudar o leitor a entender de onde vêm os ganhos preditivos e se esses
 ganhos estão associados à informação climática, à escolha do kernel ou à
 integração entre fontes genômicas e fenômicas.</p>
-<pre class="r"><code>model_catalog &lt;- tibble( ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
- Model = paste0(&quot;Eta&quot;, c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
- Pathway = c( rep(&quot;Via genômica&quot;, 6), rep(&quot;Via fenômica&quot;, 6), rep(&quot;Via combinada G + P&quot;, 6) ),
- KernelFamily = c( &quot;Linear&quot;, &quot;Linear&quot;, &quot;Gaussiano&quot;, &quot;Gaussiano&quot;, &quot;Arc-cosine&quot;, &quot;Arc-cosine&quot;, &quot;Linear&quot;, &quot;Linear&quot;, &quot;Gaussiano&quot;, &quot;Gaussiano&quot;, &quot;Arc-cosine&quot;, &quot;Arc-cosine&quot;, &quot;Linear&quot;, &quot;Linear&quot;, &quot;Gaussiano&quot;, &quot;Gaussiano&quot;, &quot;Arc-cosine&quot;, &quot;Arc-cosine&quot; ),
- WeatherStatus = c( &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot;, &quot;Sem W&quot;, &quot;Com W&quot; ),
- Group = c( &quot;Base genômica&quot;, &quot;Clima fonte única&quot;, &quot;Base genômica&quot;, &quot;Clima fonte única&quot;, &quot;Base genômica&quot;, &quot;Clima fonte única&quot;, &quot;Base fenômica&quot;, &quot;Clima fonte única&quot;, &quot;Base fenômica&quot;, &quot;Clima fonte única&quot;, &quot;Base fenômica&quot;, &quot;Clima fonte única&quot;, &quot;Base combinada&quot;, &quot;Clima combinado&quot;, &quot;Base combinada&quot;, &quot;Clima combinado&quot;, &quot;Base combinada&quot;, &quot;Clima combinado&quot; ),
- Description = c( &quot;Genômico linear + E&quot;, &quot;Genômico linear + W&quot;, &quot;Genômico Gaussiano + E&quot;, &quot;Genômico Gaussiano + W&quot;, &quot;Genômico arc-cosine + E&quot;, &quot;Genômico arc-cosine + W&quot;, &quot;Fenômico linear + E&quot;, &quot;Fenômico linear + W&quot;, &quot;Fenômico Gaussiano + E&quot;, &quot;Fenômico Gaussiano + W&quot;, &quot;Fenômico arc-cosine + E&quot;, &quot;Fenômico arc-cosine + W&quot;, &quot;Combinado linear + E&quot;, &quot;Combinado linear + W&quot;, &quot;Combinado Gaussiano + E&quot;, &quot;Combinado Gaussiano + W&quot;, &quot;Combinado arc-cosine + E&quot;, &quot;Combinado arc-cosine + W&quot; ),
-  ShortDescription = c( &quot;G + E&quot;, &quot;G + W&quot;, &quot;GGK + E&quot;, &quot;GGK + W&quot;, &quot;GAK + E&quot;, &quot;GAK + W&quot;, &quot;P + E&quot;, &quot;P + W&quot;, &quot;PGK + E&quot;, &quot;PGK + W&quot;, &quot;PAK + E&quot;, &quot;PAK + W&quot;, &quot;G+P + E&quot;, &quot;G+P + W&quot;, &quot;GGK+PGK + E&quot;, &quot;GGK+PGK + W&quot;, &quot;GAK+PAK + E&quot;, &quot;GAK+PAK + W&quot; ) )
+<pre class="r"><code>model_catalog &lt;- tibble(
+  ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
+  Model = paste0(&quot;Eta&quot;, c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
+  Pathway = c(
+    rep(&quot;Genomic pathway&quot;, 6),
+    rep(&quot;Phenomic pathway&quot;, 6),
+    rep(&quot;Combined G + P pathway&quot;, 6)
+  ),
+  KernelFamily = c(
+    &quot;Linear&quot;, &quot;Linear&quot;, &quot;Gaussian&quot;, &quot;Gaussian&quot;, &quot;Arc-cosine&quot;, &quot;Arc-cosine&quot;,
+    &quot;Linear&quot;, &quot;Linear&quot;, &quot;Gaussian&quot;, &quot;Gaussian&quot;, &quot;Arc-cosine&quot;, &quot;Arc-cosine&quot;,
+    &quot;Linear&quot;, &quot;Linear&quot;, &quot;Gaussian&quot;, &quot;Gaussian&quot;, &quot;Arc-cosine&quot;, &quot;Arc-cosine&quot;
+  ),
+  WeatherStatus = c(
+    &quot;Without W&quot;, &quot;With W&quot;, &quot;Without W&quot;, &quot;With W&quot;, &quot;Without W&quot;, &quot;With W&quot;,
+    &quot;Without W&quot;, &quot;With W&quot;, &quot;Without W&quot;, &quot;With W&quot;, &quot;Without W&quot;, &quot;With W&quot;,
+    &quot;Without W&quot;, &quot;With W&quot;, &quot;Without W&quot;, &quot;With W&quot;, &quot;Without W&quot;, &quot;With W&quot;
+  ),
+  Group = c(
+    &quot;Genomic baseline&quot;, &quot;Weather single-source&quot;, &quot;Genomic baseline&quot;, &quot;Weather single-source&quot;, &quot;Genomic baseline&quot;, &quot;Weather single-source&quot;,
+    &quot;Phenomic baseline&quot;, &quot;Weather single-source&quot;, &quot;Phenomic baseline&quot;, &quot;Weather single-source&quot;, &quot;Phenomic baseline&quot;, &quot;Weather single-source&quot;,
+    &quot;Combined baseline&quot;, &quot;Weather combined&quot;, &quot;Combined baseline&quot;, &quot;Weather combined&quot;, &quot;Combined baseline&quot;, &quot;Weather combined&quot;
+  ),
+  Description = c(
+    &quot;Genomic linear + E&quot;, &quot;Genomic linear + W&quot;, &quot;Genomic Gaussian + E&quot;, &quot;Genomic Gaussian + W&quot;, &quot;Genomic arc-cosine + E&quot;, &quot;Genomic arc-cosine + W&quot;,
+    &quot;Phenomic linear + E&quot;, &quot;Phenomic linear + W&quot;, &quot;Phenomic Gaussian + E&quot;, &quot;Phenomic Gaussian + W&quot;, &quot;Phenomic arc-cosine + E&quot;, &quot;Phenomic arc-cosine + W&quot;,
+    &quot;Combined linear + E&quot;, &quot;Combined linear + W&quot;, &quot;Combined Gaussian + E&quot;, &quot;Combined Gaussian + W&quot;, &quot;Combined arc-cosine + E&quot;, &quot;Combined arc-cosine + W&quot;
+  ),
+  ShortDescription = c(
+    &quot;G + E&quot;, &quot;G + W&quot;, &quot;GGK + E&quot;, &quot;GGK + W&quot;, &quot;GAK + E&quot;, &quot;GAK + W&quot;,
+    &quot;P + E&quot;, &quot;P + W&quot;, &quot;PGK + E&quot;, &quot;PGK + W&quot;, &quot;PAK + E&quot;, &quot;PAK + W&quot;,
+    &quot;G+P + E&quot;, &quot;G+P + W&quot;, &quot;GGK+PGK + E&quot;, &quot;GGK+PGK + W&quot;, &quot;GAK+PAK + E&quot;, &quot;GAK+PAK + W&quot;
+  ),
+  FullEffects = c(
+    &quot;E + G + GE&quot;,
+    &quot;E + W + G + GE + GW&quot;,
+    &quot;E + GGK + GGKE&quot;,
+    &quot;E + W + GGK + GGKE + GGKW&quot;,
+    &quot;E + GAK + GAKE&quot;,
+    &quot;E + W + GAK + GAKE + GAKW&quot;,
+    &quot;E + P + PE&quot;,
+    &quot;E + W + P + PE + PW&quot;,
+    &quot;E + PGK + PGKE&quot;,
+    &quot;E + W + PGK + PGKE + PGKW&quot;,
+    &quot;E + PAK + PAKE&quot;,
+    &quot;E + W + PAK + PAKE + PAKW&quot;,
+    &quot;E + G + P + GE + PE&quot;,
+    &quot;E + W + G + P + GE + PE + GW + PW&quot;,
+    &quot;E + GGK + PGK + GGKE + PGKE&quot;,
+    &quot;E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW&quot;,
+    &quot;E + GAK + PAK + GAKE + PAKE&quot;,
+    &quot;E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW&quot;
+  ),
+  InterpretiveDescription = c(
+    &quot;Linear genomic model with environment and G×E interaction.&quot;,
+    &quot;Linear genomic-weather model with environment, weather, G×E, and G×W interaction.&quot;,
+    &quot;Gaussian genomic model with environment and genomic-by-environment interaction.&quot;,
+    &quot;Gaussian genomic-weather model with environment, weather, genomic-by-environment, and genomic-by-weather interaction.&quot;,
+    &quot;Arc-cosine genomic model with environment and genomic-by-environment interaction.&quot;,
+    &quot;Arc-cosine genomic-weather model with environment, weather, genomic-by-environment, and genomic-by-weather interaction.&quot;,
+    &quot;Linear phenomic model with environment and P×E interaction.&quot;,
+    &quot;Linear phenomic-weather model with environment, weather, P×E, and P×W interaction.&quot;,
+    &quot;Gaussian phenomic model with environment and phenomic-by-environment interaction.&quot;,
+    &quot;Gaussian phenomic-weather model with environment, weather, phenomic-by-environment, and phenomic-by-weather interaction.&quot;,
+    &quot;Arc-cosine phenomic model with environment and phenomic-by-environment interaction.&quot;,
+    &quot;Arc-cosine phenomic-weather model with environment, weather, phenomic-by-environment, and phenomic-by-weather interaction.&quot;,
+    &quot;Linear combined genomic-phenomic model with environment and both G×E and P×E interaction terms.&quot;,
+    &quot;Linear combined genomic-phenomic-weather model with environment, weather, G×E, P×E, G×W, and P×W interaction terms.&quot;,
+    &quot;Gaussian combined genomic-phenomic model with environment and both genomic and phenomic interaction terms.&quot;,
+    &quot;Gaussian combined genomic-phenomic-weather model with environment, weather, and the full set of genomic and phenomic interaction terms.&quot;,
+    &quot;Arc-cosine combined genomic-phenomic model with environment and both genomic and phenomic interaction terms.&quot;,
+    &quot;Arc-cosine combined genomic-phenomic-weather model with environment, weather, and the full set of genomic and phenomic interaction terms.&quot;
+  )
+)
+
 model_catalog</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["ModelNumber"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["Model"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Pathway"],"name":[3],"type":["chr"],"align":["left"]},{"label":["KernelFamily"],"name":[4],"type":["chr"],"align":["left"]},{"label":["WeatherStatus"],"name":[5],"type":["chr"],"align":["left"]},{"label":["Group"],"name":[6],"type":["chr"],"align":["left"]},{"label":["Description"],"name":[7],"type":["chr"],"align":["left"]},{"label":["ShortDescription"],"name":[8],"type":["chr"],"align":["left"]}],"data":[{"1":"1","2":"Eta1","3":"Via genômica","4":"Linear","5":"Sem W","6":"Base genômica","7":"Genômico linear + E","8":"G + E"},{"1":"10","2":"Eta10","3":"Via genômica","4":"Linear","5":"Com W","6":"Clima fonte única","7":"Genômico linear + W","8":"G + W"},{"1":"3","2":"Eta3","3":"Via genômica","4":"Gaussiano","5":"Sem W","6":"Base genômica","7":"Genômico Gaussiano + E","8":"GGK + E"},{"1":"13","2":"Eta13","3":"Via genômica","4":"Gaussiano","5":"Com W","6":"Clima fonte única","7":"Genômico Gaussiano + W","8":"GGK + W"},{"1":"5","2":"Eta5","3":"Via genômica","4":"Arc-cosine","5":"Sem W","6":"Base genômica","7":"Genômico arc-cosine + E","8":"GAK + E"},{"1":"16","2":"Eta16","3":"Via genômica","4":"Arc-cosine","5":"Com W","6":"Clima fonte única","7":"Genômico arc-cosine + W","8":"GAK + W"},{"1":"2","2":"Eta2","3":"Via fenômica","4":"Linear","5":"Sem W","6":"Base fenômica","7":"Fenômico linear + E","8":"P + E"},{"1":"11","2":"Eta11","3":"Via fenômica","4":"Linear","5":"Com W","6":"Clima fonte única","7":"Fenômico linear + W","8":"P + W"},{"1":"4","2":"Eta4","3":"Via fenômica","4":"Gaussiano","5":"Sem W","6":"Base fenômica","7":"Fenômico Gaussiano + E","8":"PGK + E"},{"1":"14","2":"Eta14","3":"Via fenômica","4":"Gaussiano","5":"Com W","6":"Clima fonte única","7":"Fenômico Gaussiano + W","8":"PGK + W"},{"1":"6","2":"Eta6","3":"Via fenômica","4":"Arc-cosine","5":"Sem W","6":"Base fenômica","7":"Fenômico arc-cosine + E","8":"PAK + E"},{"1":"17","2":"Eta17","3":"Via fenômica","4":"Arc-cosine","5":"Com W","6":"Clima fonte única","7":"Fenômico arc-cosine + W","8":"PAK + W"},{"1":"7","2":"Eta7","3":"Via combinada G + P","4":"Linear","5":"Sem W","6":"Base combinada","7":"Combinado linear + E","8":"G+P + E"},{"1":"12","2":"Eta12","3":"Via combinada G + P","4":"Linear","5":"Com W","6":"Clima combinado","7":"Combinado linear + W","8":"G+P + W"},{"1":"8","2":"Eta8","3":"Via combinada G + P","4":"Gaussiano","5":"Sem W","6":"Base combinada","7":"Combinado Gaussiano + E","8":"GGK+PGK + E"},{"1":"15","2":"Eta15","3":"Via combinada G + P","4":"Gaussiano","5":"Com W","6":"Clima combinado","7":"Combinado Gaussiano + W","8":"GGK+PGK + W"},{"1":"9","2":"Eta9","3":"Via combinada G + P","4":"Arc-cosine","5":"Sem W","6":"Base combinada","7":"Combinado arc-cosine + E","8":"GAK+PAK + E"},{"1":"18","2":"Eta18","3":"Via combinada G + P","4":"Arc-cosine","5":"Com W","6":"Clima combinado","7":"Combinado arc-cosine + W","8":"GAK+PAK + W"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["ModelNumber"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["Model"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Pathway"],"name":[3],"type":["chr"],"align":["left"]},{"label":["KernelFamily"],"name":[4],"type":["chr"],"align":["left"]},{"label":["WeatherStatus"],"name":[5],"type":["chr"],"align":["left"]},{"label":["Group"],"name":[6],"type":["chr"],"align":["left"]},{"label":["Description"],"name":[7],"type":["chr"],"align":["left"]},{"label":["ShortDescription"],"name":[8],"type":["chr"],"align":["left"]},{"label":["FullEffects"],"name":[9],"type":["chr"],"align":["left"]},{"label":["InterpretiveDescription"],"name":[10],"type":["chr"],"align":["left"]}],"data":[{"1":"1","2":"Eta1","3":"Genomic pathway","4":"Linear","5":"Without W","6":"Genomic baseline","7":"Genomic linear + E","8":"G + E","9":"E + G + GE","10":"Linear genomic model with environment and G×E interaction."},{"1":"10","2":"Eta10","3":"Genomic pathway","4":"Linear","5":"With W","6":"Weather single-source","7":"Genomic linear + W","8":"G + W","9":"E + W + G + GE + GW","10":"Linear genomic-weather model with environment, weather, G×E, and G×W interaction."},{"1":"3","2":"Eta3","3":"Genomic pathway","4":"Gaussian","5":"Without W","6":"Genomic baseline","7":"Genomic Gaussian + E","8":"GGK + E","9":"E + GGK + GGKE","10":"Gaussian genomic model with environment and genomic-by-environment interaction."},{"1":"13","2":"Eta13","3":"Genomic pathway","4":"Gaussian","5":"With W","6":"Weather single-source","7":"Genomic Gaussian + W","8":"GGK + W","9":"E + W + GGK + GGKE + GGKW","10":"Gaussian genomic-weather model with environment, weather, genomic-by-environment, and genomic-by-weather interaction."},{"1":"5","2":"Eta5","3":"Genomic pathway","4":"Arc-cosine","5":"Without W","6":"Genomic baseline","7":"Genomic arc-cosine + E","8":"GAK + E","9":"E + GAK + GAKE","10":"Arc-cosine genomic model with environment and genomic-by-environment interaction."},{"1":"16","2":"Eta16","3":"Genomic pathway","4":"Arc-cosine","5":"With W","6":"Weather single-source","7":"Genomic arc-cosine + W","8":"GAK + W","9":"E + W + GAK + GAKE + GAKW","10":"Arc-cosine genomic-weather model with environment, weather, genomic-by-environment, and genomic-by-weather interaction."},{"1":"2","2":"Eta2","3":"Phenomic pathway","4":"Linear","5":"Without W","6":"Phenomic baseline","7":"Phenomic linear + E","8":"P + E","9":"E + P + PE","10":"Linear phenomic model with environment and P×E interaction."},{"1":"11","2":"Eta11","3":"Phenomic pathway","4":"Linear","5":"With W","6":"Weather single-source","7":"Phenomic linear + W","8":"P + W","9":"E + W + P + PE + PW","10":"Linear phenomic-weather model with environment, weather, P×E, and P×W interaction."},{"1":"4","2":"Eta4","3":"Phenomic pathway","4":"Gaussian","5":"Without W","6":"Phenomic baseline","7":"Phenomic Gaussian + E","8":"PGK + E","9":"E + PGK + PGKE","10":"Gaussian phenomic model with environment and phenomic-by-environment interaction."},{"1":"14","2":"Eta14","3":"Phenomic pathway","4":"Gaussian","5":"With W","6":"Weather single-source","7":"Phenomic Gaussian + W","8":"PGK + W","9":"E + W + PGK + PGKE + PGKW","10":"Gaussian phenomic-weather model with environment, weather, phenomic-by-environment, and phenomic-by-weather interaction."},{"1":"6","2":"Eta6","3":"Phenomic pathway","4":"Arc-cosine","5":"Without W","6":"Phenomic baseline","7":"Phenomic arc-cosine + E","8":"PAK + E","9":"E + PAK + PAKE","10":"Arc-cosine phenomic model with environment and phenomic-by-environment interaction."},{"1":"17","2":"Eta17","3":"Phenomic pathway","4":"Arc-cosine","5":"With W","6":"Weather single-source","7":"Phenomic arc-cosine + W","8":"PAK + W","9":"E + W + PAK + PAKE + PAKW","10":"Arc-cosine phenomic-weather model with environment, weather, phenomic-by-environment, and phenomic-by-weather interaction."},{"1":"7","2":"Eta7","3":"Combined G + P pathway","4":"Linear","5":"Without W","6":"Combined baseline","7":"Combined linear + E","8":"G+P + E","9":"E + G + P + GE + PE","10":"Linear combined genomic-phenomic model with environment and both G×E and P×E interaction terms."},{"1":"12","2":"Eta12","3":"Combined G + P pathway","4":"Linear","5":"With W","6":"Weather combined","7":"Combined linear + W","8":"G+P + W","9":"E + W + G + P + GE + PE + GW + PW","10":"Linear combined genomic-phenomic-weather model with environment, weather, G×E, P×E, G×W, and P×W interaction terms."},{"1":"8","2":"Eta8","3":"Combined G + P pathway","4":"Gaussian","5":"Without W","6":"Combined baseline","7":"Combined Gaussian + E","8":"GGK+PGK + E","9":"E + GGK + PGK + GGKE + PGKE","10":"Gaussian combined genomic-phenomic model with environment and both genomic and phenomic interaction terms."},{"1":"15","2":"Eta15","3":"Combined G + P pathway","4":"Gaussian","5":"With W","6":"Weather combined","7":"Combined Gaussian + W","8":"GGK+PGK + W","9":"E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW","10":"Gaussian combined genomic-phenomic-weather model with environment, weather, and the full set of genomic and phenomic interaction terms."},{"1":"9","2":"Eta9","3":"Combined G + P pathway","4":"Arc-cosine","5":"Without W","6":"Combined baseline","7":"Combined arc-cosine + E","8":"GAK+PAK + E","9":"E + GAK + PAK + GAKE + PAKE","10":"Arc-cosine combined genomic-phenomic model with environment and both genomic and phenomic interaction terms."},{"1":"18","2":"Eta18","3":"Combined G + P pathway","4":"Arc-cosine","5":"With W","6":"Weather combined","7":"Combined arc-cosine + W","8":"GAK+PAK + W","9":"E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW","10":"Arc-cosine combined genomic-phenomic-weather model with environment, weather, and the full set of genomic and phenomic interaction terms."}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -3875,7 +3921,7 @@ com o novo contrato <code>Rep/Fold</code> e preserva a separação entre
 os problemas de validação baseados em genótipos e os problemas
 leave-one-environment-out.</p>
 <pre class="r"><code>all_result_rel_paths &lt;- list.files(results_dir, pattern = &quot;\\.csv$&quot;, full.names = FALSE, recursive = TRUE)
-all_result_rel_paths &lt;- gsub(&quot;\\&quot;, &quot;/&quot;, all_result_rel_paths)
+all_result_rel_paths &lt;- gsub(&quot;\\\\&quot;, &quot;/&quot;, all_result_rel_paths)
 structured_idx &lt;- grepl(&quot;^CV1/|^CV2/|^CV0/|^CV00/&quot;, all_result_rel_paths)
 all_result_rel_paths &lt;- all_result_rel_paths[structured_idx]
 all_result_files &lt;- file.path(results_dir, all_result_rel_paths)
@@ -3919,8 +3965,7 @@ for (i in seq_along(cv12_files)) {
     stop(
       &quot;Estrutura de diretórios inesperada para arquivo CV1/CV2: &quot;,
       current_rel_path,
-      &quot;.
-Padrão esperado: CV1/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.csv ou CV2/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.csv&quot;
+      &quot;.\nPadrão esperado: CV1/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.csv ou CV2/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.csv&quot;
     )
   }
 
@@ -3929,15 +3974,14 @@ Padrão esperado: CV1/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.csv ou CV2/&lt;tra
   rep_from_path &lt;- as.numeric(gsub(&quot;^rep&quot;, &quot;&quot;, path_parts[3]))
   fold_from_path &lt;- as.numeric(gsub(&quot;^fold&quot;, &quot;&quot;, path_parts[4]))
 
-  file_name &lt;- sub(&quot;\.csv$&quot;, &quot;&quot;, basename(current_file))
+  file_name &lt;- sub(&quot;\\.csv$&quot;, &quot;&quot;, basename(current_file))
   file_parts &lt;- strsplit(file_name, &quot;_&quot;)[[1]]
 
   if (length(file_parts) != 5) {
     stop(
       &quot;Nome de arquivo inesperado para CV1/CV2: &quot;,
       file_name,
-      &quot;.
-Padrão esperado: CV1_&lt;trait&gt;_Eta&lt;model&gt;_repXX_foldXX.csv ou CV2_&lt;trait&gt;_Eta&lt;model&gt;_repXX_foldXX.csv&quot;
+      &quot;.\nPadrão esperado: CV1_&lt;trait&gt;_Eta&lt;model&gt;_repXX_foldXX.csv ou CV2_&lt;trait&gt;_Eta&lt;model&gt;_repXX_foldXX.csv&quot;
     )
   }
 
@@ -3957,8 +4001,7 @@ Padrão esperado: CV1_&lt;trait&gt;_Eta&lt;model&gt;_repXX_foldXX.csv ou CV2_&lt
     stop(
       &quot;Estrutura de colunas inesperada no arquivo: &quot;,
       file_name,
-      &quot;.
-O script final de predição deve exportar colunas incluindo Env e cor.&quot;
+      &quot;.\nO script final de predição deve exportar colunas incluindo Env e cor.&quot;
     )
   }
 
@@ -4006,8 +4049,7 @@ for (i in seq_along(cvloo_files)) {
     stop(
       &quot;Estrutura de diretórios inesperada para arquivo CV0/CV00: &quot;,
       current_rel_path,
-      &quot;.
-Padrão esperado: CV0/&lt;Env_leave&gt;/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.csv ou CV00/&lt;Env_leave&gt;/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.csv&quot;
+      &quot;.\nPadrão esperado: CV0/&lt;Env_leave&gt;/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.csv ou CV00/&lt;Env_leave&gt;/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.csv&quot;
     )
   }
 
@@ -4017,15 +4059,14 @@ Padrão esperado: CV0/&lt;Env_leave&gt;/&lt;trait&gt;/repXX/foldXX/&lt;file&gt;.
   rep_from_path &lt;- as.numeric(gsub(&quot;^rep&quot;, &quot;&quot;, path_parts[4]))
   fold_from_path &lt;- as.numeric(gsub(&quot;^fold&quot;, &quot;&quot;, path_parts[5]))
 
-  file_name &lt;- sub(&quot;\.csv$&quot;, &quot;&quot;, basename(current_file))
+  file_name &lt;- sub(&quot;\\.csv$&quot;, &quot;&quot;, basename(current_file))
   file_parts &lt;- strsplit(file_name, &quot;_&quot;)[[1]]
 
   if (length(file_parts) &lt; 6) {
     stop(
       &quot;Nome de arquivo inesperado para CV0/CV00: &quot;,
       file_name,
-      &quot;.
-Padrão esperado: CV0_&lt;trait&gt;_&lt;Env_leave&gt;_Eta&lt;model&gt;_repXX_foldXX.csv ou CV00_&lt;trait&gt;_&lt;Env_leave&gt;_Eta&lt;model&gt;_repXX_foldXX.csv&quot;
+      &quot;.\nPadrão esperado: CV0_&lt;trait&gt;_&lt;Env_leave&gt;_Eta&lt;model&gt;_repXX_foldXX.csv ou CV00_&lt;trait&gt;_&lt;Env_leave&gt;_Eta&lt;model&gt;_repXX_foldXX.csv&quot;
     )
   }
 
@@ -4046,8 +4087,7 @@ Padrão esperado: CV0_&lt;trait&gt;_&lt;Env_leave&gt;_Eta&lt;model&gt;_repXX_fol
     stop(
       &quot;Estrutura de colunas inesperada no arquivo: &quot;,
       file_name,
-      &quot;.
-O script final de predição deve exportar colunas incluindo Env e cor.&quot;
+      &quot;.\nO script final de predição deve exportar colunas incluindo Env e cor.&quot;
     )
   }
 
@@ -4147,7 +4187,11 @@ cv12_summary &lt;- cv12_rep_summary %&gt;%
    NumberOfRepetitions = n(),
    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
     .groups = &quot;drop&quot; ) %&gt;%
-  mutate( SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation) )
+  mutate( SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation) ) %&gt;%
+  left_join(
+    model_catalog %&gt;% select(ModelNumber, Model, FullEffects, InterpretiveDescription),
+    by = c(&quot;ModelNumber&quot;, &quot;Model&quot;)
+  )
 readr::write_csv(cv12_env_fold, file.path(tables_dir, &quot;prediction_cv1_cv2_by_rep_fold_env.csv&quot;))
 readr::write_csv(cv12_env_rep, file.path(tables_dir, &quot;prediction_cv1_cv2_by_rep_env.csv&quot;))
 readr::write_csv(cv12_rep_summary, file.path(tables_dir, &quot;prediction_cv1_cv2_by_rep.csv&quot;))
@@ -4217,7 +4261,11 @@ cvloo_summary &lt;- cvloo_rep_summary %&gt;%
    NumberOfRuns = n(),
    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
     .groups = &quot;drop&quot; ) %&gt;%
-  mutate( SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation) )
+  mutate( SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation) ) %&gt;%
+  left_join(
+    model_catalog %&gt;% select(ModelNumber, Model, FullEffects, InterpretiveDescription),
+    by = c(&quot;ModelNumber&quot;, &quot;Model&quot;)
+  )
 readr::write_csv(cvloo_env_fold, file.path(tables_dir, &quot;prediction_cv0_cv00_by_rep_fold_env.csv&quot;))
 readr::write_csv(cvloo_rep_summary, file.path(tables_dir, &quot;prediction_cv0_cv00_by_run.csv&quot;))
 readr::write_csv(cvloo_summary, file.path(tables_dir, &quot;prediction_cv0_cv00_summary.csv&quot;))</code></pre>
@@ -4323,7 +4371,14 @@ readr::write_csv(cvloo_top3, file.path(tables_dir, &quot;prediction_cv0_cv00_top
 <h2>12. Tabelas Top-3</h2>
 <p>As duas tabelas seguintes exibem os três modelos com melhor
 desempenho em cada esquema de validação.</p>
-<pre class="r"><code>cv12_top3 %&gt;%
+<pre class="r"><code>if (!exists(&quot;cv12_top3&quot;)) {
+  stop(&quot;O objeto cv12_top3 não foi carregado antes do chunk table-cv12-top3.&quot;)
+}
+if (!all(c(&quot;Trait&quot;, &quot;CV&quot;, &quot;ShortDescription&quot;, &quot;MeanCorrelation&quot;, &quot;SDCorrelation&quot;) %in% names(cv12_top3))) {
+  stop(&quot;cv12_top3 não contém as colunas exigidas pelo chunk table-cv12-top3.&quot;)
+}
+
+cv12_top3 %&gt;%
   knitr::kable( caption = &quot;Top 3 modelos para cada traço e esquema de validação em CV1 e CV2.&quot;,
     align = &quot;llccc&quot; ) %&gt;%
   kableExtra::kable_styling( bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;),
@@ -4367,7 +4422,7 @@ GGK + W
 0.727
 </td>
 <td style="text-align:center;">
-NA
+0.012
 </td>
 </tr>
 <tr>
@@ -4384,7 +4439,7 @@ G + W
 0.725
 </td>
 <td style="text-align:center;">
-NA
+0.011
 </td>
 </tr>
 <tr>
@@ -4401,7 +4456,7 @@ GGK+PGK + W
 0.723
 </td>
 <td style="text-align:center;">
-NA
+0.011
 </td>
 </tr>
 <tr>
@@ -4418,7 +4473,7 @@ GGK+PGK + W
 0.991
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -4435,7 +4490,7 @@ GGK+PGK + E
 0.989
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -4452,7 +4507,7 @@ G + W
 0.984
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -4469,7 +4524,7 @@ P + E
 0.762
 </td>
 <td style="text-align:center;">
-NA
+0.010
 </td>
 </tr>
 <tr>
@@ -4486,7 +4541,7 @@ P + W
 0.761
 </td>
 <td style="text-align:center;">
-NA
+0.005
 </td>
 </tr>
 <tr>
@@ -4503,7 +4558,7 @@ G+P + E
 0.728
 </td>
 <td style="text-align:center;">
-NA
+0.015
 </td>
 </tr>
 <tr>
@@ -4520,7 +4575,7 @@ G+P + W
 0.994
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -4537,7 +4592,7 @@ GGK+PGK + W
 0.994
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -4554,12 +4609,19 @@ G+P + E
 0.994
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>cvloo_top3 %&gt;%
+<pre class="r"><code>if (!exists(&quot;cvloo_top3&quot;)) {
+  stop(&quot;O objeto cvloo_top3 não foi carregado antes do chunk table-cvloo-top3.&quot;)
+}
+if (!all(c(&quot;Trait&quot;, &quot;CV&quot;, &quot;Env_leave&quot;, &quot;ShortDescription&quot;, &quot;MeanCorrelation&quot;, &quot;SDCorrelation&quot;) %in% names(cvloo_top3))) {
+  stop(&quot;cvloo_top3 não contém as colunas exigidas pelo chunk table-cvloo-top3.&quot;)
+}
+
+cvloo_top3 %&gt;%
   knitr::kable( caption = &quot;Top 3 modelos para cada traço, esquema de validação e ambiente deixado de fora em CV0 e CV00.&quot;,
     align = &quot;lllccc&quot; ) %&gt;%
   kableExtra::kable_styling( bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;),
@@ -4610,7 +4672,7 @@ GAK + E
 0.926
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -4630,7 +4692,7 @@ GAK + W
 0.924
 </td>
 <td style="text-align:center;">
-NA
+0.003
 </td>
 </tr>
 <tr>
@@ -4650,7 +4712,7 @@ GGK + E
 0.923
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -4670,7 +4732,7 @@ GGK + W
 0.896
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -4690,7 +4752,7 @@ G + W
 0.896
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -4710,7 +4772,7 @@ GGK + E
 0.894
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -4730,7 +4792,7 @@ GGK + E
 0.896
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -4750,7 +4812,7 @@ G + E
 0.894
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -4770,7 +4832,7 @@ GGK + W
 0.893
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -4790,7 +4852,7 @@ G + W
 0.909
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -4810,7 +4872,7 @@ GGK + W
 0.907
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -4830,7 +4892,7 @@ G + E
 0.904
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -4850,7 +4912,7 @@ GAK + W
 0.735
 </td>
 <td style="text-align:center;">
-NA
+0.014
 </td>
 </tr>
 <tr>
@@ -4870,7 +4932,7 @@ GAK + E
 0.732
 </td>
 <td style="text-align:center;">
-NA
+0.013
 </td>
 </tr>
 <tr>
@@ -4890,7 +4952,7 @@ G + W
 0.720
 </td>
 <td style="text-align:center;">
-NA
+0.016
 </td>
 </tr>
 <tr>
@@ -4910,7 +4972,7 @@ G + E
 0.741
 </td>
 <td style="text-align:center;">
-NA
+0.010
 </td>
 </tr>
 <tr>
@@ -4930,7 +4992,7 @@ GGK + W
 0.740
 </td>
 <td style="text-align:center;">
-NA
+0.013
 </td>
 </tr>
 <tr>
@@ -4950,7 +5012,7 @@ G + W
 0.738
 </td>
 <td style="text-align:center;">
-NA
+0.012
 </td>
 </tr>
 <tr>
@@ -4970,7 +5032,7 @@ GGK + W
 0.734
 </td>
 <td style="text-align:center;">
-NA
+0.007
 </td>
 </tr>
 <tr>
@@ -4990,7 +5052,7 @@ G + W
 0.733
 </td>
 <td style="text-align:center;">
-NA
+0.007
 </td>
 </tr>
 <tr>
@@ -5010,7 +5072,7 @@ GGK + E
 0.730
 </td>
 <td style="text-align:center;">
-NA
+0.011
 </td>
 </tr>
 <tr>
@@ -5030,7 +5092,7 @@ GGK+PGK + W
 0.714
 </td>
 <td style="text-align:center;">
-NA
+0.013
 </td>
 </tr>
 <tr>
@@ -5050,7 +5112,7 @@ GGK + W
 0.713
 </td>
 <td style="text-align:center;">
-NA
+0.009
 </td>
 </tr>
 <tr>
@@ -5070,7 +5132,7 @@ G + W
 0.710
 </td>
 <td style="text-align:center;">
-NA
+0.008
 </td>
 </tr>
 <tr>
@@ -5090,7 +5152,7 @@ GAK + E
 0.961
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -5110,7 +5172,7 @@ GGK + E
 0.960
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -5130,7 +5192,7 @@ G + E
 0.960
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -5150,7 +5212,7 @@ G + W
 0.889
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -5170,7 +5232,7 @@ GGK+PGK + W
 0.888
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -5190,7 +5252,7 @@ GGK + W
 0.887
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -5210,7 +5272,7 @@ GGK + W
 0.899
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -5230,7 +5292,7 @@ GGK + E
 0.898
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -5250,7 +5312,7 @@ G + W
 0.897
 </td>
 <td style="text-align:center;">
-NA
+0.001
 </td>
 </tr>
 <tr>
@@ -5270,7 +5332,7 @@ GGK + W
 0.949
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -5290,7 +5352,7 @@ GGK+PGK + W
 0.948
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -5310,7 +5372,7 @@ G + W
 0.948
 </td>
 <td style="text-align:center;">
-NA
+0.000
 </td>
 </tr>
 <tr>
@@ -5330,7 +5392,7 @@ P + E
 0.662
 </td>
 <td style="text-align:center;">
-NA
+0.074
 </td>
 </tr>
 <tr>
@@ -5350,7 +5412,7 @@ G+P + E
 0.654
 </td>
 <td style="text-align:center;">
-NA
+0.036
 </td>
 </tr>
 <tr>
@@ -5370,7 +5432,7 @@ P + W
 0.624
 </td>
 <td style="text-align:center;">
-NA
+0.068
 </td>
 </tr>
 <tr>
@@ -5390,7 +5452,7 @@ P + E
 0.656
 </td>
 <td style="text-align:center;">
-NA
+0.054
 </td>
 </tr>
 <tr>
@@ -5410,7 +5472,7 @@ GGK + W
 0.567
 </td>
 <td style="text-align:center;">
-NA
+0.023
 </td>
 </tr>
 <tr>
@@ -5430,7 +5492,7 @@ GGK+PGK + E
 0.566
 </td>
 <td style="text-align:center;">
-NA
+0.021
 </td>
 </tr>
 <tr>
@@ -5450,7 +5512,7 @@ GGK+PGK + E
 0.619
 </td>
 <td style="text-align:center;">
-NA
+0.013
 </td>
 </tr>
 <tr>
@@ -5470,7 +5532,7 @@ GGK + E
 0.616
 </td>
 <td style="text-align:center;">
-NA
+0.017
 </td>
 </tr>
 <tr>
@@ -5490,7 +5552,7 @@ G + W
 0.613
 </td>
 <td style="text-align:center;">
-NA
+0.009
 </td>
 </tr>
 <tr>
@@ -5510,7 +5572,7 @@ P + E
 0.640
 </td>
 <td style="text-align:center;">
-NA
+0.061
 </td>
 </tr>
 <tr>
@@ -5530,7 +5592,7 @@ G+P + E
 0.636
 </td>
 <td style="text-align:center;">
-NA
+0.041
 </td>
 </tr>
 <tr>
@@ -5550,7 +5612,7 @@ GGK+PGK + E
 0.617
 </td>
 <td style="text-align:center;">
-NA
+0.010
 </td>
 </tr>
 </tbody>
@@ -5560,7 +5622,14 @@ NA
 <h2>13. Tabelas do efeito de W</h2>
 <p>Essas tabelas apresentam as comparações pareadas entre modelos sem e
 com informação climática.</p>
-<pre class="r"><code>cv12_w_effect %&gt;%
+<pre class="r"><code>if (!exists(&quot;cv12_w_effect&quot;)) {
+  stop(&quot;O objeto cv12_w_effect não foi carregado antes do chunk table-cv12-w-effect.&quot;)
+}
+if (!all(c(&quot;Comparison&quot;, &quot;Trait&quot;, &quot;CV&quot;, &quot;MeanWithoutW&quot;, &quot;MeanWithW&quot;, &quot;DeltaWithW&quot;) %in% names(cv12_w_effect))) {
+  stop(&quot;cv12_w_effect não contém as colunas exigidas pelo chunk table-cv12-w-effect.&quot;)
+}
+
+cv12_w_effect %&gt;%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
    MeanWithW = round(MeanWithW, 3),
     DeltaWithW = round(DeltaWithW, 3) ) %&gt;%
@@ -5632,13 +5701,13 @@ CV1
 0.717
 </td>
 <td style="text-align:center;">
-NA
+0.0117158
 </td>
 <td style="text-align:center;">
 0.723
 </td>
 <td style="text-align:left;">
-NA
+0.0112130
 </td>
 <td style="text-align:left;">
 0.006
@@ -5664,13 +5733,13 @@ CV1
 0.703
 </td>
 <td style="text-align:center;">
-NA
+0.0100091
 </td>
 <td style="text-align:center;">
 0.706
 </td>
 <td style="text-align:left;">
-NA
+0.0087728
 </td>
 <td style="text-align:left;">
 0.003
@@ -5696,13 +5765,13 @@ CV1
 0.713
 </td>
 <td style="text-align:center;">
-NA
+0.0134212
 </td>
 <td style="text-align:center;">
 0.719
 </td>
 <td style="text-align:left;">
-NA
+0.0124435
 </td>
 <td style="text-align:left;">
 0.006
@@ -5728,13 +5797,13 @@ CV1
 0.719
 </td>
 <td style="text-align:center;">
-NA
+0.0106337
 </td>
 <td style="text-align:center;">
 0.727
 </td>
 <td style="text-align:left;">
-NA
+0.0120687
 </td>
 <td style="text-align:left;">
 0.008
@@ -5760,13 +5829,13 @@ CV1
 0.711
 </td>
 <td style="text-align:center;">
-NA
+0.0065960
 </td>
 <td style="text-align:center;">
 0.714
 </td>
 <td style="text-align:left;">
-NA
+0.0083470
 </td>
 <td style="text-align:left;">
 0.002
@@ -5792,13 +5861,13 @@ CV1
 0.719
 </td>
 <td style="text-align:center;">
-NA
+0.0128201
 </td>
 <td style="text-align:center;">
 0.725
 </td>
 <td style="text-align:left;">
-NA
+0.0109925
 </td>
 <td style="text-align:left;">
 0.005
@@ -5824,13 +5893,13 @@ CV1
 0.134
 </td>
 <td style="text-align:center;">
-NA
+0.0274657
 </td>
 <td style="text-align:center;">
 0.147
 </td>
 <td style="text-align:left;">
-NA
+0.0191283
 </td>
 <td style="text-align:left;">
 0.013
@@ -5856,13 +5925,13 @@ CV1
 0.178
 </td>
 <td style="text-align:center;">
-NA
+0.0296188
 </td>
 <td style="text-align:center;">
 0.177
 </td>
 <td style="text-align:left;">
-NA
+0.0380569
 </td>
 <td style="text-align:left;">
 -0.001
@@ -5888,13 +5957,13 @@ CV1
 0.645
 </td>
 <td style="text-align:center;">
-NA
+0.0121966
 </td>
 <td style="text-align:center;">
 0.637
 </td>
 <td style="text-align:left;">
-NA
+0.0196734
 </td>
 <td style="text-align:left;">
 -0.008
@@ -5920,13 +5989,13 @@ CV2
 0.989
 </td>
 <td style="text-align:center;">
-NA
+0.0001216
 </td>
 <td style="text-align:center;">
 0.991
 </td>
 <td style="text-align:left;">
-NA
+0.0000983
 </td>
 <td style="text-align:left;">
 0.002
@@ -5952,13 +6021,13 @@ CV2
 0.966
 </td>
 <td style="text-align:center;">
-NA
+0.0004052
 </td>
 <td style="text-align:center;">
 0.970
 </td>
 <td style="text-align:left;">
-NA
+0.0005673
 </td>
 <td style="text-align:left;">
 0.004
@@ -5984,13 +6053,13 @@ CV2
 0.980
 </td>
 <td style="text-align:center;">
-NA
+0.0002151
 </td>
 <td style="text-align:center;">
 0.982
 </td>
 <td style="text-align:left;">
-NA
+0.0001190
 </td>
 <td style="text-align:left;">
 0.002
@@ -6016,13 +6085,13 @@ CV2
 0.973
 </td>
 <td style="text-align:center;">
-NA
+0.0001704
 </td>
 <td style="text-align:center;">
 0.974
 </td>
 <td style="text-align:left;">
-NA
+0.0001302
 </td>
 <td style="text-align:left;">
 0.001
@@ -6048,13 +6117,13 @@ CV2
 0.964
 </td>
 <td style="text-align:center;">
-NA
+0.0005435
 </td>
 <td style="text-align:center;">
 0.968
 </td>
 <td style="text-align:left;">
-NA
+0.0003975
 </td>
 <td style="text-align:left;">
 0.004
@@ -6080,13 +6149,13 @@ CV2
 0.982
 </td>
 <td style="text-align:center;">
-NA
+0.0001184
 </td>
 <td style="text-align:center;">
 0.984
 </td>
 <td style="text-align:left;">
-NA
+0.0001054
 </td>
 <td style="text-align:left;">
 0.002
@@ -6112,13 +6181,13 @@ CV2
 0.945
 </td>
 <td style="text-align:center;">
-NA
+0.0015159
 </td>
 <td style="text-align:center;">
 0.949
 </td>
 <td style="text-align:left;">
-NA
+0.0012284
 </td>
 <td style="text-align:left;">
 0.004
@@ -6144,13 +6213,13 @@ CV2
 0.695
 </td>
 <td style="text-align:center;">
-NA
+0.0090873
 </td>
 <td style="text-align:center;">
 0.692
 </td>
 <td style="text-align:left;">
-NA
+0.0137389
 </td>
 <td style="text-align:left;">
 -0.003
@@ -6176,13 +6245,13 @@ CV2
 0.967
 </td>
 <td style="text-align:center;">
-NA
+0.0067725
 </td>
 <td style="text-align:center;">
 0.933
 </td>
 <td style="text-align:left;">
-NA
+0.0773312
 </td>
 <td style="text-align:left;">
 -0.034
@@ -6208,13 +6277,13 @@ CV1
 0.603
 </td>
 <td style="text-align:center;">
-NA
+0.0099057
 </td>
 <td style="text-align:center;">
 0.595
 </td>
 <td style="text-align:left;">
-NA
+0.0156243
 </td>
 <td style="text-align:left;">
 -0.008
@@ -6240,13 +6309,13 @@ CV1
 0.555
 </td>
 <td style="text-align:center;">
-NA
+0.0239686
 </td>
 <td style="text-align:center;">
 0.548
 </td>
 <td style="text-align:left;">
-NA
+0.0173955
 </td>
 <td style="text-align:left;">
 -0.007
@@ -6272,13 +6341,13 @@ CV1
 0.728
 </td>
 <td style="text-align:center;">
-NA
+0.0145741
 </td>
 <td style="text-align:center;">
 0.708
 </td>
 <td style="text-align:left;">
-NA
+0.0150303
 </td>
 <td style="text-align:left;">
 -0.019
@@ -6304,13 +6373,13 @@ CV1
 0.602
 </td>
 <td style="text-align:center;">
-NA
+0.0147757
 </td>
 <td style="text-align:center;">
 0.595
 </td>
 <td style="text-align:left;">
-NA
+0.0149952
 </td>
 <td style="text-align:left;">
 -0.006
@@ -6336,13 +6405,13 @@ CV1
 0.555
 </td>
 <td style="text-align:center;">
-NA
+0.0199137
 </td>
 <td style="text-align:center;">
 0.555
 </td>
 <td style="text-align:left;">
-NA
+0.0168190
 </td>
 <td style="text-align:left;">
 0.000
@@ -6368,13 +6437,13 @@ CV1
 0.585
 </td>
 <td style="text-align:center;">
-NA
+0.0151765
 </td>
 <td style="text-align:center;">
 0.594
 </td>
 <td style="text-align:left;">
-NA
+0.0179071
 </td>
 <td style="text-align:left;">
 0.009
@@ -6400,13 +6469,13 @@ CV1
 0.218
 </td>
 <td style="text-align:center;">
-NA
+0.0160546
 </td>
 <td style="text-align:center;">
 0.203
 </td>
 <td style="text-align:left;">
-NA
+0.0203866
 </td>
 <td style="text-align:left;">
 -0.015
@@ -6432,13 +6501,13 @@ CV1
 0.271
 </td>
 <td style="text-align:center;">
-NA
+0.0271355
 </td>
 <td style="text-align:center;">
 0.243
 </td>
 <td style="text-align:left;">
-NA
+0.0285264
 </td>
 <td style="text-align:left;">
 -0.028
@@ -6464,13 +6533,13 @@ CV1
 0.762
 </td>
 <td style="text-align:center;">
-NA
+0.0099625
 </td>
 <td style="text-align:center;">
 0.761
 </td>
 <td style="text-align:left;">
-NA
+0.0053242
 </td>
 <td style="text-align:left;">
 0.000
@@ -6496,13 +6565,13 @@ CV2
 0.993
 </td>
 <td style="text-align:center;">
-NA
+0.0000316
 </td>
 <td style="text-align:center;">
 0.994
 </td>
 <td style="text-align:left;">
-NA
+0.0000388
 </td>
 <td style="text-align:left;">
 0.001
@@ -6528,13 +6597,13 @@ CV2
 0.977
 </td>
 <td style="text-align:center;">
-NA
+0.0002182
 </td>
 <td style="text-align:center;">
 0.978
 </td>
 <td style="text-align:left;">
-NA
+0.0008926
 </td>
 <td style="text-align:left;">
 0.001
@@ -6560,13 +6629,13 @@ CV2
 0.994
 </td>
 <td style="text-align:center;">
-NA
+0.0002515
 </td>
 <td style="text-align:center;">
 0.994
 </td>
 <td style="text-align:left;">
-NA
+0.0005010
 </td>
 <td style="text-align:left;">
 0.000
@@ -6592,13 +6661,13 @@ CV2
 0.982
 </td>
 <td style="text-align:center;">
-NA
+0.0001168
 </td>
 <td style="text-align:center;">
 0.983
 </td>
 <td style="text-align:left;">
-NA
+0.0001170
 </td>
 <td style="text-align:left;">
 0.001
@@ -6624,13 +6693,13 @@ CV2
 0.974
 </td>
 <td style="text-align:center;">
-NA
+0.0001071
 </td>
 <td style="text-align:center;">
 0.975
 </td>
 <td style="text-align:left;">
-NA
+0.0003408
 </td>
 <td style="text-align:left;">
 0.001
@@ -6656,13 +6725,13 @@ CV2
 0.989
 </td>
 <td style="text-align:center;">
-NA
+0.0000573
 </td>
 <td style="text-align:center;">
 0.990
 </td>
 <td style="text-align:left;">
-NA
+0.0000506
 </td>
 <td style="text-align:left;">
 0.001
@@ -6688,13 +6757,13 @@ CV2
 0.955
 </td>
 <td style="text-align:center;">
-NA
+0.0008444
 </td>
 <td style="text-align:center;">
 0.958
 </td>
 <td style="text-align:left;">
-NA
+0.0010135
 </td>
 <td style="text-align:left;">
 0.003
@@ -6720,13 +6789,13 @@ CV2
 0.772
 </td>
 <td style="text-align:center;">
-NA
+0.0028779
 </td>
 <td style="text-align:center;">
 0.771
 </td>
 <td style="text-align:left;">
-NA
+0.0079429
 </td>
 <td style="text-align:left;">
 -0.001
@@ -6752,13 +6821,13 @@ CV2
 0.989
 </td>
 <td style="text-align:center;">
-NA
+0.0011764
 </td>
 <td style="text-align:center;">
 0.986
 </td>
 <td style="text-align:left;">
-NA
+0.0042936
 </td>
 <td style="text-align:left;">
 -0.003
@@ -6767,7 +6836,14 @@ NA
 </tbody>
 </table>
 </div>
-<pre class="r"><code>cvloo_w_effect %&gt;%
+<pre class="r"><code>if (!exists(&quot;cvloo_w_effect&quot;)) {
+  stop(&quot;O objeto cvloo_w_effect não foi carregado antes do chunk table-cvloo-w-effect.&quot;)
+}
+if (!all(c(&quot;Comparison&quot;, &quot;Trait&quot;, &quot;CV&quot;, &quot;Env_leave&quot;, &quot;MeanWithoutW&quot;, &quot;MeanWithW&quot;, &quot;DeltaWithW&quot;) %in% names(cvloo_w_effect))) {
+  stop(&quot;cvloo_w_effect não contém as colunas exigidas pelo chunk table-cvloo-w-effect.&quot;)
+}
+
+cvloo_w_effect %&gt;%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
    MeanWithW = round(MeanWithW, 3),
     DeltaWithW = round(DeltaWithW, 3) ) %&gt;%
@@ -6845,13 +6921,13 @@ CS11_WS
 0.922
 </td>
 <td style="text-align:center;">
-NA
+0.0006408
 </td>
 <td style="text-align:center;">
 0.921
 </td>
 <td style="text-align:left;">
-NA
+0.0005517
 </td>
 <td style="text-align:left;">
 -0.001
@@ -6880,13 +6956,13 @@ CS11_WS
 0.915
 </td>
 <td style="text-align:center;">
-NA
+0.0064663
 </td>
 <td style="text-align:center;">
 0.906
 </td>
 <td style="text-align:left;">
-NA
+0.0159762
 </td>
 <td style="text-align:left;">
 -0.008
@@ -6915,13 +6991,13 @@ CS11_WS
 0.884
 </td>
 <td style="text-align:center;">
-NA
+0.0160582
 </td>
 <td style="text-align:center;">
 0.878
 </td>
 <td style="text-align:left;">
-NA
+0.0198771
 </td>
 <td style="text-align:left;">
 -0.006
@@ -6950,13 +7026,13 @@ CS11_WS
 0.923
 </td>
 <td style="text-align:center;">
-NA
+0.0004691
 </td>
 <td style="text-align:center;">
 0.922
 </td>
 <td style="text-align:left;">
-NA
+0.0003833
 </td>
 <td style="text-align:left;">
 0.000
@@ -6985,13 +7061,13 @@ CS11_WS
 0.926
 </td>
 <td style="text-align:center;">
-NA
+0.0002212
 </td>
 <td style="text-align:center;">
 0.924
 </td>
 <td style="text-align:left;">
-NA
+0.0031137
 </td>
 <td style="text-align:left;">
 -0.001
@@ -7020,13 +7096,13 @@ CS11_WS
 0.921
 </td>
 <td style="text-align:center;">
-NA
+0.0005552
 </td>
 <td style="text-align:center;">
 0.916
 </td>
 <td style="text-align:left;">
-NA
+0.0004999
 </td>
 <td style="text-align:left;">
 -0.005
@@ -7055,13 +7131,13 @@ CS11_WS
 0.460
 </td>
 <td style="text-align:center;">
-NA
+0.0046790
 </td>
 <td style="text-align:center;">
 0.434
 </td>
 <td style="text-align:left;">
-NA
+0.0085978
 </td>
 <td style="text-align:left;">
 -0.026
@@ -7090,13 +7166,13 @@ CS11_WS
 0.421
 </td>
 <td style="text-align:center;">
-NA
+0.0327846
 </td>
 <td style="text-align:center;">
 0.398
 </td>
 <td style="text-align:left;">
-NA
+0.0327840
 </td>
 <td style="text-align:left;">
 -0.022
@@ -7125,13 +7201,13 @@ CS11_WS
 0.740
 </td>
 <td style="text-align:center;">
-NA
+0.0417897
 </td>
 <td style="text-align:center;">
 0.600
 </td>
 <td style="text-align:left;">
-NA
+0.0937367
 </td>
 <td style="text-align:left;">
 -0.140
@@ -7160,13 +7236,13 @@ CS11_WW
 0.889
 </td>
 <td style="text-align:center;">
-NA
+0.0007587
 </td>
 <td style="text-align:center;">
 0.891
 </td>
 <td style="text-align:left;">
-NA
+0.0012022
 </td>
 <td style="text-align:left;">
 0.002
@@ -7195,13 +7271,13 @@ CS11_WW
 0.848
 </td>
 <td style="text-align:center;">
-NA
+0.0282177
 </td>
 <td style="text-align:center;">
 0.850
 </td>
 <td style="text-align:left;">
-NA
+0.0307368
 </td>
 <td style="text-align:left;">
 0.003
@@ -7230,13 +7306,13 @@ CS11_WW
 0.822
 </td>
 <td style="text-align:center;">
-NA
+0.0652425
 </td>
 <td style="text-align:center;">
 0.778
 </td>
 <td style="text-align:left;">
-NA
+0.0747105
 </td>
 <td style="text-align:left;">
 -0.043
@@ -7265,13 +7341,13 @@ CS11_WW
 0.894
 </td>
 <td style="text-align:center;">
-NA
+0.0005965
 </td>
 <td style="text-align:center;">
 0.896
 </td>
 <td style="text-align:left;">
-NA
+0.0004316
 </td>
 <td style="text-align:left;">
 0.002
@@ -7300,13 +7376,13 @@ CS11_WW
 0.885
 </td>
 <td style="text-align:center;">
-NA
+0.0005851
 </td>
 <td style="text-align:center;">
 0.886
 </td>
 <td style="text-align:left;">
-NA
+0.0031297
 </td>
 <td style="text-align:left;">
 0.000
@@ -7335,13 +7411,13 @@ CS11_WW
 0.893
 </td>
 <td style="text-align:center;">
-NA
+0.0005283
 </td>
 <td style="text-align:center;">
 0.896
 </td>
 <td style="text-align:left;">
-NA
+0.0004761
 </td>
 <td style="text-align:left;">
 0.002
@@ -7370,13 +7446,13 @@ CS11_WW
 0.323
 </td>
 <td style="text-align:center;">
-NA
+0.0079081
 </td>
 <td style="text-align:center;">
 0.318
 </td>
 <td style="text-align:left;">
-NA
+0.0074471
 </td>
 <td style="text-align:left;">
 -0.005
@@ -7405,13 +7481,13 @@ CS11_WW
 0.310
 </td>
 <td style="text-align:center;">
-NA
+0.0198619
 </td>
 <td style="text-align:center;">
 0.275
 </td>
 <td style="text-align:left;">
-NA
+0.0443295
 </td>
 <td style="text-align:left;">
 -0.034
@@ -7440,13 +7516,13 @@ CS11_WW
 0.615
 </td>
 <td style="text-align:center;">
-NA
+0.1492622
 </td>
 <td style="text-align:center;">
 0.578
 </td>
 <td style="text-align:left;">
-NA
+0.1292014
 </td>
 <td style="text-align:left;">
 -0.038
@@ -7475,13 +7551,13 @@ CS12_WS
 0.889
 </td>
 <td style="text-align:center;">
-NA
+0.0008715
 </td>
 <td style="text-align:center;">
 0.884
 </td>
 <td style="text-align:left;">
-NA
+0.0007198
 </td>
 <td style="text-align:left;">
 -0.005
@@ -7510,13 +7586,13 @@ CS12_WS
 0.861
 </td>
 <td style="text-align:center;">
-NA
+0.0164014
 </td>
 <td style="text-align:center;">
 0.855
 </td>
 <td style="text-align:left;">
-NA
+0.0214819
 </td>
 <td style="text-align:left;">
 -0.006
@@ -7545,13 +7621,13 @@ CS12_WS
 0.794
 </td>
 <td style="text-align:center;">
-NA
+0.0574106
 </td>
 <td style="text-align:center;">
 0.765
 </td>
 <td style="text-align:left;">
-NA
+0.0375478
 </td>
 <td style="text-align:left;">
 -0.029
@@ -7580,13 +7656,13 @@ CS12_WS
 0.896
 </td>
 <td style="text-align:center;">
-NA
+0.0007279
 </td>
 <td style="text-align:center;">
 0.893
 </td>
 <td style="text-align:left;">
-NA
+0.0011026
 </td>
 <td style="text-align:left;">
 -0.003
@@ -7615,13 +7691,13 @@ CS12_WS
 0.884
 </td>
 <td style="text-align:center;">
-NA
+0.0006309
 </td>
 <td style="text-align:center;">
 0.883
 </td>
 <td style="text-align:left;">
-NA
+0.0006255
 </td>
 <td style="text-align:left;">
 0.000
@@ -7650,13 +7726,13 @@ CS12_WS
 0.894
 </td>
 <td style="text-align:center;">
-NA
+0.0011375
 </td>
 <td style="text-align:center;">
 0.885
 </td>
 <td style="text-align:left;">
-NA
+0.0006739
 </td>
 <td style="text-align:left;">
 -0.010
@@ -7685,13 +7761,13 @@ CS12_WS
 0.342
 </td>
 <td style="text-align:center;">
-NA
+0.0078015
 </td>
 <td style="text-align:center;">
 0.323
 </td>
 <td style="text-align:left;">
-NA
+0.0078257
 </td>
 <td style="text-align:left;">
 -0.020
@@ -7720,13 +7796,13 @@ CS12_WS
 0.273
 </td>
 <td style="text-align:center;">
-NA
+0.0322555
 </td>
 <td style="text-align:center;">
 0.257
 </td>
 <td style="text-align:left;">
-NA
+0.0491397
 </td>
 <td style="text-align:left;">
 -0.016
@@ -7755,13 +7831,13 @@ CS12_WS
 0.634
 </td>
 <td style="text-align:center;">
-NA
+0.0757856
 </td>
 <td style="text-align:center;">
 0.454
 </td>
 <td style="text-align:left;">
-NA
+0.1025718
 </td>
 <td style="text-align:left;">
 -0.180
@@ -7790,13 +7866,13 @@ CS12_WW
 0.902
 </td>
 <td style="text-align:center;">
-NA
+0.0005695
 </td>
 <td style="text-align:center;">
 0.904
 </td>
 <td style="text-align:left;">
-NA
+0.0004415
 </td>
 <td style="text-align:left;">
 0.002
@@ -7825,13 +7901,13 @@ CS12_WW
 0.892
 </td>
 <td style="text-align:center;">
-NA
+0.0095946
 </td>
 <td style="text-align:center;">
 0.894
 </td>
 <td style="text-align:left;">
-NA
+0.0083430
 </td>
 <td style="text-align:left;">
 0.003
@@ -7860,13 +7936,13 @@ CS12_WW
 0.881
 </td>
 <td style="text-align:center;">
-NA
+0.0134864
 </td>
 <td style="text-align:center;">
 0.887
 </td>
 <td style="text-align:left;">
-NA
+0.0098103
 </td>
 <td style="text-align:left;">
 0.006
@@ -7895,13 +7971,13 @@ CS12_WW
 0.904
 </td>
 <td style="text-align:center;">
-NA
+0.0004100
 </td>
 <td style="text-align:center;">
 0.907
 </td>
 <td style="text-align:left;">
-NA
+0.0004159
 </td>
 <td style="text-align:left;">
 0.004
@@ -7930,13 +8006,13 @@ CS12_WW
 0.902
 </td>
 <td style="text-align:center;">
-NA
+0.0004584
 </td>
 <td style="text-align:center;">
 0.904
 </td>
 <td style="text-align:left;">
-NA
+0.0005408
 </td>
 <td style="text-align:left;">
 0.002
@@ -7965,13 +8041,13 @@ CS12_WW
 0.904
 </td>
 <td style="text-align:center;">
-NA
+0.0005270
 </td>
 <td style="text-align:center;">
 0.909
 </td>
 <td style="text-align:left;">
-NA
+0.0004207
 </td>
 <td style="text-align:left;">
 0.005
@@ -8000,13 +8076,13 @@ CS12_WW
 0.359
 </td>
 <td style="text-align:center;">
-NA
+0.0074689
 </td>
 <td style="text-align:center;">
 0.350
 </td>
 <td style="text-align:left;">
-NA
+0.0064624
 </td>
 <td style="text-align:left;">
 -0.009
@@ -8035,13 +8111,13 @@ CS12_WW
 0.347
 </td>
 <td style="text-align:center;">
-NA
+0.0265095
 </td>
 <td style="text-align:center;">
 0.332
 </td>
 <td style="text-align:left;">
-NA
+0.0285925
 </td>
 <td style="text-align:left;">
 -0.015
@@ -8070,13 +8146,13 @@ CS12_WW
 0.592
 </td>
 <td style="text-align:center;">
-NA
+0.1219799
 </td>
 <td style="text-align:center;">
 0.512
 </td>
 <td style="text-align:left;">
-NA
+0.1222827
 </td>
 <td style="text-align:left;">
 -0.081
@@ -8105,13 +8181,13 @@ CS11_WS
 0.719
 </td>
 <td style="text-align:center;">
-NA
+0.0156232
 </td>
 <td style="text-align:center;">
 0.716
 </td>
 <td style="text-align:left;">
-NA
+0.0232356
 </td>
 <td style="text-align:left;">
 -0.003
@@ -8140,13 +8216,13 @@ CS11_WS
 0.702
 </td>
 <td style="text-align:center;">
-NA
+0.0164750
 </td>
 <td style="text-align:center;">
 0.715
 </td>
 <td style="text-align:left;">
-NA
+0.0144928
 </td>
 <td style="text-align:left;">
 0.014
@@ -8175,13 +8251,13 @@ CS11_WS
 0.666
 </td>
 <td style="text-align:center;">
-NA
+0.0336890
 </td>
 <td style="text-align:center;">
 0.677
 </td>
 <td style="text-align:left;">
-NA
+0.0357095
 </td>
 <td style="text-align:left;">
 0.011
@@ -8210,13 +8286,13 @@ CS11_WS
 0.717
 </td>
 <td style="text-align:center;">
-NA
+0.0210367
 </td>
 <td style="text-align:center;">
 0.716
 </td>
 <td style="text-align:left;">
-NA
+0.0249825
 </td>
 <td style="text-align:left;">
 -0.002
@@ -8245,13 +8321,13 @@ CS11_WS
 0.732
 </td>
 <td style="text-align:center;">
-NA
+0.0133004
 </td>
 <td style="text-align:center;">
 0.735
 </td>
 <td style="text-align:left;">
-NA
+0.0139247
 </td>
 <td style="text-align:left;">
 0.003
@@ -8280,13 +8356,13 @@ CS11_WS
 0.710
 </td>
 <td style="text-align:center;">
-NA
+0.0164292
 </td>
 <td style="text-align:center;">
 0.720
 </td>
 <td style="text-align:left;">
-NA
+0.0158158
 </td>
 <td style="text-align:left;">
 0.011
@@ -8315,13 +8391,13 @@ CS11_WS
 0.192
 </td>
 <td style="text-align:center;">
-NA
+0.0265772
 </td>
 <td style="text-align:center;">
 0.207
 </td>
 <td style="text-align:left;">
-NA
+0.0534662
 </td>
 <td style="text-align:left;">
 0.014
@@ -8350,13 +8426,13 @@ CS11_WS
 0.176
 </td>
 <td style="text-align:center;">
-NA
+0.0470906
 </td>
 <td style="text-align:center;">
 0.160
 </td>
 <td style="text-align:left;">
-NA
+0.0463932
 </td>
 <td style="text-align:left;">
 -0.017
@@ -8385,13 +8461,13 @@ CS11_WS
 0.547
 </td>
 <td style="text-align:center;">
-NA
+0.0547123
 </td>
 <td style="text-align:center;">
 0.468
 </td>
 <td style="text-align:left;">
-NA
+0.0727954
 </td>
 <td style="text-align:left;">
 -0.079
@@ -8420,13 +8496,13 @@ CS11_WW
 0.734
 </td>
 <td style="text-align:center;">
-NA
+0.0147333
 </td>
 <td style="text-align:center;">
 0.734
 </td>
 <td style="text-align:left;">
-NA
+0.0146172
 </td>
 <td style="text-align:left;">
 0.000
@@ -8455,13 +8531,13 @@ CS11_WW
 0.648
 </td>
 <td style="text-align:center;">
-NA
+0.0420356
 </td>
 <td style="text-align:center;">
 0.643
 </td>
 <td style="text-align:left;">
-NA
+0.0355772
 </td>
 <td style="text-align:left;">
 -0.005
@@ -8490,13 +8566,13 @@ CS11_WW
 0.664
 </td>
 <td style="text-align:center;">
-NA
+0.0551344
 </td>
 <td style="text-align:center;">
 0.597
 </td>
 <td style="text-align:left;">
-NA
+0.0889922
 </td>
 <td style="text-align:left;">
 -0.067
@@ -8525,13 +8601,13 @@ CS11_WW
 0.738
 </td>
 <td style="text-align:center;">
-NA
+0.0106728
 </td>
 <td style="text-align:center;">
 0.740
 </td>
 <td style="text-align:left;">
-NA
+0.0125027
 </td>
 <td style="text-align:left;">
 0.003
@@ -8560,13 +8636,13 @@ CS11_WW
 0.724
 </td>
 <td style="text-align:center;">
-NA
+0.0092225
 </td>
 <td style="text-align:center;">
 0.725
 </td>
 <td style="text-align:left;">
-NA
+0.0099241
 </td>
 <td style="text-align:left;">
 0.000
@@ -8595,13 +8671,13 @@ CS11_WW
 0.741
 </td>
 <td style="text-align:center;">
-NA
+0.0102739
 </td>
 <td style="text-align:center;">
 0.738
 </td>
 <td style="text-align:left;">
-NA
+0.0121891
 </td>
 <td style="text-align:left;">
 -0.002
@@ -8630,13 +8706,13 @@ CS11_WW
 0.167
 </td>
 <td style="text-align:center;">
-NA
+0.0334714
 </td>
 <td style="text-align:center;">
 0.192
 </td>
 <td style="text-align:left;">
-NA
+0.0319594
 </td>
 <td style="text-align:left;">
 0.025
@@ -8665,13 +8741,13 @@ CS11_WW
 0.128
 </td>
 <td style="text-align:center;">
-NA
+0.0454014
 </td>
 <td style="text-align:center;">
 0.126
 </td>
 <td style="text-align:left;">
-NA
+0.0436496
 </td>
 <td style="text-align:left;">
 -0.002
@@ -8700,13 +8776,13 @@ CS11_WW
 0.444
 </td>
 <td style="text-align:center;">
-NA
+0.1253345
 </td>
 <td style="text-align:center;">
 0.453
 </td>
 <td style="text-align:left;">
-NA
+0.1196363
 </td>
 <td style="text-align:left;">
 0.009
@@ -8735,13 +8811,13 @@ CS12_WS
 0.722
 </td>
 <td style="text-align:center;">
-NA
+0.0106525
 </td>
 <td style="text-align:center;">
 0.727
 </td>
 <td style="text-align:left;">
-NA
+0.0110813
 </td>
 <td style="text-align:left;">
 0.005
@@ -8770,13 +8846,13 @@ CS12_WS
 0.624
 </td>
 <td style="text-align:center;">
-NA
+0.0366770
 </td>
 <td style="text-align:center;">
 0.620
 </td>
 <td style="text-align:left;">
-NA
+0.0290091
 </td>
 <td style="text-align:left;">
 -0.004
@@ -8805,13 +8881,13 @@ CS12_WS
 0.617
 </td>
 <td style="text-align:center;">
-NA
+0.0577406
 </td>
 <td style="text-align:center;">
 0.598
 </td>
 <td style="text-align:left;">
-NA
+0.0459783
 </td>
 <td style="text-align:left;">
 -0.019
@@ -8840,13 +8916,13 @@ CS12_WS
 0.730
 </td>
 <td style="text-align:center;">
-NA
+0.0105024
 </td>
 <td style="text-align:center;">
 0.734
 </td>
 <td style="text-align:left;">
-NA
+0.0068753
 </td>
 <td style="text-align:left;">
 0.004
@@ -8875,13 +8951,13 @@ CS12_WS
 0.693
 </td>
 <td style="text-align:center;">
-NA
+0.0081952
 </td>
 <td style="text-align:center;">
 0.690
 </td>
 <td style="text-align:left;">
-NA
+0.0113171
 </td>
 <td style="text-align:left;">
 -0.003
@@ -8910,13 +8986,13 @@ CS12_WS
 0.725
 </td>
 <td style="text-align:center;">
-NA
+0.0120592
 </td>
 <td style="text-align:center;">
 0.733
 </td>
 <td style="text-align:left;">
-NA
+0.0073064
 </td>
 <td style="text-align:left;">
 0.008
@@ -8945,13 +9021,13 @@ CS12_WS
 0.132
 </td>
 <td style="text-align:center;">
-NA
+0.0265251
 </td>
 <td style="text-align:center;">
 0.129
 </td>
 <td style="text-align:left;">
-NA
+0.0316274
 </td>
 <td style="text-align:left;">
 -0.003
@@ -8980,13 +9056,13 @@ CS12_WS
 0.086
 </td>
 <td style="text-align:center;">
-NA
+0.0531555
 </td>
 <td style="text-align:center;">
 0.101
 </td>
 <td style="text-align:left;">
-NA
+0.0517042
 </td>
 <td style="text-align:left;">
 0.015
@@ -9015,13 +9091,13 @@ CS12_WS
 0.517
 </td>
 <td style="text-align:center;">
-NA
+0.0691137
 </td>
 <td style="text-align:center;">
 0.369
 </td>
 <td style="text-align:left;">
-NA
+0.1174927
 </td>
 <td style="text-align:left;">
 -0.148
@@ -9050,13 +9126,13 @@ CS12_WW
 0.706
 </td>
 <td style="text-align:center;">
-NA
+0.0153052
 </td>
 <td style="text-align:center;">
 0.714
 </td>
 <td style="text-align:left;">
-NA
+0.0127669
 </td>
 <td style="text-align:left;">
 0.008
@@ -9085,13 +9161,13 @@ CS12_WW
 0.656
 </td>
 <td style="text-align:center;">
-NA
+0.0155661
 </td>
 <td style="text-align:center;">
 0.656
 </td>
 <td style="text-align:left;">
-NA
+0.0259759
 </td>
 <td style="text-align:left;">
 0.000
@@ -9120,13 +9196,13 @@ CS12_WW
 0.674
 </td>
 <td style="text-align:center;">
-NA
+0.0268594
 </td>
 <td style="text-align:center;">
 0.672
 </td>
 <td style="text-align:left;">
-NA
+0.0388784
 </td>
 <td style="text-align:left;">
 -0.001
@@ -9155,13 +9231,13 @@ CS12_WW
 0.701
 </td>
 <td style="text-align:center;">
-NA
+0.0098703
 </td>
 <td style="text-align:center;">
 0.713
 </td>
 <td style="text-align:left;">
-NA
+0.0086880
 </td>
 <td style="text-align:left;">
 0.012
@@ -9190,13 +9266,13 @@ CS12_WW
 0.691
 </td>
 <td style="text-align:center;">
-NA
+0.0100686
 </td>
 <td style="text-align:center;">
 0.682
 </td>
 <td style="text-align:left;">
-NA
+0.0124059
 </td>
 <td style="text-align:left;">
 -0.008
@@ -9225,13 +9301,13 @@ CS12_WW
 0.696
 </td>
 <td style="text-align:center;">
-NA
+0.0179032
 </td>
 <td style="text-align:center;">
 0.710
 </td>
 <td style="text-align:left;">
-NA
+0.0075409
 </td>
 <td style="text-align:left;">
 0.013
@@ -9260,13 +9336,13 @@ CS12_WW
 0.119
 </td>
 <td style="text-align:center;">
-NA
+0.0317911
 </td>
 <td style="text-align:center;">
 0.114
 </td>
 <td style="text-align:left;">
-NA
+0.0242938
 </td>
 <td style="text-align:left;">
 -0.005
@@ -9295,13 +9371,13 @@ CS12_WW
 0.098
 </td>
 <td style="text-align:center;">
-NA
+0.0427283
 </td>
 <td style="text-align:center;">
 0.096
 </td>
 <td style="text-align:left;">
-NA
+0.0740510
 </td>
 <td style="text-align:left;">
 -0.002
@@ -9330,13 +9406,13 @@ CS12_WW
 0.410
 </td>
 <td style="text-align:center;">
-NA
+0.1100689
 </td>
 <td style="text-align:center;">
 0.386
 </td>
 <td style="text-align:left;">
-NA
+0.0734259
 </td>
 <td style="text-align:left;">
 -0.024
@@ -9365,13 +9441,13 @@ CS11_WS
 0.959
 </td>
 <td style="text-align:center;">
-NA
+0.0004251
 </td>
 <td style="text-align:center;">
 0.955
 </td>
 <td style="text-align:left;">
-NA
+0.0004242
 </td>
 <td style="text-align:left;">
 -0.004
@@ -9400,13 +9476,13 @@ CS11_WS
 0.952
 </td>
 <td style="text-align:center;">
-NA
+0.0060164
 </td>
 <td style="text-align:center;">
 0.934
 </td>
 <td style="text-align:left;">
-NA
+0.0117906
 </td>
 <td style="text-align:left;">
 -0.018
@@ -9435,13 +9511,13 @@ CS11_WS
 0.928
 </td>
 <td style="text-align:center;">
-NA
+0.0303599
 </td>
 <td style="text-align:center;">
 0.904
 </td>
 <td style="text-align:left;">
-NA
+0.0373431
 </td>
 <td style="text-align:left;">
 -0.025
@@ -9470,13 +9546,13 @@ CS11_WS
 0.960
 </td>
 <td style="text-align:center;">
-NA
+0.0001845
 </td>
 <td style="text-align:center;">
 0.953
 </td>
 <td style="text-align:left;">
-NA
+0.0003107
 </td>
 <td style="text-align:left;">
 -0.008
@@ -9505,13 +9581,13 @@ CS11_WS
 0.961
 </td>
 <td style="text-align:center;">
-NA
+0.0001712
 </td>
 <td style="text-align:center;">
 0.955
 </td>
 <td style="text-align:left;">
-NA
+0.0059577
 </td>
 <td style="text-align:left;">
 -0.006
@@ -9540,13 +9616,13 @@ CS11_WS
 0.960
 </td>
 <td style="text-align:center;">
-NA
+0.0003318
 </td>
 <td style="text-align:center;">
 0.945
 </td>
 <td style="text-align:left;">
-NA
+0.0003220
 </td>
 <td style="text-align:left;">
 -0.015
@@ -9575,13 +9651,13 @@ CS11_WS
 0.488
 </td>
 <td style="text-align:center;">
-NA
+0.0064600
 </td>
 <td style="text-align:center;">
 0.459
 </td>
 <td style="text-align:left;">
-NA
+0.0053104
 </td>
 <td style="text-align:left;">
 -0.029
@@ -9610,13 +9686,13 @@ CS11_WS
 0.514
 </td>
 <td style="text-align:center;">
-NA
+0.0207448
 </td>
 <td style="text-align:center;">
 0.529
 </td>
 <td style="text-align:left;">
-NA
+0.0219561
 </td>
 <td style="text-align:left;">
 0.015
@@ -9645,13 +9721,13 @@ CS11_WS
 0.800
 </td>
 <td style="text-align:center;">
-NA
+0.0569121
 </td>
 <td style="text-align:center;">
 0.708
 </td>
 <td style="text-align:left;">
-NA
+0.0720481
 </td>
 <td style="text-align:left;">
 -0.093
@@ -9680,13 +9756,13 @@ CS11_WW
 0.886
 </td>
 <td style="text-align:center;">
-NA
+0.0008546
 </td>
 <td style="text-align:center;">
 0.888
 </td>
 <td style="text-align:left;">
-NA
+0.0008502
 </td>
 <td style="text-align:left;">
 0.002
@@ -9715,13 +9791,13 @@ CS11_WW
 0.855
 </td>
 <td style="text-align:center;">
-NA
+0.0194615
 </td>
 <td style="text-align:center;">
 0.850
 </td>
 <td style="text-align:left;">
-NA
+0.0175722
 </td>
 <td style="text-align:left;">
 -0.005
@@ -9750,13 +9826,13 @@ CS11_WW
 0.829
 </td>
 <td style="text-align:center;">
-NA
+0.0365791
 </td>
 <td style="text-align:center;">
 0.780
 </td>
 <td style="text-align:left;">
-NA
+0.0736196
 </td>
 <td style="text-align:left;">
 -0.048
@@ -9785,13 +9861,13 @@ CS11_WW
 0.885
 </td>
 <td style="text-align:center;">
-NA
+0.0011692
 </td>
 <td style="text-align:center;">
 0.887
 </td>
 <td style="text-align:left;">
-NA
+0.0010117
 </td>
 <td style="text-align:left;">
 0.002
@@ -9820,13 +9896,13 @@ CS11_WW
 0.874
 </td>
 <td style="text-align:center;">
-NA
+0.0006841
 </td>
 <td style="text-align:center;">
 0.873
 </td>
 <td style="text-align:left;">
-NA
+0.0064145
 </td>
 <td style="text-align:left;">
 -0.002
@@ -9855,13 +9931,13 @@ CS11_WW
 0.885
 </td>
 <td style="text-align:center;">
-NA
+0.0011861
 </td>
 <td style="text-align:center;">
 0.889
 </td>
 <td style="text-align:left;">
-NA
+0.0003511
 </td>
 <td style="text-align:left;">
 0.004
@@ -9890,13 +9966,13 @@ CS11_WW
 0.331
 </td>
 <td style="text-align:center;">
-NA
+0.0051097
 </td>
 <td style="text-align:center;">
 0.327
 </td>
 <td style="text-align:left;">
-NA
+0.0063766
 </td>
 <td style="text-align:left;">
 -0.004
@@ -9925,13 +10001,13 @@ CS11_WW
 0.399
 </td>
 <td style="text-align:center;">
-NA
+0.0311944
 </td>
 <td style="text-align:center;">
 0.429
 </td>
 <td style="text-align:left;">
-NA
+0.0314922
 </td>
 <td style="text-align:left;">
 0.029
@@ -9960,13 +10036,13 @@ CS11_WW
 0.787
 </td>
 <td style="text-align:center;">
-NA
+0.0671637
 </td>
 <td style="text-align:center;">
 0.591
 </td>
 <td style="text-align:left;">
-NA
+0.1578071
 </td>
 <td style="text-align:left;">
 -0.196
@@ -9995,13 +10071,13 @@ CS12_WS
 0.894
 </td>
 <td style="text-align:center;">
-NA
+0.0011841
 </td>
 <td style="text-align:center;">
 0.894
 </td>
 <td style="text-align:left;">
-NA
+0.0009434
 </td>
 <td style="text-align:left;">
 0.001
@@ -10030,13 +10106,13 @@ CS12_WS
 0.860
 </td>
 <td style="text-align:center;">
-NA
+0.0250670
 </td>
 <td style="text-align:center;">
 0.880
 </td>
 <td style="text-align:left;">
-NA
+0.0136477
 </td>
 <td style="text-align:left;">
 0.020
@@ -10065,13 +10141,13 @@ CS12_WS
 0.797
 </td>
 <td style="text-align:center;">
-NA
+0.0640268
 </td>
 <td style="text-align:center;">
 0.816
 </td>
 <td style="text-align:left;">
-NA
+0.0478818
 </td>
 <td style="text-align:left;">
 0.018
@@ -10100,13 +10176,13 @@ CS12_WS
 0.898
 </td>
 <td style="text-align:center;">
-NA
+0.0011057
 </td>
 <td style="text-align:center;">
 0.899
 </td>
 <td style="text-align:left;">
-NA
+0.0005593
 </td>
 <td style="text-align:left;">
 0.001
@@ -10135,13 +10211,13 @@ CS12_WS
 0.888
 </td>
 <td style="text-align:center;">
-NA
+0.0005409
 </td>
 <td style="text-align:center;">
 0.889
 </td>
 <td style="text-align:left;">
-NA
+0.0010068
 </td>
 <td style="text-align:left;">
 0.001
@@ -10170,13 +10246,13 @@ CS12_WS
 0.896
 </td>
 <td style="text-align:center;">
-NA
+0.0008220
 </td>
 <td style="text-align:center;">
 0.897
 </td>
 <td style="text-align:left;">
-NA
+0.0010396
 </td>
 <td style="text-align:left;">
 0.001
@@ -10205,13 +10281,13 @@ CS12_WS
 0.410
 </td>
 <td style="text-align:center;">
-NA
+0.0043472
 </td>
 <td style="text-align:center;">
 0.400
 </td>
 <td style="text-align:left;">
-NA
+0.0055684
 </td>
 <td style="text-align:left;">
 -0.010
@@ -10240,13 +10316,13 @@ CS12_WS
 0.385
 </td>
 <td style="text-align:center;">
-NA
+0.0316524
 </td>
 <td style="text-align:center;">
 0.407
 </td>
 <td style="text-align:left;">
-NA
+0.0309957
 </td>
 <td style="text-align:left;">
 0.022
@@ -10275,13 +10351,13 @@ CS12_WS
 0.735
 </td>
 <td style="text-align:center;">
-NA
+0.0917405
 </td>
 <td style="text-align:center;">
 0.638
 </td>
 <td style="text-align:left;">
-NA
+0.1303465
 </td>
 <td style="text-align:left;">
 -0.097
@@ -10310,13 +10386,13 @@ CS12_WW
 0.947
 </td>
 <td style="text-align:center;">
-NA
+0.0004264
 </td>
 <td style="text-align:center;">
 0.948
 </td>
 <td style="text-align:left;">
-NA
+0.0003331
 </td>
 <td style="text-align:left;">
 0.001
@@ -10345,13 +10421,13 @@ CS12_WW
 0.938
 </td>
 <td style="text-align:center;">
-NA
+0.0061385
 </td>
 <td style="text-align:center;">
 0.935
 </td>
 <td style="text-align:left;">
-NA
+0.0105933
 </td>
 <td style="text-align:left;">
 -0.003
@@ -10380,13 +10456,13 @@ CS12_WW
 0.922
 </td>
 <td style="text-align:center;">
-NA
+0.0305936
 </td>
 <td style="text-align:center;">
 0.928
 </td>
 <td style="text-align:left;">
-NA
+0.0256338
 </td>
 <td style="text-align:left;">
 0.006
@@ -10415,13 +10491,13 @@ CS12_WW
 0.947
 </td>
 <td style="text-align:center;">
-NA
+0.0002290
 </td>
 <td style="text-align:center;">
 0.949
 </td>
 <td style="text-align:left;">
-NA
+0.0002453
 </td>
 <td style="text-align:left;">
 0.002
@@ -10450,13 +10526,13 @@ CS12_WW
 0.947
 </td>
 <td style="text-align:center;">
-NA
+0.0002183
 </td>
 <td style="text-align:center;">
 0.946
 </td>
 <td style="text-align:left;">
-NA
+0.0021284
 </td>
 <td style="text-align:left;">
 -0.001
@@ -10485,13 +10561,13 @@ CS12_WW
 0.947
 </td>
 <td style="text-align:center;">
-NA
+0.0002957
 </td>
 <td style="text-align:center;">
 0.948
 </td>
 <td style="text-align:left;">
-NA
+0.0003126
 </td>
 <td style="text-align:left;">
 0.002
@@ -10520,13 +10596,13 @@ CS12_WW
 0.431
 </td>
 <td style="text-align:center;">
-NA
+0.0074450
 </td>
 <td style="text-align:center;">
 0.429
 </td>
 <td style="text-align:left;">
-NA
+0.0085145
 </td>
 <td style="text-align:left;">
 -0.003
@@ -10555,13 +10631,13 @@ CS12_WW
 0.514
 </td>
 <td style="text-align:center;">
-NA
+0.0186631
 </td>
 <td style="text-align:center;">
 0.504
 </td>
 <td style="text-align:left;">
-NA
+0.0290988
 </td>
 <td style="text-align:left;">
 -0.010
@@ -10590,13 +10666,13 @@ CS12_WW
 0.824
 </td>
 <td style="text-align:center;">
-NA
+0.0658355
 </td>
 <td style="text-align:center;">
 0.746
 </td>
 <td style="text-align:left;">
-NA
+0.0805916
 </td>
 <td style="text-align:left;">
 -0.078
@@ -10625,13 +10701,13 @@ CS11_WS
 0.586
 </td>
 <td style="text-align:center;">
-NA
+0.0209643
 </td>
 <td style="text-align:center;">
 0.566
 </td>
 <td style="text-align:left;">
-NA
+0.0260974
 </td>
 <td style="text-align:left;">
 -0.020
@@ -10660,13 +10736,13 @@ CS11_WS
 0.508
 </td>
 <td style="text-align:center;">
-NA
+0.0472672
 </td>
 <td style="text-align:center;">
 0.484
 </td>
 <td style="text-align:left;">
-NA
+0.0409598
 </td>
 <td style="text-align:left;">
 -0.025
@@ -10695,13 +10771,13 @@ CS11_WS
 0.654
 </td>
 <td style="text-align:center;">
-NA
+0.0360532
 </td>
 <td style="text-align:center;">
 0.608
 </td>
 <td style="text-align:left;">
-NA
+0.0548281
 </td>
 <td style="text-align:left;">
 -0.045
@@ -10730,13 +10806,13 @@ CS11_WS
 0.578
 </td>
 <td style="text-align:center;">
-NA
+0.0220801
 </td>
 <td style="text-align:center;">
 0.573
 </td>
 <td style="text-align:left;">
-NA
+0.0223042
 </td>
 <td style="text-align:left;">
 -0.005
@@ -10765,13 +10841,13 @@ CS11_WS
 0.544
 </td>
 <td style="text-align:center;">
-NA
+0.0268564
 </td>
 <td style="text-align:center;">
 0.548
 </td>
 <td style="text-align:left;">
-NA
+0.0163422
 </td>
 <td style="text-align:left;">
 0.004
@@ -10800,13 +10876,13 @@ CS11_WS
 0.565
 </td>
 <td style="text-align:center;">
-NA
+0.0200134
 </td>
 <td style="text-align:center;">
 0.562
 </td>
 <td style="text-align:left;">
-NA
+0.0174611
 </td>
 <td style="text-align:left;">
 -0.003
@@ -10835,13 +10911,13 @@ CS11_WS
 0.218
 </td>
 <td style="text-align:center;">
-NA
+0.0243076
 </td>
 <td style="text-align:center;">
 0.202
 </td>
 <td style="text-align:left;">
-NA
+0.0472486
 </td>
 <td style="text-align:left;">
 -0.016
@@ -10870,13 +10946,13 @@ CS11_WS
 0.256
 </td>
 <td style="text-align:center;">
-NA
+0.0252293
 </td>
 <td style="text-align:center;">
 0.249
 </td>
 <td style="text-align:left;">
-NA
+0.0365030
 </td>
 <td style="text-align:left;">
 -0.007
@@ -10905,13 +10981,13 @@ CS11_WS
 0.662
 </td>
 <td style="text-align:center;">
-NA
+0.0743260
 </td>
 <td style="text-align:center;">
 0.624
 </td>
 <td style="text-align:left;">
-NA
+0.0680554
 </td>
 <td style="text-align:left;">
 -0.038
@@ -10940,13 +11016,13 @@ CS11_WW
 0.566
 </td>
 <td style="text-align:center;">
-NA
+0.0212727
 </td>
 <td style="text-align:center;">
 0.562
 </td>
 <td style="text-align:left;">
-NA
+0.0166412
 </td>
 <td style="text-align:left;">
 -0.004
@@ -10975,13 +11051,13 @@ CS11_WW
 0.460
 </td>
 <td style="text-align:center;">
-NA
+0.0504655
 </td>
 <td style="text-align:center;">
 0.451
 </td>
 <td style="text-align:left;">
-NA
+0.0487862
 </td>
 <td style="text-align:left;">
 -0.009
@@ -11010,13 +11086,13 @@ CS11_WW
 0.544
 </td>
 <td style="text-align:center;">
-NA
+0.0496768
 </td>
 <td style="text-align:center;">
 0.488
 </td>
 <td style="text-align:left;">
-NA
+0.0776466
 </td>
 <td style="text-align:left;">
 -0.056
@@ -11045,13 +11121,13 @@ CS11_WW
 0.565
 </td>
 <td style="text-align:center;">
-NA
+0.0197142
 </td>
 <td style="text-align:center;">
 0.567
 </td>
 <td style="text-align:left;">
-NA
+0.0234297
 </td>
 <td style="text-align:left;">
 0.002
@@ -11080,13 +11156,13 @@ CS11_WW
 0.525
 </td>
 <td style="text-align:center;">
-NA
+0.0245290
 </td>
 <td style="text-align:center;">
 0.511
 </td>
 <td style="text-align:left;">
-NA
+0.0208822
 </td>
 <td style="text-align:left;">
 -0.014
@@ -11115,13 +11191,13 @@ CS11_WW
 0.563
 </td>
 <td style="text-align:center;">
-NA
+0.0179097
 </td>
 <td style="text-align:center;">
 0.565
 </td>
 <td style="text-align:left;">
-NA
+0.0130631
 </td>
 <td style="text-align:left;">
 0.002
@@ -11150,13 +11226,13 @@ CS11_WW
 0.160
 </td>
 <td style="text-align:center;">
-NA
+0.0141550
 </td>
 <td style="text-align:center;">
 0.153
 </td>
 <td style="text-align:left;">
-NA
+0.0236371
 </td>
 <td style="text-align:left;">
 -0.007
@@ -11185,13 +11261,13 @@ CS11_WW
 0.222
 </td>
 <td style="text-align:center;">
-NA
+0.0454472
 </td>
 <td style="text-align:center;">
 0.172
 </td>
 <td style="text-align:left;">
-NA
+0.0459169
 </td>
 <td style="text-align:left;">
 -0.050
@@ -11220,13 +11296,13 @@ CS11_WW
 0.656
 </td>
 <td style="text-align:center;">
-NA
+0.0537020
 </td>
 <td style="text-align:center;">
 0.541
 </td>
 <td style="text-align:left;">
-NA
+0.1089787
 </td>
 <td style="text-align:left;">
 -0.115
@@ -11255,13 +11331,13 @@ CS12_WS
 0.619
 </td>
 <td style="text-align:center;">
-NA
+0.0125596
 </td>
 <td style="text-align:center;">
 0.607
 </td>
 <td style="text-align:left;">
-NA
+0.0129271
 </td>
 <td style="text-align:left;">
 -0.012
@@ -11290,13 +11366,13 @@ CS12_WS
 0.511
 </td>
 <td style="text-align:center;">
-NA
+0.0392188
 </td>
 <td style="text-align:center;">
 0.550
 </td>
 <td style="text-align:left;">
-NA
+0.0346599
 </td>
 <td style="text-align:left;">
 0.039
@@ -11325,13 +11401,13 @@ CS12_WS
 0.553
 </td>
 <td style="text-align:center;">
-NA
+0.0799328
 </td>
 <td style="text-align:center;">
 0.552
 </td>
 <td style="text-align:left;">
-NA
+0.0729139
 </td>
 <td style="text-align:left;">
 -0.001
@@ -11360,13 +11436,13 @@ CS12_WS
 0.616
 </td>
 <td style="text-align:center;">
-NA
+0.0174929
 </td>
 <td style="text-align:center;">
 0.611
 </td>
 <td style="text-align:left;">
-NA
+0.0169350
 </td>
 <td style="text-align:left;">
 -0.005
@@ -11395,13 +11471,13 @@ CS12_WS
 0.560
 </td>
 <td style="text-align:center;">
-NA
+0.0085485
 </td>
 <td style="text-align:center;">
 0.569
 </td>
 <td style="text-align:left;">
-NA
+0.0098365
 </td>
 <td style="text-align:left;">
 0.009
@@ -11430,13 +11506,13 @@ CS12_WS
 0.602
 </td>
 <td style="text-align:center;">
-NA
+0.0156413
 </td>
 <td style="text-align:center;">
 0.613
 </td>
 <td style="text-align:left;">
-NA
+0.0088231
 </td>
 <td style="text-align:left;">
 0.011
@@ -11465,13 +11541,13 @@ CS12_WS
 0.209
 </td>
 <td style="text-align:center;">
-NA
+0.0273382
 </td>
 <td style="text-align:center;">
 0.212
 </td>
 <td style="text-align:left;">
-NA
+0.0227339
 </td>
 <td style="text-align:left;">
 0.003
@@ -11500,13 +11576,13 @@ CS12_WS
 0.180
 </td>
 <td style="text-align:center;">
-NA
+0.0753962
 </td>
 <td style="text-align:center;">
 0.189
 </td>
 <td style="text-align:left;">
-NA
+0.0409106
 </td>
 <td style="text-align:left;">
 0.009
@@ -11535,13 +11611,13 @@ CS12_WS
 0.600
 </td>
 <td style="text-align:center;">
-NA
+0.0894934
 </td>
 <td style="text-align:center;">
 0.538
 </td>
 <td style="text-align:left;">
-NA
+0.0973559
 </td>
 <td style="text-align:left;">
 -0.062
@@ -11570,13 +11646,13 @@ CS12_WW
 0.617
 </td>
 <td style="text-align:center;">
-NA
+0.0102124
 </td>
 <td style="text-align:center;">
 0.615
 </td>
 <td style="text-align:left;">
-NA
+0.0248406
 </td>
 <td style="text-align:left;">
 -0.002
@@ -11605,13 +11681,13 @@ CS12_WW
 0.576
 </td>
 <td style="text-align:center;">
-NA
+0.0306078
 </td>
 <td style="text-align:center;">
 0.554
 </td>
 <td style="text-align:left;">
-NA
+0.0430405
 </td>
 <td style="text-align:left;">
 -0.022
@@ -11640,13 +11716,13 @@ CS12_WW
 0.636
 </td>
 <td style="text-align:center;">
-NA
+0.0411822
 </td>
 <td style="text-align:center;">
 0.614
 </td>
 <td style="text-align:left;">
-NA
+0.0398958
 </td>
 <td style="text-align:left;">
 -0.022
@@ -11675,13 +11751,13 @@ CS12_WW
 0.600
 </td>
 <td style="text-align:center;">
-NA
+0.0272165
 </td>
 <td style="text-align:center;">
 0.609
 </td>
 <td style="text-align:left;">
-NA
+0.0237787
 </td>
 <td style="text-align:left;">
 0.009
@@ -11710,13 +11786,13 @@ CS12_WW
 0.591
 </td>
 <td style="text-align:center;">
-NA
+0.0295687
 </td>
 <td style="text-align:center;">
 0.585
 </td>
 <td style="text-align:left;">
-NA
+0.0195874
 </td>
 <td style="text-align:left;">
 -0.006
@@ -11745,13 +11821,13 @@ CS12_WW
 0.601
 </td>
 <td style="text-align:center;">
-NA
+0.0150357
 </td>
 <td style="text-align:center;">
 0.603
 </td>
 <td style="text-align:left;">
-NA
+0.0329311
 </td>
 <td style="text-align:left;">
 0.001
@@ -11780,13 +11856,13 @@ CS12_WW
 0.197
 </td>
 <td style="text-align:center;">
-NA
+0.0414129
 </td>
 <td style="text-align:center;">
 0.198
 </td>
 <td style="text-align:left;">
-NA
+0.0328087
 </td>
 <td style="text-align:left;">
 0.002
@@ -11815,13 +11891,13 @@ CS12_WW
 0.239
 </td>
 <td style="text-align:center;">
-NA
+0.0433968
 </td>
 <td style="text-align:center;">
 0.256
 </td>
 <td style="text-align:left;">
-NA
+0.0392577
 </td>
 <td style="text-align:left;">
 0.017
@@ -11850,13 +11926,13 @@ CS12_WW
 0.640
 </td>
 <td style="text-align:center;">
-NA
+0.0608590
 </td>
 <td style="text-align:center;">
 0.602
 </td>
 <td style="text-align:left;">
-NA
+0.0751970
 </td>
 <td style="text-align:left;">
 -0.038
@@ -11871,7 +11947,14 @@ class="section level2">
 <h2>14. Tabelas de comparação entre famílias de kernel</h2>
 <p>Aqui o script contrasta os kernels linear, Gaussiano e arc-cosine
 dentro de cada via analítica.</p>
-<pre class="r"><code>cv12_kernel_family_compare %&gt;%
+<pre class="r"><code>if (!exists(&quot;cv12_kernel_family_compare&quot;)) {
+  stop(&quot;O objeto cv12_kernel_family_compare não foi carregado antes do chunk table-cv12-kernel-family.&quot;)
+}
+if (!all(c(&quot;Trait&quot;, &quot;CV&quot;, &quot;Pathway&quot;, &quot;WeatherStatus&quot;, &quot;Linear&quot;, &quot;Gaussian&quot;, &quot;Arc-cosine&quot;) %in% names(cv12_kernel_family_compare))) {
+  stop(&quot;cv12_kernel_family_compare não contém as colunas exigidas pelo chunk table-cv12-kernel-family.&quot;)
+}
+
+cv12_kernel_family_compare %&gt;%
   mutate( Linear = round(Linear, 3),
    Gaussian = round(Gaussian, 3),
    `Arc-cosine` = round(`Arc-cosine`, 3),
@@ -12697,7 +12780,14 @@ Sem W
 </tbody>
 </table>
 </div>
-<pre class="r"><code>cvloo_kernel_family_compare %&gt;%
+<pre class="r"><code>if (!exists(&quot;cvloo_kernel_family_compare&quot;)) {
+  stop(&quot;O objeto cvloo_kernel_family_compare não foi carregado antes do chunk table-cvloo-kernel-family.&quot;)
+}
+if (!all(c(&quot;Trait&quot;, &quot;CV&quot;, &quot;Env_leave&quot;, &quot;Pathway&quot;, &quot;WeatherStatus&quot;, &quot;Linear&quot;, &quot;Gaussian&quot;, &quot;Arc-cosine&quot;) %in% names(cvloo_kernel_family_compare))) {
+  stop(&quot;cvloo_kernel_family_compare não contém as colunas exigidas pelo chunk table-cvloo-kernel-family.&quot;)
+}
+
+cvloo_kernel_family_compare %&gt;%
   mutate( Linear = round(Linear, 3),
    Gaussian = round(Gaussian, 3),
    `Arc-cosine` = round(`Arc-cosine`, 3),
@@ -16123,9 +16213,16 @@ Sem W
 <h2>15. Figuras</h2>
 <p>As figuras finais resumem a capacidade preditiva para o catálogo
 completo de modelos em <code>CV1/CV2</code> e <code>CV0/CV00</code>.</p>
-<pre class="r"><code>cv12_plot_data &lt;- cv12_summary %&gt;%
+<pre class="r"><code>if (!exists(&quot;cv12_summary&quot;)) {
+  stop(&quot;O objeto cv12_summary não foi carregado antes do chunk figure-cv12.&quot;)
+}
+if (!all(c(&quot;Trait&quot;, &quot;CV&quot;, &quot;MeanCorrelation&quot;, &quot;SDCorrelation&quot;, &quot;FullEffects&quot;, &quot;Group&quot;) %in% names(cv12_summary))) {
+  stop(&quot;cv12_summary não contém as colunas exigidas pelo chunk figure-cv12.&quot;)
+}
+
+cv12_plot_data &lt;- cv12_summary %&gt;%
   mutate(
-    FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 18)
+    FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 22)
   )
 
 cv12_traits &lt;- unique(cv12_plot_data$Trait)
@@ -16147,6 +16244,8 @@ for (current_trait in cv12_traits) {
 
     lower_limit_trait_cv &lt;- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
     upper_limit_trait_cv &lt;- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+    plot_lower_limit_trait_cv &lt;- min(0, lower_limit_trait_cv - 0.03)
+    plot_upper_limit_trait_cv &lt;- upper_limit_trait_cv + 0.03
 
     p_trait_cv12 &lt;- ggplot(
       trait_cv_data,
@@ -16166,14 +16265,14 @@ for (current_trait in cv12_traits) {
       scale_x_discrete(name = &quot;Efeitos completos do modelo&quot;) +
       scale_y_continuous(
         name = &quot;Correlação preditiva&quot;,
-        limits = c(lower_limit_trait_cv - 0.03, upper_limit_trait_cv + 0.03),
         expand = expansion(mult = c(0, 0.02))
       ) +
+      coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
       ggthemes::scale_fill_gdocs(name = &quot;Grupo de comparação&quot;) +
       theme_bw() +
       theme(
         plot.title = element_text(face = &quot;bold&quot;, size = 12, hjust = 0.5),
-        axis.text.x = element_text(size = 7, angle = 55, hjust = 1, vjust = 1),
+        axis.text.x = element_text(size = 7, angle = 60, hjust = 1, vjust = 1),
         axis.text.y = element_text(size = 8),
         axis.title = element_text(size = 10),
         legend.position = &quot;top&quot;,
@@ -16189,8 +16288,8 @@ for (current_trait in cv12_traits) {
     ggsave(
       file.path(figures_dir, paste0(&quot;prediction_&quot;, current_trait, &quot;_&quot;, tolower(current_cv), &quot;.tiff&quot;)),
       plot = p_trait_cv12,
-      width = 16,
-      height = 10,
+      width = 18,
+      height = 11,
       dpi = 300,
       bg = &quot;white&quot;
     )
@@ -16219,6 +16318,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/b01788b36d696af665e3d06f20f7bac2161c1d92/docs/figure/visualization_pt.Rmd/figure-cv12-1.png" target="_blank">b01788b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-09
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33/docs/figure/visualization_pt.Rmd/figure-cv12-1.png" target="_blank">3ecd781</a>
@@ -16256,10 +16366,130 @@ WevertonGomesCosta
 </table>
 </div>
 </div>
-<p><img src="figure/visualization_pt.Rmd/figure-cv12-2.png" width="100%" style="display: block; margin: auto;" /><img src="figure/visualization_pt.Rmd/figure-cv12-3.png" width="100%" style="display: block; margin: auto;" /><img src="figure/visualization_pt.Rmd/figure-cv12-4.png" width="100%" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>cvloo_plot_data &lt;- cvloo_summary %&gt;%
+<p><img src="figure/visualization_pt.Rmd/figure-cv12-2.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-figure-cv12-2">
+Past versions of figure-cv12-2.png
+</button>
+</p>
+<div id="fig-figure-cv12-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/b01788b36d696af665e3d06f20f7bac2161c1d92/docs/figure/visualization_pt.Rmd/figure-cv12-2.png" target="_blank">b01788b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/visualization_pt.Rmd/figure-cv12-3.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-figure-cv12-3">
+Past versions of figure-cv12-3.png
+</button>
+</p>
+<div id="fig-figure-cv12-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/b01788b36d696af665e3d06f20f7bac2161c1d92/docs/figure/visualization_pt.Rmd/figure-cv12-3.png" target="_blank">b01788b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/visualization_pt.Rmd/figure-cv12-4.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-figure-cv12-4">
+Past versions of figure-cv12-4.png
+</button>
+</p>
+<div id="fig-figure-cv12-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/b01788b36d696af665e3d06f20f7bac2161c1d92/docs/figure/visualization_pt.Rmd/figure-cv12-4.png" target="_blank">b01788b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>if (!exists(&quot;cvloo_summary&quot;)) {
+  stop(&quot;O objeto cvloo_summary não foi carregado antes do chunk figure-cvloo.&quot;)
+}
+if (!all(c(&quot;Trait&quot;, &quot;CV&quot;, &quot;Env_leave&quot;, &quot;MeanCorrelation&quot;, &quot;SDCorrelation&quot;, &quot;FullEffects&quot;, &quot;Group&quot;) %in% names(cvloo_summary))) {
+  stop(&quot;cvloo_summary não contém as colunas exigidas pelo chunk figure-cvloo.&quot;)
+}
+
+cvloo_plot_data &lt;- cvloo_summary %&gt;%
   mutate(
-    FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 18),
+    FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 22),
     Env_leave = factor(Env_leave, levels = c(&quot;CS11_WS&quot;, &quot;CS11_WW&quot;, &quot;CS12_WS&quot;, &quot;CS12_WW&quot;))
   )
 
@@ -16289,6 +16519,8 @@ for (current_trait in cvloo_traits) {
 
     lower_limit_trait_cv &lt;- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
     upper_limit_trait_cv &lt;- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+    plot_lower_limit_trait_cv &lt;- min(0, lower_limit_trait_cv - 0.03)
+    plot_upper_limit_trait_cv &lt;- upper_limit_trait_cv + 0.03
 
     p_trait_cvloo &lt;- ggplot(
       trait_cv_data,
@@ -16309,15 +16541,15 @@ for (current_trait in cvloo_traits) {
       scale_x_discrete(name = &quot;Efeitos completos do modelo&quot;) +
       scale_y_continuous(
         name = &quot;Correlação preditiva&quot;,
-        limits = c(lower_limit_trait_cv - 0.03, upper_limit_trait_cv + 0.03),
         expand = expansion(mult = c(0, 0.02))
       ) +
+      coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
       ggthemes::scale_fill_gdocs(name = &quot;Grupo de comparação&quot;) +
       theme_bw() +
       theme(
         plot.title = element_text(face = &quot;bold&quot;, size = 12, hjust = 0.5),
         strip.text = element_text(face = &quot;bold&quot;, size = 9),
-        axis.text.x = element_text(size = 6.5, angle = 55, hjust = 1, vjust = 1),
+        axis.text.x = element_text(size = 6.5, angle = 60, hjust = 1, vjust = 1),
         axis.text.y = element_text(size = 8),
         axis.title = element_text(size = 10),
         legend.position = &quot;top&quot;,
@@ -16333,8 +16565,8 @@ for (current_trait in cvloo_traits) {
     ggsave(
       file.path(figures_dir, paste0(&quot;prediction_&quot;, current_trait, &quot;_&quot;, current_cv, &quot;.tiff&quot;)),
       plot = p_trait_cvloo,
-      width = 16,
-      height = 11,
+      width = 18,
+      height = 12,
       dpi = 300,
       bg = &quot;white&quot;
     )
@@ -16363,6 +16595,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/b01788b36d696af665e3d06f20f7bac2161c1d92/docs/figure/visualization_pt.Rmd/figure-cvloo-1.png" target="_blank">b01788b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-09
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/3ecd7811e0ec4a00fec3fca0d512c5968c5c0f33/docs/figure/visualization_pt.Rmd/figure-cvloo-1.png" target="_blank">3ecd781</a>
@@ -16400,7 +16643,120 @@ WevertonGomesCosta
 </table>
 </div>
 </div>
-<p><img src="figure/visualization_pt.Rmd/figure-cvloo-2.png" width="100%" style="display: block; margin: auto;" /><img src="figure/visualization_pt.Rmd/figure-cvloo-3.png" width="100%" style="display: block; margin: auto;" /><img src="figure/visualization_pt.Rmd/figure-cvloo-4.png" width="100%" style="display: block; margin: auto;" /></p>
+<p><img src="figure/visualization_pt.Rmd/figure-cvloo-2.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-figure-cvloo-2">
+Past versions of figure-cvloo-2.png
+</button>
+</p>
+<div id="fig-figure-cvloo-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/b01788b36d696af665e3d06f20f7bac2161c1d92/docs/figure/visualization_pt.Rmd/figure-cvloo-2.png" target="_blank">b01788b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/visualization_pt.Rmd/figure-cvloo-3.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-figure-cvloo-3">
+Past versions of figure-cvloo-3.png
+</button>
+</p>
+<div id="fig-figure-cvloo-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/b01788b36d696af665e3d06f20f7bac2161c1d92/docs/figure/visualization_pt.Rmd/figure-cvloo-3.png" target="_blank">b01788b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/visualization_pt.Rmd/figure-cvloo-4.png" width="100%" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-figure-cvloo-4">
+Past versions of figure-cvloo-4.png
+</button>
+</p>
+<div id="fig-figure-cvloo-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/b01788b36d696af665e3d06f20f7bac2161c1d92/docs/figure/visualization_pt.Rmd/figure-cvloo-4.png" target="_blank">b01788b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-04-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="nota-final" class="section level2">
 <h2>16. Nota final</h2>
@@ -16479,16 +16835,27 @@ loaded via a namespace (and not attached):
 [41] ragg_1.5.0         pkgconfig_2.0.3    pillar_1.11.1      bslib_0.9.0       
 [45] later_1.4.4        gtable_0.3.6       glue_1.8.0         Rcpp_1.1.1        
 [49] systemfonts_1.3.1  xfun_0.54          tidyselect_1.2.1   rstudioapi_0.17.1 
-[53] farver_2.1.2       htmltools_0.5.9    rmarkdown_2.30     svglite_2.2.2     
-[57] compiler_4.5.1     S7_0.2.1          </code></pre>
+[53] farver_2.1.2       htmltools_0.5.9    labeling_0.4.3     rmarkdown_2.30    
+[57] svglite_2.2.2      compiler_4.5.1     S7_0.2.1          </code></pre>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Weverton Gomes da Costa, Postdoctoral Researcher,
+Department of Statistics - Universidade Federal de Viçosa, <a
+href="mailto:wevertonufv@gmail.com"
+class="email">wevertonufv@gmail.com</a><a href="#fnref1"
+class="footnote-back">↩︎</a></p></li>
+</ol>
 </div>
 
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUmVzdW1vcyBlIGZpZ3VyYXMgZGUgcHJlZGnDp8OjbyIKYXV0aG9yOgogIC0gQ29zdGEsIFcuIEcuXltXZXZlcnRvbiBHb21lcyBkYSBDb3N0YSwgUG9zdGRvY3RvcmFsIFJlc2VhcmNoZXIsIERlcGFydG1lbnQgb2YgU3RhdGlzdGljcyAtIFVuaXZlcnNpZGFkZSBGZWRlcmFsIGRlIFZpw6dvc2EsIHdldmVydG9udWZ2QGdtYWlsLmNvbV0KZGF0ZTogImByIFN5cy5EYXRlKClgIgpzaXRlOiB3b3JrZmxvd3I6OndmbG93X3NpdGUKdXJsOiBodHRwczovL3dldmVydG9uZ29tZXNjb3N0YS5naXRodWIuaW8vSW50ZWdyYXRpbmctbmlyLWdlbm9taWMta2VybmVsLwpvdXRwdXQ6CiAgd29ya2Zsb3dyOjp3Zmxvd19odG1sOgogICAgdG9jOiB0cnVlCiAgICB0b2NfZGVwdGg6IDMKICAgIHRvY19mbG9hdDogdHJ1ZQogICAgY29kZV9kb3dubG9hZDogdHJ1ZQplZGl0b3Jfb3B0aW9uczoKICBjaHVua19vdXRwdXRfdHlwZTogY29uc29sZQpnaXRodWItcmVwbzogV2V2ZXJ0b25Hb21lc0Nvc3RhL0ludGVncmF0aW5nLW5pci1nZW5vbWljLWtlcm5lbAotLS0KCioqTGFuZ3VhZ2UgLyBJZGlvbWE6KiogW0VuZ2xpc2hdKHZpc3VhbGl6YXRpb24uaHRtbCkgfCBbUG9ydHVndcOqc10odmlzdWFsaXphdGlvbl9wdC5odG1sKQoKQSBmaW5hbGlkYWRlIGRlc3NhIGV0YXBhIMOpIHRvbWFyIGFzIHNhw61kYXMgYnJ1dGFzIGRlIHByZWRpw6fDo28gcHJvZHV6aWRhcyBlbSBgYW5hbHlzaXNfcHJlZGljdGlvbl9ydW5fb3V0cHV0cy5SbWRgLCByZW9yZ2FuaXrDoS1sYXMgZW0gdGFiZWxhcy1yZXN1bW8gaW50ZXJwcmV0w6F2ZWlzIGUgZGVwb2lzIHRyYWR1emlyIGVzc2VzIHJlc3Vtb3MgZW0gY29tcGFyYcOnw7VlcyBjb21wYWN0YXMgZSBmaWd1cmFzIGZpbmFpcy4KCiMjIDEuIENvbmZpZ3VyYcOnw6NvCgpPIGRvY3VtZW50byBjb21lw6dhIGRlZmluaW5kbyB1bSBlc3RpbG8gY29uc2lzdGVudGUgZGUgcmVuZGVyaXphw6fDo28gcGFyYSBjw7NkaWdvLCB0YWJlbGFzIGUgZmlndXJhcy4gSXNzbyBhanVkYSBvIHR1dG9yaWFsIGEgcGVybWFuZWNlciBsZWfDrXZlbCBxdWFuZG8gw6kgaW5zcGVjaW9uYWRvIGVtIEhUTUwgZSBtYW50w6ltIGVzdMOhdmVsIGEgYXByZXNlbnRhw6fDo28gdmlzdWFsIGVudHJlIG9zIGRpZmVyZW50ZXMgb3V0cHV0cyBwcm9kdXppZG9zIG5lc3RhIGV0YXBhLgoKYGBge3Igc2V0dXB9CmtuaXRyOjpvcHRzX2NodW5rJHNldCggZWNobyA9IFRSVUUsCiB3YXJuaW5nID0gRkFMU0UsCiBtZXNzYWdlID0gRkFMU0UsCiBmaWcud2lkdGggPSAxMywKIGZpZy5oZWlnaHQgPSA4LAogIG91dC53aWR0aCA9ICIxMDAlIiApCmBgYAoKIyMgMi4gQ2FycmVnYXIgcGFjb3RlcyBlIGxvY2FsaXphciBhcyBwYXN0YXMgZG8gcHJvamV0bwoKQSBldGFwYSBkZSB2aXN1YWxpemHDp8OjbyBkZXBlbmRlIGRlIHVtIHBlcXVlbm8gY29uanVudG8gZGUgcGFjb3RlcyBwYXJhIG1hbmlwdWxhw6fDo28gZGUgZGFkb3MsIGNvbnN0cnXDp8OjbyBkZSBmaWd1cmFzIGUgZm9ybWF0YcOnw6NvIGRlIHRhYmVsYXMuIEVsYSB0YW1iw6ltIHByZWNpc2EgbG9jYWxpemFyIGNvcnJldGFtZW50ZSBhcyBwYXN0YXMgZG8gcHJvamV0bywgcG9ycXVlIG9zIHJlc3Vtb3MgZ2VyYWRvcyBhcXVpIGRldmVtIHNlciBncmF2YWRvcyBlbSBjYW1pbmhvcyBkZSBzYcOtZGEgZXN0w6F2ZWlzIHF1ZSBkZXBvaXMgcG9kZW0gc2VyIHJldXRpbGl6YWRvcyBwZWxvIHNpdGUgZSBwb3IgbWF0ZXJpYWlzIG9yaWVudGFkb3MgYW8gbWFudXNjcml0by4KCkVzdGEgc2XDp8OjbyBwYWRyb25pemEgYSByYWl6IGRvIHByb2pldG8sIGxvY2FsaXphIGFzIHBhc3RhcyBxdWUgY29udMOqbSBhcyBzYcOtZGFzIGRlIHByZWRpw6fDo28gZSBwcmVwYXJhIG9zIGRpcmV0w7NyaW9zIG5vcyBxdWFpcyBhcyB0YWJlbGFzIGUgZmlndXJhcyBmaW5haXMgc2Vyw6NvIGdyYXZhZGFzLgoKYGBge3IgcGFja2FnZXMtYW5kLXBhdGhzfQpybShsaXN0ID0gbHMoKSkKb3B0aW9ucyhzY2lwZW4gPSA5OTkpCnBhY2thZ2VzX25lZWRlZCA8LSBjKCAiZHBseXIiLAogInRpZHlyIiwKICJyZWFkciIsCiAidGliYmxlIiwKICJnZ3Bsb3QyIiwKICJnZ3RoZW1lcyIsCiAia25pdHIiLAogImthYmxlRXh0cmEiLAogICJzdHJpbmdyIiApCnBhY2thZ2VzX21pc3NpbmcgPC0gcGFja2FnZXNfbmVlZGVkWyEocGFja2FnZXNfbmVlZGVkICVpbiUgaW5zdGFsbGVkLnBhY2thZ2VzKClbLCAiUGFja2FnZSJdKV0KaWYgKGxlbmd0aChwYWNrYWdlc19taXNzaW5nKSA+IDApIHsKICBzdG9wKAogICAgcGFzdGUwKAogICAgICAiT3Mgc2VndWludGVzIHBhY290ZXMgc8OjbyBuZWNlc3PDoXJpb3MgcGFyYSBlc3RlIG3Ds2R1bG8sIG1hcyBuw6NvIGVzdMOjbyBpbnN0YWxhZG9zOiAiLAogICAgICBwYXN0ZShwYWNrYWdlc19taXNzaW5nLCBjb2xsYXBzZSA9ICIsICIpLAogICAgICAiLiBJbnN0YWxlLW9zIGFudGVzIGRlIHJlbmRlcml6YXIgdmlzdWFsaXphdGlvbl9wdC5SbWQuIgogICAgKQogICkKfQpsaWJyYXJ5KGRwbHlyKQpsaWJyYXJ5KHRpZHlyKQpsaWJyYXJ5KHJlYWRyKQpsaWJyYXJ5KHRpYmJsZSkKbGlicmFyeShnZ3Bsb3QyKQpsaWJyYXJ5KGdndGhlbWVzKQpsaWJyYXJ5KGtuaXRyKQpsaWJyYXJ5KGthYmxlRXh0cmEpCmxpYnJhcnkoc3RyaW5ncikKcHJvamVjdF9yb290IDwtIGdldHdkKCkKaWYgKCFkaXIuZXhpc3RzKGZpbGUucGF0aChwcm9qZWN0X3Jvb3QsICJvdXRwdXQiKSkgJiYgZGlyLmV4aXN0cyhmaWxlLnBhdGgocHJvamVjdF9yb290LCAiLi4iLCAib3V0cHV0IikpKSB7CiAgcHJvamVjdF9yb290IDwtIG5vcm1hbGl6ZVBhdGgoZmlsZS5wYXRoKHByb2plY3Rfcm9vdCwgIi4uIikpCn0KaWYgKCFkaXIuZXhpc3RzKGZpbGUucGF0aChwcm9qZWN0X3Jvb3QsICJvdXRwdXQiKSkpIHsKICBzdG9wKCJOw6NvIGZvaSBwb3Nzw612ZWwgbG9jYWxpemFyIGEgcGFzdGEgJ291dHB1dC8nLlxuRXhlY3V0ZSBlc3RlIHNjcmlwdCBhIHBhcnRpciBkYSByYWl6IGRvIHByb2pldG8gb3UgZGUgYW5hbHlzaXMvLiIpCn0KcmVzdWx0c19kaXIgPC0gZmlsZS5wYXRoKHByb2plY3Rfcm9vdCwgIm91dHB1dCIsICJyZXN1bHRzIikKZmlndXJlc19kaXIgPC0gZmlsZS5wYXRoKHByb2plY3Rfcm9vdCwgIm91dHB1dCIsICJmaWd1cmVzIikKdGFibGVzX2RpciA8LSBmaWxlLnBhdGgocHJvamVjdF9yb290LCAib3V0cHV0IiwgInRhYmxlcyIpCmRpci5jcmVhdGUoZmlndXJlc19kaXIsIHJlY3Vyc2l2ZSA9IFRSVUUsIHNob3dXYXJuaW5ncyA9IEZBTFNFKQpkaXIuY3JlYXRlKHRhYmxlc19kaXIsIHJlY3Vyc2l2ZSA9IFRSVUUsIHNob3dXYXJuaW5ncyA9IEZBTFNFKQpgYGAKCiMjIDMuIENhdMOhbG9nbyBkZSBtb2RlbG9zIHVzYWRvIG5vIHBpcGVsaW5lIHJlZHV6aWRvCgpBIGV0YXBhIGRlIHZpc3VhbGl6YcOnw6NvIHVzYSBvIG1lc21vIGNhdMOhbG9nbyByZWR1emlkbyBkZSAxOCBtb2RlbG9zIGFkb3RhZG8gbm8gZmx1eG8gZGUgcHJlZGnDp8Ojby4gQXF1aSBlc3NlIGNhdMOhbG9nbyDDqSByZW9yZ2FuaXphZG8gcGFyYSBxdWUgb3MgcmVzdW1vcyBzZSB0b3JuZW0gbWFpcyBmw6FjZWlzIGRlIGludGVycHJldGFyIGVtIHRlcm1vcyBhbmFsw610aWNvcy4gRW0gdmV6IGRlIG1vc3RyYXIgYXBlbmFzIG7Dum1lcm9zIGRlIG1vZGVsbywgYSB0YWJlbGEgZW5mYXRpemEgYSB2aWEgcmVwcmVzZW50YWRhLCBhIGZhbcOtbGlhIGRlIGtlcm5lbCB1dGlsaXphZGEgZSBzZSBhIGluZm9ybWHDp8OjbyBjbGltw6F0aWNhIGVzdMOhIHByZXNlbnRlLgoKRXNzYSBvcmdhbml6YcOnw6NvIMOpIGltcG9ydGFudGUgcG9ycXVlIGFzIGNvbXBhcmHDp8O1ZXMgbW9zdHJhZGFzIG1haXMgYWRpYW50ZSBubyBkb2N1bWVudG8gbsOjbyBzw6NvIGFyYml0csOhcmlhcy4gRWxhcyBmb3JhbSBkZXNlbmhhZGFzIHBhcmEgYWp1ZGFyIG8gbGVpdG9yIGEgZW50ZW5kZXIgZGUgb25kZSB2w6ptIG9zIGdhbmhvcyBwcmVkaXRpdm9zIGUgc2UgZXNzZXMgZ2FuaG9zIGVzdMOjbyBhc3NvY2lhZG9zIMOgIGluZm9ybWHDp8OjbyBjbGltw6F0aWNhLCDDoCBlc2NvbGhhIGRvIGtlcm5lbCBvdSDDoCBpbnRlZ3Jhw6fDo28gZW50cmUgZm9udGVzIGdlbsO0bWljYXMgZSBmZW7DtG1pY2FzLgoKYGBge3IgbW9kZWwtY2F0YWxvZ30KbW9kZWxfY2F0YWxvZyA8LSB0aWJibGUoCiAgTW9kZWxOdW1iZXIgPSBjKDEsIDEwLCAzLCAxMywgNSwgMTYsIDIsIDExLCA0LCAxNCwgNiwgMTcsIDcsIDEyLCA4LCAxNSwgOSwgMTgpLAogIE1vZGVsID0gcGFzdGUwKCJFdGEiLCBjKDEsIDEwLCAzLCAxMywgNSwgMTYsIDIsIDExLCA0LCAxNCwgNiwgMTcsIDcsIDEyLCA4LCAxNSwgOSwgMTgpKSwKICBQYXRod2F5ID0gYygKICAgIHJlcCgiR2Vub21pYyBwYXRod2F5IiwgNiksCiAgICByZXAoIlBoZW5vbWljIHBhdGh3YXkiLCA2KSwKICAgIHJlcCgiQ29tYmluZWQgRyArIFAgcGF0aHdheSIsIDYpCiAgKSwKICBLZXJuZWxGYW1pbHkgPSBjKAogICAgIkxpbmVhciIsICJMaW5lYXIiLCAiR2F1c3NpYW4iLCAiR2F1c3NpYW4iLCAiQXJjLWNvc2luZSIsICJBcmMtY29zaW5lIiwKICAgICJMaW5lYXIiLCAiTGluZWFyIiwgIkdhdXNzaWFuIiwgIkdhdXNzaWFuIiwgIkFyYy1jb3NpbmUiLCAiQXJjLWNvc2luZSIsCiAgICAiTGluZWFyIiwgIkxpbmVhciIsICJHYXVzc2lhbiIsICJHYXVzc2lhbiIsICJBcmMtY29zaW5lIiwgIkFyYy1jb3NpbmUiCiAgKSwKICBXZWF0aGVyU3RhdHVzID0gYygKICAgICJXaXRob3V0IFciLCAiV2l0aCBXIiwgIldpdGhvdXQgVyIsICJXaXRoIFciLCAiV2l0aG91dCBXIiwgIldpdGggVyIsCiAgICAiV2l0aG91dCBXIiwgIldpdGggVyIsICJXaXRob3V0IFciLCAiV2l0aCBXIiwgIldpdGhvdXQgVyIsICJXaXRoIFciLAogICAgIldpdGhvdXQgVyIsICJXaXRoIFciLCAiV2l0aG91dCBXIiwgIldpdGggVyIsICJXaXRob3V0IFciLCAiV2l0aCBXIgogICksCiAgR3JvdXAgPSBjKAogICAgIkdlbm9taWMgYmFzZWxpbmUiLCAiV2VhdGhlciBzaW5nbGUtc291cmNlIiwgIkdlbm9taWMgYmFzZWxpbmUiLCAiV2VhdGhlciBzaW5nbGUtc291cmNlIiwgIkdlbm9taWMgYmFzZWxpbmUiLCAiV2VhdGhlciBzaW5nbGUtc291cmNlIiwKICAgICJQaGVub21pYyBiYXNlbGluZSIsICJXZWF0aGVyIHNpbmdsZS1zb3VyY2UiLCAiUGhlbm9taWMgYmFzZWxpbmUiLCAiV2VhdGhlciBzaW5nbGUtc291cmNlIiwgIlBoZW5vbWljIGJhc2VsaW5lIiwgIldlYXRoZXIgc2luZ2xlLXNvdXJjZSIsCiAgICAiQ29tYmluZWQgYmFzZWxpbmUiLCAiV2VhdGhlciBjb21iaW5lZCIsICJDb21iaW5lZCBiYXNlbGluZSIsICJXZWF0aGVyIGNvbWJpbmVkIiwgIkNvbWJpbmVkIGJhc2VsaW5lIiwgIldlYXRoZXIgY29tYmluZWQiCiAgKSwKICBEZXNjcmlwdGlvbiA9IGMoCiAgICAiR2Vub21pYyBsaW5lYXIgKyBFIiwgIkdlbm9taWMgbGluZWFyICsgVyIsICJHZW5vbWljIEdhdXNzaWFuICsgRSIsICJHZW5vbWljIEdhdXNzaWFuICsgVyIsICJHZW5vbWljIGFyYy1jb3NpbmUgKyBFIiwgIkdlbm9taWMgYXJjLWNvc2luZSArIFciLAogICAgIlBoZW5vbWljIGxpbmVhciArIEUiLCAiUGhlbm9taWMgbGluZWFyICsgVyIsICJQaGVub21pYyBHYXVzc2lhbiArIEUiLCAiUGhlbm9taWMgR2F1c3NpYW4gKyBXIiwgIlBoZW5vbWljIGFyYy1jb3NpbmUgKyBFIiwgIlBoZW5vbWljIGFyYy1jb3NpbmUgKyBXIiwKICAgICJDb21iaW5lZCBsaW5lYXIgKyBFIiwgIkNvbWJpbmVkIGxpbmVhciArIFciLCAiQ29tYmluZWQgR2F1c3NpYW4gKyBFIiwgIkNvbWJpbmVkIEdhdXNzaWFuICsgVyIsICJDb21iaW5lZCBhcmMtY29zaW5lICsgRSIsICJDb21iaW5lZCBhcmMtY29zaW5lICsgVyIKICApLAogIFNob3J0RGVzY3JpcHRpb24gPSBjKAogICAgIkcgKyBFIiwgIkcgKyBXIiwgIkdHSyArIEUiLCAiR0dLICsgVyIsICJHQUsgKyBFIiwgIkdBSyArIFciLAogICAgIlAgKyBFIiwgIlAgKyBXIiwgIlBHSyArIEUiLCAiUEdLICsgVyIsICJQQUsgKyBFIiwgIlBBSyArIFciLAogICAgIkcrUCArIEUiLCAiRytQICsgVyIsICJHR0srUEdLICsgRSIsICJHR0srUEdLICsgVyIsICJHQUsrUEFLICsgRSIsICJHQUsrUEFLICsgVyIKICApLAogIEZ1bGxFZmZlY3RzID0gYygKICAgICJFICsgRyArIEdFIiwKICAgICJFICsgVyArIEcgKyBHRSArIEdXIiwKICAgICJFICsgR0dLICsgR0dLRSIsCiAgICAiRSArIFcgKyBHR0sgKyBHR0tFICsgR0dLVyIsCiAgICAiRSArIEdBSyArIEdBS0UiLAogICAgIkUgKyBXICsgR0FLICsgR0FLRSArIEdBS1ciLAogICAgIkUgKyBQICsgUEUiLAogICAgIkUgKyBXICsgUCArIFBFICsgUFciLAogICAgIkUgKyBQR0sgKyBQR0tFIiwKICAgICJFICsgVyArIFBHSyArIFBHS0UgKyBQR0tXIiwKICAgICJFICsgUEFLICsgUEFLRSIsCiAgICAiRSArIFcgKyBQQUsgKyBQQUtFICsgUEFLVyIsCiAgICAiRSArIEcgKyBQICsgR0UgKyBQRSIsCiAgICAiRSArIFcgKyBHICsgUCArIEdFICsgUEUgKyBHVyArIFBXIiwKICAgICJFICsgR0dLICsgUEdLICsgR0dLRSArIFBHS0UiLAogICAgIkUgKyBXICsgR0dLICsgUEdLICsgR0dLRSArIFBHS0UgKyBHR0tXICsgUEdLVyIsCiAgICAiRSArIEdBSyArIFBBSyArIEdBS0UgKyBQQUtFIiwKICAgICJFICsgVyArIEdBSyArIFBBSyArIEdBS0UgKyBQQUtFICsgR0FLVyArIFBBS1ciCiAgKSwKICBJbnRlcnByZXRpdmVEZXNjcmlwdGlvbiA9IGMoCiAgICAiTGluZWFyIGdlbm9taWMgbW9kZWwgd2l0aCBlbnZpcm9ubWVudCBhbmQgR8OXRSBpbnRlcmFjdGlvbi4iLAogICAgIkxpbmVhciBnZW5vbWljLXdlYXRoZXIgbW9kZWwgd2l0aCBlbnZpcm9ubWVudCwgd2VhdGhlciwgR8OXRSwgYW5kIEfDl1cgaW50ZXJhY3Rpb24uIiwKICAgICJHYXVzc2lhbiBnZW5vbWljIG1vZGVsIHdpdGggZW52aXJvbm1lbnQgYW5kIGdlbm9taWMtYnktZW52aXJvbm1lbnQgaW50ZXJhY3Rpb24uIiwKICAgICJHYXVzc2lhbiBnZW5vbWljLXdlYXRoZXIgbW9kZWwgd2l0aCBlbnZpcm9ubWVudCwgd2VhdGhlciwgZ2Vub21pYy1ieS1lbnZpcm9ubWVudCwgYW5kIGdlbm9taWMtYnktd2VhdGhlciBpbnRlcmFjdGlvbi4iLAogICAgIkFyYy1jb3NpbmUgZ2Vub21pYyBtb2RlbCB3aXRoIGVudmlyb25tZW50IGFuZCBnZW5vbWljLWJ5LWVudmlyb25tZW50IGludGVyYWN0aW9uLiIsCiAgICAiQXJjLWNvc2luZSBnZW5vbWljLXdlYXRoZXIgbW9kZWwgd2l0aCBlbnZpcm9ubWVudCwgd2VhdGhlciwgZ2Vub21pYy1ieS1lbnZpcm9ubWVudCwgYW5kIGdlbm9taWMtYnktd2VhdGhlciBpbnRlcmFjdGlvbi4iLAogICAgIkxpbmVhciBwaGVub21pYyBtb2RlbCB3aXRoIGVudmlyb25tZW50IGFuZCBQw5dFIGludGVyYWN0aW9uLiIsCiAgICAiTGluZWFyIHBoZW5vbWljLXdlYXRoZXIgbW9kZWwgd2l0aCBlbnZpcm9ubWVudCwgd2VhdGhlciwgUMOXRSwgYW5kIFDDl1cgaW50ZXJhY3Rpb24uIiwKICAgICJHYXVzc2lhbiBwaGVub21pYyBtb2RlbCB3aXRoIGVudmlyb25tZW50IGFuZCBwaGVub21pYy1ieS1lbnZpcm9ubWVudCBpbnRlcmFjdGlvbi4iLAogICAgIkdhdXNzaWFuIHBoZW5vbWljLXdlYXRoZXIgbW9kZWwgd2l0aCBlbnZpcm9ubWVudCwgd2VhdGhlciwgcGhlbm9taWMtYnktZW52aXJvbm1lbnQsIGFuZCBwaGVub21pYy1ieS13ZWF0aGVyIGludGVyYWN0aW9uLiIsCiAgICAiQXJjLWNvc2luZSBwaGVub21pYyBtb2RlbCB3aXRoIGVudmlyb25tZW50IGFuZCBwaGVub21pYy1ieS1lbnZpcm9ubWVudCBpbnRlcmFjdGlvbi4iLAogICAgIkFyYy1jb3NpbmUgcGhlbm9taWMtd2VhdGhlciBtb2RlbCB3aXRoIGVudmlyb25tZW50LCB3ZWF0aGVyLCBwaGVub21pYy1ieS1lbnZpcm9ubWVudCwgYW5kIHBoZW5vbWljLWJ5LXdlYXRoZXIgaW50ZXJhY3Rpb24uIiwKICAgICJMaW5lYXIgY29tYmluZWQgZ2Vub21pYy1waGVub21pYyBtb2RlbCB3aXRoIGVudmlyb25tZW50IGFuZCBib3RoIEfDl0UgYW5kIFDDl0UgaW50ZXJhY3Rpb24gdGVybXMuIiwKICAgICJMaW5lYXIgY29tYmluZWQgZ2Vub21pYy1waGVub21pYy13ZWF0aGVyIG1vZGVsIHdpdGggZW52aXJvbm1lbnQsIHdlYXRoZXIsIEfDl0UsIFDDl0UsIEfDl1csIGFuZCBQw5dXIGludGVyYWN0aW9uIHRlcm1zLiIsCiAgICAiR2F1c3NpYW4gY29tYmluZWQgZ2Vub21pYy1waGVub21pYyBtb2RlbCB3aXRoIGVudmlyb25tZW50IGFuZCBib3RoIGdlbm9taWMgYW5kIHBoZW5vbWljIGludGVyYWN0aW9uIHRlcm1zLiIsCiAgICAiR2F1c3NpYW4gY29tYmluZWQgZ2Vub21pYy1waGVub21pYy13ZWF0aGVyIG1vZGVsIHdpdGggZW52aXJvbm1lbnQsIHdlYXRoZXIsIGFuZCB0aGUgZnVsbCBzZXQgb2YgZ2Vub21pYyBhbmQgcGhlbm9taWMgaW50ZXJhY3Rpb24gdGVybXMuIiwKICAgICJBcmMtY29zaW5lIGNvbWJpbmVkIGdlbm9taWMtcGhlbm9taWMgbW9kZWwgd2l0aCBlbnZpcm9ubWVudCBhbmQgYm90aCBnZW5vbWljIGFuZCBwaGVub21pYyBpbnRlcmFjdGlvbiB0ZXJtcy4iLAogICAgIkFyYy1jb3NpbmUgY29tYmluZWQgZ2Vub21pYy1waGVub21pYy13ZWF0aGVyIG1vZGVsIHdpdGggZW52aXJvbm1lbnQsIHdlYXRoZXIsIGFuZCB0aGUgZnVsbCBzZXQgb2YgZ2Vub21pYyBhbmQgcGhlbm9taWMgaW50ZXJhY3Rpb24gdGVybXMuIgogICkKKQoKbW9kZWxfY2F0YWxvZwpgYGAKCiMjIDQuIFBhcmVzIGRlIGNvbXBhcmHDp8OjbyB1c2Fkb3MgcGFyYSBjb250cmFzdGVzIGVudHJlIGNvbSBXIGUgc2VtIFcKClVtYSBwZXJndW50YSBjZW50cmFsIG5lc3RlIHByb2pldG8gw6kgc2UgYWRpY2lvbmFyIG8ga2VybmVsIGNsaW3DoXRpY28gKGBXYCkgbWVsaG9yYSBhIGNhcGFjaWRhZGUgcHJlZGl0aXZhLiBQYXJhIHJlc3BvbmRlciBhIGVzc2EgcGVyZ3VudGEgZGUgZm9ybWEganVzdGEsIGEgY29tcGFyYcOnw6NvIGRldmUgc2VtcHJlIHNlciBmZWl0YSBlbnRyZSBtb2RlbG9zIGVzdHJ1dHVyYWxtZW50ZSBzZW1lbGhhbnRlcyBlIHF1ZSBkaWZlcmVtIGFwZW5hcyBwZWxhIGluY2x1c8OjbyBkYSBpbmZvcm1hw6fDo28gY2xpbcOhdGljYS4KCk9zIHBhcmVzIGRlIGNvbXBhcmHDp8OjbyBkZWZpbmlkb3MgYWJhaXhvIGZvcm5lY2VtIGV4YXRhbWVudGUgZXNzYSBlc3RydXR1cmEuIEVsZXMgc8OjbyB1c2Fkb3MgbWFpcyBhZGlhbnRlIHBhcmEgY29uc3RydWlyIHRhYmVsYXMgcXVlIHF1YW50aWZpY2FtIHF1YW50byBvIGRlc2VtcGVuaG8gcHJlZGl0aXZvIG11ZGEgcXVhbmRvIGBXYCDDqSBpbnRyb2R1emlkbyBkZW50cm8gZGEgbWVzbWEgdmlhIGUgZGEgbWVzbWEgZmFtw61saWEgZGUga2VybmVsLgoKYGBge3IgY29tcGFyaXNvbi1wYWlyc30KY29tcGFyaXNvbl9wYWlycyA8LSB0aWJibGUoIENvbXBhcmlzb24gPSBjKCAiR2Vuw7RtaWNvIGxpbmVhciIsICJHZW7DtG1pY28gR2F1c3NpYW5vIiwgIkdlbsO0bWljbyBhcmMtY29zaW5lIiwgIkZlbsO0bWljbyBsaW5lYXIiLCAiRmVuw7RtaWNvIEdhdXNzaWFubyIsICJGZW7DtG1pY28gYXJjLWNvc2luZSIsICJDb21iaW5hZG8gbGluZWFyIiwgIkNvbWJpbmFkbyBHYXVzc2lhbm8iLCAiQ29tYmluYWRvIGFyYy1jb3NpbmUiICksCiBXaXRob3V0VyA9IGMoIkV0YTEiLCAiRXRhMyIsICJFdGE1IiwgIkV0YTIiLCAiRXRhNCIsICJFdGE2IiwgIkV0YTciLCAiRXRhOCIsICJFdGE5IiksCiAgV2l0aFcgPSBjKCJFdGExMCIsICJFdGExMyIsICJFdGExNiIsICJFdGExMSIsICJFdGExNCIsICJFdGExNyIsICJFdGExMiIsICJFdGExNSIsICJFdGExOCIpICkKY29tcGFyaXNvbl9wYWlycwpgYGAKCiMjIDUuIExvY2FsaXphciBhcnF1aXZvcyBkZSBwcmVkacOnw6NvCgpPIHByaW1laXJvIHBhc3NvIG9wZXJhY2lvbmFsIGRhIGV0YXBhIGRlIHZpc3VhbGl6YcOnw6NvIMOpIGxvY2FsaXphciBvcyBhcnF1aXZvcyBicnV0b3MgZGUgcHJlZGnDp8OjbyBwcm9kdXppZG9zIHBlbG8gbcOzZHVsbyBhbnRlcmlvci4gTm8gcGFkcsOjbyBhdHVhbCBkbyBwaXBlbGluZSwgZXNzZXMgYXJxdWl2b3Mgc8OjbyBncmF2YWRvcyByZWN1cnNpdmFtZW50ZSBlbSBgb3V0cHV0L3Jlc3VsdHMvYCwgY29tIHVtYSBoaWVyYXJxdWlhIGV4cGzDrWNpdGEgcG9yIGVzcXVlbWEgZGUgdmFsaWRhw6fDo28sIHRyYcOnbywgcmVwZXRpw6fDo28gZSBmb2xkLgoKTmVzdGEgZXRhcGEsIG8gc2NyaXB0IGzDqiBhIHBhc3RhIGRlIHJlc3VsdGFkb3MgZGUgZm9ybWEgcmVjdXJzaXZhLCBtYW50w6ltIGFwZW5hcyBvcyBDU1ZzIGRlIHByZWRpw6fDo28gYXJtYXplbmFkb3MgZGVudHJvIGRvcyByYW1vcyBlc3RydXR1cmFkb3MgYENWMWAsIGBDVjJgLCBgQ1YwYCBlIGBDVjAwYCwgZSBpZ25vcmEgb3V0cm9zIGFydGVmYXRvcywgY29tbyBgYmdscl9ydW5zYC4gSXNzbyB0b3JuYSBvcyByZXN1bW9zIHBvc3RlcmlvcmVzIGNvbXBhdMOtdmVpcyBjb20gbyBub3ZvIGNvbnRyYXRvIGBSZXAvRm9sZGAgZSBwcmVzZXJ2YSBhIHNlcGFyYcOnw6NvIGVudHJlIG9zIHByb2JsZW1hcyBkZSB2YWxpZGHDp8OjbyBiYXNlYWRvcyBlbSBnZW7Ds3RpcG9zIGUgb3MgcHJvYmxlbWFzIGxlYXZlLW9uZS1lbnZpcm9ubWVudC1vdXQuCgpgYGB7ciBsb2FkLWdlbmVyYXRlZC12aXN1YWxpemF0aW9uLW91dHB1dHMsIGluY2x1ZGU9RkFMU0V9CnJlcXVpcmVkX3RhYmxlcyA8LSBjKAogICJwcmVkaWN0aW9uX2N2MV9jdjJfc3VtbWFyeS5jc3YiLAogICJwcmVkaWN0aW9uX2N2MF9jdjAwX3N1bW1hcnkuY3N2IiwKICAicHJlZGljdGlvbl9jdjFfY3YyX3dfZWZmZWN0X3BhaXJzLmNzdiIsCiAgInByZWRpY3Rpb25fY3YwX2N2MDBfd19lZmZlY3RfcGFpcnMuY3N2IiwKICAicHJlZGljdGlvbl9jdjFfY3YyX2tlcm5lbF9mYW1pbHlfY29tcGFyZS5jc3YiLAogICJwcmVkaWN0aW9uX2N2MF9jdjAwX2tlcm5lbF9mYW1pbHlfY29tcGFyZS5jc3YiLAogICJwcmVkaWN0aW9uX2N2MV9jdjJfZGlzcGxheV90YWJsZS5jc3YiLAogICJwcmVkaWN0aW9uX2N2MF9jdjAwX2Rpc3BsYXlfdGFibGUuY3N2IiwKICAicHJlZGljdGlvbl9jdjFfY3YyX3RvcDMuY3N2IiwKICAicHJlZGljdGlvbl9jdjBfY3YwMF90b3AzLmNzdiIKKQoKbWlzc2luZ190YWJsZXMgPC0gcmVxdWlyZWRfdGFibGVzWwogICFmaWxlLmV4aXN0cyhmaWxlLnBhdGgodGFibGVzX2RpciwgcmVxdWlyZWRfdGFibGVzKSkKXQoKaWYgKGxlbmd0aChtaXNzaW5nX3RhYmxlcykgPiAwKSB7CiAgc3RvcCgKICAgICJFc3RlIGFycXVpdm8gZGUgdmlzdWFsaXphw6fDo28gZGVwZW5kZSBkZSB0YWJlbGFzIGrDoSBnZXJhZGFzIGVtIG91dHB1dC90YWJsZXMvLlxuIiwKICAgICJBcnF1aXZvcyBhdXNlbnRlczogIiwKICAgIHBhc3RlKG1pc3NpbmdfdGFibGVzLCBjb2xsYXBzZSA9ICIsICIpCiAgKQp9Cgptb2RlbF9jYXRhbG9nIDwtIG1vZGVsX2NhdGFsb2cgJT4lCiAgZHBseXI6OnNlbGVjdCgKICAgIE1vZGVsTnVtYmVyLAogICAgTW9kZWwsCiAgICBQYXRod2F5LAogICAgS2VybmVsRmFtaWx5LAogICAgV2VhdGhlclN0YXR1cywKICAgIEdyb3VwLAogICAgRGVzY3JpcHRpb24sCiAgICBTaG9ydERlc2NyaXB0aW9uLAogICAgRnVsbEVmZmVjdHMsCiAgICBJbnRlcnByZXRpdmVEZXNjcmlwdGlvbgogICkKCnJlcXVpcmVkX21vZGVsX2NhdGFsb2dfY29scyA8LSBjKAogICJNb2RlbE51bWJlciIsCiAgIk1vZGVsIiwKICAiUGF0aHdheSIsCiAgIktlcm5lbEZhbWlseSIsCiAgIldlYXRoZXJTdGF0dXMiLAogICJHcm91cCIsCiAgIkRlc2NyaXB0aW9uIiwKICAiU2hvcnREZXNjcmlwdGlvbiIsCiAgIkZ1bGxFZmZlY3RzIiwKICAiSW50ZXJwcmV0aXZlRGVzY3JpcHRpb24iCikKCm1pc3NpbmdfbW9kZWxfY2F0YWxvZ19jb2xzIDwtIHNldGRpZmYocmVxdWlyZWRfbW9kZWxfY2F0YWxvZ19jb2xzLCBuYW1lcyhtb2RlbF9jYXRhbG9nKSkKaWYgKGxlbmd0aChtaXNzaW5nX21vZGVsX2NhdGFsb2dfY29scykgPiAwKSB7CiAgc3RvcCgKICAgICJPIG9iamV0byBtb2RlbF9jYXRhbG9nIGZvaSBjcmlhZG8gc2VtIGFzIGNvbHVuYXMgb2JyaWdhdMOzcmlhczogIiwKICAgIHBhc3RlKG1pc3NpbmdfbW9kZWxfY2F0YWxvZ19jb2xzLCBjb2xsYXBzZSA9ICIsICIpLAogICAgIi4iCiAgKQp9CgpjdjEyX3N1bW1hcnkgPC0gcmVhZHI6OnJlYWRfY3N2KAogIGZpbGUucGF0aCh0YWJsZXNfZGlyLCAicHJlZGljdGlvbl9jdjFfY3YyX3N1bW1hcnkuY3N2IiksCiAgc2hvd19jb2xfdHlwZXMgPSBGQUxTRQopCgppZiAoIWFsbChjKCJNb2RlbE51bWJlciIsICJNb2RlbCIpICVpbiUgbmFtZXMoY3YxMl9zdW1tYXJ5KSkpIHsKICBzdG9wKAogICAgInByZWRpY3Rpb25fY3YxX2N2Ml9zdW1tYXJ5LmNzdiBwcmVjaXNhIGNvbnRlciBNb2RlbE51bWJlciBlIE1vZGVsIHBhcmEgcmVhbmV4YXIgRnVsbEVmZmVjdHMgZSBJbnRlcnByZXRpdmVEZXNjcmlwdGlvbi4iCiAgKQp9CgpjdjEyX3N1bW1hcnkgPC0gY3YxMl9zdW1tYXJ5ICU+JQogIGRwbHlyOjpzZWxlY3QoCiAgICAtZHBseXI6OmFueV9vZigKICAgICAgYygKICAgICAgICAiRnVsbEVmZmVjdHMiLAogICAgICAgICJJbnRlcnByZXRpdmVEZXNjcmlwdGlvbiIsCiAgICAgICAgIkZ1bGxFZmZlY3RzLngiLAogICAgICAgICJGdWxsRWZmZWN0cy55IiwKICAgICAgICAiSW50ZXJwcmV0aXZlRGVzY3JpcHRpb24ueCIsCiAgICAgICAgIkludGVycHJldGl2ZURlc2NyaXB0aW9uLnkiCiAgICAgICkKICAgICkKICApICU+JQogIGxlZnRfam9pbigKICAgIG1vZGVsX2NhdGFsb2cgJT4lIGRwbHlyOjpzZWxlY3QoTW9kZWxOdW1iZXIsIE1vZGVsLCBGdWxsRWZmZWN0cywgSW50ZXJwcmV0aXZlRGVzY3JpcHRpb24pLAogICAgYnkgPSBjKCJNb2RlbE51bWJlciIsICJNb2RlbCIpCiAgKQoKcmVxdWlyZWRfY3YxMl9zdW1tYXJ5X2NvbHMgPC0gYygKICAiVHJhaXQiLAogICJDViIsCiAgIkdyb3VwIiwKICAiTWVhbkNvcnJlbGF0aW9uIiwKICAiU0RDb3JyZWxhdGlvbiIsCiAgIkZ1bGxFZmZlY3RzIgopCgptaXNzaW5nX2N2MTJfc3VtbWFyeV9jb2xzIDwtIHNldGRpZmYocmVxdWlyZWRfY3YxMl9zdW1tYXJ5X2NvbHMsIG5hbWVzKGN2MTJfc3VtbWFyeSkpCmlmIChsZW5ndGgobWlzc2luZ19jdjEyX3N1bW1hcnlfY29scykgPiAwKSB7CiAgc3RvcCgKICAgICJjdjEyX3N1bW1hcnkgZmljb3Ugc2VtIGNvbHVuYXMgb2JyaWdhdMOzcmlhcyBhcMOzcyBhIGNhcmdhOiAiLAogICAgcGFzdGUobWlzc2luZ19jdjEyX3N1bW1hcnlfY29scywgY29sbGFwc2UgPSAiLCAiKSwKICAgICIuIgogICkKfQoKY3Zsb29fc3VtbWFyeSA8LSByZWFkcjo6cmVhZF9jc3YoCiAgZmlsZS5wYXRoKHRhYmxlc19kaXIsICJwcmVkaWN0aW9uX2N2MF9jdjAwX3N1bW1hcnkuY3N2IiksCiAgc2hvd19jb2xfdHlwZXMgPSBGQUxTRQopCgppZiAoIWFsbChjKCJNb2RlbE51bWJlciIsICJNb2RlbCIpICVpbiUgbmFtZXMoY3Zsb29fc3VtbWFyeSkpKSB7CiAgc3RvcCgKICAgICJwcmVkaWN0aW9uX2N2MF9jdjAwX3N1bW1hcnkuY3N2IHByZWNpc2EgY29udGVyIE1vZGVsTnVtYmVyIGUgTW9kZWwgcGFyYSByZWFuZXhhciBGdWxsRWZmZWN0cyBlIEludGVycHJldGl2ZURlc2NyaXB0aW9uLiIKICApCn0KCmN2bG9vX3N1bW1hcnkgPC0gY3Zsb29fc3VtbWFyeSAlPiUKICBkcGx5cjo6c2VsZWN0KAogICAgLWRwbHlyOjphbnlfb2YoCiAgICAgIGMoCiAgICAgICAgIkZ1bGxFZmZlY3RzIiwKICAgICAgICAiSW50ZXJwcmV0aXZlRGVzY3JpcHRpb24iLAogICAgICAgICJGdWxsRWZmZWN0cy54IiwKICAgICAgICAiRnVsbEVmZmVjdHMueSIsCiAgICAgICAgIkludGVycHJldGl2ZURlc2NyaXB0aW9uLngiLAogICAgICAgICJJbnRlcnByZXRpdmVEZXNjcmlwdGlvbi55IgogICAgICApCiAgICApCiAgKSAlPiUKICBsZWZ0X2pvaW4oCiAgICBtb2RlbF9jYXRhbG9nICU+JSBkcGx5cjo6c2VsZWN0KE1vZGVsTnVtYmVyLCBNb2RlbCwgRnVsbEVmZmVjdHMsIEludGVycHJldGl2ZURlc2NyaXB0aW9uKSwKICAgIGJ5ID0gYygiTW9kZWxOdW1iZXIiLCAiTW9kZWwiKQogICkKCnJlcXVpcmVkX2N2bG9vX3N1bW1hcnlfY29scyA8LSBjKAogICJUcmFpdCIsCiAgIkNWIiwKICAiRW52X2xlYXZlIiwKICAiR3JvdXAiLAogICJNZWFuQ29ycmVsYXRpb24iLAogICJTRENvcnJlbGF0aW9uIiwKICAiRnVsbEVmZmVjdHMiCikKCm1pc3NpbmdfY3Zsb29fc3VtbWFyeV9jb2xzIDwtIHNldGRpZmYocmVxdWlyZWRfY3Zsb29fc3VtbWFyeV9jb2xzLCBuYW1lcyhjdmxvb19zdW1tYXJ5KSkKaWYgKGxlbmd0aChtaXNzaW5nX2N2bG9vX3N1bW1hcnlfY29scykgPiAwKSB7CiAgc3RvcCgKICAgICJjdmxvb19zdW1tYXJ5IGZpY291IHNlbSBjb2x1bmFzIG9icmlnYXTDs3JpYXMgYXDDs3MgYSBjYXJnYTogIiwKICAgIHBhc3RlKG1pc3NpbmdfY3Zsb29fc3VtbWFyeV9jb2xzLCBjb2xsYXBzZSA9ICIsICIpLAogICAgIi4iCiAgKQp9CgpjdjEyX3dfZWZmZWN0IDwtIHJlYWRyOjpyZWFkX2NzdigKICBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YxX2N2Ml93X2VmZmVjdF9wYWlycy5jc3YiKSwKICBzaG93X2NvbF90eXBlcyA9IEZBTFNFCikKCnJlcXVpcmVkX2N2MTJfd19lZmZlY3RfY29scyA8LSBjKAogICJDb21wYXJpc29uIiwKICAiVHJhaXQiLAogICJDViIsCiAgIk1lYW5XaXRob3V0VyIsCiAgIk1lYW5XaXRoVyIsCiAgIkRlbHRhV2l0aFciCikKCm1pc3NpbmdfY3YxMl93X2VmZmVjdF9jb2xzIDwtIHNldGRpZmYocmVxdWlyZWRfY3YxMl93X2VmZmVjdF9jb2xzLCBuYW1lcyhjdjEyX3dfZWZmZWN0KSkKaWYgKGxlbmd0aChtaXNzaW5nX2N2MTJfd19lZmZlY3RfY29scykgPiAwKSB7CiAgc3RvcCgKICAgICJwcmVkaWN0aW9uX2N2MV9jdjJfd19lZmZlY3RfcGFpcnMuY3N2IGZpY291IHNlbSBjb2x1bmFzIG9icmlnYXTDs3JpYXM6ICIsCiAgICBwYXN0ZShtaXNzaW5nX2N2MTJfd19lZmZlY3RfY29scywgY29sbGFwc2UgPSAiLCAiKSwKICAgICIuIgogICkKfQoKY3Zsb29fd19lZmZlY3QgPC0gcmVhZHI6OnJlYWRfY3N2KAogIGZpbGUucGF0aCh0YWJsZXNfZGlyLCAicHJlZGljdGlvbl9jdjBfY3YwMF93X2VmZmVjdF9wYWlycy5jc3YiKSwKICBzaG93X2NvbF90eXBlcyA9IEZBTFNFCikKCnJlcXVpcmVkX2N2bG9vX3dfZWZmZWN0X2NvbHMgPC0gYygKICAiQ29tcGFyaXNvbiIsCiAgIlRyYWl0IiwKICAiQ1YiLAogICJFbnZfbGVhdmUiLAogICJNZWFuV2l0aG91dFciLAogICJNZWFuV2l0aFciLAogICJEZWx0YVdpdGhXIgopCgptaXNzaW5nX2N2bG9vX3dfZWZmZWN0X2NvbHMgPC0gc2V0ZGlmZihyZXF1aXJlZF9jdmxvb193X2VmZmVjdF9jb2xzLCBuYW1lcyhjdmxvb193X2VmZmVjdCkpCmlmIChsZW5ndGgobWlzc2luZ19jdmxvb193X2VmZmVjdF9jb2xzKSA+IDApIHsKICBzdG9wKAogICAgInByZWRpY3Rpb25fY3YwX2N2MDBfd19lZmZlY3RfcGFpcnMuY3N2IGZpY291IHNlbSBjb2x1bmFzIG9icmlnYXTDs3JpYXM6ICIsCiAgICBwYXN0ZShtaXNzaW5nX2N2bG9vX3dfZWZmZWN0X2NvbHMsIGNvbGxhcHNlID0gIiwgIiksCiAgICAiLiIKICApCn0KCmN2MTJfa2VybmVsX2ZhbWlseV9jb21wYXJlIDwtIHJlYWRyOjpyZWFkX2NzdigKICBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YxX2N2Ml9rZXJuZWxfZmFtaWx5X2NvbXBhcmUuY3N2IiksCiAgc2hvd19jb2xfdHlwZXMgPSBGQUxTRQopCgpyZXF1aXJlZF9jdjEyX2tlcm5lbF9jb2xzIDwtIGMoCiAgIlRyYWl0IiwKICAiQ1YiLAogICJQYXRod2F5IiwKICAiV2VhdGhlclN0YXR1cyIsCiAgIkxpbmVhciIsCiAgIkdhdXNzaWFuIiwKICAiQXJjLWNvc2luZSIsCiAgIkRlbHRhX0dhdXNzaWFuX3ZzX0xpbmVhciIsCiAgIkRlbHRhX0FyY0Nvc192c19MaW5lYXIiLAogICJEZWx0YV9BcmNDb3NfdnNfR2F1c3NpYW4iCikKCm1pc3NpbmdfY3YxMl9rZXJuZWxfY29scyA8LSBzZXRkaWZmKHJlcXVpcmVkX2N2MTJfa2VybmVsX2NvbHMsIG5hbWVzKGN2MTJfa2VybmVsX2ZhbWlseV9jb21wYXJlKSkKaWYgKGxlbmd0aChtaXNzaW5nX2N2MTJfa2VybmVsX2NvbHMpID4gMCkgewogIHN0b3AoCiAgICAicHJlZGljdGlvbl9jdjFfY3YyX2tlcm5lbF9mYW1pbHlfY29tcGFyZS5jc3YgZmljb3Ugc2VtIGNvbHVuYXMgb2JyaWdhdMOzcmlhczogIiwKICAgIHBhc3RlKG1pc3NpbmdfY3YxMl9rZXJuZWxfY29scywgY29sbGFwc2UgPSAiLCAiKSwKICAgICIuIgogICkKfQoKY3Zsb29fa2VybmVsX2ZhbWlseV9jb21wYXJlIDwtIHJlYWRyOjpyZWFkX2NzdigKICBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YwX2N2MDBfa2VybmVsX2ZhbWlseV9jb21wYXJlLmNzdiIpLAogIHNob3dfY29sX3R5cGVzID0gRkFMU0UKKQoKcmVxdWlyZWRfY3Zsb29fa2VybmVsX2NvbHMgPC0gYygKICAiVHJhaXQiLAogICJDViIsCiAgIkVudl9sZWF2ZSIsCiAgIlBhdGh3YXkiLAogICJXZWF0aGVyU3RhdHVzIiwKICAiTGluZWFyIiwKICAiR2F1c3NpYW4iLAogICJBcmMtY29zaW5lIiwKICAiRGVsdGFfR2F1c3NpYW5fdnNfTGluZWFyIiwKICAiRGVsdGFfQXJjQ29zX3ZzX0xpbmVhciIsCiAgIkRlbHRhX0FyY0Nvc192c19HYXVzc2lhbiIKKQoKbWlzc2luZ19jdmxvb19rZXJuZWxfY29scyA8LSBzZXRkaWZmKHJlcXVpcmVkX2N2bG9vX2tlcm5lbF9jb2xzLCBuYW1lcyhjdmxvb19rZXJuZWxfZmFtaWx5X2NvbXBhcmUpKQppZiAobGVuZ3RoKG1pc3NpbmdfY3Zsb29fa2VybmVsX2NvbHMpID4gMCkgewogIHN0b3AoCiAgICAicHJlZGljdGlvbl9jdjBfY3YwMF9rZXJuZWxfZmFtaWx5X2NvbXBhcmUuY3N2IGZpY291IHNlbSBjb2x1bmFzIG9icmlnYXTDs3JpYXM6ICIsCiAgICBwYXN0ZShtaXNzaW5nX2N2bG9vX2tlcm5lbF9jb2xzLCBjb2xsYXBzZSA9ICIsICIpLAogICAgIi4iCiAgKQp9CgpjdjEyX3RhYmxlX2Rpc3BsYXkgPC0gcmVhZHI6OnJlYWRfY3N2KAogIGZpbGUucGF0aCh0YWJsZXNfZGlyLCAicHJlZGljdGlvbl9jdjFfY3YyX2Rpc3BsYXlfdGFibGUuY3N2IiksCiAgc2hvd19jb2xfdHlwZXMgPSBGQUxTRQopCgpyZXF1aXJlZF9jdjEyX2Rpc3BsYXlfY29scyA8LSBjKAogICJUcmFpdCIsCiAgIkNWIiwKICAiUGF0aHdheSIsCiAgIktlcm5lbEZhbWlseSIsCiAgIldlYXRoZXJTdGF0dXMiLAogICJTaG9ydERlc2NyaXB0aW9uIiwKICAiTWVhbkNvcnJlbGF0aW9uIiwKICAiU0RDb3JyZWxhdGlvbiIsCiAgIk51bWJlck9mUmVwZXRpdGlvbnMiLAogICJNZWFuUnVudGltZVNlYyIKKQoKbWlzc2luZ19jdjEyX2Rpc3BsYXlfY29scyA8LSBzZXRkaWZmKHJlcXVpcmVkX2N2MTJfZGlzcGxheV9jb2xzLCBuYW1lcyhjdjEyX3RhYmxlX2Rpc3BsYXkpKQppZiAobGVuZ3RoKG1pc3NpbmdfY3YxMl9kaXNwbGF5X2NvbHMpID4gMCkgewogIHN0b3AoCiAgICAicHJlZGljdGlvbl9jdjFfY3YyX2Rpc3BsYXlfdGFibGUuY3N2IGZpY291IHNlbSBjb2x1bmFzIG9icmlnYXTDs3JpYXM6ICIsCiAgICBwYXN0ZShtaXNzaW5nX2N2MTJfZGlzcGxheV9jb2xzLCBjb2xsYXBzZSA9ICIsICIpLAogICAgIi4iCiAgKQp9Cgpjdmxvb190YWJsZV9kaXNwbGF5IDwtIHJlYWRyOjpyZWFkX2NzdigKICBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YwX2N2MDBfZGlzcGxheV90YWJsZS5jc3YiKSwKICBzaG93X2NvbF90eXBlcyA9IEZBTFNFCikKCnJlcXVpcmVkX2N2bG9vX2Rpc3BsYXlfY29scyA8LSBjKAogICJUcmFpdCIsCiAgIkNWIiwKICAiRW52X2xlYXZlIiwKICAiUGF0aHdheSIsCiAgIktlcm5lbEZhbWlseSIsCiAgIldlYXRoZXJTdGF0dXMiLAogICJTaG9ydERlc2NyaXB0aW9uIiwKICAiTWVhbkNvcnJlbGF0aW9uIiwKICAiU0RDb3JyZWxhdGlvbiIsCiAgIk51bWJlck9mUnVucyIsCiAgIk1lYW5SdW50aW1lU2VjIgopCgptaXNzaW5nX2N2bG9vX2Rpc3BsYXlfY29scyA8LSBzZXRkaWZmKHJlcXVpcmVkX2N2bG9vX2Rpc3BsYXlfY29scywgbmFtZXMoY3Zsb29fdGFibGVfZGlzcGxheSkpCmlmIChsZW5ndGgobWlzc2luZ19jdmxvb19kaXNwbGF5X2NvbHMpID4gMCkgewogIHN0b3AoCiAgICAicHJlZGljdGlvbl9jdjBfY3YwMF9kaXNwbGF5X3RhYmxlLmNzdiBmaWNvdSBzZW0gY29sdW5hcyBvYnJpZ2F0w7NyaWFzOiAiLAogICAgcGFzdGUobWlzc2luZ19jdmxvb19kaXNwbGF5X2NvbHMsIGNvbGxhcHNlID0gIiwgIiksCiAgICAiLiIKICApCn0KCmN2MTJfdG9wMyA8LSByZWFkcjo6cmVhZF9jc3YoCiAgZmlsZS5wYXRoKHRhYmxlc19kaXIsICJwcmVkaWN0aW9uX2N2MV9jdjJfdG9wMy5jc3YiKSwKICBzaG93X2NvbF90eXBlcyA9IEZBTFNFCikKCnJlcXVpcmVkX2N2MTJfdG9wM19jb2xzIDwtIGMoCiAgIlRyYWl0IiwKICAiQ1YiLAogICJTaG9ydERlc2NyaXB0aW9uIiwKICAiTWVhbkNvcnJlbGF0aW9uIiwKICAiU0RDb3JyZWxhdGlvbiIKKQoKbWlzc2luZ19jdjEyX3RvcDNfY29scyA8LSBzZXRkaWZmKHJlcXVpcmVkX2N2MTJfdG9wM19jb2xzLCBuYW1lcyhjdjEyX3RvcDMpKQppZiAobGVuZ3RoKG1pc3NpbmdfY3YxMl90b3AzX2NvbHMpID4gMCkgewogIHN0b3AoCiAgICAicHJlZGljdGlvbl9jdjFfY3YyX3RvcDMuY3N2IGZpY291IHNlbSBjb2x1bmFzIG9icmlnYXTDs3JpYXM6ICIsCiAgICBwYXN0ZShtaXNzaW5nX2N2MTJfdG9wM19jb2xzLCBjb2xsYXBzZSA9ICIsICIpLAogICAgIi4iCiAgKQp9Cgpjdmxvb190b3AzIDwtIHJlYWRyOjpyZWFkX2NzdigKICBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YwX2N2MDBfdG9wMy5jc3YiKSwKICBzaG93X2NvbF90eXBlcyA9IEZBTFNFCikKCnJlcXVpcmVkX2N2bG9vX3RvcDNfY29scyA8LSBjKAogICJUcmFpdCIsCiAgIkNWIiwKICAiRW52X2xlYXZlIiwKICAiU2hvcnREZXNjcmlwdGlvbiIsCiAgIk1lYW5Db3JyZWxhdGlvbiIsCiAgIlNEQ29ycmVsYXRpb24iCikKCm1pc3NpbmdfY3Zsb29fdG9wM19jb2xzIDwtIHNldGRpZmYocmVxdWlyZWRfY3Zsb29fdG9wM19jb2xzLCBuYW1lcyhjdmxvb190b3AzKSkKaWYgKGxlbmd0aChtaXNzaW5nX2N2bG9vX3RvcDNfY29scykgPiAwKSB7CiAgc3RvcCgKICAgICJwcmVkaWN0aW9uX2N2MF9jdjAwX3RvcDMuY3N2IGZpY291IHNlbSBjb2x1bmFzIG9icmlnYXTDs3JpYXM6ICIsCiAgICBwYXN0ZShtaXNzaW5nX2N2bG9vX3RvcDNfY29scywgY29sbGFwc2UgPSAiLCAiKSwKICAgICIuIgogICkKfQoKbW9kZWxfY2F0YWxvZyA8LSBtb2RlbF9jYXRhbG9nICU+JQogIGRwbHlyOjptdXRhdGUoCiAgICBQYXRod2F5ID0gZHBseXI6OnJlY29kZSgKICAgICAgUGF0aHdheSwKICAgICAgIkdlbm9taWMgcGF0aHdheSIgPSAiVmlhIGdlbsO0bWljYSIsCiAgICAgICJQaGVub21pYyBwYXRod2F5IiA9ICJWaWEgZmVuw7RtaWNhIiwKICAgICAgIkNvbWJpbmVkIEcgKyBQIHBhdGh3YXkiID0gIlZpYSBjb21iaW5hZGEgRyArIFAiCiAgICApLAogICAgS2VybmVsRmFtaWx5ID0gZHBseXI6OnJlY29kZSgKICAgICAgS2VybmVsRmFtaWx5LAogICAgICAiR2F1c3NpYW4iID0gIkdhdXNzaWFubyIKICAgICkKICApCgpjdjEyX3N1bW1hcnkgPC0gY3YxMl9zdW1tYXJ5ICU+JQogIGRwbHlyOjptdXRhdGUoCiAgICBQYXRod2F5ID0gZHBseXI6OnJlY29kZSgKICAgICAgUGF0aHdheSwKICAgICAgIkdlbm9taWMgcGF0aHdheSIgPSAiVmlhIGdlbsO0bWljYSIsCiAgICAgICJQaGVub21pYyBwYXRod2F5IiA9ICJWaWEgZmVuw7RtaWNhIiwKICAgICAgIkNvbWJpbmVkIEcgKyBQIHBhdGh3YXkiID0gIlZpYSBjb21iaW5hZGEgRyArIFAiCiAgICApLAogICAgS2VybmVsRmFtaWx5ID0gZHBseXI6OnJlY29kZSgKICAgICAgS2VybmVsRmFtaWx5LAogICAgICAiR2F1c3NpYW4iID0gIkdhdXNzaWFubyIKICAgICksCiAgICBXZWF0aGVyU3RhdHVzID0gZHBseXI6OnJlY29kZSgKICAgICAgV2VhdGhlclN0YXR1cywKICAgICAgIldpdGhvdXQgVyIgPSAiU2VtIFciLAogICAgICAiV2l0aCBXIiA9ICJDb20gVyIKICAgICksCiAgICBHcm91cCA9IGRwbHlyOjpyZWNvZGUoCiAgICAgIEdyb3VwLAogICAgICAiR2Vub21pYyBiYXNlbGluZSIgPSAiQmFzZSBnZW7DtG1pY2EiLAogICAgICAiUGhlbm9taWMgYmFzZWxpbmUiID0gIkJhc2UgZmVuw7RtaWNhIiwKICAgICAgIkNvbWJpbmVkIGJhc2VsaW5lIiA9ICJCYXNlIGNvbWJpbmFkYSIsCiAgICAgICJXZWF0aGVyIHNpbmdsZS1zb3VyY2UiID0gIkNsaW1hIGZvbnRlIMO6bmljYSIsCiAgICAgICJXZWF0aGVyIGNvbWJpbmVkIiA9ICJDbGltYSBjb21iaW5hZG8iCiAgICApLAogICAgRGVzY3JpcHRpb24gPSBkcGx5cjo6cmVjb2RlKAogICAgICBEZXNjcmlwdGlvbiwKICAgICAgIkdlbm9taWMgbGluZWFyICsgRSIgPSAiR2Vuw7RtaWNvIGxpbmVhciArIEUiLAogICAgICAiR2Vub21pYyBsaW5lYXIgKyBXIiA9ICJHZW7DtG1pY28gbGluZWFyICsgVyIsCiAgICAgICJHZW5vbWljIEdhdXNzaWFuICsgRSIgPSAiR2Vuw7RtaWNvIEdhdXNzaWFubyArIEUiLAogICAgICAiR2Vub21pYyBHYXVzc2lhbiArIFciID0gIkdlbsO0bWljbyBHYXVzc2lhbm8gKyBXIiwKICAgICAgIkdlbm9taWMgYXJjLWNvc2luZSArIEUiID0gIkdlbsO0bWljbyBhcmMtY29zaW5lICsgRSIsCiAgICAgICJHZW5vbWljIGFyYy1jb3NpbmUgKyBXIiA9ICJHZW7DtG1pY28gYXJjLWNvc2luZSArIFciLAogICAgICAiUGhlbm9taWMgbGluZWFyICsgRSIgPSAiRmVuw7RtaWNvIGxpbmVhciArIEUiLAogICAgICAiUGhlbm9taWMgbGluZWFyICsgVyIgPSAiRmVuw7RtaWNvIGxpbmVhciArIFciLAogICAgICAiUGhlbm9taWMgR2F1c3NpYW4gKyBFIiA9ICJGZW7DtG1pY28gR2F1c3NpYW5vICsgRSIsCiAgICAgICJQaGVub21pYyBHYXVzc2lhbiArIFciID0gIkZlbsO0bWljbyBHYXVzc2lhbm8gKyBXIiwKICAgICAgIlBoZW5vbWljIGFyYy1jb3NpbmUgKyBFIiA9ICJGZW7DtG1pY28gYXJjLWNvc2luZSArIEUiLAogICAgICAiUGhlbm9taWMgYXJjLWNvc2luZSArIFciID0gIkZlbsO0bWljbyBhcmMtY29zaW5lICsgVyIsCiAgICAgICJDb21iaW5lZCBsaW5lYXIgKyBFIiA9ICJDb21iaW5hZG8gbGluZWFyICsgRSIsCiAgICAgICJDb21iaW5lZCBsaW5lYXIgKyBXIiA9ICJDb21iaW5hZG8gbGluZWFyICsgVyIsCiAgICAgICJDb21iaW5lZCBHYXVzc2lhbiArIEUiID0gIkNvbWJpbmFkbyBHYXVzc2lhbm8gKyBFIiwKICAgICAgIkNvbWJpbmVkIEdhdXNzaWFuICsgVyIgPSAiQ29tYmluYWRvIEdhdXNzaWFubyArIFciLAogICAgICAiQ29tYmluZWQgYXJjLWNvc2luZSArIEUiID0gIkNvbWJpbmFkbyBhcmMtY29zaW5lICsgRSIsCiAgICAgICJDb21iaW5lZCBhcmMtY29zaW5lICsgVyIgPSAiQ29tYmluYWRvIGFyYy1jb3NpbmUgKyBXIgogICAgKQogICkKCmN2bG9vX3N1bW1hcnkgPC0gY3Zsb29fc3VtbWFyeSAlPiUKICBkcGx5cjo6bXV0YXRlKAogICAgUGF0aHdheSA9IGRwbHlyOjpyZWNvZGUoCiAgICAgIFBhdGh3YXksCiAgICAgICJHZW5vbWljIHBhdGh3YXkiID0gIlZpYSBnZW7DtG1pY2EiLAogICAgICAiUGhlbm9taWMgcGF0aHdheSIgPSAiVmlhIGZlbsO0bWljYSIsCiAgICAgICJDb21iaW5lZCBHICsgUCBwYXRod2F5IiA9ICJWaWEgY29tYmluYWRhIEcgKyBQIgogICAgKSwKICAgIEtlcm5lbEZhbWlseSA9IGRwbHlyOjpyZWNvZGUoCiAgICAgIEtlcm5lbEZhbWlseSwKICAgICAgIkdhdXNzaWFuIiA9ICJHYXVzc2lhbm8iCiAgICApLAogICAgV2VhdGhlclN0YXR1cyA9IGRwbHlyOjpyZWNvZGUoCiAgICAgIFdlYXRoZXJTdGF0dXMsCiAgICAgICJXaXRob3V0IFciID0gIlNlbSBXIiwKICAgICAgIldpdGggVyIgPSAiQ29tIFciCiAgICApLAogICAgR3JvdXAgPSBkcGx5cjo6cmVjb2RlKAogICAgICBHcm91cCwKICAgICAgIkdlbm9taWMgYmFzZWxpbmUiID0gIkJhc2UgZ2Vuw7RtaWNhIiwKICAgICAgIlBoZW5vbWljIGJhc2VsaW5lIiA9ICJCYXNlIGZlbsO0bWljYSIsCiAgICAgICJDb21iaW5lZCBiYXNlbGluZSIgPSAiQmFzZSBjb21iaW5hZGEiLAogICAgICAiV2VhdGhlciBzaW5nbGUtc291cmNlIiA9ICJDbGltYSBmb250ZSDDum5pY2EiLAogICAgICAiV2VhdGhlciBjb21iaW5lZCIgPSAiQ2xpbWEgY29tYmluYWRvIgogICAgKSwKICAgIERlc2NyaXB0aW9uID0gZHBseXI6OnJlY29kZSgKICAgICAgRGVzY3JpcHRpb24sCiAgICAgICJHZW5vbWljIGxpbmVhciArIEUiID0gIkdlbsO0bWljbyBsaW5lYXIgKyBFIiwKICAgICAgIkdlbm9taWMgbGluZWFyICsgVyIgPSAiR2Vuw7RtaWNvIGxpbmVhciArIFciLAogICAgICAiR2Vub21pYyBHYXVzc2lhbiArIEUiID0gIkdlbsO0bWljbyBHYXVzc2lhbm8gKyBFIiwKICAgICAgIkdlbm9taWMgR2F1c3NpYW4gKyBXIiA9ICJHZW7DtG1pY28gR2F1c3NpYW5vICsgVyIsCiAgICAgICJHZW5vbWljIGFyYy1jb3NpbmUgKyBFIiA9ICJHZW7DtG1pY28gYXJjLWNvc2luZSArIEUiLAogICAgICAiR2Vub21pYyBhcmMtY29zaW5lICsgVyIgPSAiR2Vuw7RtaWNvIGFyYy1jb3NpbmUgKyBXIiwKICAgICAgIlBoZW5vbWljIGxpbmVhciArIEUiID0gIkZlbsO0bWljbyBsaW5lYXIgKyBFIiwKICAgICAgIlBoZW5vbWljIGxpbmVhciArIFciID0gIkZlbsO0bWljbyBsaW5lYXIgKyBXIiwKICAgICAgIlBoZW5vbWljIEdhdXNzaWFuICsgRSIgPSAiRmVuw7RtaWNvIEdhdXNzaWFubyArIEUiLAogICAgICAiUGhlbm9taWMgR2F1c3NpYW4gKyBXIiA9ICJGZW7DtG1pY28gR2F1c3NpYW5vICsgVyIsCiAgICAgICJQaGVub21pYyBhcmMtY29zaW5lICsgRSIgPSAiRmVuw7RtaWNvIGFyYy1jb3NpbmUgKyBFIiwKICAgICAgIlBoZW5vbWljIGFyYy1jb3NpbmUgKyBXIiA9ICJGZW7DtG1pY28gYXJjLWNvc2luZSArIFciLAogICAgICAiQ29tYmluZWQgbGluZWFyICsgRSIgPSAiQ29tYmluYWRvIGxpbmVhciArIEUiLAogICAgICAiQ29tYmluZWQgbGluZWFyICsgVyIgPSAiQ29tYmluYWRvIGxpbmVhciArIFciLAogICAgICAiQ29tYmluZWQgR2F1c3NpYW4gKyBFIiA9ICJDb21iaW5hZG8gR2F1c3NpYW5vICsgRSIsCiAgICAgICJDb21iaW5lZCBHYXVzc2lhbiArIFciID0gIkNvbWJpbmFkbyBHYXVzc2lhbm8gKyBXIiwKICAgICAgIkNvbWJpbmVkIGFyYy1jb3NpbmUgKyBFIiA9ICJDb21iaW5hZG8gYXJjLWNvc2luZSArIEUiLAogICAgICAiQ29tYmluZWQgYXJjLWNvc2luZSArIFciID0gIkNvbWJpbmFkbyBhcmMtY29zaW5lICsgVyIKICAgICkKICApCgpjdjEyX3dfZWZmZWN0IDwtIGN2MTJfd19lZmZlY3QgJT4lCiAgZHBseXI6Om11dGF0ZSgKICAgIENvbXBhcmlzb24gPSBkcGx5cjo6cmVjb2RlKAogICAgICBDb21wYXJpc29uLAogICAgICAiR2Vub21pYyBsaW5lYXIiID0gIkdlbsO0bWljbyBsaW5lYXIiLAogICAgICAiR2Vub21pYyBHYXVzc2lhbiIgPSAiR2Vuw7RtaWNvIEdhdXNzaWFubyIsCiAgICAgICJHZW5vbWljIGFyYy1jb3NpbmUiID0gIkdlbsO0bWljbyBhcmMtY29zaW5lIiwKICAgICAgIlBoZW5vbWljIGxpbmVhciIgPSAiRmVuw7RtaWNvIGxpbmVhciIsCiAgICAgICJQaGVub21pYyBHYXVzc2lhbiIgPSAiRmVuw7RtaWNvIEdhdXNzaWFubyIsCiAgICAgICJQaGVub21pYyBhcmMtY29zaW5lIiA9ICJGZW7DtG1pY28gYXJjLWNvc2luZSIsCiAgICAgICJDb21iaW5lZCBsaW5lYXIiID0gIkNvbWJpbmFkbyBsaW5lYXIiLAogICAgICAiQ29tYmluZWQgR2F1c3NpYW4iID0gIkNvbWJpbmFkbyBHYXVzc2lhbm8iLAogICAgICAiQ29tYmluZWQgYXJjLWNvc2luZSIgPSAiQ29tYmluYWRvIGFyYy1jb3NpbmUiCiAgICApCiAgKQoKY3Zsb29fd19lZmZlY3QgPC0gY3Zsb29fd19lZmZlY3QgJT4lCiAgZHBseXI6Om11dGF0ZSgKICAgIENvbXBhcmlzb24gPSBkcGx5cjo6cmVjb2RlKAogICAgICBDb21wYXJpc29uLAogICAgICAiR2Vub21pYyBsaW5lYXIiID0gIkdlbsO0bWljbyBsaW5lYXIiLAogICAgICAiR2Vub21pYyBHYXVzc2lhbiIgPSAiR2Vuw7RtaWNvIEdhdXNzaWFubyIsCiAgICAgICJHZW5vbWljIGFyYy1jb3NpbmUiID0gIkdlbsO0bWljbyBhcmMtY29zaW5lIiwKICAgICAgIlBoZW5vbWljIGxpbmVhciIgPSAiRmVuw7RtaWNvIGxpbmVhciIsCiAgICAgICJQaGVub21pYyBHYXVzc2lhbiIgPSAiRmVuw7RtaWNvIEdhdXNzaWFubyIsCiAgICAgICJQaGVub21pYyBhcmMtY29zaW5lIiA9ICJGZW7DtG1pY28gYXJjLWNvc2luZSIsCiAgICAgICJDb21iaW5lZCBsaW5lYXIiID0gIkNvbWJpbmFkbyBsaW5lYXIiLAogICAgICAiQ29tYmluZWQgR2F1c3NpYW4iID0gIkNvbWJpbmFkbyBHYXVzc2lhbm8iLAogICAgICAiQ29tYmluZWQgYXJjLWNvc2luZSIgPSAiQ29tYmluYWRvIGFyYy1jb3NpbmUiCiAgICApCiAgKQoKY3YxMl9rZXJuZWxfZmFtaWx5X2NvbXBhcmUgPC0gY3YxMl9rZXJuZWxfZmFtaWx5X2NvbXBhcmUgJT4lCiAgZHBseXI6Om11dGF0ZSgKICAgIFBhdGh3YXkgPSBkcGx5cjo6cmVjb2RlKAogICAgICBQYXRod2F5LAogICAgICAiR2Vub21pYyBwYXRod2F5IiA9ICJWaWEgZ2Vuw7RtaWNhIiwKICAgICAgIlBoZW5vbWljIHBhdGh3YXkiID0gIlZpYSBmZW7DtG1pY2EiLAogICAgICAiQ29tYmluZWQgRyArIFAgcGF0aHdheSIgPSAiVmlhIGNvbWJpbmFkYSBHICsgUCIKICAgICksCiAgICBXZWF0aGVyU3RhdHVzID0gZHBseXI6OnJlY29kZSgKICAgICAgV2VhdGhlclN0YXR1cywKICAgICAgIldpdGhvdXQgVyIgPSAiU2VtIFciLAogICAgICAiV2l0aCBXIiA9ICJDb20gVyIKICAgICkKICApCgpjdmxvb19rZXJuZWxfZmFtaWx5X2NvbXBhcmUgPC0gY3Zsb29fa2VybmVsX2ZhbWlseV9jb21wYXJlICU+JQogIGRwbHlyOjptdXRhdGUoCiAgICBQYXRod2F5ID0gZHBseXI6OnJlY29kZSgKICAgICAgUGF0aHdheSwKICAgICAgIkdlbm9taWMgcGF0aHdheSIgPSAiVmlhIGdlbsO0bWljYSIsCiAgICAgICJQaGVub21pYyBwYXRod2F5IiA9ICJWaWEgZmVuw7RtaWNhIiwKICAgICAgIkNvbWJpbmVkIEcgKyBQIHBhdGh3YXkiID0gIlZpYSBjb21iaW5hZGEgRyArIFAiCiAgICApLAogICAgV2VhdGhlclN0YXR1cyA9IGRwbHlyOjpyZWNvZGUoCiAgICAgIFdlYXRoZXJTdGF0dXMsCiAgICAgICJXaXRob3V0IFciID0gIlNlbSBXIiwKICAgICAgIldpdGggVyIgPSAiQ29tIFciCiAgICApCiAgKQoKY3YxMl90YWJsZV9kaXNwbGF5IDwtIGN2MTJfdGFibGVfZGlzcGxheSAlPiUKICBkcGx5cjo6bXV0YXRlKAogICAgUGF0aHdheSA9IGRwbHlyOjpyZWNvZGUoCiAgICAgIFBhdGh3YXksCiAgICAgICJHZW5vbWljIHBhdGh3YXkiID0gIlZpYSBnZW7DtG1pY2EiLAogICAgICAiUGhlbm9taWMgcGF0aHdheSIgPSAiVmlhIGZlbsO0bWljYSIsCiAgICAgICJDb21iaW5lZCBHICsgUCBwYXRod2F5IiA9ICJWaWEgY29tYmluYWRhIEcgKyBQIgogICAgKSwKICAgIEtlcm5lbEZhbWlseSA9IGRwbHlyOjpyZWNvZGUoCiAgICAgIEtlcm5lbEZhbWlseSwKICAgICAgIkdhdXNzaWFuIiA9ICJHYXVzc2lhbm8iCiAgICApLAogICAgV2VhdGhlclN0YXR1cyA9IGRwbHlyOjpyZWNvZGUoCiAgICAgIFdlYXRoZXJTdGF0dXMsCiAgICAgICJXaXRob3V0IFciID0gIlNlbSBXIiwKICAgICAgIldpdGggVyIgPSAiQ29tIFciCiAgICApCiAgKQoKY3Zsb29fdGFibGVfZGlzcGxheSA8LSBjdmxvb190YWJsZV9kaXNwbGF5ICU+JQogIGRwbHlyOjptdXRhdGUoCiAgICBQYXRod2F5ID0gZHBseXI6OnJlY29kZSgKICAgICAgUGF0aHdheSwKICAgICAgIkdlbm9taWMgcGF0aHdheSIgPSAiVmlhIGdlbsO0bWljYSIsCiAgICAgICJQaGVub21pYyBwYXRod2F5IiA9ICJWaWEgZmVuw7RtaWNhIiwKICAgICAgIkNvbWJpbmVkIEcgKyBQIHBhdGh3YXkiID0gIlZpYSBjb21iaW5hZGEgRyArIFAiCiAgICApLAogICAgS2VybmVsRmFtaWx5ID0gZHBseXI6OnJlY29kZSgKICAgICAgS2VybmVsRmFtaWx5LAogICAgICAiR2F1c3NpYW4iID0gIkdhdXNzaWFubyIKICAgICksCiAgICBXZWF0aGVyU3RhdHVzID0gZHBseXI6OnJlY29kZSgKICAgICAgV2VhdGhlclN0YXR1cywKICAgICAgIldpdGhvdXQgVyIgPSAiU2VtIFciLAogICAgICAiV2l0aCBXIiA9ICJDb20gVyIKICAgICkKICApCmBgYAoKYGBge3IgbG9jYXRlLWZpbGVzLCBldmFsPUZBTFNFfQphbGxfcmVzdWx0X3JlbF9wYXRocyA8LSBsaXN0LmZpbGVzKHJlc3VsdHNfZGlyLCBwYXR0ZXJuID0gIlxcLmNzdiQiLCBmdWxsLm5hbWVzID0gRkFMU0UsIHJlY3Vyc2l2ZSA9IFRSVUUpCmFsbF9yZXN1bHRfcmVsX3BhdGhzIDwtIGdzdWIoIlxcXFwiLCAiLyIsIGFsbF9yZXN1bHRfcmVsX3BhdGhzKQpzdHJ1Y3R1cmVkX2lkeCA8LSBncmVwbCgiXkNWMS98XkNWMi98XkNWMC98XkNWMDAvIiwgYWxsX3Jlc3VsdF9yZWxfcGF0aHMpCmFsbF9yZXN1bHRfcmVsX3BhdGhzIDwtIGFsbF9yZXN1bHRfcmVsX3BhdGhzW3N0cnVjdHVyZWRfaWR4XQphbGxfcmVzdWx0X2ZpbGVzIDwtIGZpbGUucGF0aChyZXN1bHRzX2RpciwgYWxsX3Jlc3VsdF9yZWxfcGF0aHMpCmN2MTJfaWR4IDwtIGdyZXBsKCJeQ1YxL3xeQ1YyLyIsIGFsbF9yZXN1bHRfcmVsX3BhdGhzKQpjdmxvb19pZHggPC0gZ3JlcGwoIl5DVjAvfF5DVjAwLyIsIGFsbF9yZXN1bHRfcmVsX3BhdGhzKQpjdjEyX2ZpbGVzIDwtIGFsbF9yZXN1bHRfZmlsZXNbY3YxMl9pZHhdCmN2MTJfcmVsX3BhdGhzIDwtIGFsbF9yZXN1bHRfcmVsX3BhdGhzW2N2MTJfaWR4XQpjdmxvb19maWxlcyA8LSBhbGxfcmVzdWx0X2ZpbGVzW2N2bG9vX2lkeF0KY3Zsb29fcmVsX3BhdGhzIDwtIGFsbF9yZXN1bHRfcmVsX3BhdGhzW2N2bG9vX2lkeF0KY2F0KCJOw7ptZXJvIGRlIGFycXVpdm9zIENWMS9DVjI6IiwgbGVuZ3RoKGN2MTJfZmlsZXMpLCAiCiIpCmNhdCgiTsO6bWVybyBkZSBhcnF1aXZvcyBDVjAvQ1YwMDoiLCBsZW5ndGgoY3Zsb29fZmlsZXMpLCAiCiIpCmlmIChsZW5ndGgoY3YxMl9maWxlcykgPT0gMCAmJiBsZW5ndGgoY3Zsb29fZmlsZXMpID09IDApIHsKICBzdG9wKCJOZW5odW0gYXJxdWl2byBDU1YgZGUgcHJlZGnDp8OjbyBmb2kgZW5jb250cmFkbyBlbSBvdXRwdXQvcmVzdWx0cy8uCkV4ZWN1dGUgYW5hbHlzaXNfcHJlZGljdGlvbl9ydW5fb3V0cHV0cyBwcmltZWlyby4iKQp9CmBgYAoKIyMgNi4gTGVyIG9zIGFycXVpdm9zIENWMSBlIENWMiBnZXJhZG9zIHBlbG8gc2NyaXB0IGZpbmFsIGRlIHByZWRpw6fDo28KCk9zIGFycXVpdm9zIGBDVjFgIGUgYENWMmAgY29udMOqbSBhcyBzYcOtZGFzIGJydXRhcyBuZWNlc3PDoXJpYXMgcGFyYSByZXN1bWlyIG8gZGVzZW1wZW5obyBwcmVkaXRpdm8gcXVhbmRvIG8gZGVzYWZpbyDDqSBkZWZpbmlkbyBubyBlaXhvIGRvcyBnZW7Ds3RpcG9zLiBObyBmbHV4byBhdHVhbCwgcmVwZXRpw6fDo28gZSBmb2xkIGZpY2FtIGNvZGlmaWNhZG9zIHRhbnRvIG5hIGhpZXJhcnF1aWEgZGUgcGFzdGFzIHF1YW50byBubyBub21lIGRvIGFycXVpdm8sIGVudMOjbyBvIHNjcmlwdCByZWNvbnN0csOzaSBlc3NlcyBtZXRhZGFkb3MgZXhwbGljaXRhbWVudGUgYW50ZXMgZGUgbW9udGFyIG9zIHJlc3Vtb3MuCgpFc3NlIGRlc2VuaG8gw6kgw7p0aWwgcG9ycXVlIG1hbnTDqW0gbyBzaXN0ZW1hIGRlIGFycXVpdm9zIG9yZ2FuaXphZG8gcGFyYSBpbnNwZcOnw6NvIHLDoXBpZGEgZSwgYW8gbWVzbW8gdGVtcG8sIHBlcm1pdGUgcXVlIGEgZXRhcGEgZGUgdmlzdWFsaXphw6fDo28gcmVjb25zdHJ1YSB0YWJlbGFzIHVuaWZpY2FkYXMgYW8gbG9uZ28gZGUgcmVwZXRpw6fDtWVzIGUgZm9sZHMuCgpgYGB7ciByZWFkLWN2MTIsIGV2YWw9RkFMU0V9CmN2MTJfbGlzdCA8LSB2ZWN0b3IoImxpc3QiLCBsZW5ndGgoY3YxMl9maWxlcykpCmZvciAoaSBpbiBzZXFfYWxvbmcoY3YxMl9maWxlcykpIHsKICBjdXJyZW50X2ZpbGUgPC0gY3YxMl9maWxlc1tpXQogIGN1cnJlbnRfcmVsX3BhdGggPC0gY3YxMl9yZWxfcGF0aHNbaV0KICBwYXRoX3BhcnRzIDwtIHN0cnNwbGl0KGN1cnJlbnRfcmVsX3BhdGgsICIvIilbWzFdXQoKICBpZiAobGVuZ3RoKHBhdGhfcGFydHMpICE9IDUpIHsKICAgIHN0b3AoCiAgICAgICJFc3RydXR1cmEgZGUgZGlyZXTDs3Jpb3MgaW5lc3BlcmFkYSBwYXJhIGFycXVpdm8gQ1YxL0NWMjogIiwKICAgICAgY3VycmVudF9yZWxfcGF0aCwKICAgICAgIi5cblBhZHLDo28gZXNwZXJhZG86IENWMS88dHJhaXQ+L3JlcFhYL2ZvbGRYWC88ZmlsZT4uY3N2IG91IENWMi88dHJhaXQ+L3JlcFhYL2ZvbGRYWC88ZmlsZT4uY3N2IgogICAgKQogIH0KCiAgY3VycmVudF9jdiA8LSBwYXRoX3BhcnRzWzFdCiAgdHJhaXRfZnJvbV9wYXRoIDwtIHBhdGhfcGFydHNbMl0KICByZXBfZnJvbV9wYXRoIDwtIGFzLm51bWVyaWMoZ3N1YigiXnJlcCIsICIiLCBwYXRoX3BhcnRzWzNdKSkKICBmb2xkX2Zyb21fcGF0aCA8LSBhcy5udW1lcmljKGdzdWIoIl5mb2xkIiwgIiIsIHBhdGhfcGFydHNbNF0pKQoKICBmaWxlX25hbWUgPC0gc3ViKCJcXC5jc3YkIiwgIiIsIGJhc2VuYW1lKGN1cnJlbnRfZmlsZSkpCiAgZmlsZV9wYXJ0cyA8LSBzdHJzcGxpdChmaWxlX25hbWUsICJfIilbWzFdXQoKICBpZiAobGVuZ3RoKGZpbGVfcGFydHMpICE9IDUpIHsKICAgIHN0b3AoCiAgICAgICJOb21lIGRlIGFycXVpdm8gaW5lc3BlcmFkbyBwYXJhIENWMS9DVjI6ICIsCiAgICAgIGZpbGVfbmFtZSwKICAgICAgIi5cblBhZHLDo28gZXNwZXJhZG86IENWMV88dHJhaXQ+X0V0YTxtb2RlbD5fcmVwWFhfZm9sZFhYLmNzdiBvdSBDVjJfPHRyYWl0Pl9FdGE8bW9kZWw+X3JlcFhYX2ZvbGRYWC5jc3YiCiAgICApCiAgfQoKICBjdXJyZW50X3RyYWl0IDwtIGZpbGVfcGFydHNbMl0KICBjdXJyZW50X21vZGVsX2xhYmVsIDwtIGZpbGVfcGFydHNbM10KICBjdXJyZW50X21vZGVsX251bWJlciA8LSBhcy5udW1lcmljKGdzdWIoIl5FdGEiLCAiIiwgY3VycmVudF9tb2RlbF9sYWJlbCkpCiAgY3VycmVudF9yZXAgPC0gYXMubnVtZXJpYyhnc3ViKCJecmVwIiwgIiIsIGZpbGVfcGFydHNbNF0pKQogIGN1cnJlbnRfZm9sZCA8LSBhcy5udW1lcmljKGdzdWIoIl5mb2xkIiwgIiIsIGZpbGVfcGFydHNbNV0pKQoKICBpZiAoIWlkZW50aWNhbChjdXJyZW50X2N2LCBmaWxlX3BhcnRzWzFdKSB8fCAhaWRlbnRpY2FsKHRyYWl0X2Zyb21fcGF0aCwgY3VycmVudF90cmFpdCkgfHwgIWlkZW50aWNhbChyZXBfZnJvbV9wYXRoLCBjdXJyZW50X3JlcCkgfHwgIWlkZW50aWNhbChmb2xkX2Zyb21fcGF0aCwgY3VycmVudF9mb2xkKSkgewogICAgc3RvcCgiSW5jb25zaXN0w6puY2lhIGVudHJlIG1ldGFkYWRvcyBkbyBjYW1pbmhvIGUgZG8gbm9tZSBkbyBhcnF1aXZvIGVtOiAiLCBjdXJyZW50X3JlbF9wYXRoKQogIH0KCiAgY3VycmVudF9kYXRhIDwtIHJlYWRyOjpyZWFkX2NzdihjdXJyZW50X2ZpbGUsIHNob3dfY29sX3R5cGVzID0gRkFMU0UpCgogIGlmICghKCJFbnYiICVpbiUgbmFtZXMoY3VycmVudF9kYXRhKSkgfHwgISgiY29yIiAlaW4lIG5hbWVzKGN1cnJlbnRfZGF0YSkpKSB7CiAgICBzdG9wKAogICAgICAiRXN0cnV0dXJhIGRlIGNvbHVuYXMgaW5lc3BlcmFkYSBubyBhcnF1aXZvOiAiLAogICAgICBmaWxlX25hbWUsCiAgICAgICIuXG5PIHNjcmlwdCBmaW5hbCBkZSBwcmVkacOnw6NvIGRldmUgZXhwb3J0YXIgY29sdW5hcyBpbmNsdWluZG8gRW52IGUgY29yLiIKICAgICkKICB9CgogIGN1cnJlbnRfZGF0YSA8LSBjdXJyZW50X2RhdGEgJT4lCiAgICBtdXRhdGUoCiAgICAgIFJlbGF0aXZlUGF0aCA9IGN1cnJlbnRfcmVsX3BhdGgsCiAgICAgIEZvbGQgPSBjdXJyZW50X2ZvbGQsCiAgICAgIENWID0gY3VycmVudF9jdiwKICAgICAgVHJhaXQgPSBjdXJyZW50X3RyYWl0LAogICAgICBNb2RlbE51bWJlciA9IGN1cnJlbnRfbW9kZWxfbnVtYmVyLAogICAgICBNb2RlbCA9IGN1cnJlbnRfbW9kZWxfbGFiZWwsCiAgICAgIFJlcCA9IGN1cnJlbnRfcmVwCiAgICApCgogIGN2MTJfbGlzdFtbaV1dIDwtIGN1cnJlbnRfZGF0YQp9CgpjdjEyX3JhdyA8LSBiaW5kX3Jvd3MoY3YxMl9saXN0KSAlPiUKICBsZWZ0X2pvaW4obW9kZWxfY2F0YWxvZywgYnkgPSBjKCJNb2RlbE51bWJlciIsICJNb2RlbCIpKQoKaWYgKCEoIlJ1bnRpbWVfc2VjIiAlaW4lIG5hbWVzKGN2MTJfcmF3KSkpIGN2MTJfcmF3JFJ1bnRpbWVfc2VjIDwtIE5BX3JlYWxfCnJlYWRyOjp3cml0ZV9jc3YoY3YxMl9yYXcsIGZpbGUucGF0aCh0YWJsZXNfZGlyLCAicHJlZGljdGlvbl9jdjFfY3YyX3Jhdy5jc3YiKSkKYGBgCgojIyA3LiBMZXIgb3MgYXJxdWl2b3MgQ1YwIGUgQ1YwMCBnZXJhZG9zIHBlbG8gc2NyaXB0IGZpbmFsIGRlIHByZWRpw6fDo28KCk9zIGFycXVpdm9zIGBDVjBgIGUgYENWMDBgIHJlcHJlc2VudGFtIG9zIHByb2JsZW1hcyBkZSBwcmVkacOnw6NvIG1haXMgZXhpZ2VudGVzIGRlc3RlIGVzdHVkbyBwb3JxdWUgZW52b2x2ZW0gdW0gYW1iaWVudGUgcmV0aXJhZG8gZG8gYWp1c3RlLiBObyBwYWRyw6NvIGF0dWFsIGRvIHBpcGVsaW5lLCBvIGFtYmllbnRlIGxlYXZlLW9uZS1lbnZpcm9ubWVudC1vdXQgw6kgY29kaWZpY2FkbyB0YW50byBuYSBoaWVyYXJxdWlhIGRlIHBhc3RhcyBxdWFudG8gbm8gbm9tZSBkbyBhcnF1aXZvLCBlbnTDo28gbyBzY3JpcHQgcmVjb25zdHLDs2kgZXNzYSBpbmZvcm1hw6fDo28gZXhwbGljaXRhbWVudGUgYW50ZXMgZGUgbW9udGFyIG9zIHJlc3Vtb3MgbGVhdmUtb25lLWVudmlyb25tZW50LW91dC4KCkVzdGEgc2XDp8OjbyBsw6ogZXNzZXMgYXJxdWl2b3MsIHZlcmlmaWNhIGEgY29uc2lzdMOqbmNpYSBkb3MgY2FtaW5ob3MgZXN0cnV0dXJhZG9zIGUgcHJlcGFyYSBvcyBtZXRhZGFkb3MgbmVjZXNzw6FyaW9zIHBhcmEgbWFudGVyIGBFbnZfbGVhdmVgIGV4cGzDrWNpdG8gYW8gbG9uZ28gZG9zIHJlc3Vtb3MuCgpgYGB7ciByZWFkLWN2bG9vLCBldmFsPUZBTFNFfQpjdmxvb19saXN0IDwtIHZlY3RvcigibGlzdCIsIGxlbmd0aChjdmxvb19maWxlcykpCmZvciAoaSBpbiBzZXFfYWxvbmcoY3Zsb29fZmlsZXMpKSB7CiAgY3VycmVudF9maWxlIDwtIGN2bG9vX2ZpbGVzW2ldCiAgY3VycmVudF9yZWxfcGF0aCA8LSBjdmxvb19yZWxfcGF0aHNbaV0KICBwYXRoX3BhcnRzIDwtIHN0cnNwbGl0KGN1cnJlbnRfcmVsX3BhdGgsICIvIilbWzFdXQoKICBpZiAobGVuZ3RoKHBhdGhfcGFydHMpICE9IDYpIHsKICAgIHN0b3AoCiAgICAgICJFc3RydXR1cmEgZGUgZGlyZXTDs3Jpb3MgaW5lc3BlcmFkYSBwYXJhIGFycXVpdm8gQ1YwL0NWMDA6ICIsCiAgICAgIGN1cnJlbnRfcmVsX3BhdGgsCiAgICAgICIuXG5QYWRyw6NvIGVzcGVyYWRvOiBDVjAvPEVudl9sZWF2ZT4vPHRyYWl0Pi9yZXBYWC9mb2xkWFgvPGZpbGU+LmNzdiBvdSBDVjAwLzxFbnZfbGVhdmU+Lzx0cmFpdD4vcmVwWFgvZm9sZFhYLzxmaWxlPi5jc3YiCiAgICApCiAgfQoKICBjdXJyZW50X2N2IDwtIHBhdGhfcGFydHNbMV0KICBlbnZfZnJvbV9wYXRoIDwtIHBhdGhfcGFydHNbMl0KICB0cmFpdF9mcm9tX3BhdGggPC0gcGF0aF9wYXJ0c1szXQogIHJlcF9mcm9tX3BhdGggPC0gYXMubnVtZXJpYyhnc3ViKCJecmVwIiwgIiIsIHBhdGhfcGFydHNbNF0pKQogIGZvbGRfZnJvbV9wYXRoIDwtIGFzLm51bWVyaWMoZ3N1YigiXmZvbGQiLCAiIiwgcGF0aF9wYXJ0c1s1XSkpCgogIGZpbGVfbmFtZSA8LSBzdWIoIlxcLmNzdiQiLCAiIiwgYmFzZW5hbWUoY3VycmVudF9maWxlKSkKICBmaWxlX3BhcnRzIDwtIHN0cnNwbGl0KGZpbGVfbmFtZSwgIl8iKVtbMV1dCgogIGlmIChsZW5ndGgoZmlsZV9wYXJ0cykgPCA2KSB7CiAgICBzdG9wKAogICAgICAiTm9tZSBkZSBhcnF1aXZvIGluZXNwZXJhZG8gcGFyYSBDVjAvQ1YwMDogIiwKICAgICAgZmlsZV9uYW1lLAogICAgICAiLlxuUGFkcsOjbyBlc3BlcmFkbzogQ1YwXzx0cmFpdD5fPEVudl9sZWF2ZT5fRXRhPG1vZGVsPl9yZXBYWF9mb2xkWFguY3N2IG91IENWMDBfPHRyYWl0Pl88RW52X2xlYXZlPl9FdGE8bW9kZWw+X3JlcFhYX2ZvbGRYWC5jc3YiCiAgICApCiAgfQoKICBjdXJyZW50X3RyYWl0IDwtIGZpbGVfcGFydHNbMl0KICBjdXJyZW50X21vZGVsX2xhYmVsIDwtIGZpbGVfcGFydHNbbGVuZ3RoKGZpbGVfcGFydHMpIC0gMl0KICBjdXJyZW50X21vZGVsX251bWJlciA8LSBhcy5udW1lcmljKGdzdWIoIl5FdGEiLCAiIiwgY3VycmVudF9tb2RlbF9sYWJlbCkpCiAgY3VycmVudF9yZXAgPC0gYXMubnVtZXJpYyhnc3ViKCJecmVwIiwgIiIsIGZpbGVfcGFydHNbbGVuZ3RoKGZpbGVfcGFydHMpIC0gMV0pKQogIGN1cnJlbnRfZm9sZCA8LSBhcy5udW1lcmljKGdzdWIoIl5mb2xkIiwgIiIsIGZpbGVfcGFydHNbbGVuZ3RoKGZpbGVfcGFydHMpXSkpCiAgY3VycmVudF9lbnZfbGVhdmUgPC0gcGFzdGUoZmlsZV9wYXJ0c1szOihsZW5ndGgoZmlsZV9wYXJ0cykgLSAzKV0sIGNvbGxhcHNlID0gIl8iKQoKICBpZiAoIWlkZW50aWNhbChjdXJyZW50X2N2LCBmaWxlX3BhcnRzWzFdKSB8fCAhaWRlbnRpY2FsKGVudl9mcm9tX3BhdGgsIGN1cnJlbnRfZW52X2xlYXZlKSB8fCAhaWRlbnRpY2FsKHRyYWl0X2Zyb21fcGF0aCwgY3VycmVudF90cmFpdCkgfHwgIWlkZW50aWNhbChyZXBfZnJvbV9wYXRoLCBjdXJyZW50X3JlcCkgfHwgIWlkZW50aWNhbChmb2xkX2Zyb21fcGF0aCwgY3VycmVudF9mb2xkKSkgewogICAgc3RvcCgiSW5jb25zaXN0w6puY2lhIGVudHJlIG1ldGFkYWRvcyBkbyBjYW1pbmhvIGUgZG8gbm9tZSBkbyBhcnF1aXZvIGVtOiAiLCBjdXJyZW50X3JlbF9wYXRoKQogIH0KCiAgY3VycmVudF9kYXRhIDwtIHJlYWRyOjpyZWFkX2NzdihjdXJyZW50X2ZpbGUsIHNob3dfY29sX3R5cGVzID0gRkFMU0UpCgogIGlmICghKCJFbnYiICVpbiUgbmFtZXMoY3VycmVudF9kYXRhKSkgfHwgISgiY29yIiAlaW4lIG5hbWVzKGN1cnJlbnRfZGF0YSkpKSB7CiAgICBzdG9wKAogICAgICAiRXN0cnV0dXJhIGRlIGNvbHVuYXMgaW5lc3BlcmFkYSBubyBhcnF1aXZvOiAiLAogICAgICBmaWxlX25hbWUsCiAgICAgICIuXG5PIHNjcmlwdCBmaW5hbCBkZSBwcmVkacOnw6NvIGRldmUgZXhwb3J0YXIgY29sdW5hcyBpbmNsdWluZG8gRW52IGUgY29yLiIKICAgICkKICB9CgogIGN1cnJlbnRfZGF0YSA8LSBjdXJyZW50X2RhdGEgJT4lCiAgICBtdXRhdGUoCiAgICAgIFJlbGF0aXZlUGF0aCA9IGN1cnJlbnRfcmVsX3BhdGgsCiAgICAgIEZvbGQgPSBjdXJyZW50X2ZvbGQsCiAgICAgIENWID0gY3VycmVudF9jdiwKICAgICAgVHJhaXQgPSBjdXJyZW50X3RyYWl0LAogICAgICBFbnZfbGVhdmUgPSBjdXJyZW50X2Vudl9sZWF2ZSwKICAgICAgTW9kZWxOdW1iZXIgPSBjdXJyZW50X21vZGVsX251bWJlciwKICAgICAgTW9kZWwgPSBjdXJyZW50X21vZGVsX2xhYmVsLAogICAgICBSZXAgPSBjdXJyZW50X3JlcAogICAgKQoKICBjdmxvb19saXN0W1tpXV0gPC0gY3VycmVudF9kYXRhCn0KY3Zsb29fcmF3IDwtIGJpbmRfcm93cyhjdmxvb19saXN0KSAlPiUKICBsZWZ0X2pvaW4obW9kZWxfY2F0YWxvZywgYnkgPSBjKCJNb2RlbE51bWJlciIsICJNb2RlbCIpKQppZiAoISgiUnVudGltZV9zZWMiICVpbiUgbmFtZXMoY3Zsb29fcmF3KSkpIGN2bG9vX3JhdyRSdW50aW1lX3NlYyA8LSBOQV9yZWFsXwpyZWFkcjo6d3JpdGVfY3N2KGN2bG9vX3JhdywgZmlsZS5wYXRoKHRhYmxlc19kaXIsICJwcmVkaWN0aW9uX2N2MF9jdjAwX3Jhdy5jc3YiKSkKcmVhZHI6OndyaXRlX2Nzdihtb2RlbF9jYXRhbG9nLCBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fbW9kZWxfY2F0YWxvZy5jc3YiKSkKYGBgCgojIyA4LiBSZXN1bWlyIENWMSBlIENWMgoKRXN0YSBldGFwYSBjb25zdHLDs2kgb3MgcmVzdW1vcyBwYXJhIGBDVjFgIGUgYENWMmAgZGUgZm9ybWEgc2VxdWVuY2lhbDogcHJpbWVpcm8gcG9yIGFtYmllbnRlIGUgZm9sZCwgZGVwb2lzIHBvciBhbWJpZW50ZSBkZW50cm8gZGEgcmVwZXRpw6fDo28sIGRlcG9pcyBwb3IgcmVwZXRpw6fDo28gZSBmaW5hbG1lbnRlIHBvciBtw6lkaWFzIGUgZGVzdmlvcy1wYWRyw6NvIGVtIG7DrXZlbCBkZSBtb2RlbG8gYW8gbG9uZ28gZGFzIHJlcGV0acOnw7Vlcy4KCmBgYHtyIHN1bW1hcml6ZS1jdjEyLCBldmFsPUZBTFNFfQpjdjEyX2Vudl9mb2xkIDwtIGN2MTJfcmF3ICU+JQogIGdyb3VwX2J5KCBNb2RlbE51bWJlciwKICAgTW9kZWwsCiAgIEdyb3VwLAogICBQYXRod2F5LAogICBLZXJuZWxGYW1pbHksCiAgIFdlYXRoZXJTdGF0dXMsCiAgIERlc2NyaXB0aW9uLAogICBTaG9ydERlc2NyaXB0aW9uLAogICBUcmFpdCwKICAgQ1YsCiAgIFJlcCwKICAgRm9sZCwKICAgIEVudiApICU+JQogIHN1bW1hcmlzZSggRW52Q29ycmVsYXRpb24gPSBtZWFuKGNvciwgbmEucm0gPSBUUlVFKSwKICAgVmFsaWRhdGlvbkNvdW50ID0gc3VtKCFpcy5uYShjb3IpKSwKICAgTWVhblJ1bnRpbWVTZWMgPSBtZWFuKFJ1bnRpbWVfc2VjLCBuYS5ybSA9IFRSVUUpLAogICAgLmdyb3VwcyA9ICJkcm9wIiApICU+JQogIG11dGF0ZSggRW52Q29ycmVsYXRpb24gPSBpZmVsc2UoaXMubmFuKEVudkNvcnJlbGF0aW9uKSwgTkFfcmVhbF8sIEVudkNvcnJlbGF0aW9uKSwKICAgIE1lYW5SdW50aW1lU2VjID0gaWZlbHNlKGlzLm5hbihNZWFuUnVudGltZVNlYyksIE5BX3JlYWxfLCBNZWFuUnVudGltZVNlYykgKSAlPiUKICBmaWx0ZXIoIWlzLm5hKEVudkNvcnJlbGF0aW9uKSwgVmFsaWRhdGlvbkNvdW50ID4gMCkKY3YxMl9lbnZfcmVwIDwtIGN2MTJfZW52X2ZvbGQgJT4lCiAgZ3JvdXBfYnkoIE1vZGVsTnVtYmVyLAogICBNb2RlbCwKICAgR3JvdXAsCiAgIFBhdGh3YXksCiAgIEtlcm5lbEZhbWlseSwKICAgV2VhdGhlclN0YXR1cywKICAgRGVzY3JpcHRpb24sCiAgIFNob3J0RGVzY3JpcHRpb24sCiAgIFRyYWl0LAogICBDViwKICAgUmVwLAogICAgRW52ICkgJT4lCiAgc3VtbWFyaXNlKCBFbnZDb3JyZWxhdGlvbiA9IHdlaWdodGVkLm1lYW4oRW52Q29ycmVsYXRpb24sIHcgPSBWYWxpZGF0aW9uQ291bnQsIG5hLnJtID0gVFJVRSksCiAgIFZhbGlkYXRpb25Db3VudCA9IHN1bShWYWxpZGF0aW9uQ291bnQsIG5hLnJtID0gVFJVRSksCiAgIE1lYW5SdW50aW1lU2VjID0gbWVhbihNZWFuUnVudGltZVNlYywgbmEucm0gPSBUUlVFKSwKICAgIC5ncm91cHMgPSAiZHJvcCIgKQpjdjEyX3JlcF9zdW1tYXJ5IDwtIGN2MTJfZW52X3JlcCAlPiUKICBncm91cF9ieSggTW9kZWxOdW1iZXIsCiAgIE1vZGVsLAogICBHcm91cCwKICAgUGF0aHdheSwKICAgS2VybmVsRmFtaWx5LAogICBXZWF0aGVyU3RhdHVzLAogICBEZXNjcmlwdGlvbiwKICAgU2hvcnREZXNjcmlwdGlvbiwKICAgVHJhaXQsCiAgIENWLAogICAgUmVwICkgJT4lCiAgc3VtbWFyaXNlKCBXZWlnaHRlZENvcnJlbGF0aW9uID0gd2VpZ2h0ZWQubWVhbihFbnZDb3JyZWxhdGlvbiwgdyA9IFZhbGlkYXRpb25Db3VudCwgbmEucm0gPSBUUlVFKSwKICAgTWVhblJ1bnRpbWVTZWMgPSBtZWFuKE1lYW5SdW50aW1lU2VjLCBuYS5ybSA9IFRSVUUpLAogICAgLmdyb3VwcyA9ICJkcm9wIiApCmN2MTJfc3VtbWFyeSA8LSBjdjEyX3JlcF9zdW1tYXJ5ICU+JQogIGdyb3VwX2J5KCBNb2RlbE51bWJlciwKICAgTW9kZWwsCiAgIEdyb3VwLAogICBQYXRod2F5LAogICBLZXJuZWxGYW1pbHksCiAgIFdlYXRoZXJTdGF0dXMsCiAgIERlc2NyaXB0aW9uLAogICBTaG9ydERlc2NyaXB0aW9uLAogICBUcmFpdCwKICAgIENWICkgJT4lCiAgc3VtbWFyaXNlKCBNZWFuQ29ycmVsYXRpb24gPSBtZWFuKFdlaWdodGVkQ29ycmVsYXRpb24sIG5hLnJtID0gVFJVRSksCiAgIFNEQ29ycmVsYXRpb24gPSBzZChXZWlnaHRlZENvcnJlbGF0aW9uLCBuYS5ybSA9IFRSVUUpLAogICBOdW1iZXJPZlJlcGV0aXRpb25zID0gbigpLAogICBNZWFuUnVudGltZVNlYyA9IG1lYW4oTWVhblJ1bnRpbWVTZWMsIG5hLnJtID0gVFJVRSksCiAgICAuZ3JvdXBzID0gImRyb3AiICkgJT4lCiAgbXV0YXRlKCBTRENvcnJlbGF0aW9uID0gaWZlbHNlKGlzLm5hKFNEQ29ycmVsYXRpb24pLCAwLCBTRENvcnJlbGF0aW9uKSApICU+JQogIGxlZnRfam9pbigKICAgIG1vZGVsX2NhdGFsb2cgJT4lIHNlbGVjdChNb2RlbE51bWJlciwgTW9kZWwsIEZ1bGxFZmZlY3RzLCBJbnRlcnByZXRpdmVEZXNjcmlwdGlvbiksCiAgICBieSA9IGMoIk1vZGVsTnVtYmVyIiwgIk1vZGVsIikKICApCnJlYWRyOjp3cml0ZV9jc3YoY3YxMl9lbnZfZm9sZCwgZmlsZS5wYXRoKHRhYmxlc19kaXIsICJwcmVkaWN0aW9uX2N2MV9jdjJfYnlfcmVwX2ZvbGRfZW52LmNzdiIpKQpyZWFkcjo6d3JpdGVfY3N2KGN2MTJfZW52X3JlcCwgZmlsZS5wYXRoKHRhYmxlc19kaXIsICJwcmVkaWN0aW9uX2N2MV9jdjJfYnlfcmVwX2Vudi5jc3YiKSkKcmVhZHI6OndyaXRlX2NzdihjdjEyX3JlcF9zdW1tYXJ5LCBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YxX2N2Ml9ieV9yZXAuY3N2IikpCnJlYWRyOjp3cml0ZV9jc3YoY3YxMl9zdW1tYXJ5LCBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YxX2N2Ml9zdW1tYXJ5LmNzdiIpKQpgYGAKCiMjIDkuIFJlc3VtaXIgQ1YwIGUgQ1YwMAoKUGFyYSBjZW7DoXJpb3MgbGVhdmUtb25lLWVudmlyb25tZW50LW91dCwgbyBzY3JpcHQgcHJpbWVpcm8gcmVzdHJpbmdlIG9zIHJlc3Vtb3Mgw6BzIGxpbmhhcyBlbSBxdWUgYEVudiA9PSBFbnZfbGVhdmVgLiBJc3NvIG1hbnTDqW0gYXBlbmFzIG8gY29tcG9uZW50ZSBkbyBhbWJpZW50ZSBkZWl4YWRvIGRlIGZvcmEgcXVlIMOpIGNvbmNlaXR1YWxtZW50ZSByZWxldmFudGUgcGFyYSBgQ1YwYCBlIGBDVjAwYC4KCmBgYHtyIHN1bW1hcml6ZS1jdmxvbywgZXZhbD1GQUxTRX0KY3Zsb29fZW52X2ZpbHRlcmVkIDwtIGN2bG9vX3JhdyAlPiUKICBmaWx0ZXIoRW52ID09IEVudl9sZWF2ZSkKY3Zsb29fZW52X2ZvbGQgPC0gY3Zsb29fZW52X2ZpbHRlcmVkICU+JQogIGdyb3VwX2J5KCBNb2RlbE51bWJlciwKICAgTW9kZWwsCiAgIEdyb3VwLAogICBQYXRod2F5LAogICBLZXJuZWxGYW1pbHksCiAgIFdlYXRoZXJTdGF0dXMsCiAgIERlc2NyaXB0aW9uLAogICBTaG9ydERlc2NyaXB0aW9uLAogICBUcmFpdCwKICAgQ1YsCiAgIEVudl9sZWF2ZSwKICAgUmVwLAogICBGb2xkLAogICAgRW52ICkgJT4lCiAgc3VtbWFyaXNlKCBMT0VPQ29ycmVsYXRpb24gPSBtZWFuKGNvciwgbmEucm0gPSBUUlVFKSwKICAgVmFsaWRhdGlvbkNvdW50ID0gc3VtKCFpcy5uYShjb3IpKSwKICAgTWVhblJ1bnRpbWVTZWMgPSBtZWFuKFJ1bnRpbWVfc2VjLCBuYS5ybSA9IFRSVUUpLAogICAgLmdyb3VwcyA9ICJkcm9wIiApICU+JQogIG11dGF0ZSggTE9FT0NvcnJlbGF0aW9uID0gaWZlbHNlKGlzLm5hbihMT0VPQ29ycmVsYXRpb24pLCBOQV9yZWFsXywgTE9FT0NvcnJlbGF0aW9uKSwKICAgIE1lYW5SdW50aW1lU2VjID0gaWZlbHNlKGlzLm5hbihNZWFuUnVudGltZVNlYyksIE5BX3JlYWxfLCBNZWFuUnVudGltZVNlYykgKSAlPiUKICBmaWx0ZXIoIWlzLm5hKExPRU9Db3JyZWxhdGlvbiksIFZhbGlkYXRpb25Db3VudCA+IDApCmN2bG9vX3JlcF9zdW1tYXJ5IDwtIGN2bG9vX2Vudl9mb2xkICU+JQogIGdyb3VwX2J5KCBNb2RlbE51bWJlciwKICAgTW9kZWwsCiAgIEdyb3VwLAogICBQYXRod2F5LAogICBLZXJuZWxGYW1pbHksCiAgIFdlYXRoZXJTdGF0dXMsCiAgIERlc2NyaXB0aW9uLAogICBTaG9ydERlc2NyaXB0aW9uLAogICBUcmFpdCwKICAgQ1YsCiAgIEVudl9sZWF2ZSwKICAgIFJlcCApICU+JQogIHN1bW1hcmlzZSggTE9FT0NvcnJlbGF0aW9uID0gd2VpZ2h0ZWQubWVhbihMT0VPQ29ycmVsYXRpb24sIHcgPSBWYWxpZGF0aW9uQ291bnQsIG5hLnJtID0gVFJVRSksCiAgIFZhbGlkYXRpb25Db3VudCA9IHN1bShWYWxpZGF0aW9uQ291bnQsIG5hLnJtID0gVFJVRSksCiAgIE1lYW5SdW50aW1lU2VjID0gbWVhbihNZWFuUnVudGltZVNlYywgbmEucm0gPSBUUlVFKSwKICAgIC5ncm91cHMgPSAiZHJvcCIgKQpjdmxvb19zdW1tYXJ5IDwtIGN2bG9vX3JlcF9zdW1tYXJ5ICU+JQogIGdyb3VwX2J5KCBNb2RlbE51bWJlciwKICAgTW9kZWwsCiAgIEdyb3VwLAogICBQYXRod2F5LAogICBLZXJuZWxGYW1pbHksCiAgIFdlYXRoZXJTdGF0dXMsCiAgIERlc2NyaXB0aW9uLAogICBTaG9ydERlc2NyaXB0aW9uLAogICBUcmFpdCwKICAgQ1YsCiAgICBFbnZfbGVhdmUgKSAlPiUKICBzdW1tYXJpc2UoIE1lYW5Db3JyZWxhdGlvbiA9IG1lYW4oTE9FT0NvcnJlbGF0aW9uLCBuYS5ybSA9IFRSVUUpLAogICBTRENvcnJlbGF0aW9uID0gc2QoTE9FT0NvcnJlbGF0aW9uLCBuYS5ybSA9IFRSVUUpLAogICBOdW1iZXJPZlJ1bnMgPSBuKCksCiAgIE1lYW5SdW50aW1lU2VjID0gbWVhbihNZWFuUnVudGltZVNlYywgbmEucm0gPSBUUlVFKSwKICAgIC5ncm91cHMgPSAiZHJvcCIgKSAlPiUKICBtdXRhdGUoIFNEQ29ycmVsYXRpb24gPSBpZmVsc2UoaXMubmEoU0RDb3JyZWxhdGlvbiksIDAsIFNEQ29ycmVsYXRpb24pICkgJT4lCiAgbGVmdF9qb2luKAogICAgbW9kZWxfY2F0YWxvZyAlPiUgc2VsZWN0KE1vZGVsTnVtYmVyLCBNb2RlbCwgRnVsbEVmZmVjdHMsIEludGVycHJldGl2ZURlc2NyaXB0aW9uKSwKICAgIGJ5ID0gYygiTW9kZWxOdW1iZXIiLCAiTW9kZWwiKQogICkKcmVhZHI6OndyaXRlX2Nzdihjdmxvb19lbnZfZm9sZCwgZmlsZS5wYXRoKHRhYmxlc19kaXIsICJwcmVkaWN0aW9uX2N2MF9jdjAwX2J5X3JlcF9mb2xkX2Vudi5jc3YiKSkKcmVhZHI6OndyaXRlX2Nzdihjdmxvb19yZXBfc3VtbWFyeSwgZmlsZS5wYXRoKHRhYmxlc19kaXIsICJwcmVkaWN0aW9uX2N2MF9jdjAwX2J5X3J1bi5jc3YiKSkKcmVhZHI6OndyaXRlX2Nzdihjdmxvb19zdW1tYXJ5LCBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YwX2N2MDBfc3VtbWFyeS5jc3YiKSkKYGBgCgojIyAxMC4gVGFiZWxhcyBkZSBjb21wYXJhw6fDo28KCkVzdGEgc2XDp8OjbyBkZXJpdmEgdGFiZWxhcyBhbmFsw610aWNhcyBzZWN1bmTDoXJpYXMsIGVzcGVjaWFsbWVudGUgbyBjb250cmFzdGUgZW50cmUgbW9kZWxvcyBjb20gZSBzZW0gYFdgIGUgYSBjb21wYXJhw6fDo28gZW50cmUgZmFtw61saWFzIGRlIGtlcm5lbCBkZW50cm8gZGUgY2FkYSB2aWEuCgpgYGB7ciBjb21wYXJpc29uLXRhYmxlcywgZXZhbD1GQUxTRX0KY3YxMl93X2VmZmVjdCA8LSBjb21wYXJpc29uX3BhaXJzICU+JQogIGxlZnRfam9pbiggY3YxMl9zdW1tYXJ5ICU+JSBzZWxlY3QoVHJhaXQsIENWLCBNb2RlbCwgTWVhbkNvcnJlbGF0aW9uLCBTRENvcnJlbGF0aW9uKSwKICAgIGJ5ID0gYygiV2l0aG91dFciID0gIk1vZGVsIikgKSAlPiUKICByZW5hbWUoIE1lYW5XaXRob3V0VyA9IE1lYW5Db3JyZWxhdGlvbiwgU0RXaXRob3V0VyA9IFNEQ29ycmVsYXRpb24gKSAlPiUKICBsZWZ0X2pvaW4oIGN2MTJfc3VtbWFyeSAlPiUgc2VsZWN0KFRyYWl0LCBDViwgTW9kZWwsIE1lYW5Db3JyZWxhdGlvbiwgU0RDb3JyZWxhdGlvbiksCiAgICBieSA9IGMoIldpdGhXIiA9ICJNb2RlbCIsICJUcmFpdCIsICJDViIpICkgJT4lCiAgcmVuYW1lKCBNZWFuV2l0aFcgPSBNZWFuQ29ycmVsYXRpb24sIFNEV2l0aFcgPSBTRENvcnJlbGF0aW9uICkgJT4lCiAgbXV0YXRlKCBEZWx0YVdpdGhXID0gTWVhbldpdGhXIC0gTWVhbldpdGhvdXRXICkgJT4lCiAgYXJyYW5nZShUcmFpdCwgQ1YsIENvbXBhcmlzb24pCmN2bG9vX3dfZWZmZWN0IDwtIGNvbXBhcmlzb25fcGFpcnMgJT4lCiAgbGVmdF9qb2luKCBjdmxvb19zdW1tYXJ5ICU+JSBzZWxlY3QoVHJhaXQsIENWLCBFbnZfbGVhdmUsIE1vZGVsLCBNZWFuQ29ycmVsYXRpb24sIFNEQ29ycmVsYXRpb24pLAogICAgYnkgPSBjKCJXaXRob3V0VyIgPSAiTW9kZWwiKSApICU+JQogIHJlbmFtZSggTWVhbldpdGhvdXRXID0gTWVhbkNvcnJlbGF0aW9uLCBTRFdpdGhvdXRXID0gU0RDb3JyZWxhdGlvbiApICU+JQogIGxlZnRfam9pbiggY3Zsb29fc3VtbWFyeSAlPiUgc2VsZWN0KFRyYWl0LCBDViwgRW52X2xlYXZlLCBNb2RlbCwgTWVhbkNvcnJlbGF0aW9uLCBTRENvcnJlbGF0aW9uKSwKICAgIGJ5ID0gYygiV2l0aFciID0gIk1vZGVsIiwgIlRyYWl0IiwgIkNWIiwgIkVudl9sZWF2ZSIpICkgJT4lCiAgcmVuYW1lKCBNZWFuV2l0aFcgPSBNZWFuQ29ycmVsYXRpb24sIFNEV2l0aFcgPSBTRENvcnJlbGF0aW9uICkgJT4lCiAgbXV0YXRlKCBEZWx0YVdpdGhXID0gTWVhbldpdGhXIC0gTWVhbldpdGhvdXRXICkgJT4lCiAgYXJyYW5nZShUcmFpdCwgQ1YsIEVudl9sZWF2ZSwgQ29tcGFyaXNvbikKY3YxMl9rZXJuZWxfZmFtaWx5X2NvbXBhcmUgPC0gY3YxMl9zdW1tYXJ5ICU+JQogIHNlbGVjdChUcmFpdCwgQ1YsIFBhdGh3YXksIFdlYXRoZXJTdGF0dXMsIEtlcm5lbEZhbWlseSwgTWVhbkNvcnJlbGF0aW9uKSAlPiUKICBwaXZvdF93aWRlcihuYW1lc19mcm9tID0gS2VybmVsRmFtaWx5LCB2YWx1ZXNfZnJvbSA9IE1lYW5Db3JyZWxhdGlvbikgJT4lCiAgbXV0YXRlKCBEZWx0YV9HYXVzc2lhbl92c19MaW5lYXIgPSBHYXVzc2lhbiAtIExpbmVhciwKICAgRGVsdGFfQXJjQ29zX3ZzX0xpbmVhciA9IGBBcmMtY29zaW5lYCAtIExpbmVhciwKICAgIERlbHRhX0FyY0Nvc192c19HYXVzc2lhbiA9IGBBcmMtY29zaW5lYCAtIEdhdXNzaWFuICkgJT4lCiAgYXJyYW5nZShUcmFpdCwgQ1YsIFBhdGh3YXksIFdlYXRoZXJTdGF0dXMpCmN2bG9vX2tlcm5lbF9mYW1pbHlfY29tcGFyZSA8LSBjdmxvb19zdW1tYXJ5ICU+JQogIHNlbGVjdChUcmFpdCwgQ1YsIEVudl9sZWF2ZSwgUGF0aHdheSwgV2VhdGhlclN0YXR1cywgS2VybmVsRmFtaWx5LCBNZWFuQ29ycmVsYXRpb24pICU+JQogIHBpdm90X3dpZGVyKG5hbWVzX2Zyb20gPSBLZXJuZWxGYW1pbHksIHZhbHVlc19mcm9tID0gTWVhbkNvcnJlbGF0aW9uKSAlPiUKICBtdXRhdGUoIERlbHRhX0dhdXNzaWFuX3ZzX0xpbmVhciA9IEdhdXNzaWFuIC0gTGluZWFyLAogICBEZWx0YV9BcmNDb3NfdnNfTGluZWFyID0gYEFyYy1jb3NpbmVgIC0gTGluZWFyLAogICAgRGVsdGFfQXJjQ29zX3ZzX0dhdXNzaWFuID0gYEFyYy1jb3NpbmVgIC0gR2F1c3NpYW4gKSAlPiUKICBhcnJhbmdlKFRyYWl0LCBDViwgRW52X2xlYXZlLCBQYXRod2F5LCBXZWF0aGVyU3RhdHVzKQpyZWFkcjo6d3JpdGVfY3N2KGN2MTJfd19lZmZlY3QsIGZpbGUucGF0aCh0YWJsZXNfZGlyLCAicHJlZGljdGlvbl9jdjFfY3YyX3dfZWZmZWN0X3BhaXJzLmNzdiIpKQpyZWFkcjo6d3JpdGVfY3N2KGN2bG9vX3dfZWZmZWN0LCBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YwX2N2MDBfd19lZmZlY3RfcGFpcnMuY3N2IikpCnJlYWRyOjp3cml0ZV9jc3YoY3YxMl9rZXJuZWxfZmFtaWx5X2NvbXBhcmUsCiAgZmlsZS5wYXRoKHRhYmxlc19kaXIsICJwcmVkaWN0aW9uX2N2MV9jdjJfa2VybmVsX2ZhbWlseV9jb21wYXJlLmNzdiIpKQpyZWFkcjo6d3JpdGVfY3N2KGN2bG9vX2tlcm5lbF9mYW1pbHlfY29tcGFyZSwKICBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YwX2N2MDBfa2VybmVsX2ZhbWlseV9jb21wYXJlLmNzdiIpKQpgYGAKCiMjIDExLiBUYWJlbGFzIGNvbXBhY3RhcyBkZSBkaXNwbGF5CgpFc3NlcyBvYmpldG9zIHPDo28gdmVyc8O1ZXMgc2ltcGxpZmljYWRhcyBkb3MgcmVzdW1vcyBjb21wbGV0b3MuIEVsZXMgc8OjbyDDunRlaXMgcGFyYSB0YWJlbGFzIGRvIG1hbnVzY3JpdG8sIG1hdGVyaWFsIHN1cGxlbWVudGFyIGUgaW5zcGXDp8OjbyByw6FwaWRhIGRvcyBtb2RlbG9zIGNvbSBtZWxob3IgZGVzZW1wZW5oby4KCmBgYHtyIGRpc3BsYXktdGFibGVzLCBldmFsPUZBTFNFfQpjdjEyX3RhYmxlX2Rpc3BsYXkgPC0gY3YxMl9zdW1tYXJ5ICU+JQogIGFycmFuZ2UoVHJhaXQsIENWLCBQYXRod2F5LCBLZXJuZWxGYW1pbHksIFdlYXRoZXJTdGF0dXMpICU+JQogIG11dGF0ZSggTWVhbkNvcnJlbGF0aW9uID0gcm91bmQoTWVhbkNvcnJlbGF0aW9uLCAzKSwKICAgU0RDb3JyZWxhdGlvbiA9IHJvdW5kKFNEQ29ycmVsYXRpb24sIDMpLAogICAgTWVhblJ1bnRpbWVTZWMgPSByb3VuZChNZWFuUnVudGltZVNlYywgMikgKSAlPiUKICBzZWxlY3QoIFRyYWl0LAogICBDViwKICAgUGF0aHdheSwKICAgS2VybmVsRmFtaWx5LAogICBXZWF0aGVyU3RhdHVzLAogICBTaG9ydERlc2NyaXB0aW9uLAogICBNZWFuQ29ycmVsYXRpb24sCiAgIFNEQ29ycmVsYXRpb24sCiAgIE51bWJlck9mUmVwZXRpdGlvbnMsCiAgICBNZWFuUnVudGltZVNlYyApCmN2bG9vX3RhYmxlX2Rpc3BsYXkgPC0gY3Zsb29fc3VtbWFyeSAlPiUKICBhcnJhbmdlKFRyYWl0LCBDViwgRW52X2xlYXZlLCBQYXRod2F5LCBLZXJuZWxGYW1pbHksIFdlYXRoZXJTdGF0dXMpICU+JQogIG11dGF0ZSggTWVhbkNvcnJlbGF0aW9uID0gcm91bmQoTWVhbkNvcnJlbGF0aW9uLCAzKSwKICAgU0RDb3JyZWxhdGlvbiA9IHJvdW5kKFNEQ29ycmVsYXRpb24sIDMpLAogICAgTWVhblJ1bnRpbWVTZWMgPSByb3VuZChNZWFuUnVudGltZVNlYywgMikgKSAlPiUKICBzZWxlY3QoIFRyYWl0LAogICBDViwKICAgRW52X2xlYXZlLAogICBQYXRod2F5LAogICBLZXJuZWxGYW1pbHksCiAgIFdlYXRoZXJTdGF0dXMsCiAgIFNob3J0RGVzY3JpcHRpb24sCiAgIE1lYW5Db3JyZWxhdGlvbiwKICAgU0RDb3JyZWxhdGlvbiwKICAgTnVtYmVyT2ZSdW5zLAogICAgTWVhblJ1bnRpbWVTZWMgKQpjdjEyX3RvcDMgPC0gY3YxMl9zdW1tYXJ5ICU+JQogIGdyb3VwX2J5KFRyYWl0LCBDVikgJT4lCiAgc2xpY2VfbWF4KG9yZGVyX2J5ID0gTWVhbkNvcnJlbGF0aW9uLCBuID0gMywgd2l0aF90aWVzID0gRkFMU0UpICU+JQogIHVuZ3JvdXAoKSAlPiUKICBtdXRhdGUoIE1lYW5Db3JyZWxhdGlvbiA9IHJvdW5kKE1lYW5Db3JyZWxhdGlvbiwgMyksIFNEQ29ycmVsYXRpb24gPSByb3VuZChTRENvcnJlbGF0aW9uLCAzKSApICU+JQogIHNlbGVjdChUcmFpdCwgQ1YsIFNob3J0RGVzY3JpcHRpb24sIE1lYW5Db3JyZWxhdGlvbiwgU0RDb3JyZWxhdGlvbikKY3Zsb29fdG9wMyA8LSBjdmxvb19zdW1tYXJ5ICU+JQogIGdyb3VwX2J5KFRyYWl0LCBDViwgRW52X2xlYXZlKSAlPiUKICBzbGljZV9tYXgob3JkZXJfYnkgPSBNZWFuQ29ycmVsYXRpb24sIG4gPSAzLCB3aXRoX3RpZXMgPSBGQUxTRSkgJT4lCiAgdW5ncm91cCgpICU+JQogIG11dGF0ZSggTWVhbkNvcnJlbGF0aW9uID0gcm91bmQoTWVhbkNvcnJlbGF0aW9uLCAzKSwgU0RDb3JyZWxhdGlvbiA9IHJvdW5kKFNEQ29ycmVsYXRpb24sIDMpICkgJT4lCiAgc2VsZWN0KFRyYWl0LCBDViwgRW52X2xlYXZlLCBTaG9ydERlc2NyaXB0aW9uLCBNZWFuQ29ycmVsYXRpb24sIFNEQ29ycmVsYXRpb24pCnJlYWRyOjp3cml0ZV9jc3YoY3YxMl90YWJsZV9kaXNwbGF5LCBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YxX2N2Ml9kaXNwbGF5X3RhYmxlLmNzdiIpKQpyZWFkcjo6d3JpdGVfY3N2KGN2bG9vX3RhYmxlX2Rpc3BsYXksIGZpbGUucGF0aCh0YWJsZXNfZGlyLCAicHJlZGljdGlvbl9jdjBfY3YwMF9kaXNwbGF5X3RhYmxlLmNzdiIpKQpyZWFkcjo6d3JpdGVfY3N2KGN2MTJfdG9wMywgZmlsZS5wYXRoKHRhYmxlc19kaXIsICJwcmVkaWN0aW9uX2N2MV9jdjJfdG9wMy5jc3YiKSkKcmVhZHI6OndyaXRlX2Nzdihjdmxvb190b3AzLCBmaWxlLnBhdGgodGFibGVzX2RpciwgInByZWRpY3Rpb25fY3YwX2N2MDBfdG9wMy5jc3YiKSkKYGBgCgojIyAxMi4gVGFiZWxhcyBUb3AtMwoKQXMgZHVhcyB0YWJlbGFzIHNlZ3VpbnRlcyBleGliZW0gb3MgdHLDqnMgbW9kZWxvcyBjb20gbWVsaG9yIGRlc2VtcGVuaG8gZW0gY2FkYSBlc3F1ZW1hIGRlIHZhbGlkYcOnw6NvLgoKYGBge3IgdGFibGUtY3YxMi10b3AzfQppZiAoIWV4aXN0cygiY3YxMl90b3AzIikpIHsKICBzdG9wKCJPIG9iamV0byBjdjEyX3RvcDMgbsOjbyBmb2kgY2FycmVnYWRvIGFudGVzIGRvIGNodW5rIHRhYmxlLWN2MTItdG9wMy4iKQp9CmlmICghYWxsKGMoIlRyYWl0IiwgIkNWIiwgIlNob3J0RGVzY3JpcHRpb24iLCAiTWVhbkNvcnJlbGF0aW9uIiwgIlNEQ29ycmVsYXRpb24iKSAlaW4lIG5hbWVzKGN2MTJfdG9wMykpKSB7CiAgc3RvcCgiY3YxMl90b3AzIG7Do28gY29udMOpbSBhcyBjb2x1bmFzIGV4aWdpZGFzIHBlbG8gY2h1bmsgdGFibGUtY3YxMi10b3AzLiIpCn0KCmN2MTJfdG9wMyAlPiUKICBrbml0cjo6a2FibGUoIGNhcHRpb24gPSAiVG9wIDMgbW9kZWxvcyBwYXJhIGNhZGEgdHJhw6dvIGUgZXNxdWVtYSBkZSB2YWxpZGHDp8OjbyBlbSBDVjEgZSBDVjIuIiwKICAgIGFsaWduID0gImxsY2NjIiApICU+JQogIGthYmxlRXh0cmE6OmthYmxlX3N0eWxpbmcoIGJvb3RzdHJhcF9vcHRpb25zID0gYygic3RyaXBlZCIsICJob3ZlciIsICJjb25kZW5zZWQiLCAicmVzcG9uc2l2ZSIpLAogICBmdWxsX3dpZHRoID0gRkFMU0UsCiAgICBwb3NpdGlvbiA9ICJsZWZ0IiApCmBgYAoKYGBge3IgdGFibGUtY3Zsb28tdG9wM30KaWYgKCFleGlzdHMoImN2bG9vX3RvcDMiKSkgewogIHN0b3AoIk8gb2JqZXRvIGN2bG9vX3RvcDMgbsOjbyBmb2kgY2FycmVnYWRvIGFudGVzIGRvIGNodW5rIHRhYmxlLWN2bG9vLXRvcDMuIikKfQppZiAoIWFsbChjKCJUcmFpdCIsICJDViIsICJFbnZfbGVhdmUiLCAiU2hvcnREZXNjcmlwdGlvbiIsICJNZWFuQ29ycmVsYXRpb24iLCAiU0RDb3JyZWxhdGlvbiIpICVpbiUgbmFtZXMoY3Zsb29fdG9wMykpKSB7CiAgc3RvcCgiY3Zsb29fdG9wMyBuw6NvIGNvbnTDqW0gYXMgY29sdW5hcyBleGlnaWRhcyBwZWxvIGNodW5rIHRhYmxlLWN2bG9vLXRvcDMuIikKfQoKY3Zsb29fdG9wMyAlPiUKICBrbml0cjo6a2FibGUoIGNhcHRpb24gPSAiVG9wIDMgbW9kZWxvcyBwYXJhIGNhZGEgdHJhw6dvLCBlc3F1ZW1hIGRlIHZhbGlkYcOnw6NvIGUgYW1iaWVudGUgZGVpeGFkbyBkZSBmb3JhIGVtIENWMCBlIENWMDAuIiwKICAgIGFsaWduID0gImxsbGNjYyIgKSAlPiUKICBrYWJsZUV4dHJhOjprYWJsZV9zdHlsaW5nKCBib290c3RyYXBfb3B0aW9ucyA9IGMoInN0cmlwZWQiLCAiaG92ZXIiLCAiY29uZGVuc2VkIiwgInJlc3BvbnNpdmUiKSwKICAgZnVsbF93aWR0aCA9IEZBTFNFLAogICAgcG9zaXRpb24gPSAibGVmdCIgKQpgYGAKCiMjIDEzLiBUYWJlbGFzIGRvIGVmZWl0byBkZSBXCgpFc3NhcyB0YWJlbGFzIGFwcmVzZW50YW0gYXMgY29tcGFyYcOnw7VlcyBwYXJlYWRhcyBlbnRyZSBtb2RlbG9zIHNlbSBlIGNvbSBpbmZvcm1hw6fDo28gY2xpbcOhdGljYS4KCmBgYHtyIHRhYmxlLWN2MTItdy1lZmZlY3R9CmlmICghZXhpc3RzKCJjdjEyX3dfZWZmZWN0IikpIHsKICBzdG9wKCJPIG9iamV0byBjdjEyX3dfZWZmZWN0IG7Do28gZm9pIGNhcnJlZ2FkbyBhbnRlcyBkbyBjaHVuayB0YWJsZS1jdjEyLXctZWZmZWN0LiIpCn0KaWYgKCFhbGwoYygiQ29tcGFyaXNvbiIsICJUcmFpdCIsICJDViIsICJNZWFuV2l0aG91dFciLCAiTWVhbldpdGhXIiwgIkRlbHRhV2l0aFciKSAlaW4lIG5hbWVzKGN2MTJfd19lZmZlY3QpKSkgewogIHN0b3AoImN2MTJfd19lZmZlY3QgbsOjbyBjb250w6ltIGFzIGNvbHVuYXMgZXhpZ2lkYXMgcGVsbyBjaHVuayB0YWJsZS1jdjEyLXctZWZmZWN0LiIpCn0KCmN2MTJfd19lZmZlY3QgJT4lCiAgbXV0YXRlKCBNZWFuV2l0aG91dFcgPSByb3VuZChNZWFuV2l0aG91dFcsIDMpLAogICBNZWFuV2l0aFcgPSByb3VuZChNZWFuV2l0aFcsIDMpLAogICAgRGVsdGFXaXRoVyA9IHJvdW5kKERlbHRhV2l0aFcsIDMpICkgJT4lCiAga25pdHI6OmthYmxlKCBjYXB0aW9uID0gIkNvbXBhcmHDp8OjbyBwYXJlYWRhIGVudHJlIG1vZGVsb3Mgc2VtIGUgY29tIG8ga2VybmVsIGNsaW3DoXRpY28gKFcpIGVtIENWMSBlIENWMi4iLAogICAgYWxpZ24gPSAibGxsY2NjY2MiICkgJT4lCiAga2FibGVFeHRyYTo6a2FibGVfc3R5bGluZyggYm9vdHN0cmFwX29wdGlvbnMgPSBjKCJzdHJpcGVkIiwgImhvdmVyIiwgImNvbmRlbnNlZCIsICJyZXNwb25zaXZlIiksCiAgIGZ1bGxfd2lkdGggPSBGQUxTRSwKICAgIHBvc2l0aW9uID0gImxlZnQiICkgJT4lCiAga2FibGVFeHRyYTo6c2Nyb2xsX2JveCh3aWR0aCA9ICIxMDAlIiwgaGVpZ2h0ID0gIjMyMHB4IikKYGBgCgpgYGB7ciB0YWJsZS1jdmxvby13LWVmZmVjdH0KaWYgKCFleGlzdHMoImN2bG9vX3dfZWZmZWN0IikpIHsKICBzdG9wKCJPIG9iamV0byBjdmxvb193X2VmZmVjdCBuw6NvIGZvaSBjYXJyZWdhZG8gYW50ZXMgZG8gY2h1bmsgdGFibGUtY3Zsb28tdy1lZmZlY3QuIikKfQppZiAoIWFsbChjKCJDb21wYXJpc29uIiwgIlRyYWl0IiwgIkNWIiwgIkVudl9sZWF2ZSIsICJNZWFuV2l0aG91dFciLCAiTWVhbldpdGhXIiwgIkRlbHRhV2l0aFciKSAlaW4lIG5hbWVzKGN2bG9vX3dfZWZmZWN0KSkpIHsKICBzdG9wKCJjdmxvb193X2VmZmVjdCBuw6NvIGNvbnTDqW0gYXMgY29sdW5hcyBleGlnaWRhcyBwZWxvIGNodW5rIHRhYmxlLWN2bG9vLXctZWZmZWN0LiIpCn0KCmN2bG9vX3dfZWZmZWN0ICU+JQogIG11dGF0ZSggTWVhbldpdGhvdXRXID0gcm91bmQoTWVhbldpdGhvdXRXLCAzKSwKICAgTWVhbldpdGhXID0gcm91bmQoTWVhbldpdGhXLCAzKSwKICAgIERlbHRhV2l0aFcgPSByb3VuZChEZWx0YVdpdGhXLCAzKSApICU+JQogIGtuaXRyOjprYWJsZSggY2FwdGlvbiA9ICJDb21wYXJhw6fDo28gcGFyZWFkYSBlbnRyZSBtb2RlbG9zIHNlbSBlIGNvbSBvIGtlcm5lbCBjbGltw6F0aWNvIChXKSBlbSBDVjAgZSBDVjAwLiIsCiAgICBhbGlnbiA9ICJsbGxsY2NjY2MiICkgJT4lCiAga2FibGVFeHRyYTo6a2FibGVfc3R5bGluZyggYm9vdHN0cmFwX29wdGlvbnMgPSBjKCJzdHJpcGVkIiwgImhvdmVyIiwgImNvbmRlbnNlZCIsICJyZXNwb25zaXZlIiksCiAgIGZ1bGxfd2lkdGggPSBGQUxTRSwKICAgIHBvc2l0aW9uID0gImxlZnQiICkgJT4lCiAga2FibGVFeHRyYTo6c2Nyb2xsX2JveCh3aWR0aCA9ICIxMDAlIiwgaGVpZ2h0ID0gIjMyMHB4IikKYGBgCgojIyAxNC4gVGFiZWxhcyBkZSBjb21wYXJhw6fDo28gZW50cmUgZmFtw61saWFzIGRlIGtlcm5lbAoKQXF1aSBvIHNjcmlwdCBjb250cmFzdGEgb3Mga2VybmVscyBsaW5lYXIsIEdhdXNzaWFubyBlIGFyYy1jb3NpbmUgZGVudHJvIGRlIGNhZGEgdmlhIGFuYWzDrXRpY2EuCgpgYGB7ciB0YWJsZS1jdjEyLWtlcm5lbC1mYW1pbHl9CmlmICghZXhpc3RzKCJjdjEyX2tlcm5lbF9mYW1pbHlfY29tcGFyZSIpKSB7CiAgc3RvcCgiTyBvYmpldG8gY3YxMl9rZXJuZWxfZmFtaWx5X2NvbXBhcmUgbsOjbyBmb2kgY2FycmVnYWRvIGFudGVzIGRvIGNodW5rIHRhYmxlLWN2MTIta2VybmVsLWZhbWlseS4iKQp9CmlmICghYWxsKGMoIlRyYWl0IiwgIkNWIiwgIlBhdGh3YXkiLCAiV2VhdGhlclN0YXR1cyIsICJMaW5lYXIiLCAiR2F1c3NpYW4iLCAiQXJjLWNvc2luZSIpICVpbiUgbmFtZXMoY3YxMl9rZXJuZWxfZmFtaWx5X2NvbXBhcmUpKSkgewogIHN0b3AoImN2MTJfa2VybmVsX2ZhbWlseV9jb21wYXJlIG7Do28gY29udMOpbSBhcyBjb2x1bmFzIGV4aWdpZGFzIHBlbG8gY2h1bmsgdGFibGUtY3YxMi1rZXJuZWwtZmFtaWx5LiIpCn0KCmN2MTJfa2VybmVsX2ZhbWlseV9jb21wYXJlICU+JQogIG11dGF0ZSggTGluZWFyID0gcm91bmQoTGluZWFyLCAzKSwKICAgR2F1c3NpYW4gPSByb3VuZChHYXVzc2lhbiwgMyksCiAgIGBBcmMtY29zaW5lYCA9IHJvdW5kKGBBcmMtY29zaW5lYCwgMyksCiAgIERlbHRhX0dhdXNzaWFuX3ZzX0xpbmVhciA9IHJvdW5kKERlbHRhX0dhdXNzaWFuX3ZzX0xpbmVhciwgMyksCiAgIERlbHRhX0FyY0Nvc192c19MaW5lYXIgPSByb3VuZChEZWx0YV9BcmNDb3NfdnNfTGluZWFyLCAzKSwKICAgIERlbHRhX0FyY0Nvc192c19HYXVzc2lhbiA9IHJvdW5kKERlbHRhX0FyY0Nvc192c19HYXVzc2lhbiwgMykgKSAlPiUKICBrbml0cjo6a2FibGUoIGNhcHRpb24gPSAiQ29tcGFyYcOnw6NvIGVudHJlIGZhbcOtbGlhcyBkZSBrZXJuZWwgZGVudHJvIGRlIGNhZGEgdmlhIGFuYWzDrXRpY2EgZW0gQ1YxIGUgQ1YyLiIsCiAgICBhbGlnbiA9ICJsbGxsY2NjY2NjIiApICU+JQogIGthYmxlRXh0cmE6OmthYmxlX3N0eWxpbmcoIGJvb3RzdHJhcF9vcHRpb25zID0gYygic3RyaXBlZCIsICJob3ZlciIsICJjb25kZW5zZWQiLCAicmVzcG9uc2l2ZSIpLAogICBmdWxsX3dpZHRoID0gRkFMU0UsCiAgICBwb3NpdGlvbiA9ICJsZWZ0IiApICU+JQogIGthYmxlRXh0cmE6OnNjcm9sbF9ib3god2lkdGggPSAiMTAwJSIsIGhlaWdodCA9ICIzMjBweCIpCmBgYAoKYGBge3IgdGFibGUtY3Zsb28ta2VybmVsLWZhbWlseX0KaWYgKCFleGlzdHMoImN2bG9vX2tlcm5lbF9mYW1pbHlfY29tcGFyZSIpKSB7CiAgc3RvcCgiTyBvYmpldG8gY3Zsb29fa2VybmVsX2ZhbWlseV9jb21wYXJlIG7Do28gZm9pIGNhcnJlZ2FkbyBhbnRlcyBkbyBjaHVuayB0YWJsZS1jdmxvby1rZXJuZWwtZmFtaWx5LiIpCn0KaWYgKCFhbGwoYygiVHJhaXQiLCAiQ1YiLCAiRW52X2xlYXZlIiwgIlBhdGh3YXkiLCAiV2VhdGhlclN0YXR1cyIsICJMaW5lYXIiLCAiR2F1c3NpYW4iLCAiQXJjLWNvc2luZSIpICVpbiUgbmFtZXMoY3Zsb29fa2VybmVsX2ZhbWlseV9jb21wYXJlKSkpIHsKICBzdG9wKCJjdmxvb19rZXJuZWxfZmFtaWx5X2NvbXBhcmUgbsOjbyBjb250w6ltIGFzIGNvbHVuYXMgZXhpZ2lkYXMgcGVsbyBjaHVuayB0YWJsZS1jdmxvby1rZXJuZWwtZmFtaWx5LiIpCn0KCmN2bG9vX2tlcm5lbF9mYW1pbHlfY29tcGFyZSAlPiUKICBtdXRhdGUoIExpbmVhciA9IHJvdW5kKExpbmVhciwgMyksCiAgIEdhdXNzaWFuID0gcm91bmQoR2F1c3NpYW4sIDMpLAogICBgQXJjLWNvc2luZWAgPSByb3VuZChgQXJjLWNvc2luZWAsIDMpLAogICBEZWx0YV9HYXVzc2lhbl92c19MaW5lYXIgPSByb3VuZChEZWx0YV9HYXVzc2lhbl92c19MaW5lYXIsIDMpLAogICBEZWx0YV9BcmNDb3NfdnNfTGluZWFyID0gcm91bmQoRGVsdGFfQXJjQ29zX3ZzX0xpbmVhciwgMyksCiAgICBEZWx0YV9BcmNDb3NfdnNfR2F1c3NpYW4gPSByb3VuZChEZWx0YV9BcmNDb3NfdnNfR2F1c3NpYW4sIDMpICkgJT4lCiAga25pdHI6OmthYmxlKCBjYXB0aW9uID0gIkNvbXBhcmHDp8OjbyBlbnRyZSBmYW3DrWxpYXMgZGUga2VybmVsIGRlbnRybyBkZSBjYWRhIHZpYSBhbmFsw610aWNhIGVtIENWMCBlIENWMDAuIiwKICAgIGFsaWduID0gImxsbGxsY2NjY2NjIiApICU+JQogIGthYmxlRXh0cmE6OmthYmxlX3N0eWxpbmcoIGJvb3RzdHJhcF9vcHRpb25zID0gYygic3RyaXBlZCIsICJob3ZlciIsICJjb25kZW5zZWQiLCAicmVzcG9uc2l2ZSIpLAogICBmdWxsX3dpZHRoID0gRkFMU0UsCiAgICBwb3NpdGlvbiA9ICJsZWZ0IiApICU+JQogIGthYmxlRXh0cmE6OnNjcm9sbF9ib3god2lkdGggPSAiMTAwJSIsIGhlaWdodCA9ICIzMjBweCIpCmBgYAoKIyMgMTUuIEZpZ3VyYXMKCkFzIGZpZ3VyYXMgZmluYWlzIHJlc3VtZW0gYSBjYXBhY2lkYWRlIHByZWRpdGl2YSBwYXJhIG8gY2F0w6Fsb2dvIGNvbXBsZXRvIGRlIG1vZGVsb3MgZW0gYENWMS9DVjJgIGUgYENWMC9DVjAwYC4KCmBgYHtyIGZpZ3VyZS1jdjEyfQppZiAoIWV4aXN0cygiY3YxMl9zdW1tYXJ5IikpIHsKICBzdG9wKCJPIG9iamV0byBjdjEyX3N1bW1hcnkgbsOjbyBmb2kgY2FycmVnYWRvIGFudGVzIGRvIGNodW5rIGZpZ3VyZS1jdjEyLiIpCn0KaWYgKCFhbGwoYygiVHJhaXQiLCAiQ1YiLCAiTWVhbkNvcnJlbGF0aW9uIiwgIlNEQ29ycmVsYXRpb24iLCAiRnVsbEVmZmVjdHMiLCAiR3JvdXAiKSAlaW4lIG5hbWVzKGN2MTJfc3VtbWFyeSkpKSB7CiAgc3RvcCgiY3YxMl9zdW1tYXJ5IG7Do28gY29udMOpbSBhcyBjb2x1bmFzIGV4aWdpZGFzIHBlbG8gY2h1bmsgZmlndXJlLWN2MTIuIikKfQoKY3YxMl9wbG90X2RhdGEgPC0gY3YxMl9zdW1tYXJ5ICU+JQogIG11dGF0ZSgKICAgIEZ1bGxFZmZlY3RzV3JhcHBlZCA9IHN0cmluZ3I6OnN0cl93cmFwKEZ1bGxFZmZlY3RzLCB3aWR0aCA9IDIyKQogICkKCmN2MTJfdHJhaXRzIDwtIHVuaXF1ZShjdjEyX3Bsb3RfZGF0YSRUcmFpdCkKY3YxMl9zY2hlbWVzIDwtIHVuaXF1ZShjdjEyX3Bsb3RfZGF0YSRDVikKCmZvciAoY3VycmVudF90cmFpdCBpbiBjdjEyX3RyYWl0cykgewogIGZvciAoY3VycmVudF9jdiBpbiBjdjEyX3NjaGVtZXMpIHsKICAgIHRyYWl0X2N2X2RhdGEgPC0gY3YxMl9wbG90X2RhdGEgJT4lCiAgICAgIGZpbHRlcihUcmFpdCA9PSBjdXJyZW50X3RyYWl0LCBDViA9PSBjdXJyZW50X2N2KSAlPiUKICAgICAgYXJyYW5nZShNZWFuQ29ycmVsYXRpb24pICU+JQogICAgICBtdXRhdGUoCiAgICAgICAgRnVsbEVmZmVjdHNXcmFwcGVkID0gZmFjdG9yKAogICAgICAgICAgRnVsbEVmZmVjdHNXcmFwcGVkLAogICAgICAgICAgbGV2ZWxzID0gdW5pcXVlKEZ1bGxFZmZlY3RzV3JhcHBlZCkKICAgICAgICApCiAgICAgICkKCiAgICBpZiAobnJvdyh0cmFpdF9jdl9kYXRhKSA9PSAwKSBuZXh0CgogICAgbG93ZXJfbGltaXRfdHJhaXRfY3YgPC0gbWluKHRyYWl0X2N2X2RhdGEkTWVhbkNvcnJlbGF0aW9uIC0gdHJhaXRfY3ZfZGF0YSRTRENvcnJlbGF0aW9uLCBuYS5ybSA9IFRSVUUpCiAgICB1cHBlcl9saW1pdF90cmFpdF9jdiA8LSBtYXgodHJhaXRfY3ZfZGF0YSRNZWFuQ29ycmVsYXRpb24gKyB0cmFpdF9jdl9kYXRhJFNEQ29ycmVsYXRpb24sIG5hLnJtID0gVFJVRSkKICAgIHBsb3RfbG93ZXJfbGltaXRfdHJhaXRfY3YgPC0gbWluKDAsIGxvd2VyX2xpbWl0X3RyYWl0X2N2IC0gMC4wMykKICAgIHBsb3RfdXBwZXJfbGltaXRfdHJhaXRfY3YgPC0gdXBwZXJfbGltaXRfdHJhaXRfY3YgKyAwLjAzCgogICAgcF90cmFpdF9jdjEyIDwtIGdncGxvdCgKICAgICAgdHJhaXRfY3ZfZGF0YSwKICAgICAgYWVzKHggPSBGdWxsRWZmZWN0c1dyYXBwZWQsIHkgPSBNZWFuQ29ycmVsYXRpb24sIGZpbGwgPSBHcm91cCkKICAgICkgKwogICAgICBnZW9tX2NvbCh3aWR0aCA9IDAuNzUsIGNvbG9yID0gImdyZXkzMCIsIG5hLnJtID0gVFJVRSkgKwogICAgICBnZW9tX2Vycm9yYmFyKAogICAgICAgIGFlcygKICAgICAgICAgIHltaW4gPSBNZWFuQ29ycmVsYXRpb24gLSBTRENvcnJlbGF0aW9uLAogICAgICAgICAgeW1heCA9IE1lYW5Db3JyZWxhdGlvbiArIFNEQ29ycmVsYXRpb24KICAgICAgICApLAogICAgICAgIHdpZHRoID0gMC4yMCwKICAgICAgICBsaW5ld2lkdGggPSAwLjM1LAogICAgICAgIG5hLnJtID0gVFJVRQogICAgICApICsKICAgICAgZ2VvbV9obGluZSh5aW50ZXJjZXB0ID0gMCwgbGluZXR5cGUgPSAiZGFzaGVkIiwgY29sb3IgPSAiZ3JleTQwIikgKwogICAgICBzY2FsZV94X2Rpc2NyZXRlKG5hbWUgPSAiRWZlaXRvcyBjb21wbGV0b3MgZG8gbW9kZWxvIikgKwogICAgICBzY2FsZV95X2NvbnRpbnVvdXMoCiAgICAgICAgbmFtZSA9ICJDb3JyZWxhw6fDo28gcHJlZGl0aXZhIiwKICAgICAgICBleHBhbmQgPSBleHBhbnNpb24obXVsdCA9IGMoMCwgMC4wMikpCiAgICAgICkgKwogICAgICBjb29yZF9jYXJ0ZXNpYW4oeWxpbSA9IGMocGxvdF9sb3dlcl9saW1pdF90cmFpdF9jdiwgcGxvdF91cHBlcl9saW1pdF90cmFpdF9jdikpICsKICAgICAgZ2d0aGVtZXM6OnNjYWxlX2ZpbGxfZ2RvY3MobmFtZSA9ICJHcnVwbyBkZSBjb21wYXJhw6fDo28iKSArCiAgICAgIHRoZW1lX2J3KCkgKwogICAgICB0aGVtZSgKICAgICAgICBwbG90LnRpdGxlID0gZWxlbWVudF90ZXh0KGZhY2UgPSAiYm9sZCIsIHNpemUgPSAxMiwgaGp1c3QgPSAwLjUpLAogICAgICAgIGF4aXMudGV4dC54ID0gZWxlbWVudF90ZXh0KHNpemUgPSA3LCBhbmdsZSA9IDYwLCBoanVzdCA9IDEsIHZqdXN0ID0gMSksCiAgICAgICAgYXhpcy50ZXh0LnkgPSBlbGVtZW50X3RleHQoc2l6ZSA9IDgpLAogICAgICAgIGF4aXMudGl0bGUgPSBlbGVtZW50X3RleHQoc2l6ZSA9IDEwKSwKICAgICAgICBsZWdlbmQucG9zaXRpb24gPSAidG9wIiwKICAgICAgICBsZWdlbmQudGl0bGUgPSBlbGVtZW50X3RleHQoc2l6ZSA9IDkpLAogICAgICAgIGxlZ2VuZC50ZXh0ID0gZWxlbWVudF90ZXh0KHNpemUgPSA4KQogICAgICApICsKICAgICAgbGFicygKICAgICAgICB0aXRsZSA9IHBhc3RlKCJIYWJpbGlkYWRlIHByZWRpdGl2YSBlbSIsIGN1cnJlbnRfY3YsICJwYXJhIiwgY3VycmVudF90cmFpdCkKICAgICAgKQoKICAgIHByaW50KHBfdHJhaXRfY3YxMikKCiAgICBnZ3NhdmUoCiAgICAgIGZpbGUucGF0aChmaWd1cmVzX2RpciwgcGFzdGUwKCJwcmVkaWN0aW9uXyIsIGN1cnJlbnRfdHJhaXQsICJfIiwgdG9sb3dlcihjdXJyZW50X2N2KSwgIi50aWZmIikpLAogICAgICBwbG90ID0gcF90cmFpdF9jdjEyLAogICAgICB3aWR0aCA9IDE4LAogICAgICBoZWlnaHQgPSAxMSwKICAgICAgZHBpID0gMzAwLAogICAgICBiZyA9ICJ3aGl0ZSIKICAgICkKICB9Cn0KYGBgCgpgYGB7ciBmaWd1cmUtY3Zsb299CmlmICghZXhpc3RzKCJjdmxvb19zdW1tYXJ5IikpIHsKICBzdG9wKCJPIG9iamV0byBjdmxvb19zdW1tYXJ5IG7Do28gZm9pIGNhcnJlZ2FkbyBhbnRlcyBkbyBjaHVuayBmaWd1cmUtY3Zsb28uIikKfQppZiAoIWFsbChjKCJUcmFpdCIsICJDViIsICJFbnZfbGVhdmUiLCAiTWVhbkNvcnJlbGF0aW9uIiwgIlNEQ29ycmVsYXRpb24iLCAiRnVsbEVmZmVjdHMiLCAiR3JvdXAiKSAlaW4lIG5hbWVzKGN2bG9vX3N1bW1hcnkpKSkgewogIHN0b3AoImN2bG9vX3N1bW1hcnkgbsOjbyBjb250w6ltIGFzIGNvbHVuYXMgZXhpZ2lkYXMgcGVsbyBjaHVuayBmaWd1cmUtY3Zsb28uIikKfQoKY3Zsb29fcGxvdF9kYXRhIDwtIGN2bG9vX3N1bW1hcnkgJT4lCiAgbXV0YXRlKAogICAgRnVsbEVmZmVjdHNXcmFwcGVkID0gc3RyaW5ncjo6c3RyX3dyYXAoRnVsbEVmZmVjdHMsIHdpZHRoID0gMjIpLAogICAgRW52X2xlYXZlID0gZmFjdG9yKEVudl9sZWF2ZSwgbGV2ZWxzID0gYygiQ1MxMV9XUyIsICJDUzExX1dXIiwgIkNTMTJfV1MiLCAiQ1MxMl9XVyIpKQogICkKCmN2bG9vX3RyYWl0cyA8LSB1bmlxdWUoY3Zsb29fcGxvdF9kYXRhJFRyYWl0KQpjdmxvb19zY2hlbWVzIDwtIHVuaXF1ZShjdmxvb19wbG90X2RhdGEkQ1YpCgpmb3IgKGN1cnJlbnRfdHJhaXQgaW4gY3Zsb29fdHJhaXRzKSB7CiAgZm9yIChjdXJyZW50X2N2IGluIGN2bG9vX3NjaGVtZXMpIHsKICAgIHRyYWl0X2N2X2RhdGEgPC0gY3Zsb29fcGxvdF9kYXRhICU+JQogICAgICBmaWx0ZXIoVHJhaXQgPT0gY3VycmVudF90cmFpdCwgQ1YgPT0gY3VycmVudF9jdikKCiAgICBpZiAobnJvdyh0cmFpdF9jdl9kYXRhKSA9PSAwKSBuZXh0CgogICAgbW9kZWxfb3JkZXIgPC0gdHJhaXRfY3ZfZGF0YSAlPiUKICAgICAgZ3JvdXBfYnkoRnVsbEVmZmVjdHNXcmFwcGVkKSAlPiUKICAgICAgc3VtbWFyaXNlKE9yZGVyTWVhbiA9IG1lYW4oTWVhbkNvcnJlbGF0aW9uLCBuYS5ybSA9IFRSVUUpLCAuZ3JvdXBzID0gImRyb3AiKSAlPiUKICAgICAgYXJyYW5nZShPcmRlck1lYW4pICU+JQogICAgICBwdWxsKEZ1bGxFZmZlY3RzV3JhcHBlZCkKCiAgICB0cmFpdF9jdl9kYXRhIDwtIHRyYWl0X2N2X2RhdGEgJT4lCiAgICAgIG11dGF0ZSgKICAgICAgICBGdWxsRWZmZWN0c1dyYXBwZWQgPSBmYWN0b3IoCiAgICAgICAgICBGdWxsRWZmZWN0c1dyYXBwZWQsCiAgICAgICAgICBsZXZlbHMgPSBtb2RlbF9vcmRlcgogICAgICAgICkKICAgICAgKQoKICAgIGxvd2VyX2xpbWl0X3RyYWl0X2N2IDwtIG1pbih0cmFpdF9jdl9kYXRhJE1lYW5Db3JyZWxhdGlvbiAtIHRyYWl0X2N2X2RhdGEkU0RDb3JyZWxhdGlvbiwgbmEucm0gPSBUUlVFKQogICAgdXBwZXJfbGltaXRfdHJhaXRfY3YgPC0gbWF4KHRyYWl0X2N2X2RhdGEkTWVhbkNvcnJlbGF0aW9uICsgdHJhaXRfY3ZfZGF0YSRTRENvcnJlbGF0aW9uLCBuYS5ybSA9IFRSVUUpCiAgICBwbG90X2xvd2VyX2xpbWl0X3RyYWl0X2N2IDwtIG1pbigwLCBsb3dlcl9saW1pdF90cmFpdF9jdiAtIDAuMDMpCiAgICBwbG90X3VwcGVyX2xpbWl0X3RyYWl0X2N2IDwtIHVwcGVyX2xpbWl0X3RyYWl0X2N2ICsgMC4wMwoKICAgIHBfdHJhaXRfY3Zsb28gPC0gZ2dwbG90KAogICAgICB0cmFpdF9jdl9kYXRhLAogICAgICBhZXMoeCA9IEZ1bGxFZmZlY3RzV3JhcHBlZCwgeSA9IE1lYW5Db3JyZWxhdGlvbiwgZmlsbCA9IEdyb3VwKQogICAgKSArCiAgICAgIGdlb21fY29sKHdpZHRoID0gMC43NSwgY29sb3IgPSAiZ3JleTMwIiwgbmEucm0gPSBUUlVFKSArCiAgICAgIGdlb21fZXJyb3JiYXIoCiAgICAgICAgYWVzKAogICAgICAgICAgeW1pbiA9IE1lYW5Db3JyZWxhdGlvbiAtIFNEQ29ycmVsYXRpb24sCiAgICAgICAgICB5bWF4ID0gTWVhbkNvcnJlbGF0aW9uICsgU0RDb3JyZWxhdGlvbgogICAgICAgICksCiAgICAgICAgd2lkdGggPSAwLjIwLAogICAgICAgIGxpbmV3aWR0aCA9IDAuMzUsCiAgICAgICAgbmEucm0gPSBUUlVFCiAgICAgICkgKwogICAgICBmYWNldF93cmFwKH4gRW52X2xlYXZlLCBuY29sID0gMikgKwogICAgICBnZW9tX2hsaW5lKHlpbnRlcmNlcHQgPSAwLCBsaW5ldHlwZSA9ICJkYXNoZWQiLCBjb2xvciA9ICJncmV5NDAiKSArCiAgICAgIHNjYWxlX3hfZGlzY3JldGUobmFtZSA9ICJFZmVpdG9zIGNvbXBsZXRvcyBkbyBtb2RlbG8iKSArCiAgICAgIHNjYWxlX3lfY29udGludW91cygKICAgICAgICBuYW1lID0gIkNvcnJlbGHDp8OjbyBwcmVkaXRpdmEiLAogICAgICAgIGV4cGFuZCA9IGV4cGFuc2lvbihtdWx0ID0gYygwLCAwLjAyKSkKICAgICAgKSArCiAgICAgIGNvb3JkX2NhcnRlc2lhbih5bGltID0gYyhwbG90X2xvd2VyX2xpbWl0X3RyYWl0X2N2LCBwbG90X3VwcGVyX2xpbWl0X3RyYWl0X2N2KSkgKwogICAgICBnZ3RoZW1lczo6c2NhbGVfZmlsbF9nZG9jcyhuYW1lID0gIkdydXBvIGRlIGNvbXBhcmHDp8OjbyIpICsKICAgICAgdGhlbWVfYncoKSArCiAgICAgIHRoZW1lKAogICAgICAgIHBsb3QudGl0bGUgPSBlbGVtZW50X3RleHQoZmFjZSA9ICJib2xkIiwgc2l6ZSA9IDEyLCBoanVzdCA9IDAuNSksCiAgICAgICAgc3RyaXAudGV4dCA9IGVsZW1lbnRfdGV4dChmYWNlID0gImJvbGQiLCBzaXplID0gOSksCiAgICAgICAgYXhpcy50ZXh0LnggPSBlbGVtZW50X3RleHQoc2l6ZSA9IDYuNSwgYW5nbGUgPSA2MCwgaGp1c3QgPSAxLCB2anVzdCA9IDEpLAogICAgICAgIGF4aXMudGV4dC55ID0gZWxlbWVudF90ZXh0KHNpemUgPSA4KSwKICAgICAgICBheGlzLnRpdGxlID0gZWxlbWVudF90ZXh0KHNpemUgPSAxMCksCiAgICAgICAgbGVnZW5kLnBvc2l0aW9uID0gInRvcCIsCiAgICAgICAgbGVnZW5kLnRpdGxlID0gZWxlbWVudF90ZXh0KHNpemUgPSA5KSwKICAgICAgICBsZWdlbmQudGV4dCA9IGVsZW1lbnRfdGV4dChzaXplID0gOCkKICAgICAgKSArCiAgICAgIGxhYnMoCiAgICAgICAgdGl0bGUgPSBwYXN0ZSgiSGFiaWxpZGFkZSBwcmVkaXRpdmEgZW0iLCBjdXJyZW50X2N2LCAicGFyYSIsIGN1cnJlbnRfdHJhaXQpCiAgICAgICkKCiAgICBwcmludChwX3RyYWl0X2N2bG9vKQoKICAgIGdnc2F2ZSgKICAgICAgZmlsZS5wYXRoKGZpZ3VyZXNfZGlyLCBwYXN0ZTAoInByZWRpY3Rpb25fIiwgY3VycmVudF90cmFpdCwgIl8iLCBjdXJyZW50X2N2LCAiLnRpZmYiKSksCiAgICAgIHBsb3QgPSBwX3RyYWl0X2N2bG9vLAogICAgICB3aWR0aCA9IDE4LAogICAgICBoZWlnaHQgPSAxMiwKICAgICAgZHBpID0gMzAwLAogICAgICBiZyA9ICJ3aGl0ZSIKICAgICkKICB9Cn0KYGBgCgojIyAxNi4gTm90YSBmaW5hbAoKRXN0YSB2ZXJzw6NvIGRpZMOhdGljYSBlc3TDoSBhbGluaGFkYSBhbyBmbHV4byBhdHVhbCBkZSBwcmVkacOnw6NvIGJhc2VhZG8gZW0gYGFuYWx5c2lzX3ByZWRpY3Rpb25fcnVuX291dHB1dHMuUm1kYC4gRWxhIGVzcGVyYSBhcnF1aXZvcyBub3MgcXVhaXM6CgotIGEgcmVwZXRpw6fDo28gZSBvIGZvbGQgZXN0w6NvIGNvZGlmaWNhZG9zIHRhbnRvIG5hIGhpZXJhcnF1aWEgZGUgcGFzdGFzIHF1YW50byBubyBub21lIGRvIGFycXVpdm87Ci0gYENWMGAgZSBgQ1YwMGAgY2FycmVnYW0gbyByw7N0dWxvIGRvIGFtYmllbnRlIGRlaXhhZG8gZGUgZm9yYSB0YW50byBuYSBoaWVyYXJxdWlhIGRlIHBhc3RhcyBxdWFudG8gbm8gbm9tZSBkbyBhcnF1aXZvOwotIG9zIENTVnMgZGUgcHJlZGnDp8OjbyBzw6NvIGxpZG9zIHJlY3Vyc2l2YW1lbnRlIGEgcGFydGlyIGRlIGBvdXRwdXQvcmVzdWx0cy9gOwotIGBDVjBgIGUgYENWMDBgIGFpbmRhIGV4aWdlbSBvIGZpbHRybyBgRW52ID09IEVudl9sZWF2ZWAgcGFyYSBvcyByZXN1bW9zIGRvIGFtYmllbnRlIGRlaXhhZG8gZGUgZm9yYS4KCkRlcG9pcyBkZSBleGVjdXRhciBlc3RlIGFycXVpdm8sIGEgcHLDs3hpbWEgZXRhcGEgbm8gcmVwb3NpdMOzcmlvIMOpIHJvZGFyIG8gc2NyaXB0IG9yaWVudGFkbyBhbyBtYW51c2NyaXRvIHF1ZSBjb25zb21lIGFzIHRhYmVsYXMtcmVzdW1vIGdyYXZhZGFzIGVtIGBvdXRwdXQvdGFibGVzL2AuCgojIyBOYXZlZ2HDp8OjbyBlbnRyZSBldGFwYXMKCioqRXRhcGEgYW50ZXJpb3I6KiogW1ByZWRpw6fDo28g4oCUIFBhcnRlIElJXShhbmFseXNpc19wcmVkaWN0aW9uX3J1bl9vdXRwdXRzX3B0Lmh0bWwpICAKKipQcsOzeGltYSByZWZlcsOqbmNpYSBubyBzaXRlOioqIFtIb21lXShpbmRleC5odG1sKQoKRm9yYSBkbyBtZW51IGRvIHNpdGUsIGEgcHLDs3hpbWEgZXRhcGEgYW5hbMOtdGljYSDDqSBnZXJhciBvcyByZXN1bW9zIG9yaWVudGFkb3MgYW8gbWFudXNjcml0byBlIGFzIHRhYmVsYXMgZGUgcmV2aXPDo28gYSBwYXJ0aXIgZGFzIHNhw61kYXMgY3JpYWRhcyBhcXVpLgo=</div>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
 TeX fonts only; see
@@ -16538,6 +16905,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeSourceEmbed("visualization_pt.Rmd");
+});
+</script>
 
 <script>
 $(document).ready(function ()  {

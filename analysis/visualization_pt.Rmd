@@ -1,51 +1,24 @@
 ---
-title: "Resumos e figuras de predição - tutorial didático"
+title: "Resumos e figuras de predição"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
 output:
   workflowr::wflow_html:
     toc: true
+    toc_depth: 3
     toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
 **Language / Idioma:** [English](visualization.html) | [Português](visualization_pt.html)
 
-Este arquivo é a versão didática da etapa de visualização. Sua finalidade é tomar as saídas brutas de predição produzidas em `analysis_prediction_run_outputs.Rmd`, reorganizá-las em tabelas-resumo interpretáveis e depois traduzir esses resumos em comparações compactas e figuras finais.
-
-Neste ponto do pipeline, a principal pergunta analítica já não é mais como cada modelo é especificado, mas como os modelos ajustados se comportam sob diferentes problemas de predição. Por essa razão, a etapa de visualização desloca o foco da construção dos modelos para a interpretação dos modelos. Ela reúne resumos de desempenho para `CV1`, `CV2`, `CV0` e `CV00`, destaca contrastes entre modelos com e sem o kernel climático (`W`) e organiza os resultados em tabelas e figuras que são mais fáceis de inspecionar do que os próprios arquivos brutos de predição.
-
-O fluxo atual de predição grava saídas brutas em `output/results/` usando nomes de arquivo que codificam o cenário de validação, o traço, o modelo ajustado, a repetição e o fold. Para `CV0` e `CV00`, o rótulo do ambiente deixado de fora também é registrado no nome do arquivo e depois é associado a `Env` pelo filtro `Env == Env_leave`. Essa estrutura de nomes é essencial porque conecta a etapa de execução à etapa de interpretação.
-
-Ao longo deste tutorial, o **kernel climático (`W`)** deve ser interpretado como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente (`E`). O componente fenômico (`P`) também deve ser interpretado com cuidado, porque a similaridade baseada em NIRS pode refletir forte resposta ambiental além de sinal preditivo potencialmente útil.
-
-### O que este script faz
-
-O fluxo é organizado em quatro tarefas práticas:
-
-1. localizar e ler os arquivos CSV de predição;
-2. interpretar os nomes dos arquivos e recuperar as informações de traço, modelo, repetição e leave-one-environment-out;
-3. resumir os resultados para `CV1`, `CV2`, `CV0` e `CV00`;
-4. exportar tabelas limpas e figuras para a próxima etapa orientada ao manuscrito.
-
-Para tornar a interpretação mais fácil, os modelos são ordenados para ajudar a responder três perguntas práticas:
-
-1. passar de kernels lineares para kernels Gaussianos ou arc-cosine melhora a capacidade preditiva?
-2. adicionar o kernel climático (`W`) melhora a capacidade preditiva?
-3. combinar informação genômica e fenômica melhora a capacidade preditiva?
-
-## Entradas, saídas e próxima etapa
-
-**Entradas desta etapa**
-- saídas brutas de predição gravadas por `analysis_prediction_run_outputs.Rmd`
-- tabelas leves de metadados da predição geradas na etapa anterior
-
-**Saídas desta etapa**
-- tabelas-resumo finais
-- rankings de modelos
-- comparações do efeito de `W`
-- comparações entre famílias de kernel
-- figuras finais para interpretação posterior
-
-**Próxima etapa**
-- as saídas geradas aqui alimentam os resumos orientados ao manuscrito e a interpretação final dos resultados do projeto.
+A finalidade dessa etapa é tomar as saídas brutas de predição produzidas em `analysis_prediction_run_outputs.Rmd`, reorganizá-las em tabelas-resumo interpretáveis e depois traduzir esses resumos em comparações compactas e figuras finais.
 
 ## 1. Configuração
 
@@ -1388,6 +1361,8 @@ for (current_trait in cv12_traits) {
 
     lower_limit_trait_cv <- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
     upper_limit_trait_cv <- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+    plot_lower_limit_trait_cv <- min(0, lower_limit_trait_cv - 0.03)
+    plot_upper_limit_trait_cv <- upper_limit_trait_cv + 0.03
 
     p_trait_cv12 <- ggplot(
       trait_cv_data,
@@ -1407,9 +1382,9 @@ for (current_trait in cv12_traits) {
       scale_x_discrete(name = "Efeitos completos do modelo") +
       scale_y_continuous(
         name = "Correlação preditiva",
-        limits = c(lower_limit_trait_cv - 0.03, upper_limit_trait_cv + 0.03),
         expand = expansion(mult = c(0, 0.02))
       ) +
+      coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
       ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
       theme_bw() +
       theme(
@@ -1479,6 +1454,8 @@ for (current_trait in cvloo_traits) {
 
     lower_limit_trait_cv <- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
     upper_limit_trait_cv <- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+    plot_lower_limit_trait_cv <- min(0, lower_limit_trait_cv - 0.03)
+    plot_upper_limit_trait_cv <- upper_limit_trait_cv + 0.03
 
     p_trait_cvloo <- ggplot(
       trait_cv_data,
@@ -1499,9 +1476,9 @@ for (current_trait in cvloo_traits) {
       scale_x_discrete(name = "Efeitos completos do modelo") +
       scale_y_continuous(
         name = "Correlação preditiva",
-        limits = c(lower_limit_trait_cv - 0.03, upper_limit_trait_cv + 0.03),
         expand = expansion(mult = c(0, 0.02))
       ) +
+      coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
       ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
       theme_bw() +
       theme(
