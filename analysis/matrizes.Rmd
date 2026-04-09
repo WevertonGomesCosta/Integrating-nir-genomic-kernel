@@ -1110,6 +1110,7 @@ kernel_plot_info <- data.frame(
   stringsAsFactors = FALSE
 )
 
+kernel_plot_objects <- list()
 dir.create("output/Matrizes/figures", recursive = TRUE, showWarnings = FALSE)
 
 for (i in seq_len(nrow(kernel_plot_info))) {
@@ -1167,11 +1168,16 @@ for (i in seq_len(nrow(kernel_plot_info))) {
       panel.grid = element_blank()
     )
 
+  kernel_plot_objects[[current_name]] <- current_plot
   print(current_plot)
+}
+```
 
+```{r save-kernel-diagnostic-figure-square, include=FALSE}
+for (current_name in names(kernel_plot_objects)) {
   ggsave(
     filename = paste0("output/Matrizes/figures/", current_name, "_ordered_heatmap.tiff"),
-    plot = current_plot,
+    plot = kernel_plot_objects[[current_name]],
     width = 8,
     height = 8,
     dpi = 300,

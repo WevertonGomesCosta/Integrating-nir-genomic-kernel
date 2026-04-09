@@ -638,7 +638,7 @@ kernel_inventory_linear %>%
     n_cols = format(n_cols, big.mark = ",")
   ) %>%
   knitr::kable(
-    caption = "Diagnostic summary of the main linear kernels.",
+    caption = "Resumo diagnóstico dos principais kernels lineares.",
     align = "lcccccc"
   ) %>%
   kableExtra::kable_styling(
@@ -1084,7 +1084,7 @@ kernel_inventory_nonlinear %>%
     n_cols = format(n_cols, big.mark = ",")
   ) %>%
   knitr::kable(
-    caption = "Diagnostic summary of the nonlinear and interaction kernels.",
+    caption = "Resumo diagnóstico dos kernels não lineares e de interação.",
     align = "lcccccc"
   ) %>%
   kableExtra::kable_styling(
@@ -1096,7 +1096,7 @@ kernel_inventory_nonlinear %>%
 ```
 ## 15. Figuras diagnósticas para o artigo
 
-Para revelar mais claramente a estrutura interna dos kernels, no arquivo em inglês nós plotamos as **matrizes completas** em vez de apenas um pequeno subconjunto no canto superior esquerdo. Cada matriz é reordenada por clustering hierárquico com base na **distância induzida pelo kernel** entre indivíduos ou observações:
+Para revelar mais claramente a estrutura interna dos kernels, agora plotamos as **matrizes completas** em vez de apenas um pequeno subconjunto no canto superior esquerdo. Cada matriz é reordenada por clustering hierárquico com base na **distância induzida pelo kernel** entre indivíduos ou observações:
 
 \[
 d_{ij}=\sqrt{K_{ii}+K_{jj}-2K_{ij}}
@@ -1112,17 +1112,15 @@ A figura abaixo compara visualmente o comportamento dos principais kernels.
 kernel_plot_info <- data.frame(
   KernelName = c("ZG", "GGK", "GAK", "ZP", "PGK", "PAK"),
   KernelLabel = c(
-    "Linear genomic kernel",
-    "Gaussian genomic kernel",
-    "Arc-cosine genomic kernel",
-    "Linear phenomic kernel",
-    "Gaussian phenomic kernel",
-    "Arc-cosine phenomic kernel"
+    "Kernel genômico linear",
+    "Kernel genômico Gaussiano",
+    "Kernel genômico arc-cosine",
+    "Kernel fenômico linear",
+    "Kernel fenômico Gaussiano",
+    "Kernel fenômico arc-cosine"
   ),
   stringsAsFactors = FALSE
 )
-
-dir.create("output/Matrizes/figures", recursive = TRUE, showWarnings = FALSE)
 
 for (i in seq_len(nrow(kernel_plot_info))) {
 
@@ -1147,25 +1145,25 @@ for (i in seq_len(nrow(kernel_plot_info))) {
   colnames(current_matrix_ordered) <- seq_len(ncol(current_matrix_ordered))
 
   current_df <- as.data.frame(as.table(current_matrix_ordered))
-  colnames(current_df) <- c("Row", "Column", "Value")
-  current_df$Row <- factor(current_df$Row, levels = rev(unique(current_df$Row)))
-  current_df$Column <- factor(current_df$Column, levels = unique(current_df$Column))
+  colnames(current_df) <- c("Linha", "Coluna", "Valor")
+  current_df$Linha <- factor(current_df$Linha, levels = rev(unique(current_df$Linha)))
+  current_df$Coluna <- factor(current_df$Coluna, levels = unique(current_df$Coluna))
 
-  current_plot <- ggplot(current_df, aes(x = Column, y = Row, fill = Value)) +
+  current_plot <- ggplot(current_df, aes(x = Coluna, y = Linha, fill = Valor)) +
     geom_raster() +
     scale_fill_gradient2(
       low = "#2166AC",
       mid = "white",
       high = "#B2182B",
-      midpoint = median(current_df$Value, na.rm = TRUE),
+      midpoint = median(current_df$Valor, na.rm = TRUE),
       name = "Valor do kernel"
     ) +
     coord_fixed() +
     labs(
       title = current_name,
       subtitle = current_label,
-      x = "Ordered observations",
-      y = "Ordered observations"
+      x = "Observações ordenadas",
+      y = "Observações ordenadas"
     ) +
     theme_minimal(base_size = 11) +
     theme(
@@ -1180,16 +1178,6 @@ for (i in seq_len(nrow(kernel_plot_info))) {
     )
 
   print(current_plot)
-
-  ggsave(
-    filename = paste0("output/Matrizes/figures/", current_name, "_ordered_heatmap.tiff"),
-    plot = current_plot,
-    width = 8,
-    height = 8,
-    dpi = 300,
-    compression = "lzw",
-    bg = "white"
-  )
 }
 ```
 
@@ -1213,9 +1201,9 @@ current_objs <- ls(envir = .GlobalEnv)
 to_keep <- intersect(current_objs, keep_names)
 to_remove <- setdiff(current_objs, to_keep)
 
-message("Objects kept (", length(to_keep), "): ", paste(to_keep, collapse = ", "))
+message("Objetos mantidos (", length(to_keep), "): ", paste(to_keep, collapse = ", "))
 message(
-  "Objects removed (", length(to_remove), "): ",
+  "Objetos removidos (", length(to_remove), "): ",
   paste(head(to_remove, 40), collapse = ", "),
   if (length(to_remove) > 40) paste0(" ... (+", length(to_remove) - 40, " more)")
 )
@@ -1246,7 +1234,7 @@ for (file in rds_files) {
   assign(obj_name, readRDS(file), envir = .GlobalEnv)
 }
 
-message("Objects reloaded: ", paste(tools::file_path_sans_ext(basename(rds_files)), collapse = ", "))
+message("Objetos recarregados: ", paste(tools::file_path_sans_ext(basename(rds_files)), collapse = ", "))
 ```
 ## 16. Observações finais
 

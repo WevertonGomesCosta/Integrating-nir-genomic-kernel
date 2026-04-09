@@ -1,24 +1,51 @@
 ---
-title: "Resumos e figuras de predição"
-author:
-  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
-date: "`r Sys.Date()`"
-site: workflowr::wflow_site
-url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+title: "Resumos e figuras de predição - tutorial didático"
 output:
   workflowr::wflow_html:
     toc: true
-    toc_depth: 3
     toc_float: true
-    code_download: true
-editor_options:
-  chunk_output_type: console
-github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
 **Language / Idioma:** [English](visualization.html) | [Português](visualization_pt.html)
 
-A finalidade dessa etapa é tomar as saídas brutas de predição produzidas em `analysis_prediction_run_outputs.Rmd`, reorganizá-las em tabelas-resumo interpretáveis e depois traduzir esses resumos em comparações compactas e figuras finais.
+Este arquivo é a versão didática da etapa de visualização. Sua finalidade é tomar as saídas brutas de predição produzidas em `analysis_prediction_run_outputs.Rmd`, reorganizá-las em tabelas-resumo interpretáveis e depois traduzir esses resumos em comparações compactas e figuras finais.
+
+Neste ponto do pipeline, a principal pergunta analítica já não é mais como cada modelo é especificado, mas como os modelos ajustados se comportam sob diferentes problemas de predição. Por essa razão, a etapa de visualização desloca o foco da construção dos modelos para a interpretação dos modelos. Ela reúne resumos de desempenho para `CV1`, `CV2`, `CV0` e `CV00`, destaca contrastes entre modelos com e sem o kernel climático (`W`) e organiza os resultados em tabelas e figuras que são mais fáceis de inspecionar do que os próprios arquivos brutos de predição.
+
+O fluxo atual de predição grava saídas brutas em `output/results/` usando nomes de arquivo que codificam o cenário de validação, o traço, o modelo ajustado, a repetição e o fold. Para `CV0` e `CV00`, o rótulo do ambiente deixado de fora também é registrado no nome do arquivo e depois é associado a `Env` pelo filtro `Env == Env_leave`. Essa estrutura de nomes é essencial porque conecta a etapa de execução à etapa de interpretação.
+
+Ao longo deste tutorial, o **kernel climático (`W`)** deve ser interpretado como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente (`E`). O componente fenômico (`P`) também deve ser interpretado com cuidado, porque a similaridade baseada em NIRS pode refletir forte resposta ambiental além de sinal preditivo potencialmente útil.
+
+### O que este script faz
+
+O fluxo é organizado em quatro tarefas práticas:
+
+1. localizar e ler os arquivos CSV de predição;
+2. interpretar os nomes dos arquivos e recuperar as informações de traço, modelo, repetição e leave-one-environment-out;
+3. resumir os resultados para `CV1`, `CV2`, `CV0` e `CV00`;
+4. exportar tabelas limpas e figuras para a próxima etapa orientada ao manuscrito.
+
+Para tornar a interpretação mais fácil, os modelos são ordenados para ajudar a responder três perguntas práticas:
+
+1. passar de kernels lineares para kernels Gaussianos ou arc-cosine melhora a capacidade preditiva?
+2. adicionar o kernel climático (`W`) melhora a capacidade preditiva?
+3. combinar informação genômica e fenômica melhora a capacidade preditiva?
+
+## Entradas, saídas e próxima etapa
+
+**Entradas desta etapa**
+- saídas brutas de predição gravadas por `analysis_prediction_run_outputs.Rmd`
+- tabelas leves de metadados da predição geradas na etapa anterior
+
+**Saídas desta etapa**
+- tabelas-resumo finais
+- rankings de modelos
+- comparações do efeito de `W`
+- comparações entre famílias de kernel
+- figuras finais para interpretação posterior
+
+**Próxima etapa**
+- as saídas geradas aqui alimentam os resumos orientados ao manuscrito e a interpretação final dos resultados do projeto.
 
 ## 1. Configuração
 
@@ -110,9 +137,9 @@ model_catalog <- tibble(
     "Without W", "With W", "Without W", "With W", "Without W", "With W"
   ),
   Group = c(
-    rep("Genômico", 6),
-    rep("Fenômico", 6),
-    rep("Combinado", 6)
+    "Genomic baseline", "Weather single-source", "Genomic baseline", "Weather single-source", "Genomic baseline", "Weather single-source",
+    "Phenomic baseline", "Weather single-source", "Phenomic baseline", "Weather single-source", "Phenomic baseline", "Weather single-source",
+    "Combined baseline", "Weather combined", "Combined baseline", "Weather combined", "Combined baseline", "Weather combined"
   ),
   Description = c(
     "Genomic linear + E", "Genomic linear + W", "Genomic Gaussian + E", "Genomic Gaussian + W", "Genomic arc-cosine + E", "Genomic arc-cosine + W",
@@ -208,7 +235,8 @@ missing_tables <- required_tables[
 
 if (length(missing_tables) > 0) {
   stop(
-    "Este arquivo de visualização depende de tabelas já geradas em output/tables/.\n",
+    "O arquivo de visualização em português depende de tabelas já geradas em output/tables/.
+",
     "Arquivos ausentes: ",
     paste(missing_tables, collapse = ", ")
   )
@@ -291,7 +319,7 @@ required_cv12_summary_cols <- c(
 missing_cv12_summary_cols <- setdiff(required_cv12_summary_cols, names(cv12_summary))
 if (length(missing_cv12_summary_cols) > 0) {
   stop(
-    "cv12_summary ficou sem colunas obrigatórias após a carga: ",
+    "cv12_summary está sem colunas obrigatórias após a carga: ",
     paste(missing_cv12_summary_cols, collapse = ", "),
     "."
   )
@@ -339,7 +367,7 @@ required_cvloo_summary_cols <- c(
 missing_cvloo_summary_cols <- setdiff(required_cvloo_summary_cols, names(cvloo_summary))
 if (length(missing_cvloo_summary_cols) > 0) {
   stop(
-    "cvloo_summary ficou sem colunas obrigatórias após a carga: ",
+    "cvloo_summary está sem colunas obrigatórias após a carga: ",
     paste(missing_cvloo_summary_cols, collapse = ", "),
     "."
   )
@@ -362,7 +390,7 @@ required_cv12_w_effect_cols <- c(
 missing_cv12_w_effect_cols <- setdiff(required_cv12_w_effect_cols, names(cv12_w_effect))
 if (length(missing_cv12_w_effect_cols) > 0) {
   stop(
-    "prediction_cv1_cv2_w_effect_pairs.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv1_cv2_w_effect_pairs.csv está sem colunas obrigatórias: ",
     paste(missing_cv12_w_effect_cols, collapse = ", "),
     "."
   )
@@ -386,7 +414,7 @@ required_cvloo_w_effect_cols <- c(
 missing_cvloo_w_effect_cols <- setdiff(required_cvloo_w_effect_cols, names(cvloo_w_effect))
 if (length(missing_cvloo_w_effect_cols) > 0) {
   stop(
-    "prediction_cv0_cv00_w_effect_pairs.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv0_cv00_w_effect_pairs.csv está sem colunas obrigatórias: ",
     paste(missing_cvloo_w_effect_cols, collapse = ", "),
     "."
   )
@@ -413,7 +441,7 @@ required_cv12_kernel_cols <- c(
 missing_cv12_kernel_cols <- setdiff(required_cv12_kernel_cols, names(cv12_kernel_family_compare))
 if (length(missing_cv12_kernel_cols) > 0) {
   stop(
-    "prediction_cv1_cv2_kernel_family_compare.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv1_cv2_kernel_family_compare.csv está sem colunas obrigatórias: ",
     paste(missing_cv12_kernel_cols, collapse = ", "),
     "."
   )
@@ -441,7 +469,7 @@ required_cvloo_kernel_cols <- c(
 missing_cvloo_kernel_cols <- setdiff(required_cvloo_kernel_cols, names(cvloo_kernel_family_compare))
 if (length(missing_cvloo_kernel_cols) > 0) {
   stop(
-    "prediction_cv0_cv00_kernel_family_compare.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv0_cv00_kernel_family_compare.csv está sem colunas obrigatórias: ",
     paste(missing_cvloo_kernel_cols, collapse = ", "),
     "."
   )
@@ -468,7 +496,7 @@ required_cv12_display_cols <- c(
 missing_cv12_display_cols <- setdiff(required_cv12_display_cols, names(cv12_table_display))
 if (length(missing_cv12_display_cols) > 0) {
   stop(
-    "prediction_cv1_cv2_display_table.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv1_cv2_display_table.csv está sem colunas obrigatórias: ",
     paste(missing_cv12_display_cols, collapse = ", "),
     "."
   )
@@ -496,7 +524,7 @@ required_cvloo_display_cols <- c(
 missing_cvloo_display_cols <- setdiff(required_cvloo_display_cols, names(cvloo_table_display))
 if (length(missing_cvloo_display_cols) > 0) {
   stop(
-    "prediction_cv0_cv00_display_table.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv0_cv00_display_table.csv está sem colunas obrigatórias: ",
     paste(missing_cvloo_display_cols, collapse = ", "),
     "."
   )
@@ -518,7 +546,7 @@ required_cv12_top3_cols <- c(
 missing_cv12_top3_cols <- setdiff(required_cv12_top3_cols, names(cv12_top3))
 if (length(missing_cv12_top3_cols) > 0) {
   stop(
-    "prediction_cv1_cv2_top3.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv1_cv2_top3.csv está sem colunas obrigatórias: ",
     paste(missing_cv12_top3_cols, collapse = ", "),
     "."
   )
@@ -541,7 +569,7 @@ required_cvloo_top3_cols <- c(
 missing_cvloo_top3_cols <- setdiff(required_cvloo_top3_cols, names(cvloo_top3))
 if (length(missing_cvloo_top3_cols) > 0) {
   stop(
-    "prediction_cv0_cv00_top3.csv ficou sem colunas obrigatórias: ",
+    "prediction_cv0_cv00_top3.csv está sem colunas obrigatórias: ",
     paste(missing_cvloo_top3_cols, collapse = ", "),
     "."
   )
@@ -579,9 +607,9 @@ cv12_summary <- cv12_summary %>%
       "With W" = "Com W"
     ),
     Group = dplyr::case_when(
-      Pathway == "Genomic pathway" ~ "Genômico",
-      Pathway == "Phenomic pathway" ~ "Fenômico",
-      Pathway == "Combined G + P pathway" ~ "Combinado",
+      Pathway == "Via genômica" ~ "Genômico",
+      Pathway == "Via fenômica" ~ "Fenômico",
+      Pathway == "Via combinada G + P" ~ "Combinado",
       TRUE ~ as.character(Group)
     ),
     Description = dplyr::recode(
@@ -625,9 +653,9 @@ cvloo_summary <- cvloo_summary %>%
       "With W" = "Com W"
     ),
     Group = dplyr::case_when(
-      Pathway == "Genomic pathway" ~ "Genômico",
-      Pathway == "Phenomic pathway" ~ "Fenômico",
-      Pathway == "Combined G + P pathway" ~ "Combinado",
+      Pathway == "Via genômica" ~ "Genômico",
+      Pathway == "Via fenômica" ~ "Fenômico",
+      Pathway == "Via combinada G + P" ~ "Combinado",
       TRUE ~ as.character(Group)
     ),
     Description = dplyr::recode(
@@ -1196,13 +1224,6 @@ readr::write_csv(cvloo_top3, file.path(tables_dir, "prediction_cv0_cv00_top3.csv
 As duas tabelas seguintes exibem os três modelos com melhor desempenho em cada esquema de validação.
 
 ```{r table-cv12-top3}
-if (!exists("cv12_top3")) {
-  stop("O objeto cv12_top3 não foi carregado antes do chunk table-cv12-top3.")
-}
-if (!all(c("Trait", "CV", "ShortDescription", "MeanCorrelation", "SDCorrelation") %in% names(cv12_top3))) {
-  stop("cv12_top3 não contém as colunas exigidas pelo chunk table-cv12-top3.")
-}
-
 cv12_top3 %>%
   knitr::kable( caption = "Top 3 modelos para cada traço e esquema de validação em CV1 e CV2.",
     align = "llccc" ) %>%
@@ -1212,13 +1233,6 @@ cv12_top3 %>%
 ```
 
 ```{r table-cvloo-top3}
-if (!exists("cvloo_top3")) {
-  stop("O objeto cvloo_top3 não foi carregado antes do chunk table-cvloo-top3.")
-}
-if (!all(c("Trait", "CV", "Env_leave", "ShortDescription", "MeanCorrelation", "SDCorrelation") %in% names(cvloo_top3))) {
-  stop("cvloo_top3 não contém as colunas exigidas pelo chunk table-cvloo-top3.")
-}
-
 cvloo_top3 %>%
   knitr::kable( caption = "Top 3 modelos para cada traço, esquema de validação e ambiente deixado de fora em CV0 e CV00.",
     align = "lllccc" ) %>%
@@ -1232,13 +1246,6 @@ cvloo_top3 %>%
 Essas tabelas apresentam as comparações pareadas entre modelos sem e com informação climática.
 
 ```{r table-cv12-w-effect}
-if (!exists("cv12_w_effect")) {
-  stop("O objeto cv12_w_effect não foi carregado antes do chunk table-cv12-w-effect.")
-}
-if (!all(c("Comparison", "Trait", "CV", "MeanWithoutW", "MeanWithW", "DeltaWithW") %in% names(cv12_w_effect))) {
-  stop("cv12_w_effect não contém as colunas exigidas pelo chunk table-cv12-w-effect.")
-}
-
 cv12_w_effect %>%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
    MeanWithW = round(MeanWithW, 3),
@@ -1252,13 +1259,6 @@ cv12_w_effect %>%
 ```
 
 ```{r table-cvloo-w-effect}
-if (!exists("cvloo_w_effect")) {
-  stop("O objeto cvloo_w_effect não foi carregado antes do chunk table-cvloo-w-effect.")
-}
-if (!all(c("Comparison", "Trait", "CV", "Env_leave", "MeanWithoutW", "MeanWithW", "DeltaWithW") %in% names(cvloo_w_effect))) {
-  stop("cvloo_w_effect não contém as colunas exigidas pelo chunk table-cvloo-w-effect.")
-}
-
 cvloo_w_effect %>%
   mutate( MeanWithoutW = round(MeanWithoutW, 3),
    MeanWithW = round(MeanWithW, 3),
@@ -1276,13 +1276,6 @@ cvloo_w_effect %>%
 Aqui o script contrasta os kernels linear, Gaussiano e arc-cosine dentro de cada via analítica.
 
 ```{r table-cv12-kernel-family}
-if (!exists("cv12_kernel_family_compare")) {
-  stop("O objeto cv12_kernel_family_compare não foi carregado antes do chunk table-cv12-kernel-family.")
-}
-if (!all(c("Trait", "CV", "Pathway", "WeatherStatus", "Linear", "Gaussian", "Arc-cosine") %in% names(cv12_kernel_family_compare))) {
-  stop("cv12_kernel_family_compare não contém as colunas exigidas pelo chunk table-cv12-kernel-family.")
-}
-
 cv12_kernel_family_compare %>%
   mutate( Linear = round(Linear, 3),
    Gaussian = round(Gaussian, 3),
@@ -1299,13 +1292,6 @@ cv12_kernel_family_compare %>%
 ```
 
 ```{r table-cvloo-kernel-family}
-if (!exists("cvloo_kernel_family_compare")) {
-  stop("O objeto cvloo_kernel_family_compare não foi carregado antes do chunk table-cvloo-kernel-family.")
-}
-if (!all(c("Trait", "CV", "Env_leave", "Pathway", "WeatherStatus", "Linear", "Gaussian", "Arc-cosine") %in% names(cvloo_kernel_family_compare))) {
-  stop("cvloo_kernel_family_compare não contém as colunas exigidas pelo chunk table-cvloo-kernel-family.")
-}
-
 cvloo_kernel_family_compare %>%
   mutate( Linear = round(Linear, 3),
    Gaussian = round(Gaussian, 3),
@@ -1340,13 +1326,13 @@ cv12_plot_data <- cv12_summary %>%
   mutate(
     FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 22),
     PlotOrder = match(FullEffects, model_catalog$FullEffects),
-    GroupDisplay = dplyr::case_when(
-      Pathway == "Genomic pathway" ~ "Genômico",
-      Pathway == "Phenomic pathway" ~ "Fenômico",
-      Pathway == "Combined G + P pathway" ~ "Combinado",
+    Group = dplyr::case_when(
+      Pathway == "Via genômica" ~ "Genômico",
+      Pathway == "Via fenômica" ~ "Fenômico",
+      Pathway == "Via combinada G + P" ~ "Combinado",
       TRUE ~ as.character(Group)
     ),
-    GroupDisplay = factor(GroupDisplay, levels = group_levels_pt)
+    Group = factor(Group, levels = group_levels_pt)
   )
 
 cv12_traits <- unique(cv12_plot_data$Trait)
@@ -1373,7 +1359,7 @@ for (current_trait in cv12_traits) {
 
     p_trait_cv12 <- ggplot(
       trait_cv_data,
-      aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = GroupDisplay)
+      aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = Group)
     ) +
       geom_col(width = 0.75, color = "grey30", na.rm = TRUE) +
       geom_errorbar(
@@ -1392,7 +1378,15 @@ for (current_trait in cv12_traits) {
         expand = expansion(mult = c(0, 0.02))
       ) +
       coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
-      ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
+      scale_fill_manual(
+        name = "Grupo de comparação",
+        values = c(
+          "Genômico" = "#3366CC",
+          "Fenômico" = "#DC3912",
+          "Combinado" = "#109618"
+        ),
+        drop = FALSE
+      ) +
       theme_bw() +
       theme(
         plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
@@ -1428,13 +1422,13 @@ cvloo_plot_data <- cvloo_summary %>%
     FullEffectsWrapped = stringr::str_wrap(FullEffects, width = 22),
     Env_leave = factor(Env_leave, levels = c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")),
     PlotOrder = match(FullEffects, model_catalog$FullEffects),
-    GroupDisplay = dplyr::case_when(
-      Pathway == "Genomic pathway" ~ "Genômico",
-      Pathway == "Phenomic pathway" ~ "Fenômico",
-      Pathway == "Combined G + P pathway" ~ "Combinado",
+    Group = dplyr::case_when(
+      Pathway == "Via genômica" ~ "Genômico",
+      Pathway == "Via fenômica" ~ "Fenômico",
+      Pathway == "Via combinada G + P" ~ "Combinado",
       TRUE ~ as.character(Group)
     ),
-    GroupDisplay = factor(GroupDisplay, levels = group_levels_pt)
+    Group = factor(Group, levels = group_levels_pt)
   )
 
 cvloo_traits <- unique(cvloo_plot_data$Trait)
@@ -1463,7 +1457,7 @@ for (current_trait in cvloo_traits) {
 
     p_trait_cvloo <- ggplot(
       trait_cv_data,
-      aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = GroupDisplay)
+      aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = Group)
     ) +
       geom_col(width = 0.75, color = "grey30", na.rm = TRUE) +
       geom_errorbar(
@@ -1483,7 +1477,15 @@ for (current_trait in cvloo_traits) {
         expand = expansion(mult = c(0, 0.02))
       ) +
       coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
-      ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
+      scale_fill_manual(
+        name = "Grupo de comparação",
+        values = c(
+          "Genômico" = "#3366CC",
+          "Fenômico" = "#DC3912",
+          "Combinado" = "#109618"
+        ),
+        drop = FALSE
+      ) +
       theme_bw() +
       theme(
         plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
