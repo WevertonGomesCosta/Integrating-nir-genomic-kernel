@@ -18,13 +18,8 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 **Language / Idioma:** [English](visualization.html) | [Português](visualization_pt.html)
 
-Este arquivo é a versão didática da etapa de visualização. Sua finalidade é tomar as saídas brutas de predição produzidas em `analysis_prediction_run_outputs.Rmd`, reorganizá-las em tabelas-resumo interpretáveis e depois traduzir esses resumos em comparações compactas e figuras finais.
+A finalidade desta etapa é tomar as saídas brutas de predição produzidas em `analysis_prediction_run_outputs.Rmd`, reorganizá-las em tabelas-resumo interpretáveis e depois traduzir esses resumos em comparações compactas e figuras finais.
 
-Neste ponto do pipeline, a principal pergunta analítica já não é mais como cada modelo é especificado, mas como os modelos ajustados se comportam sob diferentes problemas de predição. Por essa razão, a etapa de visualização desloca o foco da construção dos modelos para a interpretação dos modelos. Ela reúne resumos de desempenho para `CV1`, `CV2`, `CV0` e `CV00`, destaca contrastes entre modelos com e sem o kernel climático (`W`) e organiza os resultados em tabelas e figuras que são mais fáceis de inspecionar do que os próprios arquivos brutos de predição.
-
-O fluxo atual de predição grava saídas brutas em `output/results/` usando nomes de arquivo que codificam o cenário de validação, o traço, o modelo ajustado, a repetição e o fold. Para `CV0` e `CV00`, o rótulo do ambiente deixado de fora também é registrado no nome do arquivo e depois é associado a `Env` pelo filtro `Env == Env_leave`. Essa estrutura de nomes é essencial porque conecta a etapa de execução à etapa de interpretação.
-
-Ao longo deste tutorial, o **kernel climático (`W`)** deve ser interpretado como uma fonte de similaridade derivada do clima que complementa, mas não substitui, o efeito categórico de ambiente (`E`). O componente fenômico (`P`) também deve ser interpretado com cuidado, porque a similaridade baseada em NIRS pode refletir forte resposta ambiental além de sinal preditivo potencialmente útil.
 
 ### O que este script faz
 
@@ -1342,69 +1337,69 @@ cv12_plot_data <- cv12_summary %>%
       Pathway == "Via combinada G + P" ~ "Combinado",
       TRUE ~ as.character(Group)
     ),
-    Group = factor(Group, levels = group_levels_pt)
+    Group = factor(Group, levels = group_levels_pt),
+    CV = factor(CV, levels = c("CV1", "CV2"))
   )
 
 cv12_traits <- unique(cv12_plot_data$Trait)
-cv12_schemes <- unique(cv12_plot_data$CV)
 
 for (current_trait in cv12_traits) {
-  for (current_cv in cv12_schemes) {
-    trait_cv_data <- cv12_plot_data %>%
-      filter(Trait == current_trait, CV == current_cv) %>%
-      arrange(PlotOrder) %>%
-      mutate(
-        FullEffectsWrapped = factor(
-          FullEffectsWrapped,
-          levels = model_order_wrapped_pt
-        )
+  trait_cv_data <- cv12_plot_data %>%
+    filter(Trait == current_trait, CV %in% c("CV1", "CV2")) %>%
+    arrange(CV, PlotOrder) %>%
+    mutate(
+      FullEffectsWrapped = factor(
+        FullEffectsWrapped,
+        levels = model_order_wrapped_pt
       )
+    )
 
-    if (nrow(trait_cv_data) == 0) next
+  if (nrow(trait_cv_data) == 0) next
 
-    lower_limit_trait_cv <- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
-    upper_limit_trait_cv <- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
-    plot_lower_limit_trait_cv <- min(0, lower_limit_trait_cv - 0.03)
-    plot_upper_limit_trait_cv <- upper_limit_trait_cv + 0.03
+  lower_limit_trait <- min(trait_cv_data$MeanCorrelation - trait_cv_data$SDCorrelation, na.rm = TRUE)
+  upper_limit_trait <- max(trait_cv_data$MeanCorrelation + trait_cv_data$SDCorrelation, na.rm = TRUE)
+  plot_lower_limit_trait <- min(0, lower_limit_trait - 0.03)
+  plot_upper_limit_trait <- upper_limit_trait + 0.03
 
-    p_trait_cv12 <- ggplot(
-      trait_cv_data,
-      aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = Group)
+  p_trait_cv12 <- ggplot(
+    trait_cv_data,
+    aes(x = FullEffectsWrapped, y = MeanCorrelation, fill = Group)
+  ) +
+    geom_col(width = 0.75, color = "grey30", na.rm = TRUE) +
+    geom_errorbar(
+      aes(
+        ymin = MeanCorrelation - SDCorrelation,
+        ymax = MeanCorrelation + SDCorrelation
+      ),
+      width = 0.20,
+      linewidth = 0.35,
+      na.rm = TRUE
     ) +
-      geom_col(width = 0.75, color = "grey30", na.rm = TRUE) +
-      geom_errorbar(
-        aes(
-          ymin = MeanCorrelation - SDCorrelation,
-          ymax = MeanCorrelation + SDCorrelation
-        ),
-        width = 0.20,
-        linewidth = 0.35,
-        na.rm = TRUE
-      ) +
-      geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
-      scale_x_discrete(name = "Efeitos completos do modelo") +
-      scale_y_continuous(
-        name = "Correlação preditiva",
-        expand = expansion(mult = c(0, 0.02))
-      ) +
-      coord_cartesian(ylim = c(plot_lower_limit_trait_cv, plot_upper_limit_trait_cv)) +
-      ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
-      theme_bw() +
-      theme(
-        plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-        axis.text.x = element_text(size = 7, angle = 60, hjust = 1, vjust = 1),
-        axis.text.y = element_text(size = 8),
-        axis.title = element_text(size = 10),
-        legend.position = "top",
-        legend.title = element_text(size = 9),
-        legend.text = element_text(size = 8)
-      ) +
-      labs(
-        title = paste("Habilidade preditiva em", current_cv, "para", current_trait)
-      )
+    geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+    facet_wrap(~ CV, ncol = 1) +
+    scale_x_discrete(name = "Efeitos completos do modelo") +
+    scale_y_continuous(
+      name = "Correlação preditiva",
+      expand = expansion(mult = c(0, 0.02))
+    ) +
+    coord_cartesian(ylim = c(plot_lower_limit_trait, plot_upper_limit_trait)) +
+    ggthemes::scale_fill_gdocs(name = "Grupo de comparação") +
+    theme_bw() +
+    theme(
+      plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+      strip.text = element_text(face = "bold", size = 10),
+      axis.text.x = element_text(size = 7, angle = 60, hjust = 1, vjust = 1),
+      axis.text.y = element_text(size = 8),
+      axis.title = element_text(size = 10),
+      legend.position = "top",
+      legend.title = element_text(size = 9),
+      legend.text = element_text(size = 8)
+    ) +
+    labs(
+      title = paste("Habilidade preditiva para", current_trait, "em CV1 e CV2")
+    )
 
-    print(p_trait_cv12)
-  }
+  print(p_trait_cv12)
 }
 ```
 
