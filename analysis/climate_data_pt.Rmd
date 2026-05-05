@@ -16,8 +16,6 @@ editor_options:
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-O documento começa definindo opções globais de renderização para que figuras, mensagens e blocos de código apareçam de forma consistente ao longo do tutorial.
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -29,17 +27,18 @@ knitr::opts_chunk$set(
 
 **Language / Idioma:** [English](climate_data.html) | [Português](climate_data_pt.html)
 
+
 ## 1. Introdução
 
 Este tutorial apresenta o fluxo de trabalho usado para obter e processar dados meteorológicos diários para os experimentos com milho conduzidos em College Station, Texas, durante as safras de 2011 e 2012.
 
-O objetivo deste script não é apenas baixar registros meteorológicos diários, mas converter essas séries temporais em um conjunto conciso e biologicamente interpretável de **covariáveis derivadas do clima**. Essas covariáveis resumem as principais condições meteorológicas de cada safra e são usadas posteriormente para construir o **kernel climático (W)** no pipeline final de predição.
+O objetivo deste fluxo é documentar como registros meteorológicos diários são convertidos em um conjunto conciso e biologicamente interpretável de **covariáveis derivadas do clima**. Essas covariáveis resumem as principais condições meteorológicas de cada safra e são usadas posteriormente para construir o **kernel climático (W)** no pipeline final de predição.
 
 No conjunto reduzido de 18 modelos usado no projeto, o kernel climático é incluído nos modelos **Eta10-Eta18**. Nesses modelos, `W` é usado para testar se a similaridade derivada do clima adiciona informação útil além do efeito categórico de ambiente (`E`) e dos kernels genômico (`G`) e fenômico (`P`). Portanto, `W` deve ser interpretado como uma fonte complementar de informação meteorológica e **não** como substituto de `E`.
 
 Em termos práticos, o fluxo tem quatro objetivos:
 
-1. Recuperar dados meteorológicos diários da base NASA POWER.
+1. Documentar a recuperação dos dados meteorológicos diários da base NASA POWER.
 2. Organizar os dados brutos em uma tabela reprodutível.
 3. Inspecionar visualmente as principais diferenças climáticas entre os anos.
 4. Derivar descritores climáticos anuais e diários que depois poderão ser usados para construir o kernel climático.
@@ -60,30 +59,22 @@ Em termos práticos, o fluxo tem quatro objetivos:
 - figuras climáticas usadas para inspeção exploratória
 
 **Próxima etapa**
-- `matrizes.Rmd` usa as saídas derivadas do clima geradas aqui para alinhar a informação ambiental com a estrutura observacional e construir o kernel climático (`W`).
+- `matrizes.Rmd` usa as saídas derivadas do clima disponíveis para alinhar a informação ambiental com a estrutura observacional e construir o kernel climático (`W`).
 
 ## 2. Ambiente em R
 
-Antes de iniciar a análise, carregamos os pacotes necessários para obtenção dos dados, manipulação, visualização e montagem de figuras multipainel.
-
 Cada pacote tem um papel claro no fluxo:
 
-- `nasapower`: conecta o R à base NASA POWER.
 - `tidyverse`: apoia manipulação de dados e gráficos.
 - `lubridate`: simplifica conversão de datas e operações baseadas em calendário.
 - `patchwork`: combina múltiplas figuras do `ggplot2` em painéis prontos para publicação.
 - `ggthemes`: fornece as escalas discretas do Google Docs usadas para padronizar cores entre as figuras.
 - `kableExtra`: melhora a apresentação de tabelas HTML no tutorial.
 
-Também criamos o diretório de saída no início do script. Isso evita erros ao salvar figuras e tabelas nas etapas posteriores da análise.
-
-A próxima etapa carrega os pacotes necessários para download de dados, manipulação, visualização e composição de painéis antes do início do processamento climático.
-
 ```{r packages}
 # Descomente se a instalação for necessária
-# install.packages(c("nasapower", "tidyverse", "lubridate", "patchwork", "ggthemes", "kableExtra"))
+# install.packages(c("tidyverse", "lubridate", "patchwork", "ggthemes", "kableExtra"))
 
-library(nasapower)
 library(tidyverse)
 library(lubridate)
 library(patchwork)
@@ -92,8 +83,7 @@ library(knitr)
 library(grid)
 library(kableExtra)
 
-if (!dir.exists("output")) dir.create("output")
-if (!dir.exists("output/climate_results")) dir.create("output/climate_results", recursive = TRUE)
+climate_results_dir <- "output/climate_results"
 ```
 
 ## 3. Parâmetros da consulta
@@ -133,17 +123,17 @@ params <- c(
 )
 ```
 
-## 4. Recuperação dos dados na NASA POWER
+## 4. Documentação da recuperação dos dados na NASA POWER
 
-Esta seção realiza o download dos dados climáticos diários da NASA POWER.
+Esta seção documenta a lógica usada para obter os dados climáticos diários da NASA POWER. A consulta é apresentada apenas como referência didática; a base usada neste documento é lida a partir dos arquivos já disponíveis em `output/climate_results/`.
 
-Executamos uma consulta para cada safra. Isso mantém o fluxo transparente e facilita confirmar que cada ano experimental foi recuperado corretamente. Após a obtenção, as duas tabelas anuais serão reunidas em um único objeto para as etapas restantes da análise.
+A consulta é documentada separadamente para cada safra. Isso mantém o fluxo transparente e facilita conferir a origem de cada ano experimental. Depois que as tabelas anuais estão disponíveis, elas podem ser reunidas em um único objeto para as etapas restantes da análise.
 
-### 4.1 Baixar os dados climáticos diários de cada ano
+### 4.1 Código de consulta dos dados climáticos diários de cada ano
 
-O código abaixo envia duas requisições independentes ao serviço NASA POWER, uma para 2011 e outra para 2012. Um identificador `year` é adicionado imediatamente após a obtenção para que a origem de cada registro permaneça explícita ao longo de todo o fluxo.
+O código abaixo documenta duas requisições independentes ao serviço NASA POWER, uma para 2011 e outra para 2012. Um identificador `year` é adicionado imediatamente após a obtenção para que a origem de cada registro permaneça explícita ao longo de todo o fluxo.
 
-A etapa a seguir documenta o download principal dos dados meteorológicos diários da NASA POWER e a construção da tabela bruta usada nas etapas seguintes.
+A etapa a seguir documenta a consulta principal dos dados meteorológicos diários da NASA POWER e a construção da tabela bruta usada nas etapas seguintes.
 
 ```{r get_data, eval=FALSE}
 data_tx_2011 <- get_power(
@@ -165,13 +155,13 @@ data_tx_2012 <- get_power(
   mutate(year = 2012)
 ```
 
-### 4.2 Reunir, formatar e salvar a base bruta
+### 4.2 Código de organização da base bruta
 
-Depois que as duas tabelas anuais estão disponíveis, nós as reunimos em um único conjunto de dados e convertemos a coluna de data para um formato de data apropriado do R. Essa etapa é essencial porque a data original é retornada como uma string numérica, e as visualizações posteriores dependem de um objeto de data válido.
+Depois que as duas tabelas anuais estão disponíveis, elas são reunidas em um único conjunto de dados e a coluna de data é convertida para um formato de data apropriado do R. Essa etapa é essencial porque a data original é retornada como uma string numérica, e as visualizações posteriores dependem de um objeto de data válido.
 
-Também salvamos o conjunto bruto diário como arquivo CSV. Isso é importante para reprodutibilidade porque preserva a versão exata dos dados recuperados usada na análise.
+No fluxo completo, o conjunto bruto diário é preservado como arquivo CSV. Isso é importante para reprodutibilidade porque mantém a versão exata dos dados recuperados usada na análise.
 
-Na sequência, reunimos as tabelas anuais e completamos as variáveis meteorológicas necessárias para formar o conjunto climático final do pipeline.
+Na sequência, as tabelas anuais são reunidas e as variáveis meteorológicas necessárias são completadas para formar o conjunto climático final do pipeline.
 
 ```{r get_data2, eval=FALSE}
 texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012) %>%
@@ -223,10 +213,10 @@ write.csv(
 ```
 
 ```{r load_downloaded_data, include=FALSE}
-raw_climate_path <- "output/climate_results/texas_climate_data_raw.csv"
+raw_climate_path <- file.path(climate_results_dir, "texas_climate_data_raw.csv")
 
 if (!file.exists(raw_climate_path)) {
-  stop("Arquivo não encontrado: 'output/climate_results/texas_climate_data_raw.csv'. Execute primeiro climate_data.Rmd para gerar a base bruta usada por esta versão em português.")
+  stop("Arquivo não encontrado: 'output/climate_results/texas_climate_data_raw.csv'. Verifique se a base bruta está disponível em 'output/climate_results/'.")
 }
 
 texas_climate_data <- readr::read_csv(raw_climate_path, show_col_types = FALSE) %>%
@@ -273,15 +263,15 @@ knitr::kable(
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-## 5. Análise exploratória e geração de figuras
+## 5. Análise exploratória e leitura das figuras
 
 Antes de resumir os dados em covariáveis derivadas do clima, é boa prática inspecionar visualmente as séries diárias. Essa etapa cumpre dois objetivos.
 
-Primeiro, ajuda a verificar se os dados baixados são coerentes e livres de problemas estruturais evidentes. Segundo, ajuda a interpretar o contraste climático entre os anos em estudo, o que é importante para a discussão biológica dos experimentos.
+Primeiro, ajuda a verificar se os dados disponíveis são coerentes e livres de problemas estruturais evidentes. Segundo, ajuda a interpretar o contraste climático entre os anos em estudo, o que é importante para a discussão biológica dos experimentos.
 
-Para tornar as figuras adequadas a um artigo científico, definimos um estilo visual comum e padronizamos títulos de eixos, unidades e formatação dos painéis.
+As figuras são construídas durante a renderização a partir dos dados já carregados. Nesta etapa, os gráficos aparecem diretamente no HTML do tutorial, sem comandos de salvamento de figura.
 
-### 5.1 Preparar rótulos compartilhados para as figuras
+### 5.1 Documentar os rótulos compartilhados usados nas figuras
 
 Para manter as figuras consistentes, definimos os rótulos dos meses apenas uma vez. Isso evita misturar formatos diferentes de mês entre os painéis e torna as comparações mais fáceis de ler.
 
@@ -336,7 +326,7 @@ p_precip_daily <- ggplot(
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
@@ -362,6 +352,8 @@ p_precip_daily <- ggplot(
 p_precip_daily
 ```
 
+
+
 ### 5.3 Precipitação diária por mês e dia do mês
 
 A figura seguinte reorganiza a mesma informação de chuva de uma forma que facilita a comparação dentro da safra. Em vez de mostrar apenas a série cronológica, comparamos os dias do mês entre os dois anos dentro de cada painel mensal.
@@ -384,7 +376,7 @@ p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill 
   ) +
   scale_x_discrete(breaks = c("1", "5", "10", "15", "20", "25", "30", "31")) +
   ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
@@ -409,6 +401,8 @@ p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill 
 
 p1
 ```
+
+
 
 ### 5.4 Totais mensais de precipitação
 
@@ -436,7 +430,7 @@ p2 <- ggplot(monthly_precip, aes(x = month, y = total_precipitation, fill = year
     caption = "As barras representam a precipitação acumulada dentro de cada mês da safra."
   ) +
   ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
@@ -461,6 +455,8 @@ p2 <- ggplot(monthly_precip, aes(x = month, y = total_precipitation, fill = year
 
 p2
 ```
+
+
 
 ### 5.5 Temperatura diária do ar
 
@@ -508,7 +504,7 @@ p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperatur
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   scale_color_manual(values = c("Mínima" = "#4285F4", "Média" = "#F4B400", "Máxima" = "#DB4437"), limits = c("Mínima", "Média", "Máxima"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
@@ -534,11 +530,13 @@ p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperatur
 p3
 ```
 
+
+
 ### 5.6 Figura climática principal combinada
 
-Depois de criar os gráficos principais de precipitação e temperatura, nós os combinamos em uma única figura multipainel. Isso é útil quando a saída final se destina a relatórios, manuscritos ou material suplementar.
+Depois que os gráficos principais de precipitação e temperatura estão disponíveis, eles podem ser organizados em uma única figura multipainel. Isso é útil quando a saída final se destina a relatórios, manuscritos ou material suplementar.
 
-Os principais painéis de precipitação e temperatura são combinados abaixo em um único arranjo, pronto para inspeção ou uso em relatórios.
+Os principais painéis de precipitação e temperatura são organizados abaixo em um único arranjo, pronto para inspeção ou uso em relatórios.
 
 ```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 5. Resumo em múltiplos painéis dos principais contrastes climáticos entre os anos, incluindo precipitação diária por mês, totais mensais de precipitação e perfis diários de temperatura do ar."}
 main_layout <- "
@@ -558,18 +556,27 @@ combined_plot <- patchwork::wrap_plots(
     theme = theme(
       plot.title = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 8))
     )
+  ) &
+  theme(
+    plot.tag = element_text(
+      face = "bold",
+      size = 22,
+      color = "black"
+    )
   )
 
 print(combined_plot)
 ```
 
+
+
 ### 5.7 Variáveis climáticas diárias adicionais
 
 Além de precipitação e temperatura, o script também examina radiação solar, velocidade do vento e umidade relativa. Essas variáveis são importantes porque ajudam a descrever demanda evaporativa, secura atmosférica e disponibilidade de energia ao longo do ciclo da cultura.
 
-As figuras complementares abaixo documentam padrões climáticos secundários que não aparecem no painel principal.
+Os gráficos complementares abaixo são preparados para documentar padrões climáticos secundários que não aparecem no painel principal.
 
-```{r additional_plots, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 6. Variáveis climáticas diárias adicionais monitoradas durante as safras de milho, incluindo radiação solar, velocidade do vento e umidade relativa."}
+```{r additional_plots, include=FALSE}
 p4 <- ggplot(
   texas_climate_data,
   aes(x = date, y = ALLSKY_SFC_SW_DWN, color = "Radiação solar")
@@ -586,7 +593,7 @@ p4 <- ggplot(
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   ggthemes::scale_color_gdocs(limits = "Radiação solar", guide = "none") +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
@@ -625,7 +632,7 @@ p5 <- ggplot(
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   ggthemes::scale_color_gdocs(limits = "Velocidade do vento", guide = "none") +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
@@ -664,7 +671,7 @@ p6 <- ggplot(
   ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   ggthemes::scale_color_gdocs(limits = "Umidade relativa", guide = "none") +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
@@ -688,9 +695,10 @@ p6 <- ggplot(
   )
 ```
 
+
 ### 5.8 Figura combinada para variáveis climáticas adicionais
 
-Como na subseção anterior, combinamos os gráficos individuais em uma única figura. O layout foi construído com `patchwork::wrap_plots()`, o que evita o erro de composição gerado quando os operadores do patchwork não são reconhecidos corretamente durante a renderização.
+Como na subseção anterior, os gráficos individuais são combinados em uma única figura. O layout usa `patchwork::wrap_plots()`, o que evita erros de composição quando os operadores do patchwork não são reconhecidos corretamente durante a renderização.
 
 As figuras climáticas complementares são organizadas abaixo em um painel compacto de múltiplos gráficos.
 
@@ -712,10 +720,19 @@ combined_additional_plots <- patchwork::wrap_plots(
     theme = theme(
       plot.title = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 8))
     )
+  ) &
+  theme(
+    plot.tag = element_text(
+      face = "bold",
+      size = 22,
+      color = "black"
+    )
   )
 
 print(combined_additional_plots)
 ```
+
+
 
 ## 6. Covariáveis derivadas do clima
 
@@ -869,11 +886,11 @@ knitr::kable(
 ```
 
 ```{r load_engineered_climate_outputs, include=FALSE}
-weather_covariates_path <- "output/climate_results/environmental_covariates.csv"
-ecs_expanded_path <- "output/climate_results/environmental_covariates_expanded.csv"
+weather_covariates_path <- file.path(climate_results_dir, "environmental_covariates.csv")
+ecs_expanded_path <- file.path(climate_results_dir, "environmental_covariates_expanded.csv")
 
 if (!file.exists(weather_covariates_path) || !file.exists(ecs_expanded_path)) {
-  stop("Arquivos finais de clima não encontrados em 'output/climate_results/'. Execute primeiro climate_data.Rmd para gerar as covariáveis climáticas usadas por esta versão em português.")
+  stop("Arquivos finais de clima não encontrados em 'output/climate_results/'. Verifique se as covariáveis climáticas estão disponíveis em 'output/climate_results/'.")
 }
 
 weather_covariates <- readr::read_csv(weather_covariates_path, show_col_types = FALSE)
@@ -963,11 +980,11 @@ Esta tabela é a saída prática que conecta o tutorial climático à etapa de m
 
 No pipeline final reduzido, essas saídas derivadas do clima são usadas apenas nos modelos que incluem explicitamente `W`, isto é, Eta10-Eta18. Elas não se destinam a substituir o efeito categórico de ambiente (`E`), que ainda captura a distinção entre os quatro macroambientes. Como a informação climática é resumida no nível do ano, `CS11_WS` e `CS11_WW` compartilham a assinatura climática de 2011, enquanto `CS12_WS` e `CS12_WW` compartilham a assinatura climática de 2012.
 
-## 7. Salvar as saídas finais
+## 7. Saídas finais documentadas
 
-A última seção armazena os arquivos processados gerados pelo tutorial. Salvar explicitamente as saídas é importante porque separa a obtenção dos dados da modelagem posterior, tornando o fluxo mais fácil de reproduzir e auditar.
+A última seção documenta os arquivos processados usados nas etapas posteriores do estudo. Eles são apenas lidos para conferência e interpretação, sem novo salvamento.
 
-Três arquivos são exportados:
+O fluxo completo usa três arquivos principais:
 
 1. `texas_climate_data_raw.csv`: registros meteorológicos diários brutos.
 2. `environmental_covariates.csv`: uma linha por ano com os resumos climáticos anuais derivados.
@@ -975,7 +992,7 @@ Três arquivos são exportados:
 
 Os dois últimos arquivos mantêm seus nomes históricos para compatibilidade com os scripts posteriores, embora agora representem covariáveis derivadas do clima.
 
-Por fim, o tutorial documenta a gravação das saídas climáticas brutas e derivadas em disco, para que os módulos posteriores reutilizem esses arquivos sem refazer o processamento.
+O bloco abaixo é mantido apenas como referência didática e permanece desativado.
 
 ```{r save_csv, eval=FALSE}
 write.csv(
@@ -994,8 +1011,6 @@ cat("Climate files successfully saved in 'output/climate_results/'.")
 ```
 
 ## 8. Observações finais
-
-Este tutorial estabelece um pipeline reprodutível de pré-processamento climático para o estudo. A partir de observações meteorológicas diárias, ele produz um conjunto curado de covariáveis derivadas do clima e figuras prontas para artigo.
 
 No fluxo mais amplo do projeto, essas saídas não são o objetivo final. Elas são objetos científicos intermediários que apoiam a construção do kernel climático (`W`) usado nos modelos Eta10-Eta18.
 

@@ -16,8 +16,6 @@ editor_options:
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-The document starts by defining global knitting options so that figures, messages, and code blocks appear consistently throughout the tutorial.
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -28,6 +26,7 @@ knitr::opts_chunk$set(
 ```
 
 **Language / Idioma:** [English](climate_data.html) | [Português](climate_data_pt.html)
+
 
 ## 1. Introduction
 
@@ -60,7 +59,7 @@ In practical terms, the workflow has four goals:
 - climate figures used for exploratory inspection
 
 **Next step**
-- `matrizes.Rmd` uses the climate-derived outputs generated here to align environmental information with the observational structure and build the weather kernel (`W`).
+- `matrizes.Rmd` uses the climate-derived outputs to align environmental information with the observational structure and build the weather kernel (`W`).
 
 ## 2. R environment
 
@@ -75,9 +74,9 @@ Each package has a clear role in the workflow:
 - `ggthemes`: provides the Google Docs discrete scales used to standardize colors across figures.
 - `kableExtra`: improves the presentation of HTML tables in the tutorial.
 
-We also create the output directory at the beginning of the script. This avoids errors when saving figures and tables later in the analysis.
+We also create the output directory at the beginning of the script. This avoids errors when the script saves tables and figures later in the analysis.
 
-The code below loads the packages required for data download, data wrangling, plotting, and panel composition before any climate processing begins.
+The code below loads the packages and prepares the output folder used by this workflow.
 
 ```{r packages}
 # Uncomment if installation is required
@@ -487,6 +486,13 @@ combined_plot <- patchwork::wrap_plots(
 ) +
   patchwork::plot_annotation(
     tag_levels = "A"
+  ) &
+  theme(
+    plot.tag = element_text(
+      face = "bold",
+      size = 22,
+      color = "black"
+    )
   )
 
 print(combined_plot)
@@ -637,6 +643,13 @@ combined_additional_plots <- patchwork::wrap_plots(
 ) +
   patchwork::plot_annotation(
     tag_levels = "A"
+  ) &
+  theme(
+    plot.tag = element_text(
+      face = "bold",
+      size = 22,
+      color = "black"
+    )
   )
 
 print(combined_additional_plots)
@@ -654,6 +667,79 @@ ggsave(
 )
 ```
 
+
+```{r save_individual_climate_figures, include=FALSE}
+ggsave(
+  filename = "output/climate_results/daily_precipitation_overview.tiff",
+  plot = p_precip_daily,
+  width = 14,
+  height = 8,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/daily_precipitation_by_month.tiff",
+  plot = p1,
+  width = 16,
+  height = 9,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/monthly_precipitation_totals.tiff",
+  plot = p2,
+  width = 10,
+  height = 7,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/daily_air_temperature.tiff",
+  plot = p3,
+  width = 14,
+  height = 8,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/daily_solar_radiation.tiff",
+  plot = p4,
+  width = 14,
+  height = 8,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/daily_wind_speed.tiff",
+  plot = p5,
+  width = 14,
+  height = 8,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/daily_relative_humidity.tiff",
+  plot = p6,
+  width = 14,
+  height = 8,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+```
+
 ## 6. Weather-derived covariates
 
 The next step transforms daily climatic records into annual summary variables. This is the most important analytical transition in the script because it converts a raw time series into features that can be used in downstream prediction models.
@@ -662,11 +748,16 @@ These summaries are designed to capture biologically relevant aspects of each gr
 
 ### 6.1 Derive daily intermediate variables
 
-Some weather-derived covariates depend on quantities that are not directly provided by NASA POWER. For this reason, we first compute intermediate daily variables such as growing degree days (GDD), daily thermal amplitude, average daily temperature, saturation vapor pressure, actual vapor pressure, and vapor pressure deficit (VPD).
+Some useful weather descriptors are not downloaded directly from NASA POWER. They must be calculated from the daily variables.
 
-These intermediate variables are calculated day by day and then summarized at the annual level in the next subsection.
+The main quantities used here are:
 
-The next block computes the annual and expanded climate covariates that will later be used to build the weather-derived inputs of the prediction pipeline.
+- **GDD (growing degree days):** a simple measure of thermal accumulation. Temperatures below the base temperature are treated as too cold for crop development, and temperatures above the upper threshold are capped to avoid overestimating useful heat.
+- **DTR (daily temperature range):** the difference between daily maximum and minimum temperature. It summarizes day-night thermal amplitude.
+- **VPD (vapor pressure deficit):** a measure of atmospheric dryness. Higher VPD values indicate stronger evaporative demand, which can increase plant water stress.
+- **Stress-day counts:** simple counts of days exceeding biologically meaningful thresholds, such as high temperature, low humidity, or high VPD.
+
+The code below first creates the daily intermediate variables and then summarizes them by year. This explicit step-by-step format is intentional: it makes the calculations easier to inspect, reuse, and modify.
 
 ```{r feature_engineering}
 texas_climate_data <- texas_climate_data %>%
@@ -823,7 +914,7 @@ In the final reduced pipeline, these weather-derived outputs are used only in th
 
 ## 7. Save the final outputs
 
-The last section stores the processed files generated by the tutorial. Saving the outputs explicitly is important because it separates data acquisition from downstream modeling, making the workflow easier to reproduce and audit.
+The last section stores the processed climate files required by downstream modeling. Saving the outputs explicitly separates data acquisition from downstream analyses, making the workflow easier to reproduce and audit.
 
 Three files are exported:
 
