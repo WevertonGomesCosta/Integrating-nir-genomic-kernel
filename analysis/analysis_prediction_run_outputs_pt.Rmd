@@ -1,5 +1,5 @@
 ---
-title: "Análises de predição - execução e saídas"
+title: "Análises de predição - execução e resultados"
 author:
   - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
@@ -22,20 +22,20 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 ## 1. Introdução
 
-Este submódulo é a contraparte de execução de `analysis_prediction_pt.Rmd`. Seu papel é rodar os ajustes de predição para o catálogo reduzido de 18 modelos, salvar os arquivos CSV em `output/results/` e inventariar as saídas que mais adiante serão consumidas pela etapa de visualização.
+Este submódulo documenta a camada de execução da predição para o catálogo reduzido de 18 modelos e organiza a leitura dos arquivos de resultado disponíveis em `output/results/`.
 
 O contrato de execução usado aqui segue quatro regras operacionais:
 
 - `CV1` e `CV2` são derivados do mesmo ajuste em cada fold;
 - `CV0` e `CV00` são derivados do mesmo ajuste para cada ambiente deixado de fora em cada fold;
 - a partição em folds é determinística para cada tarefa `MODEL × REP × TRAIT` e é reutilizada nos dois blocos de CV;
-- os arquivos de saída são organizados explicitamente por esquema de validação, ambiente quando aplicável, trait, repetição e fold, com o fold representado tanto na árvore de pastas quanto no nome do arquivo.
+- os arquivos de resultado são organizados explicitamente por esquema de validação, ambiente quando aplicável, trait, repetição e fold, com o fold representado tanto na árvore de pastas quanto no nome do arquivo.
 
-Os chunks pesados de ajuste permanecem desativados por padrão no tutorial. Ainda assim, o código mostrado abaixo é a versão executável que deve ser usada quando a etapa de predição for rerodada.
+Os chunks pesados permanecem com `eval=FALSE` para documentar a etapa de ajuste sem rerodar os modelos Bayesianos durante a renderização deste documento.
 
 ## 2. Pacotes e caminhos do projeto
 
-O módulo de execução precisa tanto dos objetos matriciais criados a montante quanto dos pacotes usados pela camada de ajuste paralelo. A lógica de caminhos abaixo mantém o arquivo executável tanto a partir da raiz do projeto quanto do diretório `analysis/`.
+Este módulo usa objetos matriciais disponíveis a montante e arquivos de resultado já organizados no diretório `output/results/`. A lógica de caminhos abaixo usa o diretório de trabalho atual como raiz do projeto.
 
 
 ```{r setup}
@@ -46,36 +46,19 @@ library(readr)
 library(dplyr)
 library(stringr)
 library(knitr)
-library(BGLR)
-library(foreach)
-library(doParallel)
-library(parallel)
 library(tidyr)
 
-project_root <- getwd()
-
-if (!dir.exists(file.path(project_root, "output")) &&
-    dir.exists(file.path(project_root, "..", "output"))) {
-  project_root <- normalizePath(file.path(project_root, ".."))
-}
-
-if (!dir.exists(file.path(project_root, "output"))) {
-  stop("Não foi possível encontrar a pasta 'output/'. Renderize este arquivo a partir da raiz do projeto ou de analysis/.")
-}
+project_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
 
 results_dir <- file.path(project_root, "output", "results")
 analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction")
 bglr_runs_dir <- file.path(results_dir, "bglr_runs")
-
-dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
-dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
-dir.create(bglr_runs_dir, recursive = TRUE, showWarnings = FALSE)
 ```
 
 
 ## 3. Recarregar os objetos de execução da Parte I
 
-Esta seção reconstrói o ambiente de execução quando o arquivo é renderizado isoladamente. Ela segue o contrato de `analysis_prediction_pt.Rmd` e recria exatamente o conjunto reduzido de 18 objetos ETA definido na Parte I.
+Esta seção reconstrói o ambiente de execução quando o arquivo é renderizado isoladamente. Ela segue o contrato do framework de predição e documenta exatamente o conjunto reduzido de 18 objetos ETA definido na Parte I.
 
 ```{r load-required-objects, eval=FALSE}
 matrices_dir <- file.path(project_root, "output", "Matrizes")
@@ -88,18 +71,6 @@ required_matrix_files <- c(
   "GGKE.rds", "PGKE.rds", "GAKE.rds", "PAKE.rds",
   "GGKW.rds", "PGKW.rds", "GAKW.rds", "PAKW.rds"
 )
-
-required_matrix_paths <- file.path(matrices_dir, required_matrix_files)
-
-if (!all(file.exists(required_matrix_paths))) {
-  missing_matrix_files <- required_matrix_files[!file.exists(required_matrix_paths)]
-  stop(
-    paste0(
-      "Os objetos de execução exigidos por analysis_prediction_run_outputs não foram encontrados em output/Matrizes/. Arquivos ausentes: ",
-      paste(missing_matrix_files, collapse = ", ")
-    )
-  )
-}
 
 Pheno <- readRDS(file.path(matrices_dir, "Pheno.rds"))
 ZG   <- readRDS(file.path(matrices_dir, "ZG.rds"))
@@ -123,23 +94,20 @@ PGKW <- readRDS(file.path(matrices_dir, "PGKW.rds"))
 GAKW <- readRDS(file.path(matrices_dir, "GAKW.rds"))
 PAKW <- readRDS(file.path(matrices_dir, "PAKW.rds"))
 
-if (!exists("Pedigree")) Pedigree <- unique(Pheno$Pedigree)
+Pedigree <- unique(Pheno$Pedigree)
 
-candidate_traits <- c("GY", "KW")
-traits_to_run <- candidate_traits[candidate_traits %in% names(Pheno)]
-if (length(traits_to_run) == 0) {
-  stop("Nenhum dos traits esperados (GY, KW) foi encontrado em Pheno.")
-}
+traits_to_run <- c("GY", "KW")
 
-if (!exists("nIter"))   nIter   <- 5000
-if (!exists("burnIn"))  burnIn  <- 1000
-if (!exists("thin"))    thin    <- 10
-if (!exists("num_rep")) num_rep <- 10
-if (!exists("n_cores")) n_cores <- max(1L, parallel::detectCores() - 1L)
+nIter <- 5000
+burnIn <- 1000
+thin <- 10
+num_rep <- 10
+n_cores <- max(1L, parallel::detectCores() - 1L)
 
 model_catalog <- data.frame(
   ModelNumber = 1:18,
-  Model = paste0("Eta", 1:18),
+  Model = paste0("M", 1:18),
+  EtaName = paste0("Eta", 1:18),
   ShortDescription = c(
     "G + E",
     "P + E",
@@ -205,23 +173,28 @@ model_catalog <- data.frame(
     "Modelo fenômico linear com ambiente e interação P × E",
     "Modelo genômico Gaussiano com ambiente e interação GGK × E",
     "Modelo fenômico Gaussiano com ambiente e interação PGK × E",
-    "Modelo genômico arc-cosine com ambiente e interação GAK × E",
-    "Modelo fenômico arc-cosine com ambiente e interação PAK × E",
+    "Modelo genômico arccosine com ambiente e interação GAK × E",
+    "Modelo fenômico arccosine com ambiente e interação PAK × E",
     "Modelo combinado linear com ambiente, GE e PE",
     "Modelo combinado Gaussiano com ambiente, GGKE e PGKE",
-    "Modelo combinado arc-cosine com ambiente, GAKE e PAKE",
+    "Modelo combinado arccosine com ambiente, GAKE e PAKE",
     "Modelo genômico linear com ambiente, clima, GE e GW",
     "Modelo fenômico linear com ambiente, clima, PE e PW",
     "Modelo combinado linear com ambiente, clima, GE, PE, GW e PW",
     "Modelo genômico Gaussiano com ambiente, clima, GGKE e GGKW",
     "Modelo fenômico Gaussiano com ambiente, clima, PGKE e PGKW",
     "Modelo combinado Gaussiano com ambiente, clima, GGKE, PGKE, GGKW e PGKW",
-    "Modelo genômico arc-cosine com ambiente, clima, GAKE e GAKW",
-    "Modelo fenômico arc-cosine com ambiente, clima, PAKE e PAKW",
-    "Modelo combinado arc-cosine com ambiente, clima, GAKE, PAKE, GAKW e PAKW"
+    "Modelo genômico arccosine com ambiente, clima, GAKE e GAKW",
+    "Modelo fenômico arccosine com ambiente, clima, PAKE e PAKW",
+    "Modelo combinado arccosine com ambiente, clima, GAKE, PAKE, GAKW e PAKW"
   ),
   stringsAsFactors = FALSE
 )
+
+# A coluna Model apresenta o rótulo usado nas tabelas e figuras do manuscrito
+# (M1-M18), enquanto EtaName preserva o identificador computacional usado
+# internamente nos nomes de arquivos e nas pastas de execução do BGLR
+# (Eta1-Eta18).
 
 env_design <- model.matrix(~ Pheno$Env - 1)
 
@@ -266,7 +239,7 @@ combos <- expand.grid(
 )
 ```
 
-## 5. Iniciar o backend paralelo
+## 5. Backend paralelo
 
 O backend abaixo espelha o fluxo original: um worker recebe uma combinação de modelo, repetição e trait.
 
@@ -276,8 +249,7 @@ cl <- parallel::makeCluster(useCores)
 doParallel::registerDoParallel(cl)
 
 parallel::clusterEvalQ(cl, {
-  library(BGLR)
-  library(dplyr)
+    library(dplyr)
   library(plyr)
   NULL
 })
@@ -286,9 +258,9 @@ cat("Rodando em ", useCores, " núcleos.")
 ```
 
 
-## 6. Executar as análises preditivas para CV1 e CV2
+## 6. Análises preditivas para CV1 e CV2
 
-Este bloco implementa a validação baseada em genótipos para o workflow de 18 modelos. O mapa determinístico de folds, o ajuste do BGLR e o resumo por ambiente ficam escritos diretamente dentro do laço para manter cada etapa explícita. Um ajuste é rodado por fold e as predições resultantes são divididas em `CV1` (genótipos deixados de fora) e `CV2` (genótipos de treinamento sob o mesmo ajuste). No padrão atual, tanto os CSVs finais quanto os artefatos de ajuste do BGLR são salvos em uma hierarquia rep/fold.
+Este bloco documenta a validação baseada em genótipos para o workflow de 18 modelos. O mapa determinístico de folds, o ajuste do BGLR e o resumo por ambiente ficam escritos diretamente dentro do laço para manter cada etapa explícita. O padrão documentado considera um ajuste por fold e a separação das predições em `CV1` (genótipos deixados de fora) e `CV2` (genótipos de treinamento sob o mesmo ajuste). Nesse padrão, os resultados finais e os artefatos de ajuste do BGLR seguem uma hierarquia rep/fold.
 
 ```{r run-predictions-cv12, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -300,25 +272,11 @@ foreach(i = seq_len(nrow(combos)),
   pheno <- data.frame(Pheno)
 
   trait_id <- match(TRAIT, trait_reference_order)
-  if (is.na(trait_id)) {
-    trait_id <- 1L
-  }
 
   seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
-  old_seed_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (old_seed_exists) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-
   set.seed(seed_value)
   obs_per_fold <- ceiling(length(Pedigree) / num_fold)
   folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
-
-  if (old_seed_exists) {
-    assign(".Random.seed", old_seed, envir = .GlobalEnv)
-  } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    rm(".Random.seed", envir = .GlobalEnv)
-  }
 
   folds_df <- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
 
@@ -333,10 +291,6 @@ foreach(i = seq_len(nrow(combos)),
 
     cv1_file <- file.path(cv1_dir, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
     cv2_file <- file.path(cv2_dir, paste0("CV2_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
-
-    if (file.exists(cv1_file) && file.exists(cv2_file)) {
-      next
-    }
 
     train_geno <- folds_df$Pedigree[folds_df$fold != fold_num]
 
@@ -384,9 +338,9 @@ foreach(i = seq_len(nrow(combos)),
   NULL
 }
 ```
-## 7. Executar as análises preditivas para CV0 e CV00
+## 7. Análises preditivas para CV0 e CV00
 
-Este bloco implementa a validação leave-one-environment-out para o mesmo workflow de 18 modelos. Para cada tarefa, o mapa determinístico de folds é reconstruído com a mesma regra usada em `CV1/CV2`, um ajuste é rodado para cada combinação `env_leave × fold` e as predições são divididas em `CV0` (genótipos de treinamento sob a máscara do ambiente) e `CV00` (genótipos deixados de fora sob a mesma máscara). Assim como no bloco baseado em genótipos, as saídas são gravadas em uma hierarquia rep/fold e os artefatos do BGLR são preservados em pastas persistentes correspondentes.
+Este bloco documenta a validação leave-one-environment-out para o mesmo workflow de 18 modelos. Para cada tarefa, o mapa determinístico de folds segue a mesma regra usada em `CV1/CV2`, com um ajuste documentado para cada combinação `env_leave × fold`. As predições são organizadas em `CV0` (genótipos de treinamento sob a máscara do ambiente) e `CV00` (genótipos deixados de fora sob a mesma máscara). Assim como no bloco baseado em genótipos, os resultados seguem uma hierarquia rep/fold, e os artefatos do BGLR são associados às pastas persistentes correspondentes.
 
 ```{r run-predictions-cv0-cv00, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -398,25 +352,11 @@ foreach(i = seq_len(nrow(combos)),
   pheno <- data.frame(Pheno)
 
   trait_id <- match(TRAIT, trait_reference_order)
-  if (is.na(trait_id)) {
-    trait_id <- 1L
-  }
 
   seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
-  old_seed_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (old_seed_exists) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-
   set.seed(seed_value)
   obs_per_fold <- ceiling(length(Pedigree) / num_fold)
   folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
-
-  if (old_seed_exists) {
-    assign(".Random.seed", old_seed, envir = .GlobalEnv)
-  } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    rm(".Random.seed", envir = .GlobalEnv)
-  }
 
   folds_df <- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
 
@@ -435,10 +375,6 @@ foreach(i = seq_len(nrow(combos)),
 
       cv00_file <- file.path(cv00_dir, paste0("CV00_", TRAIT, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
       cv0_file <- file.path(cv0_dir, paste0("CV0_", TRAIT, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
-
-      if (file.exists(cv00_file) && file.exists(cv0_file)) {
-        next
-      }
 
       yield2 <- pheno
       yield2$Y2 <- NA
@@ -486,7 +422,7 @@ foreach(i = seq_len(nrow(combos)),
   NULL
 }
 ```
-## 8. Encerrar o backend paralelo
+## 8. Encerramento do backend paralelo
 
 ```{r stop-parallel-backend, eval=FALSE}
 stopCluster(cl)
@@ -494,103 +430,100 @@ foreach::registerDoSEQ()
 ```
 
 
-## 9. Inventário dos arquivos de saída de predição
+## 9. Inventário dos arquivos de predição disponíveis
 
-Os inventários abaixo resumem os arquivos CSV produzidos pela etapa de execução usando o contrato atual de nomenclatura com 18 modelos adotado nesta versão.
+Os inventários abaixo resumem os arquivos CSV disponíveis usando o contrato atual de nomenclatura com 18 modelos adotado nesta versão.
 
 ```{r prediction-output-inventory}
-prediction_files <- character(0)
+prediction_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE, recursive = TRUE)
+results_root <- normalizePath(results_dir, winslash = "/", mustWork = FALSE)
 
-if (dir.exists(results_dir)) {
-  prediction_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE, recursive = TRUE)
-}
+cv12_files <- prediction_files[
+  stringr::str_detect(basename(prediction_files), "^CV[12]_")
+]
+
+cvloo_files <- prediction_files[
+  stringr::str_detect(basename(prediction_files), "^CV0{1,2}_")
+]
 
 inventory_cv12 <- data.frame()
-inventory_cvloo <- data.frame()
 
-if (length(prediction_files) > 0) {
-  results_root <- normalizePath(results_dir, winslash = "/")
+for (current_file in cv12_files) {
+  current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
+  rel_path <- substring(current_norm, nchar(results_root) + 2)
+  path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
+  current_name <- basename(current_file)
+  current_name_no_ext <- sub("\\.csv$", "", current_name)
+  current_parts <- strsplit(current_name_no_ext, "_")[[1]]
 
-  for (current_file in prediction_files) {
-    current_norm <- normalizePath(current_file, winslash = "/")
-    rel_path <- substring(current_norm, nchar(results_root) + 2)
-    path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
-    current_name <- basename(current_file)
-    current_name_no_ext <- sub("\\.csv$", "", current_name)
-    current_parts <- strsplit(current_name_no_ext, "_")[[1]]
-
-    if (length(path_parts) >= 5 && current_parts[1] %in% c("CV1", "CV2")) {
-      inventory_cv12 <- dplyr::bind_rows(
-        inventory_cv12,
-        data.frame(
-          relative_path = rel_path,
-          file_name = current_name,
-          CV = current_parts[1],
-          Trait = path_parts[2],
-          Rep = path_parts[3],
-          Fold = path_parts[4],
-          Model = current_parts[3],
-          stringsAsFactors = FALSE
-        )
-      )
-    }
-
-    if (length(path_parts) >= 6 && current_parts[1] %in% c("CV0", "CV00")) {
-      inventory_cvloo <- dplyr::bind_rows(
-        inventory_cvloo,
-        data.frame(
-          relative_path = rel_path,
-          file_name = current_name,
-          CV = current_parts[1],
-          Env_leave = path_parts[2],
-          Trait = path_parts[3],
-          Rep = path_parts[4],
-          Fold = path_parts[5],
-          Model = current_parts[length(current_parts) - 2],
-          stringsAsFactors = FALSE
-        )
-      )
-    }
-  }
+  inventory_cv12 <- dplyr::bind_rows(
+    inventory_cv12,
+    data.frame(
+      relative_path = rel_path,
+      file_name = current_name,
+      CV = current_parts[1],
+      Trait = path_parts[2],
+      Rep = path_parts[3],
+      Fold = path_parts[4],
+      EtaName = current_parts[3],
+      Model = stringr::str_replace(current_parts[3], "Eta", "M"),
+      stringsAsFactors = FALSE
+    )
+  )
 }
 
-write_csv(inventory_cv12, file.path(analysis_tables_dir, "analysis_prediction_inventory_cv12.csv"))
-write_csv(inventory_cvloo, file.path(analysis_tables_dir, "analysis_prediction_inventory_cvloo.csv"))
+inventory_cvloo <- data.frame()
+
+for (current_file in cvloo_files) {
+  current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
+  rel_path <- substring(current_norm, nchar(results_root) + 2)
+  path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
+  current_name <- basename(current_file)
+  current_name_no_ext <- sub("\\.csv$", "", current_name)
+  current_parts <- strsplit(current_name_no_ext, "_")[[1]]
+
+  inventory_cvloo <- dplyr::bind_rows(
+    inventory_cvloo,
+    data.frame(
+      relative_path = rel_path,
+      file_name = current_name,
+      CV = current_parts[1],
+      Env_leave = path_parts[2],
+      Trait = path_parts[3],
+      Rep = path_parts[4],
+      Fold = path_parts[5],
+      EtaName = current_parts[length(current_parts) - 2],
+      Model = stringr::str_replace(current_parts[length(current_parts) - 2], "Eta", "M"),
+      stringsAsFactors = FALSE
+    )
+  )
+}
 ```
 ## 10. Contagens de arquivos por esquema de validação e trait
 
 ```{r prediction-output-counts}
-counts_by_cv <- data.frame()
-counts_by_trait <- data.frame()
+combined_inventory <- bind_rows(
+  inventory_cv12 %>% mutate(Env_leave = NA_character_),
+  inventory_cvloo
+)
 
-if (nrow(inventory_cv12) > 0 || nrow(inventory_cvloo) > 0) {
-  combined_inventory <- bind_rows(
-    inventory_cv12 %>% mutate(Env_leave = NA_character_),
-    inventory_cvloo
-  )
+counts_by_cv <- combined_inventory %>%
+  count(CV, name = "n_files") %>%
+  arrange(CV)
 
-  counts_by_cv <- combined_inventory %>%
-    count(CV, name = "n_files") %>%
-    arrange(CV)
+counts_by_trait <- combined_inventory %>%
+  count(CV, Trait, name = "n_files") %>%
+  arrange(CV, Trait)
 
-  counts_by_trait <- combined_inventory %>%
-    count(CV, Trait, name = "n_files") %>%
-    arrange(CV, Trait)
-}
-
-write_csv(counts_by_cv, file.path(analysis_tables_dir, "analysis_prediction_counts_by_cv.csv"))
-write_csv(counts_by_trait, file.path(analysis_tables_dir, "analysis_prediction_counts_by_trait.csv"))
-
-if (nrow(counts_by_cv) > 0) {
-  knitr::kable(counts_by_cv, caption = "Número de arquivos de predição por esquema de validação.", align = "cc")
-} else {
-  cat("As contagens de predição por esquema de validação ainda não estão disponíveis.
-")
-}
+knitr::kable(
+  counts_by_cv,
+  caption = "Número de arquivos de predição por esquema de validação.",
+  align = "cc"
+)
 ```
 
 
-## 11. Exemplos do padrão de caminhos das saídas
+## 11. Exemplos do padrão de caminhos dos resultados
 
 ```{r prediction-output-examples}
 output_examples <- bind_rows(
@@ -605,8 +538,8 @@ output_examples <- bind_rows(
       "bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat"
     ),
     Meaning = c(
-      "Acurácia preditiva para CV1, trait GY, modelo Eta1, repetição 1, fold 1.",
-      "Acurácia preditiva para CV2, trait KW, modelo Eta18, repetição 10, fold 5."
+      "Acurácia preditiva para CV1, trait GY, modelo M1 (EtaName Eta1), repetição 1, fold 1.",
+      "Acurácia preditiva para CV2, trait KW, modelo M18 (EtaName Eta18), repetição 10, fold 5."
     )
   ),
   tibble::tibble(
@@ -620,22 +553,21 @@ output_examples <- bind_rows(
       "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
     ),
     Meaning = c(
-      "Acurácia preditiva para CV0, trait GY, ambiente retirado CS11_WS, modelo Eta1, repetição 1, fold 1.",
-      "Acurácia preditiva para CV00, trait KW, ambiente retirado CS12_WW, modelo Eta18, repetição 10, fold 2."
+      "Acurácia preditiva para CV0, trait GY, ambiente retirado CS11_WS, modelo M1 (EtaName Eta1), repetição 1, fold 1.",
+      "Acurácia preditiva para CV00, trait KW, ambiente retirado CS12_WW, modelo M18 (EtaName Eta18), repetição 10, fold 2."
     )
   )
 )
 
-write_csv(output_examples, file.path(analysis_tables_dir, "analysis_prediction_output_examples.csv"))
-knitr::kable(output_examples, caption = "Exemplos de arquivos de saída armazenados no layout atual por repetição e fold, juntamente com os prefixes específicos de cenário usados nos artefatos persistentes do BGLR.", align = "c")
+knitr::kable(output_examples, caption = "Exemplos de arquivos de resultado armazenados no layout atual por repetição e fold, juntamente com os prefixes específicos de cenário usados nos artefatos persistentes do BGLR.", align = "c")
 ```
 ## 12. Nota sobre artefatos temporários do `BGLR`
 
-No workflow atual de 18 modelos, os artefatos persistentes de `saveAt` são escritos em `output/results/bglr_runs/` durante cada ajuste e preservados para futuras análises de convergência. Por isso, este módulo de execução inventaria tanto os CSVs finais armazenados em `output/results/` quanto os caminhos hierárquicos que localizam as pastas correspondentes de execução do BGLR.
+No workflow atual de 18 modelos, os artefatos persistentes de `saveAt` ficam associados a `output/results/bglr_runs/` e podem ser consultados em análises futuras de convergência. Por isso, este módulo documenta tanto os resultados finais armazenados em `output/results/` quanto os caminhos hierárquicos que localizam as pastas correspondentes de execução do BGLR.
 
 ## 13. Nota final
 
-Este arquivo fecha a camada de execução da etapa de predição preservando a consistência com o módulo reduzido de pré-processamento de 18 modelos documentado em `analysis_prediction_pt.Rmd` e com o contrato atual de CSVs usado pelos resumos posteriores.
+Este arquivo fecha a documentação da camada de execução da etapa de predição, preservando a consistência com o módulo reduzido de pré-processamento de 18 modelos e com o contrato atual de resultados usado pelos resumos posteriores.
 
 ## Navegação entre etapas
 

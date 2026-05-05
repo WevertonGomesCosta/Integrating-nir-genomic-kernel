@@ -22,28 +22,28 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 ## 1. Introduction
 
-Prediction is the stage of the pipeline in which the objects produced earlier are reorganized into a model-fitting framework. At this point, the goal is not yet to run the full prediction workflow. Instead, this module prepares the analytical structure that will later be used in the execution step.
+Prediction is the stage of the pipeline in which the available analytical objects are reorganized into a model-fitting framework. At this point, the goal is not yet to run the full prediction workflow. Instead, this module prepares the analytical structure that will later be used in the execution step.
 
 The prediction problem studied here is not limited to fitting a single model. The project compares a reduced catalog of 18 models built from different combinations of environmental information (`E`), genomic information (`G`), phenomic information (`P`), weather-derived information (`W`), and their corresponding linear or kernel-based interaction structures. Because these models are intended to answer different prediction questions under different validation settings, the first step is to make their organization explicit and understandable before any expensive computation is performed.
 
 This file therefore serves two complementary purposes. First, it prepares the inputs and computational settings needed for prediction. Second, it explains the analytical meaning of the model catalog and of the cross-validation schemes adopted in the study. In practical terms, this means that the reader should leave this module understanding what is being predicted, which sources of information are being compared, and how prediction quality will later be assessed.
 
-## Inputs, outputs, and the role of this stage
+## Input objects, model catalog, and the role of this stage
 
-This stage receives as input the objects created in `matrizes.Rmd`. These include the phenotypic data table (`Pheno`), the incidence structures that connect observations to environments and weather, and the linear and nonlinear kernels derived from genomic and phenomic information. Together, these objects provide the full representation needed to define the prediction models.
+This stage receives as input the objects available in `output/Matrizes/`. These include the phenotypic data table (`Pheno`), the incidence structures that connect observations to environments and weather, and the linear and nonlinear kernels derived from genomic and phenomic information. Together, these objects provide the full representation needed to define the prediction models.
 
-The main output of this file is not a final result table. Instead, the output is an organized prediction framework: the computational settings, the catalog of 18 models, the corresponding `Eta_list` specifications, the validation design, and the naming convention that will later be used to store prediction results. In other words, this module prepares the prediction system that will be executed in the next stage.
+The central object organized in this file is not a final result table. Instead, this stage documents the prediction framework: the computational settings, the catalog of 18 models, the corresponding `Eta_list` specifications, the validation design, and the naming convention that will later be used to store prediction results. In other words, this module prepares the prediction system used in the next stage.
 
-This distinction is important for didactic reasons. Here we focus on understanding the structure of the prediction analysis: what enters each model, how the models differ, and what each validation scenario is designed to test. The execution itself is documented in the next module, where the prediction outputs are generated, inventoried, and prepared for downstream summaries.
+This distinction is important for didactic reasons. Here we focus on understanding the structure of the prediction analysis: what enters each model, how the models differ, and what each validation scenario is designed to test. The execution itself is documented in the next module, where prediction files are inventoried and prepared for downstream summaries.
 
 **Inputs**
 - Phenotypic observations and identifiers stored in `Pheno`
 - Environmental and weather design structures
 - Linear incidence-based relationships
 - Nonlinear genomic and phenomic kernels
-- Derived interaction kernels generated in `matrizes.Rmd`
+- Derived interaction kernels available for prediction
 
-**Outputs**
+**Organized objects**
 - General computational settings for model fitting
 - The 18-model catalog used in the study
 - The full `Eta_list` structure that defines each prediction model
@@ -57,7 +57,7 @@ This distinction is important for didactic reasons. Here we focus on understandi
 
 Before defining any prediction model, it is useful to begin from a clean and reproducible working session. In a teaching-oriented script, this first step also has a practical function: it makes clear that model specification should not depend on objects left from previous runs.
 
-At this stage, the emphasis is still on organization rather than execution. The prediction models are introduced, compared, and translated into their ETA structures, but the expensive fitting routine is left for the execution module. For that reason, the setup here is intentionally minimal. Scientific notation is turned off to improve readability of printed values, the workspace is cleared so that the objects used later in the file are those explicitly loaded from the pipeline outputs, and the `parallel` package is declared because the number of processor cores is already defined at this stage.
+At this stage, the emphasis is still on organization rather than execution. The prediction models are introduced, compared, and translated into their ETA structures, but the expensive fitting routine is left for the execution module. For that reason, the setup here is intentionally minimal. Scientific notation is turned off to improve readability of printed values, the workspace is cleared so that the objects used later in the file are those explicitly loaded from the available pipeline objects, and the `parallel` package is declared because the number of processor cores is already defined at this stage.
 
 ```{r setup}
 rm(list = ls())
@@ -66,13 +66,13 @@ options(scipen = 999)
 library(parallel)
 ```
 
-## 3. Inputs generated by previous scripts
+## 3. Prediction input objects
 
-The prediction analysis starts from the matrices and kernels already generated in `matrizes.Rmd`. This means that the current stage does not rebuild the data representation from scratch. Instead, it imports the saved objects that now serve as the analytical foundation for model specification.
+The prediction analysis starts from the matrices and kernels available in `output/Matrizes/`. This means that the current stage does not rebuild the data representation from scratch. Instead, it imports the saved objects that serve as the analytical foundation for model specification.
 
 These objects represent different parts of the problem. `Pheno` contains the observation-level structure of the study, including traits, genotypes, and environments. `ZG` and `ZP` represent the linear genomic and phenomic relationships. `ZE` represents the categorical environment structure, whereas `ZW` carries the weather-derived information. The remaining objects correspond to interactions and nonlinear kernels that allow the comparison of simpler and more flexible prediction models.
 
-Reading these objects directly from `output/Matrizes/` is important for two reasons. First, it keeps the workflow reproducible by making prediction depend on artifacts already created in the previous stage. Second, it allows the reader to see how the prediction module is connected to the harmonization and kernel-construction module.
+Reading these objects directly from `output/Matrizes/` is important for two reasons. First, it keeps the workflow reproducible by making prediction depend on the same stored objects used across the project. Second, it allows the reader to see how the prediction module is connected to the harmonization and kernel-construction step.
 
 ```{r load-inputs}
 Pheno <- readRDS("output/Matrizes/Pheno.rds")
@@ -103,7 +103,7 @@ GAKW <- readRDS("output/Matrizes/GAKW.rds")
 PAKW <- readRDS("output/Matrizes/PAKW.rds")
 ```
 
-In the current version of the pipeline, the observation-level matrices produced in `matrizes.Rmd` use the names `ZE`, `ZGZE`, `ZPZE`, `ZGZW`, and `ZPZW` to represent the categorical environment design and the interaction structures that link genomic and phenomic information to environment and weather. Keeping these names explicit here helps the reader connect the saved files to the prediction structures that will be built later in this module.
+In the current version of the pipeline, the observation-level matrices available in `output/Matrizes/` use the names `ZE`, `ZGZE`, `ZPZE`, `ZGZW`, and `ZPZW` to represent the categorical environment design and the interaction structures that link genomic and phenomic information to environment and weather. Keeping these names explicit here helps the reader connect the stored files to the prediction structures defined later in this module.
 
 ## 4. MCMC and general settings
 
@@ -130,12 +130,13 @@ n_cores
 
 The prediction stage does not compare a single specification. Instead, it evaluates a reduced catalog of 18 models that represent different ways of combining environment (`E`), genomic information (`G`), phenomic information (`P`), weather-derived information (`W`), and their corresponding interaction structures. This catalog is useful because it allows the reader to see, in a single place, how the analytical comparison is organized before the models are fitted.
 
-The table below should be read as a map of the modeling strategy adopted in the study. Each row identifies one model, gives it a stable label, and summarizes its main composition. These labels will be used again in the execution step, in the output files, and later in the visualization module. For that reason, understanding the catalog here makes the rest of the prediction workflow much easier to follow.
+The table below should be read as a map of the modeling strategy adopted in the study. Each row identifies one model, gives it a stable manuscript label, and summarizes its main composition. The column `Model` uses the labels shown in tables and figures (`M1` to `M18`), whereas `EtaName` keeps the computational identifier used internally by the prediction workflow (`Eta1` to `Eta18`). Understanding this distinction makes it easier to connect the manuscript figures with the files and objects used during model fitting.
 
 ```{r model-catalog}
 model_catalog <- data.frame(
   ModelNumber = 1:18,
-  Model = paste0("Eta", 1:18),
+  Model = paste0("M", 1:18),
+  EtaName = paste0("Eta", 1:18),
   ShortDescription = c(
     "G + E",
     "P + E",
@@ -201,20 +202,20 @@ model_catalog <- data.frame(
     "Linear phenomic model with environment and P × E interaction",
     "Gaussian genomic model with environment and GGK × E interaction",
     "Gaussian phenomic model with environment and PGK × E interaction",
-    "Arc-cosine genomic model with environment and GAK × E interaction",
-    "Arc-cosine phenomic model with environment and PAK × E interaction",
+    "Arccosine genomic model with environment and GAK × E interaction",
+    "Arccosine phenomic model with environment and PAK × E interaction",
     "Linear combined genomic + phenomic model with environment, GE, and PE",
     "Gaussian combined genomic + phenomic model with environment, GGKE, and PGKE",
-    "Arc-cosine combined genomic + phenomic model with environment, GAKE, and PAKE",
+    "Arccosine combined genomic + phenomic model with environment, GAKE, and PAKE",
     "Linear genomic-weather model with environment, weather, GE, and GW",
     "Linear phenomic-weather model with environment, weather, PE, and PW",
     "Linear combined genomic + phenomic + weather model with GE, PE, GW, and PW",
     "Gaussian genomic-weather model with environment, weather, GGKE, and GGKW",
     "Gaussian phenomic-weather model with environment, weather, PGKE, and PGKW",
     "Gaussian combined genomic + phenomic + weather model with GGKE, PGKE, GGKW, and PGKW",
-    "Arc-cosine genomic-weather model with environment, weather, GAKE, and GAKW",
-    "Arc-cosine phenomic-weather model with environment, weather, PAKE, and PAKW",
-    "Arc-cosine combined genomic + phenomic + weather model with GAKE, PAKE, GAKW, and PAKW"
+    "Arccosine genomic-weather model with environment, weather, GAKE, and GAKW",
+    "Arccosine phenomic-weather model with environment, weather, PAKE, and PAKW",
+    "Arccosine combined genomic + phenomic + weather model with GAKE, PAKE, GAKW, and PAKW"
   ),
   stringsAsFactors = FALSE
 )
@@ -449,7 +450,7 @@ cvloo_design
 
 ### 7.4 File naming and downstream reproducibility
 
-The prediction workflow now uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Final CSV summaries are written inside `output/results/` under scenario-specific folders, and the persistent `BGLR` fitting artifacts are written inside `output/results/bglr_runs/` using the same logical structure. Keeping this pattern explicit is important because the next modules use these paths to inventory, summarize, and visualize the results.
+The prediction workflow now uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Final CSV summaries are written inside `output/results/` under scenario-specific folders, and the persistent `BGLR` fitting artifacts are written inside `output/results/bglr_runs/` using the same logical structure. In these computational file names, the `EtaName` identifier is used because it is the internal model name used by the fitting routine, whereas the manuscript-facing model label is stored in `Model`. Keeping this pattern explicit is important because the next modules use these paths to inventory, summarize, and visualize the results.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(
@@ -474,7 +475,7 @@ prediction_file_patterns
 
 ## 8. Transition to the execution submodule
 
-At this point, the prediction stage has been organized from three complementary perspectives: the analytical inputs are defined, the reduced catalog of 18 models is made explicit, and the validation schemes are linked to the scientific questions they are meant to answer. This means that the execution stage no longer needs to introduce new concepts. Its role is to apply the structure defined here, generate the prediction files, and organize the outputs that will later be summarized and visualized.
+At this point, the prediction stage has been organized from three complementary perspectives: the analytical inputs are defined, the reduced catalog of 18 models is made explicit, and the validation schemes are linked to the scientific questions they are meant to answer. This means that the execution stage no longer needs to introduce new concepts. Its role is to apply the structure defined here and organize the prediction files that will later be summarized and visualized.
 
 The next submodule, `analysis_prediction_run_outputs.Rmd`, therefore moves from design to implementation. There the emphasis shifts from model definition and validation logic to execution records, persistent `BGLR` artifacts organized by scenario, and recursive inventories that make the prediction workflow easier to inspect and reuse in the downstream modules.
 

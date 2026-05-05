@@ -35,7 +35,7 @@ The heavy fitting chunks remain disabled by default in the tutorial. Even so, th
 
 ## 2. Packages and project paths
 
-The execution module needs both the matrix objects created upstream and the packages used by the parallel fitting layer. The path logic below keeps the file runnable from either the project root or the `analysis/` directory.
+The execution module needs both the matrix objects created upstream and the packages used by the parallel fitting layer. The path logic below uses the current working directory as the project root.
 
 
 ```{r setup}
@@ -52,16 +52,7 @@ library(doParallel)
 library(parallel)
 library(tidyr)
 
-project_root <- getwd()
-
-if (!dir.exists(file.path(project_root, "output")) &&
-    dir.exists(file.path(project_root, "..", "output"))) {
-  project_root <- normalizePath(file.path(project_root, ".."))
-}
-
-if (!dir.exists(file.path(project_root, "output"))) {
-  stop("Could not find the folder 'output/'. Render this file from the project root or from analysis/.")
-}
+project_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
 
 results_dir <- file.path(project_root, "output", "results")
 analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction")
@@ -89,18 +80,6 @@ required_matrix_files <- c(
   "GGKW.rds", "PGKW.rds", "GAKW.rds", "PAKW.rds"
 )
 
-required_matrix_paths <- file.path(matrices_dir, required_matrix_files)
-
-if (!all(file.exists(required_matrix_paths))) {
-  missing_matrix_files <- required_matrix_files[!file.exists(required_matrix_paths)]
-  stop(
-    paste0(
-      "The execution objects required by analysis_prediction_run_outputs were not found in output/Matrizes/. Missing files: ",
-      paste(missing_matrix_files, collapse = ", ")
-    )
-  )
-}
-
 Pheno <- readRDS(file.path(matrices_dir, "Pheno.rds"))
 ZG   <- readRDS(file.path(matrices_dir, "ZG.rds"))
 ZP   <- readRDS(file.path(matrices_dir, "ZP.rds"))
@@ -123,23 +102,20 @@ PGKW <- readRDS(file.path(matrices_dir, "PGKW.rds"))
 GAKW <- readRDS(file.path(matrices_dir, "GAKW.rds"))
 PAKW <- readRDS(file.path(matrices_dir, "PAKW.rds"))
 
-if (!exists("Pedigree")) Pedigree <- unique(Pheno$Pedigree)
+Pedigree <- unique(Pheno$Pedigree)
 
-candidate_traits <- c("GY", "KW")
-traits_to_run <- candidate_traits[candidate_traits %in% names(Pheno)]
-if (length(traits_to_run) == 0) {
-  stop("None of the expected traits (GY, KW) were found in Pheno.")
-}
+traits_to_run <- c("GY", "KW")
 
-if (!exists("nIter"))   nIter   <- 5000
-if (!exists("burnIn"))  burnIn  <- 1000
-if (!exists("thin"))    thin    <- 10
-if (!exists("num_rep")) num_rep <- 10
-if (!exists("n_cores")) n_cores <- max(1L, parallel::detectCores() - 1L)
+nIter <- 5000
+burnIn <- 1000
+thin <- 10
+num_rep <- 10
+n_cores <- max(1L, parallel::detectCores() - 1L)
 
 model_catalog <- data.frame(
   ModelNumber = 1:18,
-  Model = paste0("Eta", 1:18),
+  Model = paste0("M", 1:18),
+  EtaName = paste0("Eta", 1:18),
   ShortDescription = c(
     "G + E",
     "P + E",
@@ -205,23 +181,27 @@ model_catalog <- data.frame(
     "Linear phenomic model with environment and P × E interaction",
     "Gaussian genomic model with environment and GGK × E interaction",
     "Gaussian phenomic model with environment and PGK × E interaction",
-    "Arc-cosine genomic model with environment and GAK × E interaction",
-    "Arc-cosine phenomic model with environment and PAK × E interaction",
+    "Arccosine genomic model with environment and GAK × E interaction",
+    "Arccosine phenomic model with environment and PAK × E interaction",
     "Linear combined genomic + phenomic model with environment, GE, and PE",
     "Gaussian combined genomic + phenomic model with environment, GGKE, and PGKE",
-    "Arc-cosine combined genomic + phenomic model with environment, GAKE, and PAKE",
+    "Arccosine combined genomic + phenomic model with environment, GAKE, and PAKE",
     "Linear genomic-weather model with environment, weather, GE, and GW",
     "Linear phenomic-weather model with environment, weather, PE, and PW",
     "Linear combined genomic + phenomic + weather model with GE, PE, GW, and PW",
     "Gaussian genomic-weather model with environment, weather, GGKE, and GGKW",
     "Gaussian phenomic-weather model with environment, weather, PGKE, and PGKW",
     "Gaussian combined genomic + phenomic + weather model with GGKE, PGKE, GGKW, and PGKW",
-    "Arc-cosine genomic-weather model with environment, weather, GAKE, and GAKW",
-    "Arc-cosine phenomic-weather model with environment, weather, PAKE, and PAKW",
-    "Arc-cosine combined genomic + phenomic + weather model with GAKE, PAKE, GAKW, and PAKW"
+    "Arccosine genomic-weather model with environment, weather, GAKE, and GAKW",
+    "Arccosine phenomic-weather model with environment, weather, PAKE, and PAKW",
+    "Arccosine combined genomic + phenomic + weather model with GAKE, PAKE, GAKW, and PAKW"
   ),
   stringsAsFactors = FALSE
 )
+
+# The column Model gives the manuscript label used in tables and figures
+# (M1-M18), whereas EtaName keeps the computational identifier used
+# internally in file names and BGLR run folders (Eta1-Eta18).
 
 env_design <- model.matrix(~ Pheno$Env - 1)
 
@@ -300,25 +280,11 @@ foreach(i = seq_len(nrow(combos)),
   pheno <- data.frame(Pheno)
 
   trait_id <- match(TRAIT, trait_reference_order)
-  if (is.na(trait_id)) {
-    trait_id <- 1L
-  }
 
   seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
-  old_seed_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (old_seed_exists) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-
   set.seed(seed_value)
   obs_per_fold <- ceiling(length(Pedigree) / num_fold)
   folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
-
-  if (old_seed_exists) {
-    assign(".Random.seed", old_seed, envir = .GlobalEnv)
-  } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    rm(".Random.seed", envir = .GlobalEnv)
-  }
 
   folds_df <- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
 
@@ -333,10 +299,6 @@ foreach(i = seq_len(nrow(combos)),
 
     cv1_file <- file.path(cv1_dir, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
     cv2_file <- file.path(cv2_dir, paste0("CV2_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
-
-    if (file.exists(cv1_file) && file.exists(cv2_file)) {
-      next
-    }
 
     train_geno <- folds_df$Pedigree[folds_df$fold != fold_num]
 
@@ -398,25 +360,11 @@ foreach(i = seq_len(nrow(combos)),
   pheno <- data.frame(Pheno)
 
   trait_id <- match(TRAIT, trait_reference_order)
-  if (is.na(trait_id)) {
-    trait_id <- 1L
-  }
 
   seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
-  old_seed_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (old_seed_exists) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-
   set.seed(seed_value)
   obs_per_fold <- ceiling(length(Pedigree) / num_fold)
   folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
-
-  if (old_seed_exists) {
-    assign(".Random.seed", old_seed, envir = .GlobalEnv)
-  } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    rm(".Random.seed", envir = .GlobalEnv)
-  }
 
   folds_df <- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
 
@@ -435,10 +383,6 @@ foreach(i = seq_len(nrow(combos)),
 
       cv00_file <- file.path(cv00_dir, paste0("CV00_", TRAIT, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
       cv0_file <- file.path(cv0_dir, paste0("CV0_", TRAIT, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
-
-      if (file.exists(cv00_file) && file.exists(cv0_file)) {
-        next
-      }
 
       yield2 <- pheno
       yield2$Y2 <- NA
@@ -499,59 +443,68 @@ foreach::registerDoSEQ()
 The inventories below summarize the CSV files produced by the execution stage using the current rep/fold folder contract for the 18-model workflow.
 
 ```{r prediction-output-inventory}
-prediction_files <- character(0)
+prediction_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE, recursive = TRUE)
+results_root <- normalizePath(results_dir, winslash = "/", mustWork = FALSE)
 
-if (dir.exists(results_dir)) {
-  prediction_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE, recursive = TRUE)
-}
+cv12_files <- prediction_files[
+  stringr::str_detect(basename(prediction_files), "^CV[12]_")
+]
+
+cvloo_files <- prediction_files[
+  stringr::str_detect(basename(prediction_files), "^CV0{1,2}_")
+]
 
 inventory_cv12 <- data.frame()
+
+for (current_file in cv12_files) {
+  current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
+  rel_path <- substring(current_norm, nchar(results_root) + 2)
+  path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
+  current_name <- basename(current_file)
+  current_name_no_ext <- sub("\\.csv$", "", current_name)
+  current_parts <- strsplit(current_name_no_ext, "_")[[1]]
+
+  inventory_cv12 <- dplyr::bind_rows(
+    inventory_cv12,
+    data.frame(
+      relative_path = rel_path,
+      file_name = current_name,
+      CV = current_parts[1],
+      Trait = path_parts[2],
+      Rep = path_parts[3],
+      Fold = path_parts[4],
+      EtaName = current_parts[3],
+      Model = stringr::str_replace(current_parts[3], "Eta", "M"),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
 inventory_cvloo <- data.frame()
 
-if (length(prediction_files) > 0) {
-  results_root <- normalizePath(results_dir, winslash = "/")
+for (current_file in cvloo_files) {
+  current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
+  rel_path <- substring(current_norm, nchar(results_root) + 2)
+  path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
+  current_name <- basename(current_file)
+  current_name_no_ext <- sub("\\.csv$", "", current_name)
+  current_parts <- strsplit(current_name_no_ext, "_")[[1]]
 
-  for (current_file in prediction_files) {
-    current_norm <- normalizePath(current_file, winslash = "/")
-    rel_path <- substring(current_norm, nchar(results_root) + 2)
-    path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
-    current_name <- basename(current_file)
-    current_name_no_ext <- sub("\\.csv$", "", current_name)
-    current_parts <- strsplit(current_name_no_ext, "_")[[1]]
-
-    if (length(path_parts) >= 5 && current_parts[1] %in% c("CV1", "CV2")) {
-      inventory_cv12 <- dplyr::bind_rows(
-        inventory_cv12,
-        data.frame(
-          relative_path = rel_path,
-          file_name = current_name,
-          CV = current_parts[1],
-          Trait = path_parts[2],
-          Rep = path_parts[3],
-          Fold = path_parts[4],
-          Model = current_parts[3],
-          stringsAsFactors = FALSE
-        )
-      )
-    }
-
-    if (length(path_parts) >= 6 && current_parts[1] %in% c("CV0", "CV00")) {
-      inventory_cvloo <- dplyr::bind_rows(
-        inventory_cvloo,
-        data.frame(
-          relative_path = rel_path,
-          file_name = current_name,
-          CV = current_parts[1],
-          Env_leave = path_parts[2],
-          Trait = path_parts[3],
-          Rep = path_parts[4],
-          Fold = path_parts[5],
-          Model = current_parts[length(current_parts) - 2],
-          stringsAsFactors = FALSE
-        )
-      )
-    }
-  }
+  inventory_cvloo <- dplyr::bind_rows(
+    inventory_cvloo,
+    data.frame(
+      relative_path = rel_path,
+      file_name = current_name,
+      CV = current_parts[1],
+      Env_leave = path_parts[2],
+      Trait = path_parts[3],
+      Rep = path_parts[4],
+      Fold = path_parts[5],
+      EtaName = current_parts[length(current_parts) - 2],
+      Model = stringr::str_replace(current_parts[length(current_parts) - 2], "Eta", "M"),
+      stringsAsFactors = FALSE
+    )
+  )
 }
 
 write_csv(inventory_cv12, file.path(analysis_tables_dir, "analysis_prediction_inventory_cv12.csv"))
@@ -560,33 +513,27 @@ write_csv(inventory_cvloo, file.path(analysis_tables_dir, "analysis_prediction_i
 ## 10. Counts of files by validation scheme and trait
 
 ```{r prediction-output-counts}
-counts_by_cv <- data.frame()
-counts_by_trait <- data.frame()
+combined_inventory <- bind_rows(
+  inventory_cv12 %>% mutate(Env_leave = NA_character_),
+  inventory_cvloo
+)
 
-if (nrow(inventory_cv12) > 0 || nrow(inventory_cvloo) > 0) {
-  combined_inventory <- bind_rows(
-    inventory_cv12 %>% mutate(Env_leave = NA_character_),
-    inventory_cvloo
-  )
+counts_by_cv <- combined_inventory %>%
+  count(CV, name = "n_files") %>%
+  arrange(CV)
 
-  counts_by_cv <- combined_inventory %>%
-    count(CV, name = "n_files") %>%
-    arrange(CV)
-
-  counts_by_trait <- combined_inventory %>%
-    count(CV, Trait, name = "n_files") %>%
-    arrange(CV, Trait)
-}
+counts_by_trait <- combined_inventory %>%
+  count(CV, Trait, name = "n_files") %>%
+  arrange(CV, Trait)
 
 write_csv(counts_by_cv, file.path(analysis_tables_dir, "analysis_prediction_counts_by_cv.csv"))
 write_csv(counts_by_trait, file.path(analysis_tables_dir, "analysis_prediction_counts_by_trait.csv"))
 
-if (nrow(counts_by_cv) > 0) {
-  knitr::kable(counts_by_cv, caption = "Number of prediction files by validation scheme.", align = "cc")
-} else {
-  cat("Prediction counts by validation scheme are not available yet.
-")
-}
+knitr::kable(
+  counts_by_cv,
+  caption = "Number of prediction files by validation scheme.",
+  align = "cc"
+)
 ```
 
 
@@ -605,8 +552,8 @@ output_examples <- bind_rows(
       "bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat"
     ),
     Meaning = c(
-      "Prediction accuracy for CV1, trait GY, model Eta1, repetition 1, fold 1.",
-      "Prediction accuracy for CV2, trait KW, model Eta18, repetition 10, fold 5."
+      "Prediction accuracy for CV1, trait GY, model M1 (EtaName Eta1), repetition 1, fold 1.",
+      "Prediction accuracy for CV2, trait KW, model M18 (EtaName Eta18), repetition 10, fold 5."
     )
   ),
   tibble::tibble(
@@ -620,8 +567,8 @@ output_examples <- bind_rows(
       "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
     ),
     Meaning = c(
-      "Prediction accuracy for CV0, trait GY, held-out environment CS11_WS, model Eta1, repetition 1, fold 1.",
-      "Prediction accuracy for CV00, trait KW, held-out environment CS12_WW, model Eta18, repetition 10, fold 2."
+      "Prediction accuracy for CV0, trait GY, held-out environment CS11_WS, model M1 (EtaName Eta1), repetition 1, fold 1.",
+      "Prediction accuracy for CV00, trait KW, held-out environment CS12_WW, model M18 (EtaName Eta18), repetition 10, fold 2."
     )
   )
 )
