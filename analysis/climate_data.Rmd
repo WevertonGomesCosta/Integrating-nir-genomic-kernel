@@ -278,29 +278,25 @@ p_precip_daily <- ggplot(
     title = "Daily precipitation",
     subtitle = "College Station, Texas, USA, 2011-2012",
     x = "Month",
-    y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
-    caption = "Bars represent corrected total daily precipitation obtained from NASA POWER."
-  ) +
+    y = expression("Precipitation (" * mm ~ day^{-1} * ")")  ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
     panel.border = element_rect(color = "grey40", linewidth = 0.4),
     strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
-    strip.text = element_text(face = "bold", size = 10),
-    axis.title = element_text(face = "bold", size = 11),
-    axis.text = element_text(size = 9.5, color = "black"),
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
-    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
-    plot.caption.position = "plot",
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
     legend.position = "bottom",
     legend.justification = "center",
     legend.direction = "horizontal",
-    legend.title = element_text(face = "bold", size = 10),
-    legend.text = element_text(size = 9),
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
     legend.key.width = grid::unit(1.2, "cm"),
     legend.box.margin = margin(t = 4),
     plot.margin = margin(8, 10, 8, 8)
@@ -326,29 +322,25 @@ p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill 
     subtitle = "Grouped by day of month within each monthly panel",
     x = "Day of month",
     y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
-    fill = "Year",
-    caption = "This arrangement facilitates within-season comparison of rainfall patterns between years."
-  ) +
+    fill = "Year") +
   scale_x_discrete(breaks = c("1", "5", "10", "15", "20", "25", "30", "31")) +
   ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
     panel.border = element_rect(color = "grey40", linewidth = 0.4),
     strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
-    strip.text = element_text(face = "bold", size = 10),
-    axis.title = element_text(face = "bold", size = 11),
-    axis.text = element_text(size = 9.5, color = "black"),
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
-    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
-    plot.caption.position = "plot",
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
     legend.position = "bottom",
     legend.justification = "center",
     legend.direction = "horizontal",
-    legend.title = element_text(face = "bold", size = 10),
-    legend.text = element_text(size = 9),
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
     legend.key.width = grid::unit(1.2, "cm"),
     legend.box.margin = margin(t = 4),
     plot.margin = margin(8, 10, 8, 8)
@@ -379,28 +371,24 @@ p2 <- ggplot(monthly_precip, aes(x = month, y = total_precipitation, fill = year
     subtitle = "Growing season comparison between 2011 and 2012",
     x = "Month",
     y = "Total precipitation (mm)",
-    fill = "Year",
-    caption = "Bars represent cumulative precipitation within each month of the crop season."
-  ) +
+    fill = "Year" ) +
   ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
     panel.border = element_rect(color = "grey40", linewidth = 0.4),
     strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
-    strip.text = element_text(face = "bold", size = 10),
-    axis.title = element_text(face = "bold", size = 11),
-    axis.text = element_text(size = 9.5, color = "black"),
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
-    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
-    plot.caption.position = "plot",
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
     legend.position = "bottom",
     legend.justification = "center",
     legend.direction = "horizontal",
-    legend.title = element_text(face = "bold", size = 10),
-    legend.text = element_text(size = 9),
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
     legend.key.width = grid::unit(1.2, "cm"),
     legend.box.margin = margin(t = 4),
     plot.margin = margin(8, 10, 8, 8)
@@ -450,29 +438,25 @@ p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperatur
     subtitle = "Minimum, mean, and maximum values; dashed lines indicate LOESS trends",
     x = "Month",
     y = expression("Air temperature (" * degree * "C)"),
-    color = "Temperature metric",
-    caption = "Dashed LOESS curves are included only to summarize seasonal trajectories for each temperature metric."
-  ) +
+    color = "Temperature metric") +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   scale_color_manual(values = c("Minimum" = "#4285F4", "Mean" = "#F4B400", "Maximum" = "#DB4437"), limits = c("Minimum", "Mean", "Maximum"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
-  theme_bw(base_size = 11) +
+   theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
     panel.border = element_rect(color = "grey40", linewidth = 0.4),
     strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
-    strip.text = element_text(face = "bold", size = 10),
-    axis.title = element_text(face = "bold", size = 11),
-    axis.text = element_text(size = 9.5, color = "black"),
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
-    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
-    plot.caption.position = "plot",
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
     legend.position = "bottom",
     legend.justification = "center",
     legend.direction = "horizontal",
-    legend.title = element_text(face = "bold", size = 10),
-    legend.text = element_text(size = 9),
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
     legend.key.width = grid::unit(1.2, "cm"),
     legend.box.margin = margin(t = 4),
     plot.margin = margin(8, 10, 8, 8)
@@ -502,11 +486,7 @@ combined_plot <- patchwork::wrap_plots(
   design = main_layout
 ) +
   patchwork::plot_annotation(
-    tag_levels = "A",
-    title = "Main climatic contrasts between growing seasons",
-    theme = theme(
-      plot.title = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 8))
-    )
+    tag_levels = "A"
   )
 
 print(combined_plot)
@@ -516,11 +496,11 @@ print(combined_plot)
 ggsave(
   filename = "output/climate_results/combined_climate_plot.tiff",
   plot = combined_plot,
-  width = 14,
-  height = 10,
-  dpi = 300,
-  compression = "lzw",
-  bg = "white"
+    width = 16,
+    height = 14,
+    dpi = 600,
+    compression = "lzw",
+    bg = "white"
 )
 ```
 
@@ -542,29 +522,25 @@ p4 <- ggplot(
     title = "Daily shortwave solar radiation",
     subtitle = "Dashed line indicates the LOESS trend",
     x = "Month",
-    y = expression("Shortwave solar radiation (" * MJ ~ m^{-2} ~ day^{-1} * ")"),
-    caption = "Daily incoming shortwave radiation during the crop season."
-  ) +
+    y = expression("Shortwave solar radiation (" * MJ ~ m^{-2} ~ day^{-1} * ")")  ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   ggthemes::scale_color_gdocs(limits = "Solar radiation", guide = "none") +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
     panel.border = element_rect(color = "grey40", linewidth = 0.4),
     strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
-    strip.text = element_text(face = "bold", size = 10),
-    axis.title = element_text(face = "bold", size = 11),
-    axis.text = element_text(size = 9.5, color = "black"),
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
-    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
-    plot.caption.position = "plot",
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
     legend.position = "bottom",
     legend.justification = "center",
     legend.direction = "horizontal",
-    legend.title = element_text(face = "bold", size = 10),
-    legend.text = element_text(size = 9),
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
     legend.key.width = grid::unit(1.2, "cm"),
     legend.box.margin = margin(t = 4),
     plot.margin = margin(8, 10, 8, 8)
@@ -581,29 +557,25 @@ p5 <- ggplot(
     title = "Daily wind speed at 2 m",
     subtitle = "Dashed line indicates the LOESS trend",
     x = "Month",
-    y = expression("Wind speed (" * m ~ s^{-1} * ")"),
-    caption = "Daily wind speed measured at 2 m above ground level."
-  ) +
+    y = expression("Wind speed (" * m ~ s^{-1} * ")")) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   ggthemes::scale_color_gdocs(limits = "Wind speed", guide = "none") +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
     panel.border = element_rect(color = "grey40", linewidth = 0.4),
     strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
-    strip.text = element_text(face = "bold", size = 10),
-    axis.title = element_text(face = "bold", size = 11),
-    axis.text = element_text(size = 9.5, color = "black"),
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
-    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
-    plot.caption.position = "plot",
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
     legend.position = "bottom",
     legend.justification = "center",
     legend.direction = "horizontal",
-    legend.title = element_text(face = "bold", size = 10),
-    legend.text = element_text(size = 9),
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
     legend.key.width = grid::unit(1.2, "cm"),
     legend.box.margin = margin(t = 4),
     plot.margin = margin(8, 10, 8, 8)
@@ -620,29 +592,25 @@ p6 <- ggplot(
     title = "Daily relative humidity at 2 m",
     subtitle = "Dashed line indicates the LOESS trend",
     x = "Month",
-    y = "Relative humidity (%)",
-    caption = "Daily relative humidity measured at 2 m above ground level."
-  ) +
+    y = "Relative humidity (%)") +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
   ggthemes::scale_color_gdocs(limits = "Relative humidity", guide = "none") +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 20) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
     panel.border = element_rect(color = "grey40", linewidth = 0.4),
     strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
-    strip.text = element_text(face = "bold", size = 10),
-    axis.title = element_text(face = "bold", size = 11),
-    axis.text = element_text(size = 9.5, color = "black"),
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5, margin = margin(b = 4)),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 8)),
-    plot.caption = element_text(size = 8.5, hjust = 0, color = "grey30", margin = margin(t = 8)),
-    plot.caption.position = "plot",
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
     legend.position = "bottom",
     legend.justification = "center",
     legend.direction = "horizontal",
-    legend.title = element_text(face = "bold", size = 10),
-    legend.text = element_text(size = 9),
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
     legend.key.width = grid::unit(1.2, "cm"),
     legend.box.margin = margin(t = 4),
     plot.margin = margin(8, 10, 8, 8)
@@ -668,11 +636,7 @@ combined_additional_plots <- patchwork::wrap_plots(
   design = additional_layout
 ) +
   patchwork::plot_annotation(
-    tag_levels = "A",
-    title = "Additional climatic contrasts between growing seasons",
-    theme = theme(
-      plot.title = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 8))
-    )
+    tag_levels = "A"
   )
 
 print(combined_additional_plots)
@@ -682,11 +646,11 @@ print(combined_additional_plots)
 ggsave(
   filename = "output/climate_results/combined_additional_climate_plots.tiff",
   plot = combined_additional_plots,
-  width = 14,
-  height = 10,
-  dpi = 300,
-  compression = "lzw",
-  bg = "white"
+    width = 16,
+    height = 14,
+    dpi = 600,
+    compression = "lzw",
+    bg = "white"
 )
 ```
 

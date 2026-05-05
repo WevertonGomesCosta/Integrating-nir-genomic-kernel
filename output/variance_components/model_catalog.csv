@@ -1,19 +1,19 @@
-ModelID,Model,ETA,Categoria,Description
-1,Eta1,Eta1,Fonte única + E,E + G + GE
-2,Eta2,Eta2,Fonte única + E,E + P + PE
-3,Eta3,Eta3,Fonte única + E,E + GGK + GGKE
-4,Eta4,Eta4,Fonte única + E,E + PGK + PGKE
-5,Eta5,Eta5,Fonte única + E,E + GAK + GAKE
-6,Eta6,Eta6,Fonte única + E,E + PAK + PAKE
-7,Eta7,Eta7,Integrado G/P + E,E + G + P + GE + PE
-8,Eta8,Eta8,Integrado G/P + E,E + GGK + PGK + GGKE + PGKE
-9,Eta9,Eta9,Integrado G/P + E,E + GAK + PAK + GAKE + PAKE
-10,Eta10,Eta10,Enriquecido com clima,E + W + G + GE + GW
-11,Eta11,Eta11,Enriquecido com clima,E + W + P + PE + PW
-12,Eta12,Eta12,Enriquecido com clima,E + W + G + P + GE + PE + GW + PW
-13,Eta13,Eta13,Enriquecido com clima,E + W + GGK + GGKE + GGKW
-14,Eta14,Eta14,Enriquecido com clima,E + W + PGK + PGKE + PGKW
-15,Eta15,Eta15,Enriquecido com clima,E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
-16,Eta16,Eta16,Enriquecido com clima,E + W + GAK + GAKE + GAKW
-17,Eta17,Eta17,Enriquecido com clima,E + W + PAK + PAKE + PAKW
-18,Eta18,Eta18,Enriquecido com clima,E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW
+ModelID,Model,ETA,Category,Description
+1,Eta1,Eta1,Single-source + E,E + G + GE
+2,Eta2,Eta2,Single-source + E,E + P + PE
+3,Eta3,Eta3,Single-source + E,E + GGK + GGKE
+4,Eta4,Eta4,Single-source + E,E + PGK + PGKE
+5,Eta5,Eta5,Single-source + E,E + GAK + GAKE
+6,Eta6,Eta6,Single-source + E,E + PAK + PAKE
+7,Eta7,Eta7,Integrated G/P + E,E + G + P + GE + PE
+8,Eta8,Eta8,Integrated G/P + E,E + GGK + PGK + GGKE + PGKE
+9,Eta9,Eta9,Integrated G/P + E,E + GAK + PAK + GAKE + PAKE
+10,Eta10,Eta10,Weather-augmented,E + W + G + GE + GW
+11,Eta11,Eta11,Weather-augmented,E + W + P + PE + PW
+12,Eta12,Eta12,Weather-augmented,E + W + G + P + GE + PE + GW + PW
+13,Eta13,Eta13,Weather-augmented,E + W + GGK + GGKE + GGKW
+14,Eta14,Eta14,Weather-augmented,E + W + PGK + PGKE + PGKW
+15,Eta15,Eta15,Weather-augmented,E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
+16,Eta16,Eta16,Weather-augmented,E + W + GAK + GAKE + GAKW
+17,Eta17,Eta17,Weather-augmented,E + W + PAK + PAKE + PAKW
+18,Eta18,Eta18,Weather-augmented,E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW

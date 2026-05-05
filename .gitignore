@@ -29,3 +29,4 @@
 
 # Prediction result CSVs generated anywhere under output/results
 /output/results/**/*.csv
+.positai
