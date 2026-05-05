@@ -16,9 +16,6 @@ editor_options:
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-**Language / Idioma:** [English](variance_components.html) | [Português](variance_components_pt.html)
-
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -31,44 +28,46 @@ knitr::opts_chunk$set(
 )
 ```
 
+**Language / Idioma:** [English](variance_components.html) | [Português](variance_components_pt.html)
+
 ## 1. Introdução
 
-Este tutorial resume os **componentes de variância** dos modelos preditivos usados neste estudo. No fluxo atual, este arquivo é usado principalmente para **consolidar e interpretar resultados que já foram previamente estimados**, embora ainda preserve a estrutura de código necessária para ajustar os modelos quando essa etapa precisar ser refeita.
+Este tutorial resume os **componentes de variância** dos modelos preditivos usados neste estudo. No fluxo atual, a análise pesada já foi realizada anteriormente; por isso, o documento preserva a estrutura do código, mas mantém o ajuste dos modelos com `eval=FALSE`.
 
 O objetivo é quantificar quanto da variância fenotípica total é atribuída aos efeitos principais e aos termos de interação incluídos em cada modelo. Em termos práticos, este script ajuda a responder perguntas como:
 
 - Quanto da variância está associado ao **efeito categórico de ambiente (E)**?
 - Quanto é capturado pelos **kernels genômicos**?
 - Quanto é capturado pelos **kernels fenômicos/NIRS (P)**?
-- Quanto está associado ao **kernel climático (W)**, usado principalmente nos modelos **Eta10-Eta18**?
+- Quanto está associado ao **kernel climático (W)**, usado principalmente nos modelos **M10-M18**?
 - Quão relevantes são os termos de interação como **G × E**, **G × W**, **P × E** e **P × W**?
 
 Este script está organizado em quatro estágios:
 
-1. **Carregar os kernels e os dados fenotípicos** produzidos em `matrizes.Rmd`.
+1. **Carregar os kernels e os dados fenotípicos** disponíveis em `output/Matrizes/`.
 2. **Definir os 18 modelos de componentes de variância**.
-3. **Ler ou rerodar as saídas do BGLR**, dependendo de os resumos posteriores salvos já existirem.
+3. **Ler os resumos de componentes de variância disponíveis**, mantendo o ajuste pesado apenas documentado com `eval=FALSE`.
 4. **Processar e visualizar a decomposição da variância** para produtividade de grãos (GY) e peso de 500 grãos (KW).
 
 Uma grande proporção de variância associada a uma dada fonte não deve ser interpretada automaticamente como evidência de complementaridade biológica ou de melhor desempenho preditivo. Esse ponto é especialmente importante para **P**, porque a similaridade baseada em NIRS pode refletir forte resposta fisiológica ao ambiente além de qualquer sinal biológico estável, e para **W**, porque o kernel climático complementa, mas não substitui, o efeito categórico de ambiente.
 
-## Entradas, saídas e próxima etapa
+## Entradas, objetos finais e próxima etapa
 
 **Entradas desta etapa**
-- matrizes e kernels gerados em `matrizes.Rmd`
+- matrizes e kernels disponíveis a partir da etapa de matrizes
 - o catálogo reduzido de 18 modelos usado no projeto
 
-**Saídas desta etapa**
-- resultados brutos de componentes de variância
-- resumos processados de componentes de variância
-- tabelas percentuais e figuras diagnósticas
+**Objetos finais desta etapa**
+- resultados brutos de componentes de variância disponíveis
+- resumos processados de componentes de variância disponíveis
+- tabelas percentuais e figuras diagnósticas renderizadas
 
 **Próxima etapa**
-- esta etapa complementa a interpretação estrutural dos modelos e deve ser lida em conjunto com os resultados preditivos gerados depois em `analysis_prediction_pt.Rmd`.
+- esta etapa complementa a interpretação estrutural dos modelos e deve ser lida em conjunto com os resultados preditivos disponíveis depois na etapa de predição.
 
 ## 2. Ambiente em R e entradas necessárias
 
-Primeiro, carregamos os pacotes usados para manipular os dados, ajustar os modelos Bayesianos e gerar as figuras finais em padrão de artigo.
+Primeiro, carregamos apenas os pacotes necessários para manipular os dados disponíveis, organizar tabelas e renderizar as figuras finais em padrão de artigo.
 
 ```{r load-packages}
 library(dplyr)
@@ -78,10 +77,6 @@ library(stringr)
 library(tibble)
 library(ggplot2)
 library(patchwork)
-library(BGLR)
-library(parallel)
-library(doParallel)
-library(foreach)
 library(ggthemes)
 library(scales)
 library(fs)
@@ -92,17 +87,13 @@ library(kableExtra)
 
 ### 2.1. Caminhos dos arquivos
 
-Todos os kernels e objetos fenotípicos devem estar disponíveis em `output/Matrizes/`, que é o diretório de saída criado em `matrizes.Rmd`. Os resultados de componentes de variância gerados aqui são armazenados em `output/variance_components/`.
+Todos os kernels e objetos fenotípicos devem estar disponíveis em `output/Matrizes/`. Os resultados de componentes de variância devem estar disponíveis em `output/variance_components/`.
 
 ```{r define-paths}
 kernel_dir <- "output/Matrizes"
 results_dir <- "output/variance_components"
 figure_dir <- file.path(results_dir, "figures")
 bglr_runs_dir <- file.path(results_dir, "bglr_runs")
-
-dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
-dir.create(bglr_runs_dir, recursive = TRUE, showWarnings = FALSE)
-dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
 ```
 
 ### 2.2. Checagem das entradas
@@ -125,7 +116,7 @@ if (length(missing_files) > 0) {
   stop(
     "The following required files were not found in output/Matrizes/: ",
     paste(missing_files, collapse = ", "),
-    ". Run matrizes.Rmd first."
+    ". Check whether the required objects are available before rendering this document."
   )
 }
 ```
@@ -146,8 +137,8 @@ component_display <- c(
   PW = "P × W",
   GGK = "Genômico Gaussiano (GGK)",
   PGK = "Fenômico Gaussiano (PGK)",
-  GAK = "Genômico arc-cosine (GAK)",
-  PAK = "Fenômico arc-cosine (PAK)",
+  GAK = "Genômico arccosine (GAK)",
+  PAK = "Fenômico arccosine (PAK)",
   GGKE = "GGK × E",
   PGKE = "PGK × E",
   GAKE = "GAK × E",
@@ -170,8 +161,8 @@ component_order <- c(
   "P × W",
   "Genômico Gaussiano (GGK)",
   "Fenômico Gaussiano (PGK)",
-  "Genômico arc-cosine (GAK)",
-  "Fenômico arc-cosine (PAK)",
+  "Genômico arccosine (GAK)",
+  "Fenômico arccosine (PAK)",
   "GGK × E",
   "PGK × E",
   "GAK × E",
@@ -189,7 +180,7 @@ component_order[component_order == "PAK × W"] <- "PAK × W"
 
 ## 3. Carregamento dos kernels e objetos fenotípicos
 
-Esta seção carrega as matrizes geradas em `matrizes.Rmd`. Esses objetos são as entradas centrais da análise de componentes de variância.
+Esta seção carrega as matrizes disponíveis em `output/Matrizes/`. Esses objetos são as entradas centrais da análise de componentes de variância.
 
 ```{r load-matrices, include=FALSE}
 ZG    <- readRDS(file.path(kernel_dir, "ZG.rds"))
@@ -477,7 +468,7 @@ Esta tabela é útil tanto para verificações internas quanto para vincular os 
 ```{r model-catalog}
 model_info <- tibble(
   ModelID = 1:18,
-  Model = paste0("Eta", 1:18),
+  Model = paste0("M", 1:18),
   ETA = names(models),
   Categoria = c(
     rep("Fonte única + E", 6),
@@ -506,7 +497,6 @@ model_info <- tibble(
   )
 )
 
-readr::write_csv(model_info, file.path(results_dir, "model_catalog.csv"))
 
 model_info %>%
   knitr::kable(
@@ -535,7 +525,7 @@ traits  <- c("GY", "KW")
 
 ## 6. Ajuste do BGLR para cada modelo
 
-Este é o passo computacionalmente mais caro. O chunk é mantido com `eval=FALSE` para que o tutorial possa ser renderizado sem rerodar todos os modelos Bayesianos a cada vez. Quando você precisar de componentes de variância atualizados, mude `eval` para `TRUE` e execute o chunk.
+Este é o passo computacionalmente mais caro. O chunk é mantido com `eval=FALSE` para documentar a etapa de ajuste sem rerodar os modelos Bayesianos durante a renderização deste documento.
 
 ```{r parallel-run, eval=FALSE}
 numCores <- parallel::detectCores()
@@ -671,9 +661,9 @@ saveRDS(all_variance, file.path(results_dir, "variance_components_raw.rds"))
 
 ## 7. Consolidação dos resumos posteriores salvos
 
-Na versão atual do fluxo, esta é a seção usada com mais frequência. Em vez de reajustar todos os modelos a cada execução, o script lê os arquivos `_metrics.rds` previamente salvos e os consolida em um único objeto. Isso mantém o tutorial prático e reprodutível, ao mesmo tempo que deixa claro que esta página é principalmente uma **etapa de consolidação de resultados**, a menos que o usuário decida rerodar intencionalmente a etapa completa de ajuste no BGLR.
+Esta seção documenta como os arquivos `_metrics.rds` podem ser consolidados em um único objeto quando a consolidação precisar ser refeita. Como os resultados já estão disponíveis para renderização, o chunk permanece com `eval=FALSE`.
 
-```{r consolidate-saved-results}
+```{r consolidate-saved-results, eval=FALSE}
 rds_files <- list.files(
   path = bglr_runs_dir,
   pattern = "(variance_metrics|_(metrics|metricas))\\.rds$",
@@ -751,7 +741,7 @@ if (length(rds_files) > 0) {
 
 ## 8. Carregamento do objeto consolidado de componentes de variância
 
-Esta seção carrega os resultados consolidados e os prepara para o resumo. Se o arquivo não existir, o script interrompe a execução e instrui o usuário a executar a etapa de ajuste dos modelos primeiro.
+Esta seção carrega os resultados consolidados e os prepara para o resumo. Se o arquivo não existir, o script interrompe a renderização e informa que o objeto consolidado necessário não está disponível.
 
 ```{r load-results, include=FALSE}
 raw_file <- file.path(results_dir, "variance_components_all.rds")
@@ -759,7 +749,7 @@ raw_file <- file.path(results_dir, "variance_components_all.rds")
 if (!file.exists(raw_file)) {
   stop(
     "The file '", raw_file, "' was not found. ",
-    "Run the Bayesian fitting stage first or keep the previously saved _metrics.rds files in output/variance_components/."
+    "Check whether the required consolidated object or saved _metrics.rds files are available before rendering this document."
   )
 }
 
@@ -812,14 +802,13 @@ variance_summary <- all_variance %>%
       Component
     ),
     Component = sub("_(BRR|RKHS)$", "", Component),
-    Model = factor(paste0("Eta", ModelNumber), levels = paste0("Eta", 1:18)),
+    Model = factor(paste0("M", ModelNumber), levels = paste0("M", 1:18)),
     ComponentLabel = dplyr::recode(Component, !!!component_display),
     ComponentLabel = factor(ComponentLabel, levels = component_order),
     Trait = factor(Trait, levels = c("GY", "KW"))
   ) %>%
   dplyr::select(-ModelNumber, -EtaIndex)
 
-readr::write_csv(variance_summary, file.path(results_dir, "variance_components_processed.csv"))
 ```
 
 ### 9.1. Tabela resumo em formato amplo
@@ -832,7 +821,6 @@ variance_table <- variance_summary %>%
   dplyr::mutate(Percentage = round(100 * Percentage, 2)) %>%
   tidyr::pivot_wider(names_from = ComponentLabel, values_from = Percentage)
 
-readr::write_csv(variance_table, file.path(results_dir, "variance_components_table_percent.csv"))
 
 head(variance_table, 12) %>%
   knitr::kable(
@@ -849,11 +837,11 @@ head(variance_table, 12) %>%
 
 ## 10. Figura para o artigo
 
-A figura abaixo resume a contribuição percentual de cada componente de variância nos 18 modelos para ambos os caracteres. Para manter o eixo x legível, os modelos são exibidos como `Eta1` a `Eta18`, e as descrições detalhadas permanecem disponíveis no catálogo de modelos salvo acima.
+A figura abaixo resume a contribuição percentual de cada componente de variância nos 18 modelos para ambos os caracteres. Para manter o eixo x legível, os modelos são exibidos como `M1` a `M18`, e a composição completa de cada modelo é apresentada na Tabela Suplementar S1.
 
 Essa figura deve ser lida como um resumo estrutural dos modelos ajustados, e não como prova direta de que combinar mais fontes de dados leva automaticamente a maior complementaridade biológica ou melhor desempenho preditivo.
 
-```{r variance-figure, fig.cap="Figura 3. Percentual médio posterior da variância total atribuído a cada componente do modelo nos 18 modelos preditivos para produtividade de grãos (GY) e peso de grãos (KW). Cada barra empilhada representa uma composição completa de modelo, com média ao longo das repetições, e as cores identificam os componentes de variância incluídos na estrutura do modelo. O kernel climático (W) e seus termos de interação associados aparecem principalmente nos modelos com clima. A decomposição da variância deve ser interpretada como uma descrição estrutural dos modelos ajustados, e não automaticamente como evidência de maior complementaridade biológica entre as fontes de informação.", fig.height=12, fig.width=14}
+```{r variance-figure, fig.cap="Figura 3. Contribuição percentual dos componentes de variância nos modelos preditivos para produtividade de grãos (GY) e peso de grãos (KW). O painel (A) mostra a decomposição da variância para GY e o painel (B) para KW. Cada barra empilhada representa um modelo preditivo, identificado no eixo x como M1-M18; a composição completa dos efeitos de cada modelo é apresentada na Tabela Suplementar S1. Os componentes de variância são indicados como: E, ambiente; G, efeito genômico principal; P, efeito fenômico principal; W, efeito climático; GE, interação genótipo por ambiente; PE, interação fenômica por ambiente; GW, interação genótipo por clima; e PW, interação fenômica por clima. Os componentes de kernel Gaussiano são indicados por GGK e PGK, e os componentes de kernel arccosine por GAK e PAK, com os sufixos E e W indicando suas interações com ambiente e clima, respectivamente. Residual representa a variância não explicada.", fig.height=12, fig.width=14}
 component_codes_for_figure <- c(
   "E", "G", "P", "W",
   "GE", "PE", "GW", "PW",
@@ -863,54 +851,86 @@ component_codes_for_figure <- c(
   "Residual"
 )
 
-model_axis_labels <- stats::setNames(
-  stringr::str_wrap(model_info$Description, width = 24),
-  model_info$Model
-)
-
 variance_plot_data <- variance_summary %>%
   dplyr::mutate(
     ComponentFigure = factor(Component, levels = component_codes_for_figure)
   )
 
-build_variance_panel <- function(trait_code, trait_title, show_x_axis = TRUE) {
-  variance_plot_data %>%
-    dplyr::filter(Trait == trait_code) %>%
-    ggplot(aes(x = Model, y = Percentage, fill = ComponentFigure)) +
-    geom_col(color = "white", linewidth = 0.15, width = 0.82) +
-    ggthemes::scale_fill_gdocs(name = "Componente de variância", drop = FALSE) +
-    scale_x_discrete(labels = model_axis_labels) +
-    scale_y_continuous(
-      labels = scales::percent_format(accuracy = 1),
-      expand = expansion(mult = c(0, 0.02))
-    ) +
-    labs(
-      title = trait_title,
-      x = if (show_x_axis) "Composição completa do modelo" else NULL,
-      y = "Proporção da variância total"
-    ) +
-    theme_minimal(base_size = 11) +
-    theme(
-      plot.title = element_text(face = "bold", size = 12, hjust = 0),
-      axis.title = element_text(face = "bold"),
-      axis.text.x = if (show_x_axis) element_text(angle = 45, hjust = 1, vjust = 1, size = 8) else element_blank(),
-      axis.title.x = if (show_x_axis) element_text(face = "bold") else element_blank(),
-      axis.ticks.x = if (show_x_axis) element_line() else element_blank(),
-      axis.text.y = element_text(size = 9),
-      legend.position = "right",
-      legend.box = "vertical",
-      legend.title = element_text(face = "bold", size = 10),
-      legend.text = element_text(size = 8),
-      legend.key.height = unit(0.40, "cm"),
-      legend.key.width = unit(0.55, "cm"),
-      panel.grid.major.x = element_blank(),
-      panel.grid.minor = element_blank()
-    ) +
-    guides(fill = guide_legend(ncol = 1, byrow = TRUE))
-}
+variance_plot_gy_data <- variance_plot_data %>%
+  dplyr::filter(Trait == "GY") %>%
+  dplyr::mutate(Model = factor(Model, levels = paste0("M", 1:18)))
 
-variance_plot_gy <- build_variance_panel("GY", "Produtividade de grãos (GY)", show_x_axis = FALSE)
-variance_plot_kw <- build_variance_panel("KW", "Peso de grãos (KW)", show_x_axis = TRUE)
+variance_plot_kw_data <- variance_plot_data %>%
+  dplyr::filter(Trait == "KW") %>%
+  dplyr::mutate(Model = factor(Model, levels = paste0("M", 1:18)))
+
+variance_plot_gy <- ggplot(
+  variance_plot_gy_data,
+  aes(x = Model, y = Percentage, fill = ComponentFigure)
+) +
+  geom_col(width = 0.75, color = "grey30", na.rm = TRUE) +
+  ggthemes::scale_fill_gdocs(
+    name = "Componente de\nvariância",
+    drop = FALSE
+  ) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  labs(
+    title = "Produtividade de grãos (GY)",
+    y = "Proporção da variância total"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title.y = element_text(face = "bold", size = 14),
+    legend.position = "right",
+    legend.box = "vertical",
+    legend.title = element_text(face = "bold", size = 14, lineheight = 0.9),
+    legend.text = element_text(size = 12),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  guides(fill = guide_legend(ncol = 1, byrow = TRUE))
+
+variance_plot_kw <- ggplot(
+  variance_plot_kw_data,
+  aes(x = Model, y = Percentage, fill = ComponentFigure)
+) +
+  geom_col(width = 0.75, color = "grey30", na.rm = TRUE) +
+  ggthemes::scale_fill_gdocs(
+    name = "Componente de\nvariância",
+    drop = FALSE
+  ) +
+  scale_x_discrete(name = "Modelo") +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  labs(
+    title = "Peso de grãos (KW)",
+    y = "Proporção da variância total"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    axis.text.x = element_text(size = 12, color = "black"),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title.x = element_text(face = "bold", size = 14),
+    axis.title.y = element_text(face = "bold", size = 14),
+    legend.position = "right",
+    legend.box = "vertical",
+    legend.title = element_text(face = "bold", size = 14, lineheight = 0.9),
+    legend.text = element_text(size = 12),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  guides(fill = guide_legend(ncol = 1, byrow = TRUE))
 
 variance_plot <- patchwork::wrap_plots(
   variance_plot_gy,
@@ -918,7 +938,10 @@ variance_plot <- patchwork::wrap_plots(
   ncol = 1,
   guides = "collect"
 ) +
-  patchwork::plot_annotation(tag_levels = "A")
+  patchwork::plot_annotation(tag_levels = "A") &
+  theme(
+    plot.tag = element_text(face = "bold", size = 18, color = "black")
+  )
 
 print(variance_plot)
 ```
@@ -930,7 +953,7 @@ Esta seção final esclarece como a figura deve ser interpretada.
 - Um grande segmento de **Ambiente (E)** indica que o efeito categórico de macroambiente domina a partição da variância.
 - Grandes termos genômicos como **G**, **GGK** ou **GAK** indicam que a similaridade genômica captura uma parcela importante da variabilidade do caráter.
 - Grandes termos fenômicos como **P**, **PGK** ou **PAK** indicam maior contribuição da similaridade derivada de NIRS, mas esses termos devem ser interpretados com cautela porque NIRS também pode refletir forte resposta fisiológica ao ambiente.
-- Grandes termos relacionados ao clima como **W**, **G × W** ou **P × W** indicam que covariáveis derivadas do clima explicam estrutura adicional. Esses termos aparecem principalmente nos modelos **Eta10-Eta18** e devem ser interpretados como complementares ao efeito categórico de ambiente, e não como substitutos de **E**.
+- Grandes termos relacionados ao clima como **W**, **G × W** ou **P × W** indicam que covariáveis derivadas do clima explicam estrutura adicional. Esses termos aparecem principalmente nos modelos **M10-M18** e devem ser interpretados como complementares ao efeito categórico de ambiente, e não como substitutos de **E**.
 - Um grande segmento de **Residual** indica que fontes importantes de variabilidade permanecem não explicadas pelo modelo ajustado.
 
 No contexto deste artigo, essas decomposições de variância complementam as análises preditivas ao mostrar **quais fontes de informação contribuem para a estrutura dos modelos**. Entretanto, uma grande parcela de variância de um componente não deve ser lida automaticamente como evidência de maior complementaridade biológica ou de melhor habilidade preditiva.
