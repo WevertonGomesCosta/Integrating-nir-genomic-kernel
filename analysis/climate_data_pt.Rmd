@@ -10,7 +10,7 @@ output:
     toc: true
     toc_depth: 3
     toc_float: true
-    code_download: yes
+    code_download: true
 editor_options:
   chunk_output_type: console
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel

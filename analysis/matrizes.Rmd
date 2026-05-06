@@ -28,7 +28,7 @@ knitr::opts_chunk$set(
 
 **Language / Idioma:** [English](matrizes.html) | [Português](matrizes_pt.html)
 
-# 1. Introduction
+## 1. Introduction
 
 This tutorial documents how the project constructs the core kernels used in the genomic prediction analyses. The goal is not simply to read files and calculate matrices. The goal is to transform heterogeneous information sources into aligned scientific objects that can be used in multi-environment prediction models.
 

@@ -28,7 +28,7 @@ knitr::opts_chunk$set(
 
 **Language / Idioma:** [English](matrizes.html) | [Português](matrizes_pt.html)
 
-# 1. Introdução
+## 1. Introdução
 
 Este tutorial documenta como o projeto constrói os kernels centrais usados nas análises de predição genômica. O objetivo não é simplesmente ler arquivos e calcular matrizes. O objetivo é transformar fontes heterogêneas de informação em objetos científicos alinhados que possam ser usados em modelos de predição multiambientes.
 
