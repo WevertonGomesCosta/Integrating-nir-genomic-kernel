@@ -419,7 +419,7 @@ id="fnref1"><sup>1</sup></a></h4>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+workflowr <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -430,8 +430,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> </a>
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -444,9 +444,9 @@ aria-hidden="true"></span> </a>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -470,21 +470,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of
-the R Markdown file created these results, you’ll want to first commit
-it to the Git repo. If you’re still working on the analysis, you can
-ignore this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -575,15 +572,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltreec3f4a7abcad1efb9295d6ae8f11c676c547f2300targetblankc3f4a7aa">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree5c5ada95583ee09a4d75f3d1a4280e0357ddbaf5targetblank5c5ada9a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/c3f4a7abcad1efb9295d6ae8f11c676c547f2300" target="_blank">c3f4a7a</a>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/5c5ada95583ee09a4d75f3d1a4280e0357ddbaf5" target="_blank">5c5ada9</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltreec3f4a7abcad1efb9295d6ae8f11c676c547f2300targetblankc3f4a7aa"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaIntegratingnirgenomickerneltree5c5ada95583ee09a4d75f3d1a4280e0357ddbaf5targetblank5c5ada9a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -593,7 +590,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/c3f4a7abcad1efb9295d6ae8f11c676c547f2300" target="_blank">c3f4a7a</a>.
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/tree/5c5ada95583ee09a4d75f3d1a4280e0357ddbaf5" target="_blank">5c5ada9</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -3098,18 +3095,6 @@ Ignored files:
     Ignored:    output/variance_components/bglr_runs/KW/rep10/Eta9/VC_KW_Eta9_rep10_varE.dat
     Ignored:    output/variance_components/figures/
 
-Unstaged changes:
-    Modified:   analysis/visualization.Rmd
-    Modified:   analysis/visualization_pt.Rmd
-    Modified:   output/tables/prediction_cv0_cv00_display_table.csv
-    Modified:   output/tables/prediction_cv0_cv00_kernel_family_compare.csv
-    Modified:   output/tables/prediction_cv0_cv00_top3.csv
-    Modified:   output/tables/prediction_cv0_cv00_w_effect_pairs.csv
-    Modified:   output/tables/prediction_cv1_cv2_display_table.csv
-    Modified:   output/tables/prediction_cv1_cv2_kernel_family_compare.csv
-    Modified:   output/tables/prediction_cv1_cv2_top3.csv
-    Modified:   output/tables/prediction_cv1_cv2_w_effect_pairs.csv
-
 </code></pre>
 <p>
 Note that any generated files, e.g. HTML, png, CSS, etc., are not
@@ -3153,6 +3138,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/4de0fc817dce42547e1169e53bb38686c85442e9/analysis/visualization_pt.Rmd" target="_blank">4de0fc8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-05-05
+</td>
+<td>
+update files
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/4de0fc817dce42547e1169e53bb38686c85442e9/docs/visualization_pt.html" target="_blank">4de0fc8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-05-05
+</td>
+<td>
+update files
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -14462,6 +14481,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/4de0fc817dce42547e1169e53bb38686c85442e9/docs/figure/visualization_pt.Rmd/figure-cv12-1.png" target="_blank">4de0fc8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-05-05
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/d68d253875ab899ec60e92c9465cd431f3616d84/docs/figure/visualization_pt.Rmd/figure-cv12-1.png" target="_blank">d68d253</a>
 </td>
 <td>
@@ -14598,6 +14628,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/4de0fc817dce42547e1169e53bb38686c85442e9/docs/figure/visualization_pt.Rmd/figure-cv12-2.png" target="_blank">4de0fc8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-05-05
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/d68d253875ab899ec60e92c9465cd431f3616d84/docs/figure/visualization_pt.Rmd/figure-cv12-2.png" target="_blank">d68d253</a>
@@ -14917,6 +14958,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/4de0fc817dce42547e1169e53bb38686c85442e9/docs/figure/visualization_pt.Rmd/figure-cvloo-1.png" target="_blank">4de0fc8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-05-05
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/2625a5998e1a80b9e5f20c9c8bc704214ebf72fd/docs/figure/visualization_pt.Rmd/figure-cvloo-1.png" target="_blank">2625a59</a>
 </td>
 <td>
@@ -15033,6 +15085,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/4de0fc817dce42547e1169e53bb38686c85442e9/docs/figure/visualization_pt.Rmd/figure-cvloo-2.png" target="_blank">4de0fc8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-05-05
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/2625a5998e1a80b9e5f20c9c8bc704214ebf72fd/docs/figure/visualization_pt.Rmd/figure-cvloo-2.png" target="_blank">2625a59</a>
 </td>
 <td>
@@ -15116,6 +15179,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/4de0fc817dce42547e1169e53bb38686c85442e9/docs/figure/visualization_pt.Rmd/figure-cvloo-3.png" target="_blank">4de0fc8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-05-05
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/2625a5998e1a80b9e5f20c9c8bc704214ebf72fd/docs/figure/visualization_pt.Rmd/figure-cvloo-3.png" target="_blank">2625a59</a>
 </td>
 <td>
@@ -15197,6 +15271,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/4de0fc817dce42547e1169e53bb38686c85442e9/docs/figure/visualization_pt.Rmd/figure-cvloo-4.png" target="_blank">4de0fc8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-05-05
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/WevertonGomesCosta/Integrating-nir-genomic-kernel/blob/2625a5998e1a80b9e5f20c9c8bc704214ebf72fd/docs/figure/visualization_pt.Rmd/figure-cvloo-4.png" target="_blank">2625a59</a>
