@@ -215,10 +215,6 @@ write.csv(
 ```{r load_downloaded_data, include=FALSE}
 raw_climate_path <- file.path(climate_results_dir, "texas_climate_data_raw.csv")
 
-if (!file.exists(raw_climate_path)) {
-  stop("Arquivo não encontrado: 'output/climate_results/texas_climate_data_raw.csv'. Verifique se a base bruta está disponível em 'output/climate_results/'.")
-}
-
 texas_climate_data <- readr::read_csv(raw_climate_path, show_col_types = FALSE) %>%
   mutate(
     date = ymd(date),
@@ -888,10 +884,6 @@ knitr::kable(
 ```{r load_engineered_climate_outputs, include=FALSE}
 weather_covariates_path <- file.path(climate_results_dir, "environmental_covariates.csv")
 ecs_expanded_path <- file.path(climate_results_dir, "environmental_covariates_expanded.csv")
-
-if (!file.exists(weather_covariates_path) || !file.exists(ecs_expanded_path)) {
-  stop("Arquivos finais de clima não encontrados em 'output/climate_results/'. Verifique se as covariáveis climáticas estão disponíveis em 'output/climate_results/'.")
-}
 
 weather_covariates <- readr::read_csv(weather_covariates_path, show_col_types = FALSE)
 ecs_expanded <- readr::read_csv(ecs_expanded_path, show_col_types = FALSE)
