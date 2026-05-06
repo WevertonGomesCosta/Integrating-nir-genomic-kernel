@@ -96,9 +96,9 @@ figure_dir <- file.path(results_dir, "figures")
 bglr_runs_dir <- file.path(results_dir, "bglr_runs")
 ```
 
-### 2.2. Checagem das entradas
+### 2.2. Objetos de entrada necessários
 
-Antes de ler os arquivos, verificamos se os objetos `.rds` esperados estão presentes na pasta de saídas das matrizes. Isso deixa o tutorial mais robusto porque o script para imediatamente se algum objeto necessário estiver ausente.
+Esta seção lista os objetos de matrizes e kernels esperados pelo fluxo de componentes de variância. O código abaixo é mantido como inventário visível das entradas necessárias; os chunks seguintes leem os objetos diretamente da pasta esperada.
 
 ```{r input-checks}
 required_files <- c(
@@ -110,15 +110,12 @@ required_files <- c(
   "Pheno.rds", "Pedigree.rds"
 )
 
-missing_files <- required_files[!file.exists(file.path(kernel_dir, required_files))]
+input_file_index <- tibble(
+  RequiredFile = required_files,
+  ExpectedPath = file.path(kernel_dir, required_files)
+)
 
-if (length(missing_files) > 0) {
-  stop(
-    "The following required files were not found in output/Matrizes/: ",
-    paste(missing_files, collapse = ", "),
-    ". Check whether the required objects are available before rendering this document."
-  )
-}
+knitr::kable(input_file_index, caption = "Objetos de matrizes e kernels usados nesta etapa.")
 ```
 
 ### 2.3. Rótulos usados nas tabelas e figuras finais
@@ -671,87 +668,76 @@ rds_files <- list.files(
   full.names = TRUE
 )
 
-if (length(rds_files) > 0) {
-  all_tables <- vector("list", length(rds_files))
+all_tables <- vector("list", length(rds_files))
 
-  for (i in seq_along(rds_files)) {
-    current_file <- normalizePath(rds_files[i], winslash = "/", mustWork = FALSE)
-    path_parts <- str_split(current_file, "/")[[1]]
+for (i in seq_along(rds_files)) {
+  current_file <- normalizePath(rds_files[i], winslash = "/", mustWork = FALSE)
+  path_parts <- str_split(current_file, "/")[[1]]
 
-    rep_part <- path_parts[str_detect(path_parts, "^rep[0-9]+$|^rep_[0-9]+$")][1]
-    eta_part <- path_parts[str_detect(path_parts, "^Eta")][1]
-    trait_part <- path_parts[path_parts %in% traits][1]
+  rep_part <- path_parts[str_detect(path_parts, "^rep[0-9]+$|^rep_[0-9]+$")][1]
+  eta_part <- path_parts[str_detect(path_parts, "^Eta")][1]
+  trait_part <- path_parts[path_parts %in% traits][1]
 
-    rep_value <- as.integer(str_remove(rep_part, "^rep_?0*"))
-    model_value <- as.integer(str_remove(eta_part, "^Eta0*"))
-    trait_value <- trait_part
+  rep_value <- as.integer(str_remove(rep_part, "^rep_?0*"))
+  model_value <- as.integer(str_remove(eta_part, "^Eta0*"))
+  trait_value <- trait_part
 
-    current_object <- readRDS(current_file)
+  current_object <- readRDS(current_file)
 
-    current_table <- tibble(
+  residual_table <- tibble(
+    Rep = rep_value,
+    Model = model_value,
+    Trait = trait_value,
+    Component = "Residual",
+    MeanVar = mean(current_object$varE_samples, na.rm = TRUE),
+    DIC = current_object$DIC,
+    runtime_sec = current_object$runtime_sec
+  )
+
+  variance_means <- colMeans(
+    as.data.frame(current_object$variances_samples),
+    na.rm = TRUE
+  )
+
+  variance_table <- tibble(
+    ComponentRaw = names(variance_means),
+    MeanVar = as.numeric(variance_means)
+  ) %>%
+    mutate(
+      EtaIndex = suppressWarnings(as.integer(str_match(ComponentRaw, "^ETA_([0-9]+)")[, 2])),
+      ComponentClean = sub("_(BRR|RKHS)$", "", ComponentRaw)
+    ) %>%
+    left_join(
+      model_component_lookup %>%
+        filter(ModelID == model_value) %>%
+        select(EtaIndex, ComponentBase),
+      by = "EtaIndex"
+    ) %>%
+    transmute(
       Rep = rep_value,
       Model = model_value,
       Trait = trait_value,
-      Component = "Residual",
-      MeanVar = mean(current_object$varE_samples, na.rm = TRUE),
+      Component = coalesce(ComponentBase, ComponentClean),
+      MeanVar = MeanVar,
       DIC = current_object$DIC,
       runtime_sec = current_object$runtime_sec
     )
 
-    if (length(current_object$variances_samples) > 0) {
-      for (nm in names(current_object$variances_samples)) {
-        current_table <- bind_rows(
-          current_table,
-          tibble(
-            Rep = rep_value,
-            Model = model_value,
-            Trait = trait_value,
-            Component = {
-              current_component <- nm
-              if (grepl("^ETA_[0-9]+$", current_component)) {
-                current_eta_index <- suppressWarnings(as.integer(sub("^ETA_", "", current_component)))
-                current_match <- which(
-                  model_component_lookup$ModelID == model_value &
-                    model_component_lookup$EtaIndex == current_eta_index
-                )
-                if (length(current_match) == 1) {
-                  current_component <- model_component_lookup$ComponentBase[current_match]
-                }
-              }
-              current_component <- sub("_(BRR|RKHS)$", "", current_component)
-              current_component
-            },
-            MeanVar = mean(current_object$variances_samples[[nm]], na.rm = TRUE),
-            DIC = current_object$DIC,
-            runtime_sec = current_object$runtime_sec
-          )
-        )
-      }
-    }
-
-    all_tables[[i]] <- current_table
-  }
-
-  all_variance <- bind_rows(all_tables)
-
-  saveRDS(all_variance, file.path(results_dir, "variance_components_all.rds"))
-  write_csv(all_variance, file.path(results_dir, "variance_components_raw.csv"))
+  all_tables[[i]] <- bind_rows(residual_table, variance_table)
 }
+
+all_variance <- bind_rows(all_tables)
+
+saveRDS(all_variance, file.path(results_dir, "variance_components_all.rds"))
+write_csv(all_variance, file.path(results_dir, "variance_components_raw.csv"))
 ```
 
 ## 8. Carregamento do objeto consolidado de componentes de variância
 
-Esta seção carrega os resultados consolidados e os prepara para o resumo. Se o arquivo não existir, o script interrompe a renderização e informa que o objeto consolidado necessário não está disponível.
+Esta seção carrega os resultados consolidados e os prepara para o resumo e a visualização sem repetir a estimação computacionalmente pesada.
 
 ```{r load-results, include=FALSE}
 raw_file <- file.path(results_dir, "variance_components_all.rds")
-
-if (!file.exists(raw_file)) {
-  stop(
-    "The file '", raw_file, "' was not found. ",
-    "Check whether the required consolidated object or saved _metrics.rds files are available before rendering this document."
-  )
-}
 
 all_variance <- readRDS(raw_file)
 

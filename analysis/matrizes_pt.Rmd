@@ -260,7 +260,7 @@ Esse kernel é útil porque resume a similaridade espectral entre observações.
 O código abaixo documenta a construção do kernel fenômico linear a partir dos dados NIR para compará-lo às estruturas genômicas e climáticas.
 
 ```{r build-zp, eval=FALSE}
-# Identify spectral variables defensively: keep only numeric columns and remove
+# Identify spectral variables: keep only numeric columns and remove
 # metadata/trait columns that should not enter the phenomic kernel.
 metadata_cols <- c("Pedigree", "Env", "GY", "KW", "ObsID")
 
@@ -269,16 +269,11 @@ nir_feature_cols <- nir_feature_cols[
   vapply(NIR[, nir_feature_cols, drop = FALSE], is.numeric, logical(1))
 ]
 
-if (length(nir_feature_cols) == 0) {
-  stop("No numeric NIR feature columns were found after filtering metadata columns.")
-}
 
 excluded_non_numeric <- setdiff(setdiff(colnames(NIR), metadata_cols), nir_feature_cols)
 
 cat("Number of NIR feature columns used in ZP:", length(nir_feature_cols), "\n")
-if (length(excluded_non_numeric) > 0) {
-  cat("Excluded non-numeric columns:", paste(excluded_non_numeric, collapse = ", "), "\n")
-}
+cat("Excluded non-numeric columns:", paste(excluded_non_numeric, collapse = ", "), "\n")
 
 NIR.a <- scale(as.matrix(a[, nir_feature_cols, drop = FALSE]), center = TRUE, scale = TRUE)
 NIR.b <- scale(as.matrix(b[, nir_feature_cols, drop = FALSE]), center = TRUE, scale = TRUE)
@@ -347,14 +342,6 @@ O código abaixo documenta a leitura dos arquivos climáticos necessários para 
 annual_ec_file <- "output/climate_results/environmental_covariates.csv"
 expanded_ec_file <- "output/climate_results/environmental_covariates_expanded.csv"
 
-if (!file.exists(annual_ec_file)) {
-  stop("The file 'output/climate_results/environmental_covariates.csv' was not found. Verifique se os arquivos de covariáveis climáticas estão disponíveis antes de renderizar este documento.")
-}
-
-if (!file.exists(expanded_ec_file)) {
-  stop("The file 'output/climate_results/environmental_covariates_expanded.csv' was not found. Verifique se os arquivos de covariáveis climáticas estão disponíveis antes de renderizar este documento.")
-}
-
 ECs_annual <- read.csv(annual_ec_file)
 ECs_expanded <- read.csv(expanded_ec_file)
 
@@ -387,14 +374,8 @@ daily_cols <- candidate_daily_cols[
 
 excluded_daily_cols <- setdiff(candidate_daily_cols, daily_cols)
 
-if (length(daily_cols) == 0) {
-  stop("No numeric daily climate variables were found in environmental_covariates_expanded.csv.")
-}
-
 cat("Number of daily climate variables used in ZW:", length(daily_cols), "\n")
-if (length(excluded_daily_cols) > 0) {
-  cat("Excluded non-climatic or non-numeric columns:", paste(excluded_daily_cols, collapse = ", "), "\n")
-}
+cat("Excluded non-climatic or non-numeric columns:", paste(excluded_daily_cols, collapse = ", "), "\n")
 
 ECs_annual <- ECs_annual %>%
   mutate(year = as.integer(year)) %>%
@@ -574,17 +555,6 @@ required_matrix_objects <- c(
   "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW",
   "Pheno", "Pedigree", "Pedigree_communs", "Geno.all", "NIR.all", "W"
 )
-
-missing_matrix_files <- required_matrix_objects[
-  !file.exists(file.path("output/Matrizes", paste0(required_matrix_objects, ".rds")))
-]
-
-if (length(missing_matrix_files) > 0) {
-  stop(
-    "Arquivos obrigatórios não encontrados em 'output/Matrizes/'. Verifique se os objetos necessários estão disponíveis antes de renderizar este documento: ",
-    paste(missing_matrix_files, collapse = ", ")
-  )
-}
 
 for (obj_name in required_matrix_objects) {
   assign(
@@ -1200,8 +1170,7 @@ to_remove <- setdiff(current_objs, to_keep)
 message("Objetos mantidos (", length(to_keep), "): ", paste(to_keep, collapse = ", "))
 message(
   "Objetos removidos (", length(to_remove), "): ",
-  paste(head(to_remove, 40), collapse = ", "),
-  if (length(to_remove) > 40) paste0(" ... (+", length(to_remove) - 40, " more)")
+  paste(to_remove, collapse = ", ")
 )
 
 for (obj_name in to_keep) {
