@@ -1,0 +1,19 @@
+ModelID,Model,ETA,Category,Description
+1,M1,Eta1,Single-source + E,E + G + GE
+2,M2,Eta2,Single-source + E,E + P + PE
+3,M3,Eta3,Single-source + E,E + GGK + GGKE
+4,M4,Eta4,Single-source + E,E + PGK + PGKE
+5,M5,Eta5,Single-source + E,E + GAK + GAKE
+6,M6,Eta6,Single-source + E,E + PAK + PAKE
+7,M7,Eta7,Integrated G/P + E,E + G + P + GE + PE
+8,M8,Eta8,Integrated G/P + E,E + GGK + PGK + GGKE + PGKE
+9,M9,Eta9,Integrated G/P + E,E + GAK + PAK + GAKE + PAKE
+10,M10,Eta10,Weather-augmented,E + W + G + GE + GW
+11,M11,Eta11,Weather-augmented,E + W + P + PE + PW
+12,M12,Eta12,Weather-augmented,E + W + G + P + GE + PE + GW + PW
+13,M13,Eta13,Weather-augmented,E + W + GGK + GGKE + GGKW
+14,M14,Eta14,Weather-augmented,E + W + PGK + PGKE + PGKW
+15,M15,Eta15,Weather-augmented,E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW
+16,M16,Eta16,Weather-augmented,E + W + GAK + GAKE + GAKW
+17,M17,Eta17,Weather-augmented,E + W + PAK + PAKE + PAKW
+18,M18,Eta18,Weather-augmented,E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW
