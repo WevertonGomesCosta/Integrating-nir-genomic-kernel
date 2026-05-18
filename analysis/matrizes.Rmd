@@ -337,6 +337,8 @@ This script uses **both** files:
 - The annual file provides the weather-derived summary covariates.
 - The expanded file provides the daily weather trajectories used to describe the within-season weather signature of each year.
 
+The annual summaries now include `PTR_AVG`, the average daily photothermal ratio. The expanded daily file also keeps `PHOTOPERIOD_HOURS` as an audit variable and `PTR_DAILY` as a daily weather descriptor. Because `PHOTOPERIOD_HOURS` is an intermediate component used to compute PTR, it is excluded manually from the daily weather kernel, while `PTR_DAILY` remains eligible to enter `ZW`.
+
 In the final reduced pipeline, `ZW` is used mainly in models `Eta10`-`Eta18`, together with interactions such as `GW`, `PW`, `GGKW`, `PGKW`, `GAKW`, and `PAKW`. The weather kernel should therefore be interpreted as an additional source of meteorological similarity. It does **not** replace the categorical environment effect represented by `ZEZE`.
 
 ### 9.1 Load climate files
@@ -351,7 +353,7 @@ ECs_annual <- read.csv(annual_ec_file)
 ECs_expanded <- read.csv(expanded_ec_file)
 
 annual_cols <- c(
-  "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS",
+  "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "PTR_AVG", "HEAT_STRESS_DAYS",
   "PRECTOT", "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM",
   "T_AVG", "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS",
   "PREC_INTENSITY", "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"
@@ -368,16 +370,27 @@ daily_id_cols <- c(
   "day", "DD",
   "LON", "LAT"
 )
+
+# Keep PHOTOPERIOD_HOURS available for auditing, but do not use it
+# directly in ZW because PTR_DAILY already combines photoperiod and GDD.
+manual_exclude_daily <- intersect(
+  c("PHOTOPERIOD_HOURS"),
+  colnames(ECs_expanded)
+)
+
 candidate_daily_cols <- setdiff(
   colnames(ECs_expanded),
-  c(daily_id_cols, annual_cols)
+  c(daily_id_cols, annual_cols, manual_exclude_daily)
 )
 
 daily_cols <- candidate_daily_cols[
   vapply(ECs_expanded[, candidate_daily_cols, drop = FALSE], is.numeric, logical(1))
 ]
 
-excluded_daily_cols <- setdiff(candidate_daily_cols, daily_cols)
+excluded_daily_cols <- c(
+  manual_exclude_daily,
+  setdiff(candidate_daily_cols, daily_cols)
+)
 
 cat("Number of daily climate variables used in ZW:", length(daily_cols), "\n")
 cat("Excluded non-climatic or non-numeric columns:", paste(excluded_daily_cols, collapse = ", "), "\n")

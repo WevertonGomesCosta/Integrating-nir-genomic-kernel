@@ -70,6 +70,7 @@ Cada pacote tem um papel claro no fluxo:
 - `patchwork`: combina múltiplas figuras do `ggplot2` em painéis prontos para publicação.
 - `ggthemes`: fornece as escalas discretas do Google Docs usadas para padronizar cores entre as figuras.
 - `kableExtra`: melhora a apresentação de tabelas HTML no tutorial.
+- `suncalc`: é usado na versão em inglês para calcular nascer e pôr do sol e, a partir deles, o fotoperíodo diário.
 
 ```{r packages}
 # Descomente se a instalação for necessária
@@ -738,14 +739,31 @@ Esses resumos foram pensados para capturar aspectos biologicamente relevantes de
 
 ### 6.1 Derivar variáveis intermediárias diárias
 
-Algumas covariáveis derivadas do clima dependem de quantidades que não são fornecidas diretamente pela NASA POWER. Por isso, primeiro calculamos variáveis intermediárias diárias como graus-dia (GDD), amplitude térmica diária, temperatura média diária, pressão de vapor de saturação, pressão de vapor real e déficit de pressão de vapor (VPD).
+Algumas covariáveis derivadas do clima dependem de quantidades que não são fornecidas diretamente pela NASA POWER. Por isso, primeiro calculamos variáveis intermediárias diárias como graus-dia (GDD), fotoperíodo, razão fototérmica (PTR), amplitude térmica diária, temperatura média diária, pressão de vapor de saturação, pressão de vapor real e déficit de pressão de vapor (VPD).
+
+Neste tutorial, `PHOTOPERIOD_HOURS` representa o fotoperíodo diário em horas e é mantido como variável de auditoria. A variável `PTR_DAILY` é a razão entre o fotoperíodo diário e os graus-dia (`GDD`). Ela é calculada apenas quando `GDD > 0`, evitando divisão por zero ou valores sem interpretação biológica. O resumo anual correspondente é `PTR_AVG`.
 
 Essas variáveis intermediárias são calculadas dia a dia e depois resumidas no nível anual na próxima subseção.
 
 A etapa a seguir documenta o cálculo das covariáveis climáticas anuais e expandidas que serão usadas depois na construção das entradas derivadas do clima.
 
 ```{r feature_engineering, eval=FALSE}
+photoperiod_tbl <- suncalc::getSunlightTimes(
+  data = tibble(
+    date = unique(texas_climate_data$date),
+    lat = unname(coords_texas["lat"]),
+    lon = unname(coords_texas["lon"])
+  ),
+  keep = c("sunrise", "sunset"),
+  tz = "America/Chicago"
+) %>%
+  transmute(
+    date = as.Date(date),
+    PHOTOPERIOD_HOURS = as.numeric(difftime(sunset, sunrise, units = "hours"))
+  )
+
 texas_climate_data <- texas_climate_data %>%
+  left_join(photoperiod_tbl, by = "date") %>%
   mutate(
     T_base = 10,
     T_upper = 30,
@@ -759,7 +777,8 @@ texas_climate_data <- texas_climate_data %>%
     # Equação de Tetens, resultando em kPa
     SAT_VAP_PRES = 0.6108 * exp((17.27 * T_AVG_DAILY) / (T_AVG_DAILY + 237.3)),
     ACT_VAP_PRES = SAT_VAP_PRES * (RH2M / 100),
-    VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES
+    VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES,
+    PTR_DAILY = if_else(GDD > 0, PHOTOPERIOD_HOURS / GDD, NA_real_)
   )
 
 weather_covariates <- texas_climate_data %>%
@@ -769,6 +788,7 @@ weather_covariates <- texas_climate_data %>%
     TMAX_AVG = mean(T2M_MAX, na.rm = TRUE),
     TMIN_AVG = mean(T2M_MIN, na.rm = TRUE),
     GDD_CUM = sum(GDD, na.rm = TRUE),
+    PTR_AVG = mean(PTR_DAILY, na.rm = TRUE),
     HEAT_STRESS_DAYS = sum(T2M_MAX > 35, na.rm = TRUE),
 
     PRECTOT = sum(PRECTOTCORR, na.rm = TRUE),
@@ -806,7 +826,9 @@ ecs_expanded <- texas_climate_data %>%
     RH2M = RH2M,
     ALLSKY_SFC_SW_DWN = ALLSKY_SFC_SW_DWN,
     WS2M = WS2M,
+    PHOTOPERIOD_HOURS = PHOTOPERIOD_HOURS,
     GDD = GDD,
+    PTR_DAILY = PTR_DAILY,
     DTR = DTR,
     T_AVG_DAILY = T_AVG_DAILY,
     SAT_VAP_PRES = SAT_VAP_PRES,
@@ -817,13 +839,13 @@ ecs_expanded <- texas_climate_data %>%
 
 weather_covariates_dictionary <- tibble::tibble(
   Variável = c(
-    "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS", "PRECTOT",
+    "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "PTR_AVG", "HEAT_STRESS_DAYS", "PRECTOT",
     "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM", "T_AVG",
     "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS", "PREC_INTENSITY",
     "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"
   ),
   Unidade = c(
-    "°C", "°C", "°C day", "days", "mm",
+    "°C", "°C", "°C day", "h / GDD", "days", "mm",
     "days", "%", "m s^-1", "MJ m^-2", "°C",
     "°C", "days", "days", "mm day^-1",
     "days", "kPa", "days"
@@ -832,6 +854,7 @@ weather_covariates_dictionary <- tibble::tibble(
     "Temperatura máxima média durante a safra",
     "Temperatura mínima média durante a safra",
     "Graus-dia acumulados",
+    "Razão fototérmica diária média, calculada como fotoperíodo em horas dividido por GDD",
     "Número de dias com estresse térmico",
     "Precipitação total durante a safra",
     "Número de dias secos",
@@ -890,13 +913,13 @@ ecs_expanded <- readr::read_csv(ecs_expanded_path, show_col_types = FALSE)
 
 weather_covariates_dictionary <- tibble::tibble(
   Variável = c(
-    "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS", "PRECTOT",
+    "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "PTR_AVG", "HEAT_STRESS_DAYS", "PRECTOT",
     "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM", "T_AVG",
     "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS", "PREC_INTENSITY",
     "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"
   ),
   Unidade = c(
-    "°C", "°C", "°C day", "days", "mm",
+    "°C", "°C", "°C day", "h / GDD", "days", "mm",
     "days", "%", "m s^-1", "MJ m^-2", "°C",
     "°C", "days", "days", "mm day^-1",
     "days", "kPa", "days"
@@ -905,6 +928,7 @@ weather_covariates_dictionary <- tibble::tibble(
     "Temperatura máxima média durante a safra",
     "Temperatura mínima média durante a safra",
     "Graus-dia acumulados",
+    "Razão fototérmica diária média, calculada como fotoperíodo em horas dividido por GDD",
     "Número de dias com estresse térmico",
     "Precipitação total durante a safra",
     "Número de dias secos",
@@ -963,6 +987,7 @@ A tabela final contém uma linha por ano e vários descritores climáticos.
 Por exemplo:
 
 - `GDD_CUM` resume o acúmulo térmico durante o ciclo da cultura.
+- `PTR_AVG` resume a razão fototérmica diária média, combinando duração do dia e acúmulo térmico efetivo.
 - `PRECTOT` resume a entrada total de água pela chuva.
 - `DRY_DAYS` e `HEAT_STRESS_DAYS` quantificam a frequência de estresse.
 - `VPD_AVG` e `VPD_STRESS_DAYS` capturam a secura atmosférica.
