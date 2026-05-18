@@ -1,0 +1,467 @@
+---
+title: "Análises de predição - Parte I: setup, modelos e desenho de CV"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+**Language / Idioma:** [English](analysis_prediction.html) | [Português](analysis_prediction_pt.html)
+
+**Navegação do módulo / Module navigation:** [Parte II: execução e organização da predição](analysis_prediction_run_outputs_pt.html)
+
+## 1. Introdução
+
+A predição é a etapa do pipeline em que os objetos analíticos disponíveis são reorganizados em uma estrutura de ajuste de modelos. Neste ponto, o objetivo ainda não é executar o fluxo completo de predição. Em vez disso, este módulo prepara a estrutura analítica que será usada mais adiante na etapa de execução.
+
+O problema de predição estudado aqui não se limita ao ajuste de um único modelo. O projeto compara um catálogo reduzido de 18 modelos construídos a partir de diferentes combinações de informação ambiental (`E`), informação genômica (`G`), informação fenômica (`P`), informação derivada do clima (`W`) e suas correspondentes estruturas de interação lineares ou baseadas em kernels. Como esses modelos foram concebidos para responder a diferentes perguntas de predição sob diferentes contextos de validação, o primeiro passo é tornar sua organização explícita e compreensível antes que qualquer computação cara seja realizada.
+
+Este arquivo, portanto, cumpre duas funções complementares. Primeiro, prepara as entradas e as configurações computacionais necessárias para a predição. Segundo, explica o significado analítico do catálogo de modelos e dos esquemas de validação cruzada adotados no estudo. Em termos práticos, isso significa que o leitor deve sair deste módulo entendendo o que está sendo previsto, quais fontes de informação estão sendo comparadas e como a qualidade da predição será posteriormente avaliada.
+
+## Objetos de entrada, catálogo de modelos e papel desta etapa
+
+Esta etapa recebe como entrada os objetos disponíveis em `output/Matrizes/`. Entre eles estão a tabela de dados fenotípicos (`Pheno`), as estruturas de incidência que conectam observações a ambientes e clima, e os kernels lineares e não lineares derivados da informação genômica e fenômica. Em conjunto, esses objetos fornecem a representação completa necessária para definir os modelos de predição.
+
+O principal objeto organizado nesta etapa não é uma tabela final de resultados. Em vez disso, esta etapa documenta a estrutura de predição: as configurações computacionais, o catálogo de 18 modelos, as correspondentes especificações de `Eta_list`, o desenho de validação e a convenção de nomes que será mais tarde usada para armazenar os resultados de predição. Em outras palavras, este módulo prepara o sistema de predição usado na etapa seguinte.
+
+Essa distinção é importante por razões didáticas. Aqui o foco está em entender a estrutura da análise preditiva: o que entra em cada modelo, como os modelos diferem e o que cada cenário de validação foi desenhado para testar. A execução propriamente dita é documentada no próximo módulo, onde os arquivos de predição são inventariados e preparados para os resumos das etapas posteriores.
+
+**Entradas**
+- Observações fenotípicas e identificadores armazenados em `Pheno`
+- Estruturas de desenho para ambiente e clima
+- Relações lineares baseadas em incidência
+- Kernels genômicos e fenômicos não lineares
+- Kernels de interação disponíveis para a predição
+
+**Objetos organizados**
+- Configurações computacionais gerais para o ajuste dos modelos
+- O catálogo de 18 modelos usado no estudo
+- A estrutura completa de `Eta_list` que define cada modelo de predição
+- O desenho de validação cruzada usado para avaliar o desempenho preditivo
+- As regras de nomes de arquivos usadas nas etapas posteriores de execução, inventário e visualização
+
+**Etapa anterior:** `variance_components_pt.Rmd`  
+**Próxima etapa:** `analysis_prediction_run_outputs_pt.Rmd`
+
+## 2. Pacotes e opções
+
+Antes de definir qualquer modelo de predição, é útil começar de uma sessão de trabalho limpa e reprodutível. Em um script orientado ao ensino, esse primeiro passo também tem uma função prática: deixar claro que a especificação dos modelos não deve depender de objetos deixados por execuções anteriores.
+
+Nesta etapa, a ênfase ainda está na organização e não na execução. Os modelos de predição são apresentados, comparados e traduzidos para suas estruturas ETA, mas a rotina cara de ajuste fica reservada ao módulo de execução. Por essa razão, a configuração inicial aqui é intencionalmente mínima. A notação científica é desligada para melhorar a legibilidade dos valores impressos, o ambiente de trabalho é limpo para que os objetos usados adiante no arquivo sejam aqueles explicitamente carregados a partir dos objetos disponíveis no pipeline, e o pacote `parallel` é declarado porque o número de núcleos de processamento já é definido nesta etapa.
+
+```{r setup}
+rm(list = ls())
+options(scipen = 999)
+
+library(parallel)
+```
+
+## 3. Objetos de entrada para a predição
+
+A análise preditiva começa a partir das matrizes e kernels disponíveis em `output/Matrizes/`. Isso significa que a etapa atual não reconstrói do zero a representação dos dados. Em vez disso, ela importa os objetos salvos que servem como base analítica para a especificação dos modelos.
+
+Esses objetos representam partes diferentes do problema. `Pheno` contém a estrutura em nível de observação do estudo, incluindo traits, genótipos e ambientes. `ZG` e `ZP` representam as relações lineares genômicas e fenômicas. `ZE` representa a estrutura categórica de ambiente, enquanto `ZW` carrega a informação derivada do clima. Os objetos restantes correspondem a interações e kernels não lineares que permitem comparar modelos de predição mais simples e mais flexíveis.
+
+Ler esses objetos diretamente de `output/Matrizes/` é importante por duas razões. Primeiro, isso mantém o fluxo reprodutível, fazendo a predição depender do mesmo conjunto de objetos armazenados ao longo do projeto. Segundo, isso permite ao leitor ver como o módulo de predição está conectado à etapa de harmonização e construção de kernels.
+
+```{r load-inputs}
+Pheno <- readRDS("output/Matrizes/Pheno.rds")
+
+ZG   <- readRDS("output/Matrizes/ZG.rds")
+ZP   <- readRDS("output/Matrizes/ZP.rds")
+ZE   <- readRDS("output/Matrizes/ZE.rds")
+ZW   <- readRDS("output/Matrizes/ZW.rds")
+
+ZGZE <- readRDS("output/Matrizes/ZGZE.rds")
+ZPZE <- readRDS("output/Matrizes/ZPZE.rds")
+ZGZW <- readRDS("output/Matrizes/ZGZW.rds")
+ZPZW <- readRDS("output/Matrizes/ZPZW.rds")
+
+GGK  <- readRDS("output/Matrizes/GGK.rds")
+PGK  <- readRDS("output/Matrizes/PGK.rds")
+GAK  <- readRDS("output/Matrizes/GAK.rds")
+PAK  <- readRDS("output/Matrizes/PAK.rds")
+
+GGKE <- readRDS("output/Matrizes/GGKE.rds")
+PGKE <- readRDS("output/Matrizes/PGKE.rds")
+GAKE <- readRDS("output/Matrizes/GAKE.rds")
+PAKE <- readRDS("output/Matrizes/PAKE.rds")
+
+GGKW <- readRDS("output/Matrizes/GGKW.rds")
+PGKW <- readRDS("output/Matrizes/PGKW.rds")
+GAKW <- readRDS("output/Matrizes/GAKW.rds")
+PAKW <- readRDS("output/Matrizes/PAKW.rds")
+```
+
+Na versão atual do pipeline, as matrizes em nível de observação disponíveis em `output/Matrizes/` usam os nomes `ZE`, `ZGZE`, `ZPZE`, `ZGZW` e `ZPZW` para representar o desenho categórico de ambiente e as estruturas de interação que conectam informação genômica e fenômica a ambiente e clima. Manter esses nomes explícitos aqui ajuda o leitor a conectar os arquivos armazenados às estruturas de predição definidas mais adiante neste módulo.
+
+## 4. MCMC e configurações gerais
+
+Uma vez que as entradas estejam disponíveis, o próximo passo é definir as configurações computacionais que controlam o ajuste dos modelos e a validação repetida. Esses valores não mudam a pergunta científica em estudo, mas determinam como as distribuições a posteriori são exploradas e quão estáveis podem ser os resumos preditivos obtidos em repetições sucessivas.
+
+As configurações do MCMC (`nIter`, `burnIn` e `thin`) definem como a estimação Bayesiana será conduzida. O número de repetições (`num_rep`) controla quantas partições independentes serão mais adiante usadas nos esquemas de validação. O número de núcleos de processamento (`n_cores`) é registrado aqui porque o módulo de execução pode usar computação paralela quando a etapa cara de predição for ativada.
+
+```{r mcmc-settings}
+nIter <- 5000
+burnIn <- 1000
+thin <- 10
+num_rep <- 10
+
+n_cores <- max(1, parallel::detectCores() - 1)
+
+nIter
+burnIn
+thin
+num_rep
+n_cores
+```
+
+## 5. Catálogo de modelos
+
+A etapa de predição não compara uma única especificação. Em vez disso, ela avalia um catálogo reduzido de 18 modelos que representam diferentes formas de combinar ambiente (`E`), informação genômica (`G`), informação fenômica (`P`), informação derivada do clima (`W`) e suas correspondentes estruturas de interação. Esse catálogo é útil porque permite ao leitor ver, em um único lugar, como a comparação analítica está organizada antes que os modelos sejam ajustados.
+
+A tabela abaixo deve ser lida como um mapa da estratégia de modelagem adotada no estudo. Cada linha identifica um modelo, fornece um rótulo estável para o manuscrito e resume sua composição principal. A coluna `Model` usa os rótulos exibidos em tabelas e figuras (`M1` a `M18`), enquanto `EtaName` preserva o identificador computacional usado internamente pelo fluxo de predição (`Eta1` a `Eta18`). Entender essa distinção facilita a conexão entre as figuras do manuscrito e os arquivos/objetos usados durante o ajuste dos modelos.
+
+```{r model-catalog}
+model_catalog <- data.frame(
+  ModelNumber = 1:18,
+  Model = paste0("M", 1:18),
+  EtaName = paste0("Eta", 1:18),
+  Description = c(
+    "E + G + GE",
+    "E + P + PE",
+    "E + GGK + GGKE",
+    "E + PGK + PGKE",
+    "E + GAK + GAKE",
+    "E + PAK + PAKE",
+    "E + G + P + GE + PE",
+    "E + GGK + PGK + GGKE + PGKE",
+    "E + GAK + PAK + GAKE + PAKE",
+    "E + W + G + GE + GW",
+    "E + W + P + PE + PW",
+    "E + W + G + P + GE + PE + GW + PW",
+    "E + W + GGK + GGKE + GGKW",
+    "E + W + PGK + PGKE + PGKW",
+    "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    "E + W + GAK + GAKE + GAKW",
+    "E + W + PAK + PAKE + PAKW",
+    "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+  ),
+  FullEffects = c(
+    "E + G + GE",
+    "E + P + PE",
+    "E + GGK + GGKE",
+    "E + PGK + PGKE",
+    "E + GAK + GAKE",
+    "E + PAK + PAKE",
+    "E + G + P + GE + PE",
+    "E + GGK + PGK + GGKE + PGKE",
+    "E + GAK + PAK + GAKE + PAKE",
+    "E + W + G + GE + GW",
+    "E + W + P + PE + PW",
+    "E + W + G + P + GE + PE + GW + PW",
+    "E + W + GGK + GGKE + GGKW",
+    "E + W + PGK + PGKE + PGKW",
+    "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    "E + W + GAK + GAKE + GAKW",
+    "E + W + PAK + PAKE + PAKW",
+    "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+  ),
+  InterpretiveDescription = c(
+    "Modelo genômico linear com ambiente e interação G × E",
+    "Modelo fenômico linear com ambiente e interação P × E",
+    "Modelo genômico Gaussiano com ambiente e interação GGK × E",
+    "Modelo fenômico Gaussiano com ambiente e interação PGK × E",
+    "Modelo genômico arccosine com ambiente e interação GAK × E",
+    "Modelo fenômico arccosine com ambiente e interação PAK × E",
+    "Modelo combinado linear com ambiente, GE e PE",
+    "Modelo combinado Gaussiano com ambiente, GGKE e PGKE",
+    "Modelo combinado arccosine com ambiente, GAKE e PAKE",
+    "Modelo genômico linear com ambiente, clima, GE e GW",
+    "Modelo fenômico linear com ambiente, clima, PE e PW",
+    "Modelo combinado linear com ambiente, clima, GE, PE, GW e PW",
+    "Modelo genômico Gaussiano com ambiente, clima, GGKE e GGKW",
+    "Modelo fenômico Gaussiano com ambiente, clima, PGKE e PGKW",
+    "Modelo combinado Gaussiano com ambiente, clima, GGKE, PGKE, GGKW e PGKW",
+    "Modelo genômico arccosine com ambiente, clima, GAKE e GAKW",
+    "Modelo fenômico arccosine com ambiente, clima, PAKE e PAKW",
+    "Modelo combinado arccosine com ambiente, clima, GAKE, PAKE, GAKW e PAKW"
+  ),
+  stringsAsFactors = FALSE
+)
+
+model_catalog
+```
+
+## 6. Especificação dos modelos
+
+Uma vez definido o catálogo, o passo seguinte é traduzir cada modelo para a estrutura que será passada ao `BGLR`. Neste fluxo, essa estrutura é armazenada em `Eta_list`. Cada entrada de `Eta_list` corresponde a um modelo do catálogo e registra quais efeitos ou kernels serão usados quando o modelo for posteriormente ajustado.
+
+Esta parte do tutorial é importante porque conecta o significado biológico dos modelos à sua implementação computacional. O código abaixo não introduz uma nova pergunta científica; em vez disso, ele torna explícito como cada ideia analítica é codificada em uma forma que o software pode usar na etapa de execução.
+
+### 6.1 Inicialização do contêiner ETA
+
+Antes de preencher as especificações dos 18 modelos, é útil criar um contêiner vazio que armazenará essas estruturas de forma organizada. A partir daí, cada grupo de modelos é adicionado à lista na mesma ordem em que aparece no catálogo.
+
+```{r eta-list-initialize}
+Eta_list <- list()
+```
+
+### 6.2 Modelos 1 a 6: vias de fonte única com `E`
+
+Os primeiros seis modelos representam as comparações mais simples do catálogo. Cada um combina o efeito categórico de ambiente com uma única fonte principal de informação — linear ou baseada em kernel — juntamente com sua interação correspondente. Esses modelos são úteis como ponto de partida porque permitem ao leitor ver como cada fonte de informação se comporta quando considerada de maneira relativamente isolada.
+
+```{r eta-list-models-1-6}
+Eta_list[[1]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZG,   model = "RKHS"),
+                       list(K = ZGZE, model = "RKHS"))
+
+Eta_list[[2]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZP,   model = "RKHS"),
+                       list(K = ZPZE, model = "RKHS"))
+
+Eta_list[[3]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = GGK,  model = "RKHS"),
+                       list(K = GGKE, model = "RKHS"))
+
+Eta_list[[4]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = PGK,  model = "RKHS"),
+                       list(K = PGKE, model = "RKHS"))
+
+Eta_list[[5]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = GAK,  model = "RKHS"),
+                       list(K = GAKE, model = "RKHS"))
+
+Eta_list[[6]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = PAK,  model = "RKHS"),
+                       list(K = PAKE, model = "RKHS"))
+```
+
+### 6.3 Modelos 7 a 9: vias integradas genômicas e fenômicas sem `W`
+
+O grupo seguinte combina simultaneamente duas fontes principais de informação, mas ainda sem introduzir o componente climático. Esses modelos são importantes porque permitem comparar o ganho potencial obtido ao integrar estruturas genômicas e fenômicas na mesma formulação.
+
+```{r eta-list-models-7-9}
+Eta_list[[7]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZG,   model = "RKHS"),
+                       list(K = ZP,   model = "RKHS"),
+                       list(K = ZGZE, model = "RKHS"),
+                       list(K = ZPZE, model = "RKHS"))
+
+Eta_list[[8]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = GGK,  model = "RKHS"),
+                       list(K = PGK,  model = "RKHS"),
+                       list(K = GGKE, model = "RKHS"),
+                       list(K = PGKE, model = "RKHS"))
+
+Eta_list[[9]]  <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = GAK,  model = "RKHS"),
+                       list(K = PAK,  model = "RKHS"),
+                       list(K = GAKE, model = "RKHS"),
+                       list(K = PAKE, model = "RKHS"))
+```
+
+### 6.4 Modelos 10 a 12: vias lineares enriquecidas com clima
+
+Aqui o catálogo passa a incorporar explicitamente a informação derivada do clima. Esses modelos mantêm estruturas lineares para os componentes genômicos ou fenômicos, mas acrescentam `W` e suas interações correspondentes. Em termos didáticos, este é o ponto em que a comparação deixa de ser apenas entre fontes biológicas e passa a incluir também a contribuição potencial do clima para a predição.
+
+```{r eta-list-models-10-12}
+Eta_list[[10]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = ZG,   model = "RKHS"),
+                       list(K = ZGZE, model = "RKHS"),
+                       list(K = ZGZW, model = "RKHS"))
+
+Eta_list[[11]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = ZP,   model = "RKHS"),
+                       list(K = ZPZE, model = "RKHS"),
+                       list(K = ZPZW, model = "RKHS"))
+
+Eta_list[[12]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = ZG,   model = "RKHS"),
+                       list(K = ZP,   model = "RKHS"),
+                       list(K = ZGZE, model = "RKHS"),
+                       list(K = ZPZE, model = "RKHS"),
+                       list(K = ZGZW, model = "RKHS"),
+                       list(K = ZPZW, model = "RKHS"))
+```
+
+### 6.5 Modelos 13 a 18: vias não lineares enriquecidas com clima
+
+Os seis modelos finais estendem a comparação anterior ao combinar informação derivada do clima com estruturas de kernel não lineares. Esses modelos são importantes porque representam as especificações mais flexíveis do catálogo. Em termos práticos, eles permitem ao fluxo comparar formulações lineares mais simples com alternativas não lineares mais ricas, que podem capturar padrões de similaridade mais complexos entre genótipos, perfis fenômicos e ambientes.
+
+```{r eta-list-models-13-18}
+Eta_list[[13]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = GGK,  model = "RKHS"),
+                       list(K = GGKE, model = "RKHS"),
+                       list(K = GGKW, model = "RKHS"))
+
+Eta_list[[14]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = PGK,  model = "RKHS"),
+                       list(K = PGKE, model = "RKHS"),
+                       list(K = PGKW, model = "RKHS"))
+
+Eta_list[[15]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = GGK,  model = "RKHS"),
+                       list(K = PGK,  model = "RKHS"),
+                       list(K = GGKE, model = "RKHS"),
+                       list(K = PGKE, model = "RKHS"),
+                       list(K = GGKW, model = "RKHS"),
+                       list(K = PGKW, model = "RKHS"))
+
+Eta_list[[16]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = GAK,  model = "RKHS"),
+                       list(K = GAKE, model = "RKHS"),
+                       list(K = GAKW, model = "RKHS"))
+
+Eta_list[[17]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = PAK,  model = "RKHS"),
+                       list(K = PAKE, model = "RKHS"),
+                       list(K = PAKW, model = "RKHS"))
+
+Eta_list[[18]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
+                       list(K = ZW,   model = "RKHS"),
+                       list(K = GAK,  model = "RKHS"),
+                       list(K = PAK,  model = "RKHS"),
+                       list(K = GAKE, model = "RKHS"),
+                       list(K = PAKE, model = "RKHS"),
+                       list(K = GAKW, model = "RKHS"),
+                       list(K = PAKW, model = "RKHS"))
+```
+
+### 6.6 Checagem final de integridade da lista ETA
+
+Antes de avançar para o desenho da validação, é útil verificar se a representação computacional dos modelos está completa. Essa checagem final confirma que o número de objetos ETA coincide com o número de modelos listados no catálogo. Manter essas duas estruturas alinhadas é essencial, porque as etapas seguintes assumem que rótulos de modelos, números de modelos e especificações ETA se referem ao mesmo conjunto ordenado de 18 modelos.
+
+```{r eta-list-check}
+stopifnot(length(Eta_list) == nrow(model_catalog))
+length(Eta_list)
+```
+
+## 7. Desenho da validação cruzada
+
+A acurácia preditiva depende não apenas do modelo ajustado, mas também do problema de predição que está sendo imposto. Neste estudo, quatro esquemas de validação são usados para representar diferentes tipos de generalização: predição de genótipos completamente novos, predição de células ausentes de genótipo por ambiente, predição em um ambiente completamente novo e predição de novos genótipos dentro de um ambiente novo. Como esses cenários não são equivalentes, o desempenho do modelo sempre precisa ser interpretado junto com a estrutura da regra de mascaramento.
+
+Esta seção esclarece o que é escondido em cada esquema de validação e qual pergunta científica cada um deles pretende responder. Essa distinção é essencial antes de avançar para a etapa de execução, porque o mesmo modelo pode ter desempenho muito diferente dependendo de o desafio estar no eixo dos genótipos, no eixo dos ambientes ou em ambos simultaneamente.
+
+### 7.1 Cenários de validação e seu significado científico
+
+Os quatro esquemas de validação adotados neste estudo são resumidos abaixo. Cada um corresponde a um alvo de predição diferente e, portanto, avalia uma noção diferente de generalização. Leia esta tabela como um mapa das perguntas preditivas que serão mais adiante implementadas no submódulo de execução.
+
+```{r cv-scenarios-table}
+cv_scenarios <- data.frame(
+  CV = c("CV1", "CV2", "CV0", "CV00"),
+  WhatIsMasked = c(
+    "Genótipos inteiros",
+    "Genótipos de treinamento sob o mesmo ajuste usado em CV1",
+    "Um ambiente por vez, avaliado em genótipos já vistos",
+    "Genótipos dentro de um ambiente deixado de fora"
+  ),
+  MainQuestion = c(
+    "O modelo consegue prever genótipos completamente novos?",
+    "Quão bem o mesmo ajuste de CV1 recupera os genótipos que permaneceram no treinamento?",
+    "O modelo consegue prever genótipos já vistos em um ambiente completamente novo?",
+    "O modelo consegue prever novos genótipos dentro de um ambiente completamente novo?"
+  ),
+  stringsAsFactors = FALSE
+)
+
+cv_scenarios
+```
+
+### 7.2 Predição quando genótipos estão completamente não observados versus mantidos no treinamento
+
+Os dois primeiros esquemas são gerados a partir do mesmo ajuste por folds. Em `CV1`, o modelo é avaliado em genótipos que foram completamente excluídos do treinamento naquele fold. Em `CV2`, o modelo é avaliado nos genótipos que permaneceram no treinamento sob esse mesmo ajuste. Portanto, `CV2` não é um segundo desenho de mascaramento; ele é a acurácia de referência dentro do fold para os genótipos de treinamento produzida pelo mesmo ajuste usado em `CV1`. O resumo abaixo deixa essa distinção explícita.
+
+```{r cv1-cv2-design}
+cv12_design <- data.frame(
+  Scenario = c("CV1", "CV2"),
+  TrainingSet = c(
+    "Todas as observações, exceto as dos genótipos retirados",
+    "Mesmo ajuste usado em CV1; sem mascaramento adicional"
+  ),
+  EvaluationTarget = c(
+    "Predições para genótipos completamente não observados",
+    "Predições para genótipos mantidos no treinamento sob o mesmo fold"
+  ),
+  stringsAsFactors = FALSE
+)
+
+cv12_design
+```
+
+### 7.3 Predição em ambientes que não estão totalmente disponíveis durante o treinamento
+
+Os esquemas `CV0` e `CV00` deslocam a dificuldade para o eixo dos ambientes e são derivados do mesmo ajuste com ambiente mascarado dentro de cada fold. Em `CV0`, o alvo de avaliação é o conjunto de genótipos que já foram vistos em outros ambientes e precisam ser previstos no ambiente retirado. Em `CV00`, o alvo é mais restritivo: novos genótipos nesse mesmo ambiente retirado. Essa distinção é essencial porque `CV0` e `CV00` respondem a perguntas de generalização diferentes, embora nasçam do mesmo passo de mascaramento.
+
+```{r cv0-cv00-design}
+cvloo_design <- data.frame(
+  Scenario = c("CV0", "CV00"),
+  TrainingSet = c(
+    "Apenas genótipos de treinamento, com um ambiente totalmente mascarado",
+    "Mesmo ajuste usado em CV0; sem mascaramento adicional de ambiente"
+  ),
+  EvaluationTarget = c(
+    "Predições para genótipos vistos em outros ambientes dentro do ambiente retirado",
+    "Predições para novos genótipos dentro do ambiente retirado"
+  ),
+  stringsAsFactors = FALSE
+)
+
+cvloo_design
+```
+
+### 7.4 Nomes de arquivos e reprodutibilidade nas etapas posteriores
+
+O fluxo de predição organiza muitos arquivos, e seus nomes precisam carregar informação suficiente para identificar o cenário de validação, o trait, o modelo ajustado, a repetição e o fold ou ambiente deixado de fora. Nesses nomes computacionais, o identificador `EtaName` é usado porque ele representa o nome interno do modelo na rotina de ajuste, enquanto o rótulo apresentado no manuscrito fica armazenado em `Model`. Manter esse padrão explícito é importante porque os módulos seguintes usam esses nomes para inventariar, resumir e visualizar os resultados. A tabela abaixo mostra a convenção de nomes que conecta a etapa de execução aos resumos posteriores.
+
+```{r filename-patterns}
+prediction_file_patterns <- data.frame(
+  Scenario = c("CV1", "CV2", "CV0", "CV00"),
+  ExampleCSV = c(
+    "CV1/GY/rep02/fold03/CV1_GY_Eta1_rep02_fold03.csv",
+    "CV2/KW/rep08/fold01/CV2_KW_Eta12_rep08_fold01.csv",
+    "CV0/CS11_WS/GY/rep01/fold04/CV0_GY_CS11_WS_Eta10_rep01_fold04.csv",
+    "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
+  ),
+  ExampleBGLR = c(
+    "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GxE_RKHS_varU.dat",
+    "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PxW_RKHS_varU.dat",
+    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_CS11_WS_GY_Eta10_rep01_fold04_GxW_RKHS_varU.dat",
+    "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+  ),
+  stringsAsFactors = FALSE
+)
+
+prediction_file_patterns
+```
+
+## 8. Transição para o submódulo de execução
+
+Neste ponto, a etapa de predição já foi organizada a partir de três perspectivas complementares: as entradas analíticas estão definidas, o catálogo reduzido de 18 modelos está explícito e os esquemas de validação estão ligados às perguntas científicas que pretendem responder. Isso significa que a etapa de execução não precisa mais introduzir novos conceitos. Seu papel é aplicar a estrutura definida aqui e organizar os arquivos de predição que mais adiante serão resumidos e visualizados.
+
+O próximo submódulo, `analysis_prediction_run_outputs_pt.Rmd`, passa então do desenho à implementação. Ali o foco deixa de estar na definição dos modelos e na lógica da validação e passa para os registros de execução, o inventário de arquivos e as tabelas leves que tornam o fluxo de predição mais fácil de inspecionar e reaproveitar nos módulos posteriores.
+
+## Navegação entre etapas
+
+Este módulo conecta a definição estrutural da análise preditiva à etapa de execução e organização que vem em seguida. Leitores que queiram revisar como o conjunto de modelos foi definido devem permanecer neste arquivo. Leitores que queiram inspecionar como as predições são executadas e organizadas devem continuar para o próximo módulo.
+
+**Etapa anterior:** [Componentes de variância](variance_components_pt.html)  
+**Próxima etapa:** [Predição — Parte II](analysis_prediction_run_outputs_pt.html)

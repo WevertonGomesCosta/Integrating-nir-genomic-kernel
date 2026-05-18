@@ -1,0 +1,5 @@
+"kernel","n_rows","n_cols","is_square","symmetric_names","aligned_with_reference"
+"ZG (genomic)",982,982,TRUE,TRUE,TRUE
+"ZP (phenomic/NIR)",982,982,TRUE,TRUE,TRUE
+"ZEZE (categorical environment effect)",982,982,TRUE,TRUE,TRUE
+"ZW (weather kernel)",982,982,TRUE,TRUE,TRUE

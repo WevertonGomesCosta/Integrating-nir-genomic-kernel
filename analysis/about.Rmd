@@ -1,0 +1,115 @@
+---
+title: "About"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+## English version
+
+### Study background
+
+This project evaluates kernel-based strategies for integrating genomic markers, NIR spectra, and weather-derived covariates in maize prediction models.
+
+The study focuses on two agronomic traits:
+
+- grain yield (GY)
+- 500-kernel weight (KW)
+
+The analyses were conducted in four macro-environments formed by the combination of year and water regime.
+
+### Why this project was organized this way
+
+The website and repository were restructured to support two goals at the same time:
+
+1. provide a reproducible analytical pipeline for the study
+2. serve as a didactic and transparent tutorial for readers who want to understand each analytical step
+
+For this reason, the workflow is organized into separate pages that follow the same order used in the manuscript revision process.
+
+### Terminology used in the project
+
+A key adjustment in the current version of the project is the distinction between **environment** and **weather**.
+
+- **Environment (`E`)** refers to the categorical macro-environment effect used in the models.
+- **Weather (`W`)** refers to the kernel derived from meteorological covariates obtained from NASA POWER.
+
+This distinction is important because the weather kernel is built only from meteorological variables. It does not include broader environmental descriptors such as soil, management, or other site-level factors.
+
+### Main methodological components
+
+The project includes:
+
+- linear genomic and phenomic kernels
+- nonlinear genomic and phenomic kernels
+- categorical environment effects
+- weather-derived kernels
+- interaction terms such as `G × E`, `P × E`, `G × W`, and `P × W`
+- Bayesian multi-kernel prediction using `BGLR`
+
+### Current scientific emphasis
+
+The updated analytical pipeline is designed to support a careful revision of the manuscript. The main emphasis is to evaluate how genomic, phenomic, and weather information behave in the prediction process, rather than to assume that integration necessarily produces better performance.
+
+This makes the project useful both as a research report and as a methodological example of multi-source kernel modeling in plant breeding.
+
+---
+
+## Versão em português
+
+### Contexto do estudo
+
+Este projeto avalia estratégias baseadas em kernels para integrar marcadores genômicos, espectros NIR e covariáveis derivadas do clima em modelos de predição em milho.
+
+O estudo é focado em dois caracteres agronômicos:
+
+- produtividade de grãos (GY)
+- peso de 500 grãos (KW)
+
+As análises foram conduzidas em quatro macroambientes formados pela combinação entre ano e regime hídrico.
+
+### Por que este projeto foi organizado dessa forma
+
+O site e o repositório foram reestruturados para atender simultaneamente a dois objetivos:
+
+1. fornecer um pipeline analítico reprodutível para o estudo
+2. servir como um tutorial didático e transparente para leitores que desejam entender cada etapa analítica
+
+Por isso, o fluxo de trabalho foi organizado em páginas separadas que seguem a mesma ordem usada no processo de revisão do manuscrito.
+
+### Terminologia usada no projeto
+
+Um ajuste central na versão atual do projeto é a distinção entre **environment** e **weather**.
+
+- **Environment (`E`)** refere-se ao efeito categórico de macroambiente usado nos modelos.
+- **Weather (`W`)** refere-se ao kernel derivado de covariáveis meteorológicas obtidas da NASA POWER.
+
+Essa distinção é importante porque o kernel climático é construído apenas a partir de variáveis meteorológicas. Ele não inclui descritores ambientais mais amplos, como solo, manejo ou outros fatores em nível de local.
+
+### Principais componentes metodológicos
+
+O projeto inclui:
+
+- kernels genômicos e fenômicos lineares
+- kernels genômicos e fenômicos não lineares
+- efeitos categóricos de ambiente
+- kernels derivados do clima
+- termos de interação como `G × E`, `P × E`, `G × W` e `P × W`
+- predição Bayesiana multi-kernel usando `BGLR`
+
+### Ênfase científica atual
+
+O pipeline analítico atualizado foi desenhado para apoiar uma revisão cuidadosa do manuscrito. A ênfase principal é avaliar como as informações genômicas, fenômicas e climáticas se comportam no processo de predição, em vez de assumir que a integração necessariamente produz melhor desempenho.
+
+Isso torna o projeto útil tanto como relatório de pesquisa quanto como exemplo metodológico de modelagem multi-origem com kernels em melhoramento de plantas.

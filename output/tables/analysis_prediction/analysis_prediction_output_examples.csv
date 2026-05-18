@@ -1,0 +1,5 @@
+ExampleType,relative_path,bglr_example,Meaning
+CV1/CV2,CV1/GY/rep01/fold01/CV1_GY_Eta1_rep01_fold01.csv,bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GxE_RKHS_varU.dat,"Prediction accuracy for CV1, trait GY, model M1 (EtaName Eta1), repetition 1, fold 1."
+CV1/CV2,CV2/KW/rep10/fold05/CV2_KW_Eta18_rep10_fold05.csv,bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat,"Prediction accuracy for CV2, trait KW, model M18 (EtaName Eta18), repetition 10, fold 5."
+CV0/CV00,CV0/CS11_WS/GY/rep01/fold01/CV0_GY_CS11_WS_Eta1_rep01_fold01.csv,bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GxW_RKHS_varU.dat,"Prediction accuracy for CV0, trait GY, held-out environment CS11_WS, model M1 (EtaName Eta1), repetition 1, fold 1."
+CV0/CV00,CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv,bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat,"Prediction accuracy for CV00, trait KW, held-out environment CS12_WW, model M18 (EtaName Eta18), repetition 10, fold 2."
