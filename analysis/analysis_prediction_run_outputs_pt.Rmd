@@ -1,0 +1,556 @@
+---
+title: "Análises de predição - execução e resultados"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+**Language / Idioma:** [English](analysis_prediction_run_outputs.html) | [Português](analysis_prediction_run_outputs_pt.html)
+
+**Navegação do módulo / Module navigation:** [Parte I: setup, modelos e desenho de CV](analysis_prediction_pt.html)
+
+## 1. Introdução
+
+Este submódulo documenta a camada de execução da predição para o catálogo reduzido de 18 modelos e organiza a leitura dos arquivos de resultado disponíveis em `output/results/`.
+
+O contrato de execução usado aqui segue quatro regras operacionais:
+
+- `CV1` e `CV2` são derivados do mesmo ajuste em cada fold;
+- `CV0` e `CV00` são derivados do mesmo ajuste para cada ambiente deixado de fora em cada fold;
+- a partição em folds é determinística para cada tarefa `MODEL × REP × TRAIT` e é reutilizada nos dois blocos de CV;
+- os arquivos de resultado são organizados explicitamente por esquema de validação, ambiente quando aplicável, trait, repetição e fold, com o fold representado tanto na árvore de pastas quanto no nome do arquivo.
+
+Os chunks pesados permanecem com `eval=FALSE` para documentar a etapa de ajuste sem rerodar os modelos Bayesianos durante a renderização deste documento.
+
+## 2. Pacotes e caminhos do projeto
+
+Este módulo usa objetos matriciais disponíveis a montante e arquivos de resultado já organizados no diretório `output/results/`. A lógica de caminhos abaixo usa o diretório de trabalho atual como raiz do projeto.
+
+
+```{r setup}
+rm(list = ls())
+options(scipen = 999)
+
+library(readr)
+library(dplyr)
+library(stringr)
+library(knitr)
+library(tidyr)
+
+project_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
+
+results_dir <- file.path(project_root, "output", "results")
+analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction")
+bglr_runs_dir <- file.path(results_dir, "bglr_runs")
+```
+
+
+## 3. Recarregar os objetos de execução da Parte I
+
+Esta seção reconstrói o ambiente de execução quando o arquivo é renderizado isoladamente. Ela segue o contrato do framework de predição e documenta exatamente o conjunto reduzido de 18 objetos ETA definido na Parte I.
+
+```{r load-required-objects, eval=FALSE}
+matrices_dir <- file.path(project_root, "output", "Matrizes")
+
+required_matrix_files <- c(
+  "Pheno.rds",
+  "ZG.rds", "ZP.rds", "ZE.rds", "ZW.rds",
+  "ZGZE.rds", "ZPZE.rds", "ZGZW.rds", "ZPZW.rds",
+  "GGK.rds", "PGK.rds", "GAK.rds", "PAK.rds",
+  "GGKE.rds", "PGKE.rds", "GAKE.rds", "PAKE.rds",
+  "GGKW.rds", "PGKW.rds", "GAKW.rds", "PAKW.rds"
+)
+
+Pheno <- readRDS(file.path(matrices_dir, "Pheno.rds"))
+ZG   <- readRDS(file.path(matrices_dir, "ZG.rds"))
+ZP   <- readRDS(file.path(matrices_dir, "ZP.rds"))
+ZE   <- readRDS(file.path(matrices_dir, "ZE.rds"))
+ZW   <- readRDS(file.path(matrices_dir, "ZW.rds"))
+ZGZE <- readRDS(file.path(matrices_dir, "ZGZE.rds"))
+ZPZE <- readRDS(file.path(matrices_dir, "ZPZE.rds"))
+ZGZW <- readRDS(file.path(matrices_dir, "ZGZW.rds"))
+ZPZW <- readRDS(file.path(matrices_dir, "ZPZW.rds"))
+GGK  <- readRDS(file.path(matrices_dir, "GGK.rds"))
+PGK  <- readRDS(file.path(matrices_dir, "PGK.rds"))
+GAK  <- readRDS(file.path(matrices_dir, "GAK.rds"))
+PAK  <- readRDS(file.path(matrices_dir, "PAK.rds"))
+GGKE <- readRDS(file.path(matrices_dir, "GGKE.rds"))
+PGKE <- readRDS(file.path(matrices_dir, "PGKE.rds"))
+GAKE <- readRDS(file.path(matrices_dir, "GAKE.rds"))
+PAKE <- readRDS(file.path(matrices_dir, "PAKE.rds"))
+GGKW <- readRDS(file.path(matrices_dir, "GGKW.rds"))
+PGKW <- readRDS(file.path(matrices_dir, "PGKW.rds"))
+GAKW <- readRDS(file.path(matrices_dir, "GAKW.rds"))
+PAKW <- readRDS(file.path(matrices_dir, "PAKW.rds"))
+
+Pedigree <- unique(Pheno$Pedigree)
+
+traits_to_run <- c("GY", "KW")
+
+nIter <- 5000
+burnIn <- 1000
+thin <- 10
+num_rep <- 10
+n_cores <- max(1L, parallel::detectCores() - 1L)
+
+model_catalog <- data.frame(
+  ModelNumber = 1:18,
+  Model = paste0("M", 1:18),
+  EtaName = paste0("Eta", 1:18),
+  Description = c(
+    "E + G + GE",
+    "E + P + PE",
+    "E + GGK + GGKE",
+    "E + PGK + PGKE",
+    "E + GAK + GAKE",
+    "E + PAK + PAKE",
+    "E + G + P + GE + PE",
+    "E + GGK + PGK + GGKE + PGKE",
+    "E + GAK + PAK + GAKE + PAKE",
+    "E + W + G + GE + GW",
+    "E + W + P + PE + PW",
+    "E + W + G + P + GE + PE + GW + PW",
+    "E + W + GGK + GGKE + GGKW",
+    "E + W + PGK + PGKE + PGKW",
+    "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    "E + W + GAK + GAKE + GAKW",
+    "E + W + PAK + PAKE + PAKW",
+    "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+  ),
+  FullEffects = c(
+    "E + G + GE",
+    "E + P + PE",
+    "E + GGK + GGKE",
+    "E + PGK + PGKE",
+    "E + GAK + GAKE",
+    "E + PAK + PAKE",
+    "E + G + P + GE + PE",
+    "E + GGK + PGK + GGKE + PGKE",
+    "E + GAK + PAK + GAKE + PAKE",
+    "E + W + G + GE + GW",
+    "E + W + P + PE + PW",
+    "E + W + G + P + GE + PE + GW + PW",
+    "E + W + GGK + GGKE + GGKW",
+    "E + W + PGK + PGKE + PGKW",
+    "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    "E + W + GAK + GAKE + GAKW",
+    "E + W + PAK + PAKE + PAKW",
+    "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+  ),
+  InterpretiveDescription = c(
+    "Modelo genômico linear com ambiente e interação G × E",
+    "Modelo fenômico linear com ambiente e interação P × E",
+    "Modelo genômico Gaussiano com ambiente e interação GGK × E",
+    "Modelo fenômico Gaussiano com ambiente e interação PGK × E",
+    "Modelo genômico arccosine com ambiente e interação GAK × E",
+    "Modelo fenômico arccosine com ambiente e interação PAK × E",
+    "Modelo combinado linear com ambiente, GE e PE",
+    "Modelo combinado Gaussiano com ambiente, GGKE e PGKE",
+    "Modelo combinado arccosine com ambiente, GAKE e PAKE",
+    "Modelo genômico linear com ambiente, clima, GE e GW",
+    "Modelo fenômico linear com ambiente, clima, PE e PW",
+    "Modelo combinado linear com ambiente, clima, GE, PE, GW e PW",
+    "Modelo genômico Gaussiano com ambiente, clima, GGKE e GGKW",
+    "Modelo fenômico Gaussiano com ambiente, clima, PGKE e PGKW",
+    "Modelo combinado Gaussiano com ambiente, clima, GGKE, PGKE, GGKW e PGKW",
+    "Modelo genômico arccosine com ambiente, clima, GAKE e GAKW",
+    "Modelo fenômico arccosine com ambiente, clima, PAKE e PAKW",
+    "Modelo combinado arccosine com ambiente, clima, GAKE, PAKE, GAKW e PAKW"
+  ),
+  stringsAsFactors = FALSE
+)
+
+# A coluna Model apresenta o rótulo usado nas tabelas e figuras do manuscrito
+# (M1-M18), enquanto EtaName preserva o identificador computacional usado
+# internamente nos nomes de arquivos e nas pastas de execução do BGLR
+# (Eta1-Eta18).
+
+env_design <- model.matrix(~ Pheno$Env - 1)
+
+Eta_list <- vector("list", 18)
+Eta_list[[1]]  <- list(list(X = env_design, model = "BRR"), list(K = ZG, model = "RKHS"), list(K = ZGZE, model = "RKHS"))
+Eta_list[[2]]  <- list(list(X = env_design, model = "BRR"), list(K = ZP, model = "RKHS"), list(K = ZPZE, model = "RKHS"))
+Eta_list[[3]]  <- list(list(X = env_design, model = "BRR"), list(K = GGK, model = "RKHS"), list(K = GGKE, model = "RKHS"))
+Eta_list[[4]]  <- list(list(X = env_design, model = "BRR"), list(K = PGK, model = "RKHS"), list(K = PGKE, model = "RKHS"))
+Eta_list[[5]]  <- list(list(X = env_design, model = "BRR"), list(K = GAK, model = "RKHS"), list(K = GAKE, model = "RKHS"))
+Eta_list[[6]]  <- list(list(X = env_design, model = "BRR"), list(K = PAK, model = "RKHS"), list(K = PAKE, model = "RKHS"))
+Eta_list[[7]]  <- list(list(X = env_design, model = "BRR"), list(K = ZG, model = "RKHS"), list(K = ZP, model = "RKHS"), list(K = ZGZE, model = "RKHS"), list(K = ZPZE, model = "RKHS"))
+Eta_list[[8]]  <- list(list(X = env_design, model = "BRR"), list(K = GGK, model = "RKHS"), list(K = PGK, model = "RKHS"), list(K = GGKE, model = "RKHS"), list(K = PGKE, model = "RKHS"))
+Eta_list[[9]]  <- list(list(X = env_design, model = "BRR"), list(K = GAK, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = GAKE, model = "RKHS"), list(K = PAKE, model = "RKHS"))
+Eta_list[[10]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = ZG, model = "RKHS"), list(K = ZGZE, model = "RKHS"), list(K = ZGZW, model = "RKHS"))
+Eta_list[[11]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = ZP, model = "RKHS"), list(K = ZPZE, model = "RKHS"), list(K = ZPZW, model = "RKHS"))
+Eta_list[[12]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = ZG, model = "RKHS"), list(K = ZP, model = "RKHS"), list(K = ZGZE, model = "RKHS"), list(K = ZPZE, model = "RKHS"), list(K = ZGZW, model = "RKHS"), list(K = ZPZW, model = "RKHS"))
+Eta_list[[13]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GGK, model = "RKHS"), list(K = GGKE, model = "RKHS"), list(K = GGKW, model = "RKHS"))
+Eta_list[[14]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = PGK, model = "RKHS"), list(K = PGKE, model = "RKHS"), list(K = PGKW, model = "RKHS"))
+Eta_list[[15]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GGK, model = "RKHS"), list(K = PGK, model = "RKHS"), list(K = GGKE, model = "RKHS"), list(K = PGKE, model = "RKHS"), list(K = GGKW, model = "RKHS"), list(K = PGKW, model = "RKHS"))
+Eta_list[[16]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GAK, model = "RKHS"), list(K = GAKE, model = "RKHS"), list(K = GAKW, model = "RKHS"))
+Eta_list[[17]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = PAKE, model = "RKHS"), list(K = PAKW, model = "RKHS"))
+Eta_list[[18]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GAK, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = GAKE, model = "RKHS"), list(K = PAKE, model = "RKHS"), list(K = GAKW, model = "RKHS"), list(K = PAKW, model = "RKHS"))
+
+```
+
+
+## 4. Definir o contrato de execução
+
+Este bloco restaura os objetos operacionais usados pelo workflow atual: o conjunto fixo de ambientes leave-one-environment-out, o número de folds e a grade de tarefas `MODEL × REP × TRAIT` para o catálogo de 18 modelos. A lógica de ajuste e de resumo fica escrita diretamente dentro dos blocos de CV para manter o caminho de execução explícito.
+
+```{r define-run-objects, eval=FALSE}
+envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
+envs_leaveout <- envs_leaveout[envs_leaveout %in% unique(Pheno$Env)]
+
+num_fold <- 5L
+n_hybrids <- length(Pedigree)
+combos <- expand.grid(
+  MODEL = seq_along(Eta_list),
+  REP = seq_len(num_rep),
+  TRAIT = traits_to_run,
+  stringsAsFactors = FALSE
+)
+```
+
+## 5. Backend paralelo
+
+O backend abaixo espelha o fluxo original: um worker recebe uma combinação de modelo, repetição e trait.
+
+```{r start-parallel-backend, eval=FALSE}
+useCores <- max(1L, n_cores)
+cl <- parallel::makeCluster(useCores)
+doParallel::registerDoParallel(cl)
+
+parallel::clusterEvalQ(cl, {
+    library(dplyr)
+  library(plyr)
+  NULL
+})
+
+cat("Rodando em ", useCores, " núcleos.")
+```
+
+
+## 6. Análises preditivas para CV1 e CV2
+
+Este bloco documenta a validação baseada em genótipos para o workflow de 18 modelos. O mapa determinístico de folds, o ajuste do BGLR e o resumo por ambiente ficam escritos diretamente dentro do laço para manter cada etapa explícita. O padrão documentado considera um ajuste por fold e a separação das predições em `CV1` (genótipos deixados de fora) e `CV2` (genótipos de treinamento sob o mesmo ajuste). Nesse padrão, os resultados finais e os artefatos de ajuste do BGLR seguem uma hierarquia rep/fold.
+
+```{r run-predictions-cv12, eval=FALSE}
+foreach(i = seq_len(nrow(combos)),
+        .packages = c("BGLR", "dplyr", "plyr")) %dopar% {
+  MODEL <- combos$MODEL[i]
+  rep_num <- combos$REP[i]
+  TRAIT <- as.character(combos$TRAIT[i])
+
+  pheno <- data.frame(Pheno)
+
+  trait_id <- match(TRAIT, trait_reference_order)
+
+  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
+  set.seed(seed_value)
+  obs_per_fold <- ceiling(length(Pedigree) / num_fold)
+  folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
+
+  folds_df <- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
+
+  for (fold_num in seq_len(num_fold)) {
+    rep_label <- sprintf("rep%02d", rep_num)
+    fold_label <- sprintf("fold%02d", fold_num)
+
+    cv1_dir <- file.path(results_dir, "CV1", TRAIT, rep_label, fold_label)
+    cv2_dir <- file.path(results_dir, "CV2", TRAIT, rep_label, fold_label)
+    dir.create(cv1_dir, recursive = TRUE, showWarnings = FALSE)
+    dir.create(cv2_dir, recursive = TRUE, showWarnings = FALSE)
+
+    cv1_file <- file.path(cv1_dir, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
+    cv2_file <- file.path(cv2_dir, paste0("CV2_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
+
+    train_geno <- folds_df$Pedigree[folds_df$fold != fold_num]
+
+    yield <- pheno
+    yield$Y2 <- NA
+    yield$Y2[yield$Pedigree %in% train_geno] <- yield[[TRAIT]][yield$Pedigree %in% train_geno]
+
+    run_dir <- file.path(bglr_runs_dir, "CV1", TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+    dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+
+    save_prefix_full <- file.path(run_dir, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
+
+    y_t <- as.numeric(yield$Y2)
+    start_time <- Sys.time()
+    fit <- BGLR(y = y_t, ETA = Eta_list[[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_full)
+    end_time <- Sys.time()
+    runtime_full <- as.numeric(difftime(end_time, start_time, units = "secs"))
+
+    yield$yhat <- fit$yHat
+    rm(fit)
+    gc()
+
+    df_test <- yield[!yield$Pedigree %in% train_geno, ]
+    df_train <- yield[yield$Pedigree %in% train_geno, ]
+
+    tmp1 <- df_test %>%
+      dplyr::group_by(Env) %>%
+      dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+      as.data.frame()
+
+    tmp2 <- df_train %>%
+      dplyr::group_by(Env) %>%
+      dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+      as.data.frame()
+
+    tmp1$Runtime_sec <- runtime_full
+    tmp2$Runtime_sec <- runtime_full
+    tmp1$Fold <- fold_label
+    tmp2$Fold <- fold_label
+
+    write.csv(tmp1, file = cv1_file, row.names = FALSE)
+    write.csv(tmp2, file = cv2_file, row.names = FALSE)
+  }
+
+  NULL
+}
+```
+## 7. Análises preditivas para CV0 e CV00
+
+Este bloco documenta a validação leave-one-environment-out para o mesmo workflow de 18 modelos. Para cada tarefa, o mapa determinístico de folds segue a mesma regra usada em `CV1/CV2`, com um ajuste documentado para cada combinação `env_leave × fold`. As predições são organizadas em `CV0` (genótipos de treinamento sob a máscara do ambiente) e `CV00` (genótipos deixados de fora sob a mesma máscara). Assim como no bloco baseado em genótipos, os resultados seguem uma hierarquia rep/fold, e os artefatos do BGLR são associados às pastas persistentes correspondentes.
+
+```{r run-predictions-cv0-cv00, eval=FALSE}
+foreach(i = seq_len(nrow(combos)),
+        .packages = c("BGLR", "dplyr", "plyr")) %dopar% {
+  MODEL <- combos$MODEL[i]
+  rep_num <- combos$REP[i]
+  TRAIT <- as.character(combos$TRAIT[i])
+
+  pheno <- data.frame(Pheno)
+
+  trait_id <- match(TRAIT, trait_reference_order)
+
+  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
+  set.seed(seed_value)
+  obs_per_fold <- ceiling(length(Pedigree) / num_fold)
+  folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
+
+  folds_df <- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
+
+  for (fold_num in seq_len(num_fold)) {
+    train_geno <- folds_df$Pedigree[folds_df$fold != fold_num]
+    rep_label <- sprintf("rep%02d", rep_num)
+    fold_label <- sprintf("fold%02d", fold_num)
+
+    for (env_idx in seq_along(envs_leaveout)) {
+      env_name <- envs_leaveout[env_idx]
+
+      cv00_dir <- file.path(results_dir, "CV00", env_name, TRAIT, rep_label, fold_label)
+      cv0_dir <- file.path(results_dir, "CV0", env_name, TRAIT, rep_label, fold_label)
+      dir.create(cv00_dir, recursive = TRUE, showWarnings = FALSE)
+      dir.create(cv0_dir, recursive = TRUE, showWarnings = FALSE)
+
+      cv00_file <- file.path(cv00_dir, paste0("CV00_", TRAIT, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
+      cv0_file <- file.path(cv0_dir, paste0("CV0_", TRAIT, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
+
+      yield2 <- pheno
+      yield2$Y2 <- NA
+      yield2$Y2[yield2$Pedigree %in% train_geno] <- yield2[[TRAIT]][yield2$Pedigree %in% train_geno]
+      yield2$Y2[yield2$Env == env_name] <- NA
+
+      run_dir <- file.path(bglr_runs_dir, "CV0", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+      dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+
+      save_prefix_env <- file.path(run_dir, paste0("CV0_", env_name, "_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
+
+      y_t <- as.numeric(yield2$Y2)
+      start_time <- Sys.time()
+      fit <- BGLR(y = y_t, ETA = Eta_list[[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_env)
+      end_time <- Sys.time()
+      runtime_env <- as.numeric(difftime(end_time, start_time, units = "secs"))
+
+      yield2$yhat <- fit$yHat
+      rm(fit)
+      gc()
+
+      df_test2 <- yield2[!yield2$Pedigree %in% train_geno & yield2$Env == env_name, , drop = FALSE]
+      df_train2 <- yield2[yield2$Pedigree %in% train_geno & yield2$Env == env_name, , drop = FALSE]
+
+      tmp00 <- df_test2 %>%
+        dplyr::group_by(Env) %>%
+        dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+        as.data.frame()
+
+      tmp0 <- df_train2 %>%
+        dplyr::group_by(Env) %>%
+        dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+        as.data.frame()
+
+      tmp00$Runtime_sec <- runtime_env
+      tmp0$Runtime_sec <- runtime_env
+      tmp00$Fold <- fold_label
+      tmp0$Fold <- fold_label
+
+      write.csv(tmp00, file = cv00_file, row.names = FALSE)
+      write.csv(tmp0, file = cv0_file, row.names = FALSE)
+    }
+  }
+
+  NULL
+}
+```
+## 8. Encerramento do backend paralelo
+
+```{r stop-parallel-backend, eval=FALSE}
+stopCluster(cl)
+foreach::registerDoSEQ()
+```
+
+
+## 9. Inventário dos arquivos de predição disponíveis
+
+Os inventários abaixo resumem os arquivos CSV disponíveis usando o contrato atual de nomenclatura com 18 modelos adotado nesta versão.
+
+```{r prediction-output-inventory}
+prediction_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE, recursive = TRUE)
+results_root <- normalizePath(results_dir, winslash = "/", mustWork = FALSE)
+
+cv12_files <- prediction_files[
+  stringr::str_detect(basename(prediction_files), "^CV[12]_")
+]
+
+cvloo_files <- prediction_files[
+  stringr::str_detect(basename(prediction_files), "^CV0{1,2}_")
+]
+
+inventory_cv12 <- data.frame()
+
+for (current_file in cv12_files) {
+  current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
+  rel_path <- substring(current_norm, nchar(results_root) + 2)
+  path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
+  current_name <- basename(current_file)
+  current_name_no_ext <- sub("\\.csv$", "", current_name)
+  current_parts <- strsplit(current_name_no_ext, "_")[[1]]
+
+  inventory_cv12 <- dplyr::bind_rows(
+    inventory_cv12,
+    data.frame(
+      relative_path = rel_path,
+      file_name = current_name,
+      CV = current_parts[1],
+      Trait = path_parts[2],
+      Rep = path_parts[3],
+      Fold = path_parts[4],
+      EtaName = current_parts[3],
+      Model = stringr::str_replace(current_parts[3], "Eta", "M"),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+inventory_cvloo <- data.frame()
+
+for (current_file in cvloo_files) {
+  current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
+  rel_path <- substring(current_norm, nchar(results_root) + 2)
+  path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
+  current_name <- basename(current_file)
+  current_name_no_ext <- sub("\\.csv$", "", current_name)
+  current_parts <- strsplit(current_name_no_ext, "_")[[1]]
+
+  inventory_cvloo <- dplyr::bind_rows(
+    inventory_cvloo,
+    data.frame(
+      relative_path = rel_path,
+      file_name = current_name,
+      CV = current_parts[1],
+      Env_leave = path_parts[2],
+      Trait = path_parts[3],
+      Rep = path_parts[4],
+      Fold = path_parts[5],
+      EtaName = current_parts[length(current_parts) - 2],
+      Model = stringr::str_replace(current_parts[length(current_parts) - 2], "Eta", "M"),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+```
+## 10. Contagens de arquivos por esquema de validação e trait
+
+```{r prediction-output-counts}
+combined_inventory <- bind_rows(
+  inventory_cv12 %>% mutate(Env_leave = NA_character_),
+  inventory_cvloo
+)
+
+counts_by_cv <- combined_inventory %>%
+  count(CV, name = "n_files") %>%
+  arrange(CV)
+
+counts_by_trait <- combined_inventory %>%
+  count(CV, Trait, name = "n_files") %>%
+  arrange(CV, Trait)
+
+knitr::kable(
+  counts_by_cv,
+  caption = "Número de arquivos de predição por esquema de validação.",
+  align = "cc"
+)
+```
+
+
+## 11. Exemplos do padrão de caminhos dos resultados
+
+```{r prediction-output-examples}
+output_examples <- bind_rows(
+  tibble::tibble(
+    ExampleType = "CV1/CV2",
+    relative_path = c(
+      "CV1/GY/rep01/fold01/CV1_GY_Eta1_rep01_fold01.csv",
+      "CV2/KW/rep10/fold05/CV2_KW_Eta18_rep10_fold05.csv"
+    ),
+    bglr_example = c(
+      "bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GxE_RKHS_varU.dat",
+      "bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat"
+    ),
+    Meaning = c(
+      "Acurácia preditiva para CV1, trait GY, modelo M1 (EtaName Eta1), repetição 1, fold 1.",
+      "Acurácia preditiva para CV2, trait KW, modelo M18 (EtaName Eta18), repetição 10, fold 5."
+    )
+  ),
+  tibble::tibble(
+    ExampleType = "CV0/CV00",
+    relative_path = c(
+      "CV0/CS11_WS/GY/rep01/fold01/CV0_GY_CS11_WS_Eta1_rep01_fold01.csv",
+      "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
+    ),
+    bglr_example = c(
+      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GxW_RKHS_varU.dat",
+      "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+    ),
+    Meaning = c(
+      "Acurácia preditiva para CV0, trait GY, ambiente retirado CS11_WS, modelo M1 (EtaName Eta1), repetição 1, fold 1.",
+      "Acurácia preditiva para CV00, trait KW, ambiente retirado CS12_WW, modelo M18 (EtaName Eta18), repetição 10, fold 2."
+    )
+  )
+)
+
+knitr::kable(output_examples, caption = "Exemplos de arquivos de resultado armazenados no layout atual por repetição e fold, juntamente com os prefixes específicos de cenário usados nos artefatos persistentes do BGLR.", align = "c")
+```
+## 12. Nota sobre artefatos temporários do `BGLR`
+
+No workflow atual de 18 modelos, os artefatos persistentes de `saveAt` ficam associados a `output/results/bglr_runs/` e podem ser consultados em análises futuras de convergência. Por isso, este módulo documenta tanto os resultados finais armazenados em `output/results/` quanto os caminhos hierárquicos que localizam as pastas correspondentes de execução do BGLR.
+
+## 13. Nota final
+
+Este arquivo fecha a documentação da camada de execução da etapa de predição, preservando a consistência com o módulo reduzido de pré-processamento de 18 modelos e com o contrato atual de resultados usado pelos resumos posteriores.
+
+## Navegação entre etapas
+
+**Etapa anterior:** [Predição — Parte I](analysis_prediction_pt.html)  
+**Próxima etapa:** [Visualização](visualization_pt.html)
+

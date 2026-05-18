@@ -1,0 +1,812 @@
+---
+title: "Resumos e figuras de predição - tutorial didático"
+author:
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 13,
+  fig.height = 8,
+  out.width = "100%"
+)
+```
+
+**Language / Idioma:** [English](visualization.html) | [Português](visualization_pt.html)
+
+Esta etapa organiza os resumos de predição usados nas tabelas, nos resumos automáticos e nas figuras finais. O documento trabalha com tabelas disponíveis em `output/tables/`, anexa o catálogo de modelos, calcula comparações compactas e renderiza as figuras para inspeção.
+
+
+## 1. Carregar pacotes e localizar as pastas do projeto
+
+Esta etapa carrega os pacotes usados para manipulação de tabelas, construção das figuras e formatação do documento HTML. Os caminhos abaixo assumem que a renderização ocorre a partir da raiz do projeto.
+
+```{r packages-and-paths}
+rm(list = ls())
+options(scipen = 999)
+
+library(dplyr)
+library(tidyr)
+library(readr)
+library(tibble)
+library(ggplot2)
+library(ggthemes)
+library(knitr)
+library(kableExtra)
+library(stringr)
+library(patchwork)
+library(grid)
+
+project_root <- getwd()
+results_dir <- file.path(project_root, "output", "results")
+figures_dir <- file.path(project_root, "output", "figures")
+tables_dir <- file.path(project_root, "output", "tables")
+```
+
+## 2. Catálogo de modelos usado nos resumos de predição
+
+O catálogo define os 18 modelos comparados no estudo. A coluna `Model` apresenta o rótulo usado nas tabelas e figuras do manuscrito (`M1`--`M18`), enquanto `EtaName` preserva o identificador computacional usado internamente em nomes de arquivos e pastas de execução (`Eta1`--`Eta18`).
+
+```{r model-catalog}
+model_catalog <- tibble(
+  ModelNumber = c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18),
+  Model = paste0("M", c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
+  EtaName = paste0("Eta", c(1, 10, 3, 13, 5, 16, 2, 11, 4, 14, 6, 17, 7, 12, 8, 15, 9, 18)),
+  Pathway = c(
+    rep("Via genômica", 6),
+    rep("Via fenômica", 6),
+    rep("Via combinada G + P", 6)
+  ),
+  KernelFamily = c(
+    "Linear", "Linear", "Gaussiano", "Gaussiano", "Arccosine", "Arccosine",
+    "Linear", "Linear", "Gaussiano", "Gaussiano", "Arccosine", "Arccosine",
+    "Linear", "Linear", "Gaussiano", "Gaussiano", "Arccosine", "Arccosine"
+  ),
+  WeatherStatus = c(
+    "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W",
+    "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W",
+    "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W"
+  ),
+  Group = c(
+    rep("Genomic", 6),
+    rep("Phenomic", 6),
+    rep("Combined", 6)
+  ),
+  Description = c(
+    "Genômico linear + E", "Genômico linear + W", "Genômico Gaussiano + E", "Genômico Gaussiano + W", "Genômico arccosine + E", "Genômico arccosine + W",
+    "Fenômico linear + E", "Fenômico linear + W", "Fenômico Gaussiano + E", "Fenômico Gaussiano + W", "Fenômico arccosine + E", "Fenômico arccosine + W",
+    "Combinado linear + E", "Combinado linear + W", "Combinado Gaussiano + E", "Combinado Gaussiano + W", "Combinado arccosine + E", "Combinado arccosine + W"
+  ),
+  FullEffects = c(
+    "E + G + GE",
+    "E + W + G + GE + GW",
+    "E + GGK + GGKE",
+    "E + W + GGK + GGKE + GGKW",
+    "E + GAK + GAKE",
+    "E + W + GAK + GAKE + GAKW",
+    "E + P + PE",
+    "E + W + P + PE + PW",
+    "E + PGK + PGKE",
+    "E + W + PGK + PGKE + PGKW",
+    "E + PAK + PAKE",
+    "E + W + PAK + PAKE + PAKW",
+    "E + G + P + GE + PE",
+    "E + W + G + P + GE + PE + GW + PW",
+    "E + GGK + PGK + GGKE + PGKE",
+    "E + W + GGK + PGK + GGKE + PGKE + GGKW + PGKW",
+    "E + GAK + PAK + GAKE + PAKE",
+    "E + W + GAK + PAK + GAKE + PAKE + GAKW + PAKW"
+  ),
+  InterpretiveDescription = c(
+    "Modelo genômico linear com ambiente e interação GxE.",
+    "Modelo genômico-climático linear com ambiente, clima, GxE e GxW.",
+    "Modelo genômico Gaussiano com ambiente e interação genômico-ambiente.",
+    "Modelo genômico-climático Gaussiano com ambiente, clima, interação genômico-ambiente e interação genômico-clima.",
+    "Modelo genômico arccosine com ambiente e interação genômico-ambiente.",
+    "Modelo genômico-climático arccosine com ambiente, clima, interação genômico-ambiente e interação genômico-clima.",
+    "Modelo fenômico linear com ambiente e interação PxE.",
+    "Modelo fenômico-climático linear com ambiente, clima, PxE e PxW.",
+    "Modelo fenômico Gaussiano com ambiente e interação fenômico-ambiente.",
+    "Modelo fenômico-climático Gaussiano com ambiente, clima, interação fenômico-ambiente e interação fenômico-clima.",
+    "Modelo fenômico arccosine com ambiente e interação fenômico-ambiente.",
+    "Modelo fenômico-climático arccosine com ambiente, clima, interação fenômico-ambiente e interação fenômico-clima.",
+    "Modelo combinado genômico-fenômico linear com ambiente e termos GxE e PxE.",
+    "Modelo combinado genômico-fenômico-climático linear com ambiente, clima, GxE, PxE, GxW e PxW.",
+    "Modelo combinado genômico-fenômico Gaussiano com ambiente e interações genômicas e fenômicas.",
+    "Modelo combinado genômico-fenômico-climático Gaussiano com ambiente, clima e conjunto completo de interações genômicas e fenômicas.",
+    "Modelo combinado genômico-fenômico arccosine com ambiente e interações genômicas e fenômicas.",
+    "Modelo combinado genômico-fenômico-climático arccosine com ambiente, clima e conjunto completo de interações genômicas e fenômicas."
+  )
+)
+
+model_catalog
+```
+
+## 3. Pares de comparação entre modelos sem W e com W
+
+Os pares abaixo comparam a mesma via de modelagem e a mesma família de kernel com e sem o kernel climático.
+
+```{r comparison-pairs}
+comparison_pairs <- tibble(
+  Comparison = c(
+    "Genômico linear", "Genômico Gaussiano", "Genômico arccosine",
+    "Fenômico linear", "Fenômico Gaussiano", "Fenômico arccosine",
+    "Combinado linear", "Combinado Gaussiano", "Combinado arccosine"
+  ),
+  WithoutW = c("M1", "M3", "M5", "M2", "M4", "M6", "M7", "M8", "M9"),
+  WithW = c("M10", "M13", "M16", "M11", "M14", "M17", "M12", "M15", "M18")
+)
+
+comparison_pairs
+```
+
+## 4. Carregar tabelas de predição
+
+```{r load-visualization-tables, include=FALSE}
+cv12_summary <- readr::read_csv(
+  file.path(tables_dir, "prediction_cv1_cv2_summary.csv"),
+  show_col_types = FALSE
+) %>%
+  dplyr::select(-dplyr::any_of(c(
+    "Pathway", "KernelFamily", "WeatherStatus", "Group",
+    "FullEffects", "InterpretiveDescription"
+  ))) %>%
+  dplyr::mutate(
+    Model = stringr::str_replace(as.character(Model), "Eta", "M"),
+    EtaName = stringr::str_replace(Model, "M", "Eta")
+  ) %>%
+  dplyr::left_join(
+    model_catalog %>%
+      dplyr::select(
+        ModelNumber, Model, EtaName, Pathway, KernelFamily, WeatherStatus,
+        Group, FullEffects, InterpretiveDescription
+      ),
+    by = c("ModelNumber", "Model", "EtaName")
+  ) %>%
+  dplyr::mutate(
+    KernelFamily = stringr::str_replace_all(
+      as.character(KernelFamily),
+      paste0("(?i)", "arc", "-", "cosine"),
+      "Arccosine"
+    ),
+    KernelFamily = dplyr::recode(
+      KernelFamily,
+      "Gaussiano" = "Gaussian",
+      .default = KernelFamily
+    )
+  )
+
+cvloo_summary <- readr::read_csv(
+  file.path(tables_dir, "prediction_cv0_cv00_summary.csv"),
+  show_col_types = FALSE
+) %>%
+  dplyr::select(-dplyr::any_of(c(
+    "Pathway", "KernelFamily", "WeatherStatus", "Group",
+    "FullEffects", "InterpretiveDescription"
+  ))) %>%
+  dplyr::mutate(
+    Model = stringr::str_replace(as.character(Model), "Eta", "M"),
+    EtaName = stringr::str_replace(Model, "M", "Eta")
+  ) %>%
+  dplyr::left_join(
+    model_catalog %>%
+      dplyr::select(
+        ModelNumber, Model, EtaName, Pathway, KernelFamily, WeatherStatus,
+        Group, FullEffects, InterpretiveDescription
+      ),
+    by = c("ModelNumber", "Model", "EtaName")
+  ) %>%
+  dplyr::mutate(
+    KernelFamily = stringr::str_replace_all(
+      as.character(KernelFamily),
+      paste0("(?i)", "arc", "-", "cosine"),
+      "Arccosine"
+    ),
+    KernelFamily = dplyr::recode(
+      KernelFamily,
+      "Gaussiano" = "Gaussian",
+      .default = KernelFamily
+    )
+  )
+
+cv12_display <- cv12_summary %>%
+  dplyr::arrange(Trait, CV, Pathway, KernelFamily, WeatherStatus, ModelNumber) %>%
+  dplyr::mutate(
+    MeanCorrelation = round(MeanCorrelation, 3),
+    SDCorrelation = round(SDCorrelation, 3),
+    MeanRuntimeSec = round(MeanRuntimeSec, 2)
+  ) %>%
+  dplyr::select(
+    Trait, CV, Model, EtaName, Pathway, KernelFamily, WeatherStatus,
+    FullEffects, MeanCorrelation, SDCorrelation, NumberOfRepetitions, MeanRuntimeSec
+  )
+
+cvloo_display <- cvloo_summary %>%
+  dplyr::arrange(Trait, CV, Env_leave, Pathway, KernelFamily, WeatherStatus, ModelNumber) %>%
+  dplyr::mutate(
+    MeanCorrelation = round(MeanCorrelation, 3),
+    SDCorrelation = round(SDCorrelation, 3),
+    MeanRuntimeSec = round(MeanRuntimeSec, 2)
+  ) %>%
+  dplyr::select(
+    Trait, CV, Env_leave, Model, EtaName, Pathway, KernelFamily, WeatherStatus,
+    FullEffects, MeanCorrelation, SDCorrelation, NumberOfRuns, MeanRuntimeSec
+  )
+
+cv12_top3 <- cv12_summary %>%
+  dplyr::group_by(Trait, CV) %>%
+  dplyr::slice_max(order_by = MeanCorrelation, n = 3, with_ties = FALSE) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(
+    MeanCorrelation = round(MeanCorrelation, 3),
+    SDCorrelation = round(SDCorrelation, 3)
+  ) %>%
+  dplyr::select(Trait, CV, Model, EtaName, FullEffects, MeanCorrelation, SDCorrelation)
+
+cvloo_top3 <- cvloo_summary %>%
+  dplyr::group_by(Trait, CV, Env_leave) %>%
+  dplyr::slice_max(order_by = MeanCorrelation, n = 3, with_ties = FALSE) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(
+    MeanCorrelation = round(MeanCorrelation, 3),
+    SDCorrelation = round(SDCorrelation, 3)
+  ) %>%
+  dplyr::select(Trait, CV, Env_leave, Model, EtaName, FullEffects, MeanCorrelation, SDCorrelation)
+
+cv12_w_effect <- cv12_summary %>%
+  dplyr::select(Trait, CV, Model, MeanCorrelation) %>%
+  dplyr::inner_join(comparison_pairs, by = c("Model" = "WithoutW")) %>%
+  dplyr::rename(MeanWithoutW = MeanCorrelation) %>%
+  dplyr::inner_join(
+    cv12_summary %>%
+      dplyr::select(Trait, CV, Model, MeanCorrelation),
+    by = c("Trait", "CV", "WithW" = "Model")
+  ) %>%
+  dplyr::rename(MeanWithW = MeanCorrelation) %>%
+  dplyr::mutate(DeltaWithW = MeanWithW - MeanWithoutW) %>%
+  dplyr::select(Comparison, Trait, CV, MeanWithoutW, MeanWithW, DeltaWithW)
+
+cvloo_w_effect <- cvloo_summary %>%
+  dplyr::select(Trait, CV, Env_leave, Model, MeanCorrelation) %>%
+  dplyr::inner_join(comparison_pairs, by = c("Model" = "WithoutW")) %>%
+  dplyr::rename(MeanWithoutW = MeanCorrelation) %>%
+  dplyr::inner_join(
+    cvloo_summary %>%
+      dplyr::select(Trait, CV, Env_leave, Model, MeanCorrelation),
+    by = c("Trait", "CV", "Env_leave", "WithW" = "Model")
+  ) %>%
+  dplyr::rename(MeanWithW = MeanCorrelation) %>%
+  dplyr::mutate(DeltaWithW = MeanWithW - MeanWithoutW) %>%
+  dplyr::select(Comparison, Trait, CV, Env_leave, MeanWithoutW, MeanWithW, DeltaWithW)
+
+cv12_kernel_family_compare <- cv12_summary %>%
+  dplyr::select(Trait, CV, Pathway, WeatherStatus, KernelFamily, MeanCorrelation) %>%
+  tidyr::pivot_wider(names_from = KernelFamily, values_from = MeanCorrelation) %>%
+  dplyr::mutate(
+    Delta_Gaussian_vs_Linear = Gaussian - Linear,
+    Delta_Arccosine_vs_Linear = Arccosine - Linear
+  ) %>%
+  dplyr::arrange(Trait, CV, Pathway, WeatherStatus)
+
+cvloo_kernel_family_compare <- cvloo_summary %>%
+  dplyr::select(Trait, CV, Env_leave, Pathway, WeatherStatus, KernelFamily, MeanCorrelation) %>%
+  tidyr::pivot_wider(names_from = KernelFamily, values_from = MeanCorrelation) %>%
+  dplyr::mutate(
+    Delta_Gaussian_vs_Linear = Gaussian - Linear,
+    Delta_Arccosine_vs_Linear = Arccosine - Linear
+  ) %>%
+  dplyr::arrange(Trait, CV, Env_leave, Pathway, WeatherStatus)
+```
+
+## 5. Tabelas Top-3
+
+As próximas tabelas mostram os três modelos com maior capacidade preditiva em cada cenário de validação. A coluna `FullEffects` mostra os efeitos completos, enquanto `Model` mostra o rótulo usado nas figuras.
+
+```{r table-cv12-top3}
+cv12_top3 %>%
+  knitr::kable(
+    caption = "Top 3 modelos para cada traço e esquema de validação em CV1 e CV2.",
+    align = "llllcc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  )
+```
+
+```{r table-cvloo-top3}
+cvloo_top3 %>%
+  knitr::kable(
+    caption = "Top 3 modelos para cada traço, esquema de validação e ambiente omitido em CV0 e CV00.",
+    align = "lllllcc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  )
+```
+
+## 6. Tabelas do efeito de W
+
+As próximas tabelas resumem contrastes pareados entre modelos com e sem o kernel climático.
+
+```{r table-cv12-w-effect}
+cv12_w_effect %>%
+  dplyr::mutate(
+    MeanWithoutW = round(MeanWithoutW, 3),
+    MeanWithW = round(MeanWithW, 3),
+    DeltaWithW = round(DeltaWithW, 3)
+  ) %>%
+  knitr::kable(
+    caption = "Efeito da adição de W em CV1 e CV2.",
+    align = "lllccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+```{r table-cvloo-w-effect}
+cvloo_w_effect %>%
+  dplyr::mutate(
+    MeanWithoutW = round(MeanWithoutW, 3),
+    MeanWithW = round(MeanWithW, 3),
+    DeltaWithW = round(DeltaWithW, 3)
+  ) %>%
+  knitr::kable(
+    caption = "Efeito da adição de W em CV0 e CV00.",
+    align = "llllccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+## 7. Tabelas de comparação entre famílias de kernel
+
+As próximas tabelas comparam kernels lineares, Gaussianos e arccosine dentro de cada via analítica e status climático.
+
+```{r table-cv12-kernel-family}
+cv12_kernel_family_compare %>%
+  dplyr::mutate(
+    Linear = round(Linear, 3),
+    Gaussian = round(Gaussian, 3),
+    Arccosine = round(Arccosine, 3),
+    Delta_Gaussian_vs_Linear = round(Delta_Gaussian_vs_Linear, 3),
+    Delta_Arccosine_vs_Linear = round(Delta_Arccosine_vs_Linear, 3)
+  ) %>%
+  knitr::kable(
+    caption = "Comparação entre famílias de kernel em CV1 e CV2.",
+    align = "llllccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+```{r table-cvloo-kernel-family}
+cvloo_kernel_family_compare %>%
+  dplyr::mutate(
+    Linear = round(Linear, 3),
+    Gaussian = round(Gaussian, 3),
+    Arccosine = round(Arccosine, 3),
+    Delta_Gaussian_vs_Linear = round(Delta_Gaussian_vs_Linear, 3),
+    Delta_Arccosine_vs_Linear = round(Delta_Arccosine_vs_Linear, 3)
+  ) %>%
+  knitr::kable(
+    caption = "Comparação entre famílias de kernel em CV0 e CV00.",
+    align = "lllllccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+## 8. Resumos automáticos orientados aos resultados
+
+As tabelas abaixo fornecem resumos automáticos compactos para inspeção antes da redação narrativa dos resultados.
+
+```{r automated-results-text-pt, results='asis'}
+cv12_best_models <- cv12_summary %>%
+  dplyr::group_by(Trait, CV) %>%
+  dplyr::slice_max(order_by = MeanCorrelation, n = 1, with_ties = FALSE) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(MeanCorrelation = round(MeanCorrelation, 3)) %>%
+  dplyr::select(Trait, CV, Model, FullEffects, MeanCorrelation)
+
+cvloo_best_models <- cvloo_summary %>%
+  dplyr::group_by(Trait, CV, Env_leave) %>%
+  dplyr::slice_max(order_by = MeanCorrelation, n = 1, with_ties = FALSE) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(MeanCorrelation = round(MeanCorrelation, 3)) %>%
+  dplyr::select(Trait, CV, Env_leave, Model, FullEffects, MeanCorrelation)
+
+cv12_w_summary <- cv12_w_effect %>%
+  dplyr::group_by(Trait, CV) %>%
+  dplyr::summarise(MeanDeltaWithW = round(mean(DeltaWithW, na.rm = TRUE), 3), .groups = "drop")
+
+cvloo_w_summary <- cvloo_w_effect %>%
+  dplyr::group_by(Trait, CV) %>%
+  dplyr::summarise(MeanDeltaWithW = round(mean(DeltaWithW, na.rm = TRUE), 3), .groups = "drop")
+
+cat("### Melhores modelos em CV1 e CV2\n\n")
+cv12_best_models %>%
+  knitr::kable(align = "llllc") %>%
+  kableExtra::kable_styling(full_width = FALSE, position = "left")
+
+cat("\n\n### Melhores modelos em CV0 e CV00\n\n")
+cvloo_best_models %>%
+  knitr::kable(align = "lllllc") %>%
+  kableExtra::kable_styling(full_width = FALSE, position = "left")
+
+cat("\n\n### Efeito médio de W\n\n")
+dplyr::bind_rows(
+  cv12_w_summary,
+  cvloo_w_summary
+) %>%
+  dplyr::arrange(Trait, CV) %>%
+  knitr::kable(align = "llc") %>%
+  kableExtra::kable_styling(full_width = FALSE, position = "left")
+```
+
+## 9. Figuras
+
+As figuras finais resumem a capacidade preditiva para o catálogo de modelos em `CV1/CV2` e `CV0/CV00`. O eixo x usa `M1`--`M18`; as composições completas dos modelos estão na Tabela Suplementar S1.
+
+```{r figure-cv12}
+group_levels_pt <- c("Genomic", "Phenomic", "Combined")
+model_levels_pt <- model_catalog$Model
+
+cv12_plot_data <- cv12_summary %>%
+  dplyr::mutate(
+    Group = factor(Group, levels = group_levels_pt),
+    Model = factor(Model, levels = model_levels_pt),
+    CV = factor(CV, levels = c("CV1", "CV2"))
+  )
+
+plot_gy_cv1 <- cv12_plot_data %>%
+  dplyr::filter(Trait == "GY", CV == "CV1") %>%
+  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
+  geom_col(width = 0.75, color = "grey30", linewidth = 0.25, na.rm = TRUE) +
+  geom_errorbar(aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation), width = 0.20, linewidth = 0.35, na.rm = TRUE) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
+  scale_x_discrete(name = "Modelo") +
+  scale_y_continuous(name = "Correlação preditiva", breaks = seq(0, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
+  coord_cartesian(ylim = c(0, 1)) +
+  ggthemes::scale_fill_gdocs(
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
+    drop = FALSE,
+    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
+  ) +
+  labs(title = "CV1") +
+  theme_bw(base_size = 16) +
+  theme(plot.title = element_text(face = "bold", size = 17, hjust = 0.5), axis.text.x = element_text(size = 13, color = "black"), axis.text.y = element_text(size = 12, color = "black"), axis.title = element_text(face = "bold", size = 14), legend.position = "top", legend.title = element_text(face = "bold", size = 14), legend.text = element_text(size = 12), legend.key.width = grid::unit(1.2, "cm"), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), plot.margin = margin(8, 8, 8, 8))
+
+plot_gy_cv2 <- cv12_plot_data %>%
+  dplyr::filter(Trait == "GY", CV == "CV2") %>%
+  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
+  geom_col(width = 0.75, color = "grey30", linewidth = 0.25, na.rm = TRUE) +
+  geom_errorbar(aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation), width = 0.20, linewidth = 0.35, na.rm = TRUE) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
+  scale_x_discrete(name = "Modelo") +
+  scale_y_continuous(name = "Correlação preditiva", breaks = seq(0, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
+  coord_cartesian(ylim = c(0, 1)) +
+  ggthemes::scale_fill_gdocs(
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
+    drop = FALSE,
+    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
+  ) +
+  labs(title = "CV2") +
+  theme_bw(base_size = 16) +
+  theme(plot.title = element_text(face = "bold", size = 17, hjust = 0.5), axis.text.x = element_text(size = 13, color = "black"), axis.text.y = element_text(size = 12, color = "black"), axis.title = element_text(face = "bold", size = 14), legend.position = "top", legend.title = element_text(face = "bold", size = 14), legend.text = element_text(size = 12), legend.key.width = grid::unit(1.2, "cm"), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), plot.margin = margin(8, 8, 8, 8))
+
+plot_kw_cv1 <- cv12_plot_data %>%
+  dplyr::filter(Trait == "KW", CV == "CV1") %>%
+  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
+  geom_col(width = 0.75, color = "grey30", linewidth = 0.25, na.rm = TRUE) +
+  geom_errorbar(aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation), width = 0.20, linewidth = 0.35, na.rm = TRUE) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
+  scale_x_discrete(name = "Modelo") +
+  scale_y_continuous(name = "Correlação preditiva", breaks = seq(0, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
+  coord_cartesian(ylim = c(0, 1)) +
+  ggthemes::scale_fill_gdocs(
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
+    drop = FALSE,
+    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
+  ) +
+  labs(title = "CV1") +
+  theme_bw(base_size = 16) +
+  theme(plot.title = element_text(face = "bold", size = 17, hjust = 0.5), axis.text.x = element_text(size = 13, color = "black"), axis.text.y = element_text(size = 12, color = "black"), axis.title = element_text(face = "bold", size = 14), legend.position = "top", legend.title = element_text(face = "bold", size = 14), legend.text = element_text(size = 12), legend.key.width = grid::unit(1.2, "cm"), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), plot.margin = margin(8, 8, 8, 8))
+
+plot_kw_cv2 <- cv12_plot_data %>%
+  dplyr::filter(Trait == "KW", CV == "CV2") %>%
+  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
+  geom_col(width = 0.75, color = "grey30", linewidth = 0.25, na.rm = TRUE) +
+  geom_errorbar(aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation), width = 0.20, linewidth = 0.35, na.rm = TRUE) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
+  scale_x_discrete(name = "Modelo") +
+  scale_y_continuous(name = "Correlação preditiva", breaks = seq(0, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
+  coord_cartesian(ylim = c(0, 1)) +
+  ggthemes::scale_fill_gdocs(
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
+    drop = FALSE,
+    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
+  ) +
+  labs(title = "CV2") +
+  theme_bw(base_size = 16) +
+  theme(plot.title = element_text(face = "bold", size = 17, hjust = 0.5), axis.text.x = element_text(size = 13, color = "black"), axis.text.y = element_text(size = 12, color = "black"), axis.title = element_text(face = "bold", size = 14), legend.position = "top", legend.title = element_text(face = "bold", size = 14), legend.text = element_text(size = 12), legend.key.width = grid::unit(1.2, "cm"), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), plot.margin = margin(8, 8, 8, 8))
+
+prediction_GY_CV1_CV2_combined <- (plot_gy_cv1 + plot_gy_cv2) +
+  patchwork::plot_layout(ncol = 2, guides = "collect") +
+  patchwork::plot_annotation(title = "Capacidade preditiva para produtividade de grãos (GY)", tag_levels = "A") &
+  theme(legend.position = "top", plot.title = element_text(face = "bold", size = 18, hjust = 0.5), plot.tag = element_text(face = "bold", size = 18, color = "black"))
+
+prediction_KW_CV1_CV2_combined <- (plot_kw_cv1 + plot_kw_cv2) +
+  patchwork::plot_layout(ncol = 2, guides = "collect") +
+  patchwork::plot_annotation(title = "Capacidade preditiva para peso de grãos (KW)", tag_levels = "A") &
+  theme(legend.position = "top", plot.title = element_text(face = "bold", size = 18, hjust = 0.5), plot.tag = element_text(face = "bold", size = 18, color = "black"))
+
+prediction_GY_CV1_CV2_combined
+prediction_KW_CV1_CV2_combined
+```
+
+```{r figure-cvloo}
+cvloo_plot_data <- cvloo_summary %>%
+  dplyr::mutate(
+    Group = factor(Group, levels = group_levels_pt),
+    Model = factor(Model, levels = model_levels_pt),
+    Env_leave = factor(Env_leave, levels = c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")),
+    CV = factor(CV, levels = c("CV00", "CV0"))
+  )
+
+plot_gy_cv00 <- cvloo_plot_data %>%
+  dplyr::filter(Trait == "GY", CV == "CV00") %>%
+  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
+  geom_col(
+    width = 0.75,
+    color = "grey30",
+    na.rm = TRUE
+  ) +
+  geom_errorbar(
+    aes(
+      ymin = MeanCorrelation - SDCorrelation,
+      ymax = MeanCorrelation + SDCorrelation
+    ),
+    width = 0.20,
+    linewidth = 0.35,
+    na.rm = TRUE
+  ) +
+  facet_wrap(~ Env_leave, ncol = 2) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed",
+    color = "grey40"
+  ) +
+  scale_x_discrete(name = "Modelo") +
+  scale_y_continuous(
+    name = "Correlação preditiva",
+    breaks = seq(0, 1, by = 0.2),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  coord_cartesian(ylim = c(0, 1)) +
+  ggthemes::scale_fill_gdocs(
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
+    drop = FALSE,
+    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
+  ) +
+  labs(title = "Capacidade preditiva em CV00 para produtividade de grãos (GY)") +
+  theme_bw(base_size = 16) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    axis.text.x = element_text(size = 12, color = "black"),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(face = "bold", size = 14),
+    strip.text = element_text(face = "bold", size = 12),
+    legend.position = "top",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+plot_gy_cv0 <- cvloo_plot_data %>%
+  dplyr::filter(Trait == "GY", CV == "CV0") %>%
+  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
+  geom_col(
+    width = 0.75,
+    color = "grey30",
+    na.rm = TRUE
+  ) +
+  geom_errorbar(
+    aes(
+      ymin = MeanCorrelation - SDCorrelation,
+      ymax = MeanCorrelation + SDCorrelation
+    ),
+    width = 0.20,
+    linewidth = 0.35,
+    na.rm = TRUE
+  ) +
+  facet_wrap(~ Env_leave, ncol = 2) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed",
+    color = "grey40"
+  ) +
+  scale_x_discrete(name = "Modelo") +
+  scale_y_continuous(
+    name = "Correlação preditiva",
+    breaks = seq(0, 1, by = 0.2),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  coord_cartesian(ylim = c(0, 1)) +
+  ggthemes::scale_fill_gdocs(
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
+    drop = FALSE,
+    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
+  ) +
+  labs(title = "Capacidade preditiva em CV0 para produtividade de grãos (GY)") +
+  theme_bw(base_size = 16) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    axis.text.x = element_text(size = 12, color = "black"),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(face = "bold", size = 14),
+    strip.text = element_text(face = "bold", size = 12),
+    legend.position = "top",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+plot_kw_cv00 <- cvloo_plot_data %>%
+  dplyr::filter(Trait == "KW", CV == "CV00") %>%
+  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
+  geom_col(
+    width = 0.75,
+    color = "grey30",
+    na.rm = TRUE
+  ) +
+  geom_errorbar(
+    aes(
+      ymin = MeanCorrelation - SDCorrelation,
+      ymax = MeanCorrelation + SDCorrelation
+    ),
+    width = 0.20,
+    linewidth = 0.35,
+    na.rm = TRUE
+  ) +
+  facet_wrap(~ Env_leave, ncol = 2) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed",
+    color = "grey40"
+  ) +
+  scale_x_discrete(name = "Modelo") +
+  scale_y_continuous(
+    name = "Correlação preditiva",
+    breaks = seq(0, 1, by = 0.2),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  coord_cartesian(ylim = c(0, 1)) +
+  ggthemes::scale_fill_gdocs(
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
+    drop = FALSE,
+    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
+  ) +
+  labs(title = "Capacidade preditiva em CV00 para peso de grãos (KW)") +
+  theme_bw(base_size = 16) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    axis.text.x = element_text(size = 12, color = "black"),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(face = "bold", size = 14),
+    strip.text = element_text(face = "bold", size = 12),
+    legend.position = "top",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+plot_kw_cv0 <- cvloo_plot_data %>%
+  dplyr::filter(Trait == "KW", CV == "CV0") %>%
+  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
+  geom_col(
+    width = 0.75,
+    color = "grey30",
+    na.rm = TRUE
+  ) +
+  geom_errorbar(
+    aes(
+      ymin = MeanCorrelation - SDCorrelation,
+      ymax = MeanCorrelation + SDCorrelation
+    ),
+    width = 0.20,
+    linewidth = 0.35,
+    na.rm = TRUE
+  ) +
+  facet_wrap(~ Env_leave, ncol = 2) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed",
+    color = "grey40"
+  ) +
+  scale_x_discrete(name = "Modelo") +
+  scale_y_continuous(
+    name = "Correlação preditiva",
+    breaks = seq(0, 1, by = 0.2),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  coord_cartesian(ylim = c(0, 1)) +
+  ggthemes::scale_fill_gdocs(
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
+    drop = FALSE,
+    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
+  ) +
+  labs(title = "Capacidade preditiva em CV0 para peso de grãos (KW)") +
+  theme_bw(base_size = 16) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    axis.text.x = element_text(size = 12, color = "black"),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(face = "bold", size = 14),
+    strip.text = element_text(face = "bold", size = 12),
+    legend.position = "top",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+plot_gy_cv00
+plot_gy_cv0
+plot_kw_cv00
+plot_kw_cv0
+```
+
+## 10. Nota final
+
+A etapa de visualização fornece as tabelas e figuras finais usadas para interpretar o comportamento preditivo dos modelos genômicos, fenômicos, integrados, climáticos, Gaussianos e arccosine. Os códigos dos modelos exibidos nas figuras correspondem à Tabela Suplementar S1.
+
+## Navegação entre etapas
+
+Etapa anterior: [Execução da predição e organização dos resultados](analysis_prediction_run_outputs_pt.html)  
+Próxima etapa: interpretação dos resultados orientada ao manuscrito.

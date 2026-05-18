@@ -1,0 +1,981 @@
+---
+title: "Climate Data Acquisition and Processing (NASA POWER)"
+author: 
+  - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Integrating-nir-genomic-kernel/
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+editor_options:
+  chunk_output_type: console
+github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  out.width = "100%"
+)
+```
+
+**Language / Idioma:** [English](climate_data.html) | [Português](climate_data_pt.html)
+
+
+## 1. Introduction
+
+This tutorial presents the workflow used to obtain and process daily weather data for the maize experiments conducted in College Station, Texas, during the 2011 and 2012 growing seasons.
+
+The purpose of this script is not only to download daily weather records, but to convert those time series into a concise and biologically meaningful set of **weather-derived covariates**. These covariates summarize the main meteorological conditions of each growing season and are later used to build the **weather kernel (W)** in the final prediction pipeline.
+
+In the reduced set of 18 models used in the project, the weather kernel is included in models **Eta10-Eta18**. In those models, `W` is used to test whether weather-derived similarity adds useful information beyond the categorical environment effect (`E`) and the genomic (`G`) and phenomic (`P`) kernels. Therefore, `W` should be interpreted as a complementary source of meteorological information and **not** as a replacement for `E`.
+
+In practical terms, the workflow has four goals:
+
+1. Retrieve daily weather data from the NASA POWER database.
+2. Organize the raw data into a reproducible table.
+3. Visually inspect the main weather differences between years.
+4. Derive annual and daily weather descriptors that can later be used to construct the weather kernel.
+
+**Study location:** College Station, Texas, USA  
+**Growing season window:** May 1 to September 30  
+**Study years:** 2011 and 2012
+
+## Inputs, outputs and next step
+
+**Inputs of this step**
+- location and time information required to query NASA POWER
+- internal settings used to aggregate, summarize, and visualize climate variables
+
+**Outputs of this step**
+- annual weather covariates
+- expanded daily weather table
+- climate figures used for exploratory inspection
+
+**Next step**
+- `matrizes.Rmd` uses the climate-derived outputs to align environmental information with the observational structure and build the weather kernel (`W`).
+
+## 2. R environment
+
+Before starting the analysis, we load the packages required for data retrieval, data manipulation, visualization, and multi-panel figure assembly.
+
+Each package has a clear role in the workflow:
+
+- `nasapower`: connects R to the NASA POWER database.
+- `tidyverse`: supports data wrangling and plotting.
+- `lubridate`: simplifies date conversion and date-based operations.
+- `patchwork`: combines multiple `ggplot2` figures into publication-ready panels.
+- `ggthemes`: provides the Google Docs discrete scales used to standardize colors across figures.
+- `kableExtra`: improves the presentation of HTML tables in the tutorial.
+- `suncalc`: derives sunrise and sunset times used to compute photoperiod.
+
+We also create the output directory at the beginning of the script. This avoids errors when the script saves tables and figures later in the analysis.
+
+The code below loads the packages and prepares the output folder used by this workflow.
+
+```{r packages}
+# Uncomment if installation is required
+# install.packages(c("nasapower", "tidyverse", "lubridate", "patchwork", "ggthemes", "kableExtra", "suncalc"))
+
+library(nasapower)
+library(tidyverse)
+library(lubridate)
+library(patchwork)
+library(ggthemes)
+library(knitr)
+library(grid)
+library(kableExtra)
+library(suncalc)
+
+dir.create("output", showWarnings = FALSE)
+dir.create("output/climate_results", recursive = TRUE, showWarnings = FALSE)
+```
+
+## 3. Query parameters
+
+In this section, we define the basic inputs for the NASA POWER query. These inputs determine **where**, **when**, and **which climatic variables** will be retrieved.
+
+The geographic coordinates identify the experimental site. The start and end dates define the crop season window to be analyzed. The vector `params` lists the daily climatic variables required for downstream summaries, such as precipitation, temperature, relative humidity, solar radiation, and wind speed.
+
+These variables were selected because they allow us to derive weather-derived descriptors with direct agronomic interpretation, such as accumulated precipitation, growing degree days, thermal stress, and vapor pressure deficit.
+
+The next code block defines the study location, the growing-season windows, and the variables that will be requested from NASA POWER. These settings control both the download itself and the labels used later in the summaries.
+
+```{r parameters}
+# Experimental site coordinates (College Station, TX)
+coords_texas <- c(lon = -96.3344, lat = 30.6282)
+
+# Growing season intervals
+start_date_2011 <- "2011-05-01"
+end_date_2011   <- "2011-09-30"
+
+start_date_2012 <- "2012-05-01"
+end_date_2012   <- "2012-09-30"
+
+# NASA POWER variables
+# PRECTOTCORR      = Corrected total precipitation (mm/day)
+# T2M_MAX, T2M_MIN = Maximum and minimum air temperature at 2 m (°C)
+# RH2M             = Relative humidity at 2 m (%)
+# ALLSKY_SFC_SW_DWN= All-sky shortwave downward radiation (MJ m^-2 day^-1)
+# WS2M             = Wind speed at 2 m (m/s)
+params <- c(
+  "PRECTOTCORR",
+  "T2M_MAX",
+  "T2M_MIN",
+  "RH2M",
+  "ALLSKY_SFC_SW_DWN",
+  "WS2M"
+)
+```
+
+## 4. Data retrieval from NASA POWER
+
+This section performs the download of daily climatic data from NASA POWER.
+
+We run one query for each growing season. This keeps the workflow transparent and makes it easier to confirm that each experimental year was retrieved correctly. After retrieval, the two annual tables will be merged into a single object for the remaining steps of the analysis.
+
+### 4.1 Download daily climate data for each year
+
+The code below sends two independent requests to the NASA POWER service, one for 2011 and one for 2012. A `year` identifier is added immediately after retrieval so that the origin of each record remains explicit throughout the workflow. These yearly tables are the starting point for the inspection, plotting, and feature-engineering steps that follow.
+
+```{r get_data}
+data_tx_2011 <- get_power(
+  community = "AG",
+  lonlat = coords_texas,
+  pars = params,
+  dates = c(start_date_2011, end_date_2011),
+  temporal_api = "DAILY"
+) %>%
+  mutate(year = 2011)
+
+data_tx_2012 <- get_power(
+  community = "AG",
+  lonlat = coords_texas,
+  pars = params,
+  dates = c(start_date_2012, end_date_2012),
+  temporal_api = "DAILY"
+) %>%
+  mutate(year = 2012)
+```
+
+### 4.2 Merge, format, and save the raw dataset
+
+Once both yearly tables are available, we merge them into a single dataset and convert the date column to a proper R date format. This step is essential because the original date is returned as a numeric string, and later visualizations depend on a valid date object.
+
+We also save the raw daily dataset as a CSV file. This is an important reproducibility step because it preserves the exact version of the retrieved data used in the analysis.
+
+After the two yearly tables are retrieved, they are merged into a single dataset, reformatted, previewed, and saved for later reuse in the pipeline.
+
+```{r get_data2}
+texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012) %>%
+  mutate(
+    date = ymd(YYYYMMDD),
+    year = factor(year, levels = c(2011, 2012))
+  )
+
+daily_preview_table <- texas_climate_data %>%
+  select(date, year, PRECTOTCORR, T2M_MAX, T2M_MIN, RH2M, ALLSKY_SFC_SW_DWN, WS2M) %>%
+  slice(1:10) %>%
+  mutate(
+    PRECTOTCORR = round(PRECTOTCORR, 2),
+    T2M_MAX = round(T2M_MAX, 2),
+    T2M_MIN = round(T2M_MIN, 2),
+    RH2M = round(RH2M, 1),
+    ALLSKY_SFC_SW_DWN = round(ALLSKY_SFC_SW_DWN, 2),
+    WS2M = round(WS2M, 2)
+  ) %>%
+  rename(
+    Date = date,
+    Year = year,
+    `Precipitation` = PRECTOTCORR,
+    `Tmax` = T2M_MAX,
+    `Tmin` = T2M_MIN,
+    `Relative humidity` = RH2M,
+    `Solar radiation` = ALLSKY_SFC_SW_DWN,
+    `Wind speed` = WS2M
+  )
+
+knitr::kable(
+  daily_preview_table,
+  align = "c",
+  caption = "Table 1. Sample of daily weather records retrieved from NASA POWER for the Texas trials."
+) %>%
+  kableExtra::kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    position = "center",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+
+write.csv(
+  texas_climate_data,
+  "output/climate_results/texas_climate_data_raw.csv",
+  row.names = FALSE
+)
+```
+
+## 5. Exploratory analysis and figure generation
+
+Before summarizing the data into weather-derived covariates, it is good practice to inspect the daily series visually. This step serves two purposes.
+
+First, it helps verify that the downloaded data are coherent and free from obvious structural problems. Second, it helps interpret the climatic contrast between the years under study, which is important for the biological discussion of the experiments.
+
+To make the figures suitable for a scientific article, we define a common visual style and standardize axis titles, units, and panel formatting.
+
+### 5.1 Prepare shared labels for the figures
+
+To keep the figures consistent, we define the month labels only once. This avoids mixing different month formats across panels and makes the comparisons easier to read.
+
+To keep the tutorial easy to follow, most graphical settings are written explicitly rather than hidden inside helper functions. This makes the script longer, but it also makes each plotting decision easier to understand for beginners and intermediate readers.
+
+The next block defines shared labels and date breaks so that the precipitation and temperature figures follow the same visual standard throughout the tutorial.
+
+```{r figure_settings}
+month_levels <- 5:9
+
+# Month labels are fixed explicitly here so the whole script always uses
+# the same format with an uppercase initial, regardless of local settings.
+month_labels <- c("May", "Jun", "Jul", "Aug", "Sep")
+
+month_breaks <- as.Date(c(
+  "2011-05-01", "2011-06-01", "2011-07-01", "2011-08-01", "2011-09-01",
+  "2012-05-01", "2012-06-01", "2012-07-01", "2012-08-01", "2012-09-01"
+))
+
+month_break_labels <- c(
+  "May", "Jun", "Jul", "Aug", "Sep",
+  "May", "Jun", "Jul", "Aug", "Sep"
+)
+
+daily_data_with_parts <- texas_climate_data %>%
+  mutate(
+    Year = factor(year(date), levels = c(2011, 2012)),
+    Month = factor(month(date), levels = month_levels, labels = month_labels),
+    Day_of_month = factor(mday(date))
+  )
+```
+
+### 5.2 Daily precipitation overview
+
+This first figure provides a direct view of daily rainfall over time. It is useful for identifying dry periods, rainfall concentration, and broad differences between the two years.
+
+The next figure gives a broad visual summary of rainfall behavior across the study conditions.
+
+```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figure 1. Daily precipitation across the 2011 and 2012 maize growing seasons in College Station, Texas. Bars represent corrected daily precipitation obtained from NASA POWER."}
+p_precip_daily <- ggplot(
+  texas_climate_data,
+  aes(x = date, y = PRECTOTCORR, fill = year)
+) +
+  geom_col(alpha = 0.85, show.legend = FALSE) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Daily precipitation",
+    subtitle = "College Station, Texas, USA, 2011-2012",
+    x = "Month",
+    y = expression("Precipitation (" * mm ~ day^{-1} * ")")  ) +
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  theme_bw(base_size = 20) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
+
+p_precip_daily
+```
+
+### 5.3 Daily precipitation by month and day of month
+
+The next figure reorganizes the same rainfall information in a way that facilitates within-season comparison. Instead of plotting only the chronological series, we compare days of the month across the two years inside each monthly panel.
+
+This layout is especially helpful when the goal is to see whether one season was systematically drier or wetter during specific periods of crop development.
+
+The code below reorganizes the precipitation data into grouped views that make between-year patterns easier to compare.
+
+```{r plot_precipitation_grouped, fig.width=12, fig.height=6.4, fig.align="center", fig.cap="Figure 2. Daily precipitation arranged by day of month within each month to facilitate between-year comparison during the crop season."}
+p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill = Year)) +
+  geom_col(position = position_dodge(width = 0.85), alpha = 0.85, width = 0.8) +
+  facet_wrap(~ Month, scales = "free_x", ncol = 5) +
+  labs(
+    title = "Daily precipitation by month and year",
+    subtitle = "Grouped by day of month within each monthly panel",
+    x = "Day of month",
+    y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
+    fill = "Year") +
+  scale_x_discrete(breaks = c("1", "5", "10", "15", "20", "25", "30", "31")) +
+  ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  theme_bw(base_size = 20) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
+
+p1
+```
+
+### 5.4 Monthly precipitation totals
+
+Daily precipitation is informative, but monthly totals provide a simpler seasonal summary. This figure aggregates the daily series and allows a cleaner comparison of cumulative water input between years and months.
+
+The next step summarizes precipitation at the monthly level so that seasonal contrasts can be inspected more clearly than in the daily series alone.
+
+```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figure 3. Monthly precipitation totals during the maize growing seasons of 2011 and 2012 in College Station, Texas."}
+monthly_precip <- texas_climate_data %>%
+  mutate(
+    year = factor(year(date), levels = c(2011, 2012)),
+    month = factor(month(date), levels = month_levels, labels = month_labels)
+  ) %>%
+  group_by(year, month) %>%
+  summarise(total_precipitation = sum(PRECTOTCORR, na.rm = TRUE), .groups = "drop")
+
+p2 <- ggplot(monthly_precip, aes(x = month, y = total_precipitation, fill = year)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7, alpha = 0.9) +
+  labs(
+    title = "Monthly precipitation totals",
+    subtitle = "Growing season comparison between 2011 and 2012",
+    x = "Month",
+    y = "Total precipitation (mm)",
+    fill = "Year" ) +
+  ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+  theme_bw(base_size = 20) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
+
+p2
+```
+
+### 5.5 Daily air temperature
+
+Temperature is another core descriptor of crop environment. In this figure, we compare minimum, mean, and maximum daily temperature profiles across the two seasons.
+
+The dashed smoothing lines do not replace the original data. Their role is only to help visualize the general seasonal trends for each temperature metric.
+
+The figure below is used to compare the thermal profile of the evaluated environments over time.
+
+```{r plot_temperature, fig.width=10, fig.height=6, fig.align="center", fig.cap="Figure 4. Daily minimum, mean, and maximum air temperature during the 2011 and 2012 maize growing seasons. Dashed lines indicate LOESS trends used only to aid visual interpretation."}
+temperature_data <- texas_climate_data %>%
+  mutate(T2M_MEAN = (T2M_MAX + T2M_MIN) / 2) %>%
+  pivot_longer(
+    cols = c(T2M_MIN, T2M_MEAN, T2M_MAX),
+    names_to = "Temperature_metric",
+    values_to = "Temperature"
+  ) %>%
+  mutate(
+    Temperature_metric = factor(
+      Temperature_metric,
+      levels = c("T2M_MIN", "T2M_MEAN", "T2M_MAX"),
+      labels = c("Minimum", "Mean", "Maximum")
+    )
+  )
+
+p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperature_metric)) +
+  geom_line(linewidth = 0.55, alpha = 0.85) +
+  geom_smooth(
+    aes(group = Temperature_metric),
+    method = "loess",
+    se = FALSE,
+    linetype = "dashed",
+    color = "black",
+    linewidth = 0.5,
+    show.legend = FALSE
+  ) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Daily air temperature",
+    subtitle = "Minimum, mean, and maximum values; dashed lines indicate LOESS trends",
+    x = "Month",
+    y = expression("Air temperature (" * degree * "C)"),
+    color = "Temperature metric") +
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  scale_color_manual(values = c("Minimum" = "#4285F4", "Mean" = "#F4B400", "Maximum" = "#DB4437"), limits = c("Minimum", "Mean", "Maximum"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
+   theme_bw(base_size = 20) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
+
+p3
+```
+
+### 5.6 Combined main climate figure
+
+After creating the main precipitation and temperature plots, we combine them into a single multi-panel figure. This is useful when the final output is intended for reports, manuscripts, or supplementary material.
+
+The figure is also exported as a high-resolution TIFF file, which is a common requirement for journal submission.
+
+The main precipitation and temperature panels are combined below into a single layout that can be used directly in reports or teaching materials.
+
+```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 5. Multi-panel summary of the main climatic contrasts between years, including daily precipitation by month, monthly precipitation totals, and daily air temperature profiles."}
+main_layout <- "
+AA
+BC
+"
+
+combined_plot <- patchwork::wrap_plots(
+  A = p1,
+  B = p2,
+  C = p3,
+  design = main_layout
+) +
+  patchwork::plot_annotation(
+    tag_levels = "A"
+  ) &
+  theme(
+    plot.tag = element_text(
+      face = "bold",
+      size = 22,
+      color = "black"
+    )
+  )
+
+print(combined_plot)
+```
+
+```{r save_combined_main_plot, include=FALSE}
+ggsave(
+  filename = "output/climate_results/combined_climate_plot.tiff",
+  plot = combined_plot,
+    width = 16,
+    height = 14,
+    dpi = 600,
+    compression = "lzw",
+    bg = "white"
+)
+```
+
+### 5.7 Additional daily climate variables
+
+In addition to precipitation and temperature, the script also examines solar radiation, wind speed, and relative humidity. These variables are important because they help describe evaporative demand, atmospheric dryness, and energy availability during the crop cycle.
+
+The following plots document secondary weather patterns that are not shown in the main combined panel.
+
+```{r additional_plots, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 6. Additional daily climatic variables monitored during the maize growing seasons, including solar radiation, wind speed, and relative humidity."}
+p4 <- ggplot(
+  texas_climate_data,
+  aes(x = date, y = ALLSKY_SFC_SW_DWN, color = "Solar radiation")
+) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Daily shortwave solar radiation",
+    subtitle = "Dashed line indicates the LOESS trend",
+    x = "Month",
+    y = expression("Shortwave solar radiation (" * MJ ~ m^{-2} ~ day^{-1} * ")")  ) +
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  ggthemes::scale_color_gdocs(limits = "Solar radiation", guide = "none") +
+  theme_bw(base_size = 20) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
+
+p5 <- ggplot(
+  texas_climate_data,
+  aes(x = date, y = WS2M, color = "Wind speed")
+) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Daily wind speed at 2 m",
+    subtitle = "Dashed line indicates the LOESS trend",
+    x = "Month",
+    y = expression("Wind speed (" * m ~ s^{-1} * ")")) +
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  ggthemes::scale_color_gdocs(limits = "Wind speed", guide = "none") +
+  theme_bw(base_size = 20) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
+
+p6 <- ggplot(
+  texas_climate_data,
+  aes(x = date, y = RH2M, color = "Relative humidity")
+) +
+  geom_line(alpha = 0.85, linewidth = 0.55, show.legend = FALSE) +
+  geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "black", linewidth = 0.5) +
+  facet_wrap(~ year, scales = "free_x") +
+  labs(
+    title = "Daily relative humidity at 2 m",
+    subtitle = "Dashed line indicates the LOESS trend",
+    x = "Month",
+    y = "Relative humidity (%)") +
+  scale_x_date(breaks = month_breaks, labels = month_break_labels) +
+  ggthemes::scale_color_gdocs(limits = "Relative humidity", guide = "none") +
+  theme_bw(base_size = 20) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90", linewidth = 0.25),
+    panel.border = element_rect(color = "grey40", linewidth = 0.4),
+    strip.background = element_rect(fill = "grey95", color = "grey70", linewidth = 0.3),
+    strip.text = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold", size = 14),
+    axis.text = element_text(size = 12, color = "black"),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5, margin = margin(b = 8)),
+    legend.position = "bottom",
+    legend.justification = "center",
+    legend.direction = "horizontal",
+    legend.title = element_text(face = "bold", size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.width = grid::unit(1.2, "cm"),
+    legend.box.margin = margin(t = 4),
+    plot.margin = margin(8, 10, 8, 8)
+  )
+```
+
+### 5.8 Combined figure for additional climate variables
+
+As in the previous subsection, we combine the individual plots into a single figure. The layout was built using `patchwork::wrap_plots()`, which avoids the composition error generated when the patchwork operators are not correctly recognized during rendering.
+
+These complementary weather plots are then arranged into a compact multi-panel figure for downstream inspection.
+
+```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 7. Multi-panel summary of additional climatic variables across years, including shortwave solar radiation, wind speed, and relative humidity."}
+additional_layout <- "
+AB
+CC
+"
+
+combined_additional_plots <- patchwork::wrap_plots(
+  A = p4,
+  B = p5,
+  C = p6,
+  design = additional_layout
+) +
+  patchwork::plot_annotation(
+    tag_levels = "A"
+  ) &
+  theme(
+    plot.tag = element_text(
+      face = "bold",
+      size = 22,
+      color = "black"
+    )
+  )
+
+print(combined_additional_plots)
+```
+
+```{r save_combined_additional_plot, include=FALSE}
+ggsave(
+  filename = "output/climate_results/combined_additional_climate_plots.tiff",
+  plot = combined_additional_plots,
+    width = 16,
+    height = 14,
+    dpi = 600,
+    compression = "lzw",
+    bg = "white"
+)
+```
+
+
+```{r save_individual_climate_figures, include=FALSE}
+ggsave(
+  filename = "output/climate_results/daily_precipitation_overview.tiff",
+  plot = p_precip_daily,
+  width = 14,
+  height = 8,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/daily_precipitation_by_month.tiff",
+  plot = p1,
+  width = 16,
+  height = 9,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/monthly_precipitation_totals.tiff",
+  plot = p2,
+  width = 10,
+  height = 7,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/daily_air_temperature.tiff",
+  plot = p3,
+  width = 14,
+  height = 8,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/daily_solar_radiation.tiff",
+  plot = p4,
+  width = 14,
+  height = 8,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/daily_wind_speed.tiff",
+  plot = p5,
+  width = 14,
+  height = 8,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+
+ggsave(
+  filename = "output/climate_results/daily_relative_humidity.tiff",
+  plot = p6,
+  width = 14,
+  height = 8,
+  dpi = 600,
+  compression = "lzw",
+  bg = "white"
+)
+```
+
+## 6. Weather-derived covariates
+
+The next step transforms daily climatic records into annual summary variables. This is the most important analytical transition in the script because it converts a raw time series into features that can be used in downstream prediction models.
+
+These summaries are designed to capture biologically relevant aspects of each growing season, including thermal accumulation, water availability, atmospheric dryness, and stress frequency.
+
+### 6.1 Derive daily intermediate variables
+
+Some useful weather descriptors are not downloaded directly from NASA POWER. They must be calculated from the daily variables.
+
+The main quantities used here are:
+
+- **GDD (growing degree days):** a simple measure of thermal accumulation. Temperatures below the base temperature are treated as too cold for crop development, and temperatures above the upper threshold are capped to avoid overestimating useful heat.
+- **Photoperiod:** the daylight duration, computed from date and experimental coordinates using sunrise and sunset times.
+- **PTR (photothermal ratio):** the ratio between photoperiod in hours and GDD. It is calculated only when `GDD > 0`, because the ratio is not defined when thermal accumulation is zero or negative.
+- **DTR (daily temperature range):** the difference between daily maximum and minimum temperature. It summarizes day-night thermal amplitude.
+- **VPD (vapor pressure deficit):** a measure of atmospheric dryness. Higher VPD values indicate stronger evaporative demand, which can increase plant water stress.
+- **Stress-day counts:** simple counts of days exceeding biologically meaningful thresholds, such as high temperature, low humidity, or high VPD.
+
+The code below first creates the daily intermediate variables and then summarizes them by year. This explicit step-by-step format is intentional: it makes the calculations easier to inspect, reuse, and modify.
+
+```{r feature_engineering}
+photoperiod_tbl <- suncalc::getSunlightTimes(
+  data = tibble(
+    date = unique(texas_climate_data$date),
+    lat = unname(coords_texas["lat"]),
+    lon = unname(coords_texas["lon"])
+  ),
+  keep = c("sunrise", "sunset"),
+  tz = "America/Chicago"
+) %>%
+  transmute(
+    date = as.Date(date),
+    PHOTOPERIOD_HOURS = as.numeric(difftime(sunset, sunrise, units = "hours"))
+  )
+
+texas_climate_data <- texas_climate_data %>%
+  left_join(photoperiod_tbl, by = "date") %>%
+  mutate(
+    T_base = 10,
+    T_upper = 30,
+    T_eff_min = if_else(T2M_MIN < T_base, T_base, T2M_MIN),
+    T_eff_max = if_else(T2M_MAX > T_upper, T_upper, T2M_MAX),
+    T_avg_eff = (T_eff_min + T_eff_max) / 2,
+    GDD = T_avg_eff - T_base,
+    DTR = T2M_MAX - T2M_MIN,
+    T_AVG_DAILY = (T2M_MAX + T2M_MIN) / 2,
+
+    # Tetens equation, resulting in kPa
+    SAT_VAP_PRES = 0.6108 * exp((17.27 * T_AVG_DAILY) / (T_AVG_DAILY + 237.3)),
+    ACT_VAP_PRES = SAT_VAP_PRES * (RH2M / 100),
+    VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES,
+    PTR_DAILY = if_else(GDD > 0, PHOTOPERIOD_HOURS / GDD, NA_real_)
+  )
+
+weather_covariates <- texas_climate_data %>%
+  mutate(year_numeric = as.integer(as.character(year))) %>%
+  group_by(year_numeric) %>%
+  summarise(
+    TMAX_AVG = mean(T2M_MAX, na.rm = TRUE),
+    TMIN_AVG = mean(T2M_MIN, na.rm = TRUE),
+    GDD_CUM = sum(GDD, na.rm = TRUE),
+    PTR_AVG = mean(PTR_DAILY, na.rm = TRUE),
+    HEAT_STRESS_DAYS = sum(T2M_MAX > 35, na.rm = TRUE),
+
+    PRECTOT = sum(PRECTOTCORR, na.rm = TRUE),
+    DRY_DAYS = sum(PRECTOTCORR == 0, na.rm = TRUE),
+    RH_AVG = mean(RH2M, na.rm = TRUE),
+
+    WS2M_AVG = mean(WS2M, na.rm = TRUE),
+    RAD_CUM = sum(ALLSKY_SFC_SW_DWN, na.rm = TRUE),
+
+    T_AVG = mean(T_AVG_DAILY, na.rm = TRUE),
+    DTR_AVG = mean(DTR, na.rm = TRUE),
+    COLD_STRESS_DAYS = sum(T2M_MIN < 10, na.rm = TRUE),
+
+    RAINY_DAYS = sum(PRECTOTCORR > 0, na.rm = TRUE),
+    PREC_INTENSITY = if_else(RAINY_DAYS > 0, PRECTOT / RAINY_DAYS, 0),
+    LOW_RH_DAYS = sum(RH2M < 30, na.rm = TRUE),
+
+    VPD_AVG = mean(VPD_DAILY, na.rm = TRUE),
+    VPD_STRESS_DAYS = sum(VPD_DAILY > 1.5, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  rename(year = year_numeric)
+
+# Optional expanded table: daily weather data plus annual weather summaries
+# The output file names keep the historical term "environmental_covariates"
+# only to preserve compatibility with the downstream scripts already used in
+# the project pipeline.
+ecs_expanded <- texas_climate_data %>%
+  transmute(
+    year = as.integer(as.character(year)),
+    date = date,
+    PRECTOTCORR = PRECTOTCORR,
+    T2M_MAX = T2M_MAX,
+    T2M_MIN = T2M_MIN,
+    RH2M = RH2M,
+    ALLSKY_SFC_SW_DWN = ALLSKY_SFC_SW_DWN,
+    WS2M = WS2M,
+    PHOTOPERIOD_HOURS = PHOTOPERIOD_HOURS,
+    GDD = GDD,
+    PTR_DAILY = PTR_DAILY,
+    DTR = DTR,
+    T_AVG_DAILY = T_AVG_DAILY,
+    SAT_VAP_PRES = SAT_VAP_PRES,
+    ACT_VAP_PRES = ACT_VAP_PRES,
+    VPD_DAILY = VPD_DAILY
+  ) %>%
+  left_join(weather_covariates, by = "year")
+
+weather_covariates_dictionary <- tibble::tibble(
+  Variable = c(
+    "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "PTR_AVG", "HEAT_STRESS_DAYS", "PRECTOT",
+    "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM", "T_AVG",
+    "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS", "PREC_INTENSITY",
+    "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"
+  ),
+  Unit = c(
+    "°C", "°C", "°C day", "h / GDD", "days", "mm",
+    "days", "%", "m s^-1", "MJ m^-2", "°C",
+    "°C", "days", "days", "mm day^-1",
+    "days", "kPa", "days"
+  ),
+  Description = c(
+    "Average maximum temperature during the season",
+    "Average minimum temperature during the season",
+    "Accumulated growing degree days",
+    "Average daily photothermal ratio (photoperiod hours divided by GDD)",
+    "Number of heat stress days",
+    "Total precipitation during the season",
+    "Number of dry days",
+    "Average relative humidity",
+    "Average wind speed at 2 m",
+    "Accumulated shortwave radiation",
+    "Average mean temperature",
+    "Average daily temperature range",
+    "Number of cold stress days",
+    "Number of rainy days",
+    "Average rainfall intensity on rainy days",
+    "Number of low-humidity days",
+    "Average vapor pressure deficit",
+    "Number of vapor pressure deficit stress days"
+  )
+)
+
+knitr::kable(
+  weather_covariates_dictionary,
+  align = c("l", "c", "l"),
+  caption = "Table 2. Weather-derived covariates used to characterize the growing seasons and to support the construction of the weather kernel."
+) %>%
+  kableExtra::kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    position = "center",
+    font_size = 12
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
+
+weather_covariates_display <- weather_covariates %>%
+  mutate(across(-year, ~ round(.x, 2))) %>%
+  rename(Year = year)
+
+knitr::kable(
+  weather_covariates_display,
+  align = c("c", rep("c", ncol(weather_covariates_display) - 1)),
+  caption = "Table 3. Annual weather-derived covariates derived from NASA POWER data for the 2011 and 2012 growing seasons."
+) %>%
+  kableExtra::kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    position = "center",
+    font_size = 11
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "320px")
+```
+
+### 6.2 Interpretation of the resulting weather-derived covariates
+
+The final table contains one row per year and several climatic descriptors.
+
+For example:
+
+- `GDD_CUM` summarizes thermal accumulation during the crop cycle.
+- `PTR_AVG` summarizes the average daily photothermal ratio and combines daylight duration with effective thermal accumulation.
+- `PRECTOT` summarizes total water input from rainfall.
+- `DRY_DAYS` and `HEAT_STRESS_DAYS` quantify stress frequency.
+- `VPD_AVG` and `VPD_STRESS_DAYS` capture atmospheric dryness.
+- `RAD_CUM` summarizes the seasonal solar energy available to the crop.
+
+This table is the practical output that connects the climate tutorial to the predictive modeling stage of the project and to the subsequent construction of the weather kernel.
+
+In the final reduced pipeline, these weather-derived outputs are used only in the models that explicitly include `W`, namely Eta10-Eta18. They are not intended to replace the categorical environment effect (`E`), which still captures the distinction among the four macro-environments. Because the weather information is summarized at the year level, CS11_WS and CS11_WW share the 2011 weather signature, whereas CS12_WS and CS12_WW share the 2012 weather signature.
+
+## 7. Save the final outputs
+
+The last section stores the processed climate files required by downstream modeling. Saving the outputs explicitly separates data acquisition from downstream analyses, making the workflow easier to reproduce and audit.
+
+Three files are exported:
+
+1. `texas_climate_data_raw.csv`: raw daily weather records.
+2. `environmental_covariates.csv`: one row per year with the derived annual weather summaries.
+3. `environmental_covariates_expanded.csv`: cleaned daily weather records linked to the annual weather summaries.
+
+The last two files retain their historical names for compatibility with the downstream scripts, even though they now represent weather-derived covariates.
+
+Finally, the processed climate outputs are written to disk so that later modules can reuse them without repeating the download and preprocessing stages.
+
+```{r save_csv}
+write.csv(
+  weather_covariates,
+  "output/climate_results/environmental_covariates.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  ecs_expanded,
+  "output/climate_results/environmental_covariates_expanded.csv",
+  row.names = FALSE
+)
+
+cat("Climate files successfully saved in 'output/climate_results/'.")
+```
+
+## 8. Final remarks
+
+This tutorial establishes a reproducible weather preprocessing pipeline for the study. Starting from daily weather observations, it produces a curated set of weather-derived covariates and article-ready figures.
+
+In the broader workflow of the project, these outputs are not the final goal. They are intermediate scientific objects that support the construction of the weather kernel (`W`) used in models Eta10-Eta18.
+
+It is also important to note that the weather kernel does not replace the categorical environment effect (`E`). In this dataset, the 2011 weather signature is shared by CS11_WS and CS11_WW, and the 2012 weather signature is shared by CS12_WS and CS12_WW. Therefore, `W` captures year-specific meteorological similarity, whereas `E` still represents the categorical distinction among the four macro-environments.
+
+## Stage navigation
+
+**Previous stage:** [Home](index.html)  
+**Next stage:** [Matrices](matrizes.html)
