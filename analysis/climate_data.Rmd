@@ -73,6 +73,7 @@ Each package has a clear role in the workflow:
 - `patchwork`: combines multiple `ggplot2` figures into publication-ready panels.
 - `ggthemes`: provides the Google Docs discrete scales used to standardize colors across figures.
 - `kableExtra`: improves the presentation of HTML tables in the tutorial.
+- `suncalc`: derives sunrise and sunset times used to compute photoperiod.
 
 We also create the output directory at the beginning of the script. This avoids errors when the script saves tables and figures later in the analysis.
 
@@ -80,7 +81,7 @@ The code below loads the packages and prepares the output folder used by this wo
 
 ```{r packages}
 # Uncomment if installation is required
-# install.packages(c("nasapower", "tidyverse", "lubridate", "patchwork", "ggthemes", "kableExtra"))
+# install.packages(c("nasapower", "tidyverse", "lubridate", "patchwork", "ggthemes", "kableExtra", "suncalc"))
 
 library(nasapower)
 library(tidyverse)
@@ -90,6 +91,7 @@ library(ggthemes)
 library(knitr)
 library(grid)
 library(kableExtra)
+library(suncalc)
 
 dir.create("output", showWarnings = FALSE)
 dir.create("output/climate_results", recursive = TRUE, showWarnings = FALSE)
@@ -753,6 +755,8 @@ Some useful weather descriptors are not downloaded directly from NASA POWER. The
 The main quantities used here are:
 
 - **GDD (growing degree days):** a simple measure of thermal accumulation. Temperatures below the base temperature are treated as too cold for crop development, and temperatures above the upper threshold are capped to avoid overestimating useful heat.
+- **Photoperiod:** the daylight duration, computed from date and experimental coordinates using sunrise and sunset times.
+- **PTR (photothermal ratio):** the ratio between photoperiod in hours and GDD. It is calculated only when `GDD > 0`, because the ratio is not defined when thermal accumulation is zero or negative.
 - **DTR (daily temperature range):** the difference between daily maximum and minimum temperature. It summarizes day-night thermal amplitude.
 - **VPD (vapor pressure deficit):** a measure of atmospheric dryness. Higher VPD values indicate stronger evaporative demand, which can increase plant water stress.
 - **Stress-day counts:** simple counts of days exceeding biologically meaningful thresholds, such as high temperature, low humidity, or high VPD.
@@ -760,7 +764,22 @@ The main quantities used here are:
 The code below first creates the daily intermediate variables and then summarizes them by year. This explicit step-by-step format is intentional: it makes the calculations easier to inspect, reuse, and modify.
 
 ```{r feature_engineering}
+photoperiod_tbl <- suncalc::getSunlightTimes(
+  data = tibble(
+    date = unique(texas_climate_data$date),
+    lat = unname(coords_texas["lat"]),
+    lon = unname(coords_texas["lon"])
+  ),
+  keep = c("sunrise", "sunset"),
+  tz = "America/Chicago"
+) %>%
+  transmute(
+    date = as.Date(date),
+    PHOTOPERIOD_HOURS = as.numeric(difftime(sunset, sunrise, units = "hours"))
+  )
+
 texas_climate_data <- texas_climate_data %>%
+  left_join(photoperiod_tbl, by = "date") %>%
   mutate(
     T_base = 10,
     T_upper = 30,
@@ -774,7 +793,8 @@ texas_climate_data <- texas_climate_data %>%
     # Tetens equation, resulting in kPa
     SAT_VAP_PRES = 0.6108 * exp((17.27 * T_AVG_DAILY) / (T_AVG_DAILY + 237.3)),
     ACT_VAP_PRES = SAT_VAP_PRES * (RH2M / 100),
-    VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES
+    VPD_DAILY = SAT_VAP_PRES - ACT_VAP_PRES,
+    PTR_DAILY = if_else(GDD > 0, PHOTOPERIOD_HOURS / GDD, NA_real_)
   )
 
 weather_covariates <- texas_climate_data %>%
@@ -784,6 +804,7 @@ weather_covariates <- texas_climate_data %>%
     TMAX_AVG = mean(T2M_MAX, na.rm = TRUE),
     TMIN_AVG = mean(T2M_MIN, na.rm = TRUE),
     GDD_CUM = sum(GDD, na.rm = TRUE),
+    PTR_AVG = mean(PTR_DAILY, na.rm = TRUE),
     HEAT_STRESS_DAYS = sum(T2M_MAX > 35, na.rm = TRUE),
 
     PRECTOT = sum(PRECTOTCORR, na.rm = TRUE),
@@ -821,7 +842,9 @@ ecs_expanded <- texas_climate_data %>%
     RH2M = RH2M,
     ALLSKY_SFC_SW_DWN = ALLSKY_SFC_SW_DWN,
     WS2M = WS2M,
+    PHOTOPERIOD_HOURS = PHOTOPERIOD_HOURS,
     GDD = GDD,
+    PTR_DAILY = PTR_DAILY,
     DTR = DTR,
     T_AVG_DAILY = T_AVG_DAILY,
     SAT_VAP_PRES = SAT_VAP_PRES,
@@ -832,13 +855,13 @@ ecs_expanded <- texas_climate_data %>%
 
 weather_covariates_dictionary <- tibble::tibble(
   Variable = c(
-    "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "HEAT_STRESS_DAYS", "PRECTOT",
+    "TMAX_AVG", "TMIN_AVG", "GDD_CUM", "PTR_AVG", "HEAT_STRESS_DAYS", "PRECTOT",
     "DRY_DAYS", "RH_AVG", "WS2M_AVG", "RAD_CUM", "T_AVG",
     "DTR_AVG", "COLD_STRESS_DAYS", "RAINY_DAYS", "PREC_INTENSITY",
     "LOW_RH_DAYS", "VPD_AVG", "VPD_STRESS_DAYS"
   ),
   Unit = c(
-    "°C", "°C", "°C day", "days", "mm",
+    "°C", "°C", "°C day", "h / GDD", "days", "mm",
     "days", "%", "m s^-1", "MJ m^-2", "°C",
     "°C", "days", "days", "mm day^-1",
     "days", "kPa", "days"
@@ -847,6 +870,7 @@ weather_covariates_dictionary <- tibble::tibble(
     "Average maximum temperature during the season",
     "Average minimum temperature during the season",
     "Accumulated growing degree days",
+    "Average daily photothermal ratio (photoperiod hours divided by GDD)",
     "Number of heat stress days",
     "Total precipitation during the season",
     "Number of dry days",
@@ -903,6 +927,7 @@ The final table contains one row per year and several climatic descriptors.
 For example:
 
 - `GDD_CUM` summarizes thermal accumulation during the crop cycle.
+- `PTR_AVG` summarizes the average daily photothermal ratio and combines daylight duration with effective thermal accumulation.
 - `PRECTOT` summarizes total water input from rainfall.
 - `DRY_DAYS` and `HEAT_STRESS_DAYS` quantify stress frequency.
 - `VPD_AVG` and `VPD_STRESS_DAYS` capture atmospheric dryness.
