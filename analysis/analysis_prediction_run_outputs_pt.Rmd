@@ -247,13 +247,11 @@ foreach(i = seq_len(nrow(combos)),
         .packages = c("BGLR", "dplyr", "plyr")) %dopar% {
   MODEL <- combos$MODEL[i]
   rep_num <- combos$REP[i]
-  TRAIT <- as.character(combos$TRAIT[i])
+  trait_id <- as.character(combos$TRAIT[i])
 
   pheno <- data.frame(Pheno)
 
-  trait_id <- match(TRAIT, trait_reference_order)
-
-  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
+  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + as.numeric(as.factor(combos$TRAIT[i])))
   set.seed(seed_value)
   obs_per_fold <- ceiling(length(Pedigree) / num_fold)
   folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
@@ -264,24 +262,24 @@ foreach(i = seq_len(nrow(combos)),
     rep_label <- sprintf("rep%02d", rep_num)
     fold_label <- sprintf("fold%02d", fold_num)
 
-    cv1_dir <- file.path(results_dir, "CV1", TRAIT, rep_label, fold_label)
-    cv2_dir <- file.path(results_dir, "CV2", TRAIT, rep_label, fold_label)
+    cv1_dir <- file.path(results_dir, "CV1", trait_id, rep_label, fold_label)
+    cv2_dir <- file.path(results_dir, "CV2", trait_id, rep_label, fold_label)
     dir.create(cv1_dir, recursive = TRUE, showWarnings = FALSE)
     dir.create(cv2_dir, recursive = TRUE, showWarnings = FALSE)
 
-    cv1_file <- file.path(cv1_dir, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
-    cv2_file <- file.path(cv2_dir, paste0("CV2_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
+    cv1_file <- file.path(cv1_dir, paste0("CV1_", trait_id, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
+    cv2_file <- file.path(cv2_dir, paste0("CV2_", trait_id, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
 
     train_geno <- folds_df$Pedigree[folds_df$fold != fold_num]
 
     yield <- pheno
     yield$Y2 <- NA
-    yield$Y2[yield$Pedigree %in% train_geno] <- yield[[TRAIT]][yield$Pedigree %in% train_geno]
+    yield$Y2[yield$Pedigree %in% train_geno] <- yield[[trait_id]][yield$Pedigree %in% train_geno]
 
-    run_dir <- file.path(bglr_runs_dir, "CV1", TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+    run_dir <- file.path(bglr_runs_dir, "CV1", trait_id, rep_label, fold_label, paste0("Eta", MODEL))
     dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
-    save_prefix_full <- file.path(run_dir, paste0("CV1_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
+    save_prefix_full <- file.path(run_dir, paste0("CV1_", trait_id, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
     y_t <- as.numeric(yield$Y2)
     start_time <- Sys.time()
@@ -298,12 +296,12 @@ foreach(i = seq_len(nrow(combos)),
 
     tmp1 <- df_test %>%
       dplyr::group_by(Env) %>%
-      dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+      dplyr::summarize(cor = cor(.data[[trait_id]], yhat, use = "complete.obs"), .groups = "drop") %>%
       as.data.frame()
 
     tmp2 <- df_train %>%
       dplyr::group_by(Env) %>%
-      dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+      dplyr::summarize(cor = cor(.data[[trait_id]], yhat, use = "complete.obs"), .groups = "drop") %>%
       as.data.frame()
 
     tmp1$Runtime_sec <- runtime_full
@@ -327,13 +325,11 @@ foreach(i = seq_len(nrow(combos)),
         .packages = c("BGLR", "dplyr", "plyr")) %dopar% {
   MODEL <- combos$MODEL[i]
   rep_num <- combos$REP[i]
-  TRAIT <- as.character(combos$TRAIT[i])
+  trait_id <- as.character(combos$TRAIT[i])
 
   pheno <- data.frame(Pheno)
 
-  trait_id <- match(TRAIT, trait_reference_order)
-
-  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + trait_id)
+  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + as.numeric(as.factor(combos$TRAIT[i])))
   set.seed(seed_value)
   obs_per_fold <- ceiling(length(Pedigree) / num_fold)
   folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
@@ -348,23 +344,23 @@ foreach(i = seq_len(nrow(combos)),
     for (env_idx in seq_along(envs_leaveout)) {
       env_name <- envs_leaveout[env_idx]
 
-      cv00_dir <- file.path(results_dir, "CV00", env_name, TRAIT, rep_label, fold_label)
-      cv0_dir <- file.path(results_dir, "CV0", env_name, TRAIT, rep_label, fold_label)
+      cv00_dir <- file.path(results_dir, "CV00", env_name, trait_id, rep_label, fold_label)
+      cv0_dir <- file.path(results_dir, "CV0", env_name, trait_id, rep_label, fold_label)
       dir.create(cv00_dir, recursive = TRUE, showWarnings = FALSE)
       dir.create(cv0_dir, recursive = TRUE, showWarnings = FALSE)
 
-      cv00_file <- file.path(cv00_dir, paste0("CV00_", TRAIT, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
-      cv0_file <- file.path(cv0_dir, paste0("CV0_", TRAIT, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
+      cv00_file <- file.path(cv00_dir, paste0("CV00_", trait_id, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
+      cv0_file <- file.path(cv0_dir, paste0("CV0_", trait_id, "_", env_name, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
 
       yield2 <- pheno
       yield2$Y2 <- NA
-      yield2$Y2[yield2$Pedigree %in% train_geno] <- yield2[[TRAIT]][yield2$Pedigree %in% train_geno]
+      yield2$Y2[yield2$Pedigree %in% train_geno] <- yield2[[trait_id]][yield2$Pedigree %in% train_geno]
       yield2$Y2[yield2$Env == env_name] <- NA
 
-      run_dir <- file.path(bglr_runs_dir, "CV0", env_name, TRAIT, rep_label, fold_label, paste0("Eta", MODEL))
+      run_dir <- file.path(bglr_runs_dir, "CV0", env_name, trait_id, rep_label, fold_label, paste0("Eta", MODEL))
       dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
-      save_prefix_env <- file.path(run_dir, paste0("CV0_", env_name, "_", TRAIT, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
+      save_prefix_env <- file.path(run_dir, paste0("CV0_", env_name, "_", trait_id, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
       y_t <- as.numeric(yield2$Y2)
       start_time <- Sys.time()
@@ -381,12 +377,12 @@ foreach(i = seq_len(nrow(combos)),
 
       tmp00 <- df_test2 %>%
         dplyr::group_by(Env) %>%
-        dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+        dplyr::summarize(cor = cor(.data[[trait_id]], yhat, use = "complete.obs"), .groups = "drop") %>%
         as.data.frame()
 
       tmp0 <- df_train2 %>%
         dplyr::group_by(Env) %>%
-        dplyr::summarize(cor = cor(.data[[TRAIT]], yhat, use = "complete.obs"), .groups = "drop") %>%
+        dplyr::summarize(cor = cor(.data[[trait_id]], yhat, use = "complete.obs"), .groups = "drop") %>%
         as.data.frame()
 
       tmp00$Runtime_sec <- runtime_env
