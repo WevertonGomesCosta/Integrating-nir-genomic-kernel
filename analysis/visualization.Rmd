@@ -528,6 +528,8 @@ plot_gy <- cv12_plot_data %>%
   theme_bw(base_size = 16) +
   theme(plot.title = element_text(face = "bold", size = 18, hjust = 0.5), axis.text.x = element_text(size = 16, color = "black"), axis.text.y = element_text(size = 14, color = "black"), axis.title = element_text(face = "bold", size = 16), legend.position = "top", legend.title = element_text(face = "bold", size = 16), legend.text = element_text(size = 14))
 
+plot_gy
+
 plot_kw <- cv12_plot_data %>%
   dplyr::filter(Trait == "KW") %>%
   ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
@@ -549,7 +551,6 @@ plot_kw <- cv12_plot_data %>%
   theme_bw(base_size = 16) +
   theme(plot.title = element_text(face = "bold", size = 18, hjust = 0.5), axis.text.x = element_text(size = 16, color = "black"), axis.text.y = element_text(size = 14, color = "black"), axis.title = element_text(face = "bold", size = 16), legend.position = "top", legend.title = element_text(face = "bold", size = 16), legend.text = element_text(size = 14))
 
-plot_gy
 plot_kw
 ```
 
@@ -569,13 +570,30 @@ cvloo_plot_data <- cvloo_summary %>%
 
 plot_gy_cv00 <- cvloo_plot_data %>%
   dplyr::filter(Trait == "GY", CV == "CV00") %>%
+  dplyr::mutate(
+    label_value = sprintf("%.3f", MeanCorrelation),
+    label_inside = MeanCorrelation >= 0.25,
+    label_y = dplyr::if_else(
+      label_inside,
+      MeanCorrelation / 2,
+      MeanCorrelation + SDCorrelation + 0.1
+    )
+  ) %>%
   ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
   geom_col(
     width = 0.75,
     color = "grey30",
     na.rm = TRUE
   ) +
-  geom_text(aes(label = round(MeanCorrelation,3)), position = position_stack(vjust = 0.5), angle = 90) +
+  geom_text(
+    aes(
+      y = label_y,
+      label = label_value),
+    angle = 90,
+    hjust = 0.5,
+    vjust = 0.5,
+    show.legend = FALSE
+  ) +
   geom_errorbar(
     aes(
       ymin = MeanCorrelation - SDCorrelation,
@@ -608,6 +626,7 @@ plot_gy_cv00 <- cvloo_plot_data %>%
   theme_bw(base_size = 16) +
   theme(plot.title = element_text(face = "bold", size = 18, hjust = 0.5), axis.text.x = element_text(size = 16, color = "black"), axis.text.y = element_text(size = 14, color = "black"), axis.title = element_text(face = "bold", size = 16), legend.position = "top", legend.title = element_text(face = "bold", size = 16), legend.text = element_text(size = 14))
 
+plot_gy_cv00
 
 plot_gy_cv0 <- cvloo_plot_data %>%
   dplyr::filter(Trait == "GY", CV == "CV0") %>%
@@ -650,16 +669,34 @@ plot_gy_cv0 <- cvloo_plot_data %>%
   theme_bw(base_size = 16) +
   theme(plot.title = element_text(face = "bold", size = 18, hjust = 0.5), axis.text.x = element_text(size = 16, color = "black"), axis.text.y = element_text(size = 14, color = "black"), axis.title = element_text(face = "bold", size = 16), legend.position = "top", legend.title = element_text(face = "bold", size = 16), legend.text = element_text(size = 14))
 
+plot_gy_cv0
 
 plot_kw_cv00 <- cvloo_plot_data %>%
   dplyr::filter(Trait == "KW", CV == "CV00") %>%
+  dplyr::mutate(
+    label_value = sprintf("%.3f", MeanCorrelation),
+    label_inside = MeanCorrelation >= 0.25,
+    label_y = dplyr::if_else(
+      label_inside,
+      MeanCorrelation / 2,
+      MeanCorrelation + SDCorrelation + 0.1
+    )
+  ) %>%
   ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
   geom_col(
     width = 0.75,
     color = "grey30",
     na.rm = TRUE
   ) +
-  geom_text(aes(label = round(MeanCorrelation,3)), position = position_stack(vjust = 0.5), angle = 90) +
+  geom_text(
+    aes(
+      y = label_y,
+      label = label_value),
+    angle = 90,
+    hjust = 0.5,
+    vjust = 0.5,
+    show.legend = FALSE
+  ) +
   geom_errorbar(
     aes(
       ymin = MeanCorrelation - SDCorrelation,
@@ -692,6 +729,7 @@ plot_kw_cv00 <- cvloo_plot_data %>%
   theme_bw(base_size = 16) +
   theme(plot.title = element_text(face = "bold", size = 18, hjust = 0.5), axis.text.x = element_text(size = 16, color = "black"), axis.text.y = element_text(size = 14, color = "black"), axis.title = element_text(face = "bold", size = 16), legend.position = "top", legend.title = element_text(face = "bold", size = 16), legend.text = element_text(size = 14))
 
+plot_kw_cv00
 
 plot_kw_cv0 <- cvloo_plot_data %>%
   dplyr::filter(Trait == "KW", CV == "CV0") %>%
@@ -734,10 +772,6 @@ plot_kw_cv0 <- cvloo_plot_data %>%
   theme_bw(base_size = 16) +
   theme(plot.title = element_text(face = "bold", size = 18, hjust = 0.5), axis.text.x = element_text(size = 16, color = "black"), axis.text.y = element_text(size = 14, color = "black"), axis.title = element_text(face = "bold", size = 16), legend.position = "top", legend.title = element_text(face = "bold", size = 16), legend.text = element_text(size = 14))
 
-
-plot_gy_cv00
-plot_gy_cv0
-plot_kw_cv00
 plot_kw_cv0
 ```
 
