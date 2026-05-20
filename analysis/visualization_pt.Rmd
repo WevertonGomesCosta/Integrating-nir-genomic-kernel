@@ -27,6 +27,8 @@ knitr::opts_chunk$set(
 )
 ```
 
+**Idioma/ Language:** [Português](visualization_pt.html) | [English](visualization.html)
+
 Este módulo prepara os resumos de predição usados nas tabelas do manuscrito, nos resumos automáticos de resultados e nas figuras finais. Ele parte das tabelas de resultados de predição disponíveis em `output/tables/`, anexa o catálogo de modelos, calcula tabelas compactas de comparação e renderiza as saídas orientadas à visualização diretamente no documento.
 
 ## 1. Carregar pacotes e localizar as pastas do projeto
@@ -80,9 +82,9 @@ model_catalog <- tibble(
     "Sem W", "Com W", "Sem W", "Com W", "Sem W", "Com W"
   ),
   Group = c(
-    rep("Genomic", 6),
-    rep("Phenomic", 6),
-    rep("Combined", 6)
+    rep("Genômico", 6),
+    rep("Fenômico", 6),
+    rep("Combinado", 6)
   ),
   Description = c(
     "Genômico linear + E", "Genômico linear + W", "Genômico Gaussiano + E", "Genômico Gaussiano + W", "Genômico arccosine + E", "Genômico arccosine + W",
@@ -480,7 +482,7 @@ dplyr::bind_rows(
 As figuras finais resumem a capacidade preditiva para o catálogo de modelos em `CV1/CV2` e `CV0/CV00`. O eixo x usa `M1`--`M18`; as composições completas dos modelos são fornecidas na Tabela Suplementar S1.
 
 ```{r figure-cv12}
-group_levels_en <- c("Genomic", "Phenomic", "Combined")
+group_levels_en <- c("Genômico", "Fenômico", "Combinado")
 model_levels_en <- model_catalog$Model
 
 cv12_plot_data <- cv12_summary %>%
@@ -530,7 +532,7 @@ plot_kw <- cv12_plot_data %>%
     drop = FALSE,
     guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
   ) +
-  labs(title = "Predictive ability for kernel weight (KW)") +
+  labs(title = "Capacidade preditiva para peso de grãos (KW)") +
   theme_bw(base_size = 16) +
   theme(plot.title = element_text(face = "bold", size = 18, hjust = 0.5), axis.text.x = element_text(size = 16, color = "black"), axis.text.y = element_text(size = 14, color = "black"), axis.title = element_text(face = "bold", size = 16), legend.position = "top", legend.title = element_text(face = "bold", size = 16), legend.text = element_text(size = 14))
 
