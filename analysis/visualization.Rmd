@@ -137,7 +137,20 @@ model_catalog <- tibble(
   )
 )
 
-model_catalog
+model_catalog %>%
+  knitr::kable(
+    caption = "Model catalog used in the prediction summaries.",
+    escape = FALSE
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left",
+    font_size = 12,
+    fixed_thead = TRUE
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "420px")
 ```
 
 ## 3. Comparison pairs used for contrasts between without W and with W
@@ -155,7 +168,19 @@ comparison_pairs <- tibble(
   WithW = c("M10", "M13", "M16", "M11", "M14", "M17", "M12", "M15", "M18")
 )
 
-comparison_pairs
+comparison_pairs %>%
+  knitr::kable(
+    caption = "Paired comparisons between models without W and with W.",
+    align = "lll",
+    escape = FALSE
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
 ## 4. Load prediction summary tables
@@ -335,26 +360,36 @@ The next tables show the three best-performing models in each validation setting
 cv12_top3 %>%
   knitr::kable(
     caption = "Top 3 models for each trait and validation scheme in CV1 and CV2.",
-    align = "llllcc"
+    align = "llllcc",
+    escape = FALSE
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     full_width = FALSE,
-    position = "left"
-  )
+    position = "left",
+    font_size = 13,
+    fixed_thead = TRUE
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
 ```
 
 ```{r table-cvloo-top3}
 cvloo_top3 %>%
   knitr::kable(
     caption = "Top 3 models for each trait, validation scheme, and left-out environment in CV0 and CV00.",
-    align = "lllllcc"
+    align = "lllllcc",
+    escape = FALSE
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     full_width = FALSE,
-    position = "left"
-  )
+    position = "left",
+    font_size = 13,
+    fixed_thead = TRUE
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
 ```
 
 ## 6. W-effect tables
@@ -370,14 +405,18 @@ cv12_w_effect %>%
   ) %>%
   knitr::kable(
     caption = "Effect of adding W in CV1 and CV2.",
-    align = "lllccc"
+    align = "lllccc",
+    escape = FALSE
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     full_width = FALSE,
-    position = "left"
+    position = "left",
+    font_size = 13,
+    fixed_thead = TRUE
   ) %>%
-  kableExtra::scroll_box(width = "100%", height = "320px")
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
 ```
 
 ```{r table-cvloo-w-effect}
@@ -389,14 +428,18 @@ cvloo_w_effect %>%
   ) %>%
   knitr::kable(
     caption = "Effect of adding W in CV0 and CV00.",
-    align = "llllccc"
+    align = "llllccc",
+    escape = FALSE
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     full_width = FALSE,
-    position = "left"
+    position = "left",
+    font_size = 13,
+    fixed_thead = TRUE
   ) %>%
-  kableExtra::scroll_box(width = "100%", height = "320px")
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
 ```
 
 ## 7. Kernel-family comparison tables
@@ -414,14 +457,18 @@ cv12_kernel_family_compare %>%
   ) %>%
   knitr::kable(
     caption = "Comparison among kernel families in CV1 and CV2.",
-    align = "llllccccc"
+    align = "llllccccc",
+    escape = FALSE
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     full_width = FALSE,
-    position = "left"
+    position = "left",
+    font_size = 13,
+    fixed_thead = TRUE
   ) %>%
-  kableExtra::scroll_box(width = "100%", height = "320px")
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
 ```
 
 ```{r table-cvloo-kernel-family}
@@ -435,14 +482,18 @@ cvloo_kernel_family_compare %>%
   ) %>%
   knitr::kable(
     caption = "Comparison among kernel families in CV0 and CV00.",
-    align = "lllllccccc"
+    align = "lllllccccc",
+    escape = FALSE
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     full_width = FALSE,
-    position = "left"
+    position = "left",
+    font_size = 13,
+    fixed_thead = TRUE
   ) %>%
-  kableExtra::scroll_box(width = "100%", height = "320px")
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
 ```
 
 ## 8. Automated result-oriented summaries
@@ -474,13 +525,33 @@ cvloo_w_summary <- cvloo_w_effect %>%
 
 cat("### Best models in CV1 and CV2\n\n")
 cv12_best_models %>%
-  knitr::kable(align = "llllc") %>%
-  kableExtra::kable_styling(full_width = FALSE, position = "left")
+  knitr::kable(
+    align = "llllc",
+    escape = FALSE
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 
 cat("\n\n### Best models in CV0 and CV00\n\n")
 cvloo_best_models %>%
-  knitr::kable(align = "lllllc") %>%
-  kableExtra::kable_styling(full_width = FALSE, position = "left")
+  knitr::kable(
+    align = "lllllc",
+    escape = FALSE
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left",
+    font_size = 13,
+    fixed_thead = TRUE
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
 
 cat("\n\n### Mean effect of W\n\n")
 dplyr::bind_rows(
@@ -488,8 +559,17 @@ dplyr::bind_rows(
   cvloo_w_summary
 ) %>%
   dplyr::arrange(Trait, CV) %>%
-  knitr::kable(align = "llc") %>%
-  kableExtra::kable_styling(full_width = FALSE, position = "left")
+  knitr::kable(
+    align = "llc",
+    escape = FALSE
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "left",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
 ## 9. Figures
