@@ -1,5 +1,5 @@
 ---
-title: "Resumos e figuras de predição - tutorial didático"
+title: "Resumos e figuras de predição"
 author:
   - Costa, W. G.^[Weverton Gomes da Costa, Postdoctoral Researcher, Department of Statistics - Universidade Federal de Viçosa, wevertonufv@gmail.com]
 date: "`r Sys.Date()`"
@@ -27,14 +27,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-**Language / Idioma:** [English](visualization.html) | [Português](visualization_pt.html)
-
-Esta etapa organiza os resumos de predição usados nas tabelas, nos resumos automáticos e nas figuras finais. O documento trabalha com tabelas disponíveis em `output/tables/`, anexa o catálogo de modelos, calcula comparações compactas e renderiza as figuras para inspeção.
-
+Este módulo prepara os resumos de predição usados nas tabelas do manuscrito, nos resumos automáticos de resultados e nas figuras finais. Ele parte das tabelas de resultados de predição disponíveis em `output/tables/`, anexa o catálogo de modelos, calcula tabelas compactas de comparação e renderiza as saídas orientadas à visualização diretamente no documento.
 
 ## 1. Carregar pacotes e localizar as pastas do projeto
 
-Esta etapa carrega os pacotes usados para manipulação de tabelas, construção das figuras e formatação do documento HTML. Os caminhos abaixo assumem que a renderização ocorre a partir da raiz do projeto.
+Esta etapa carrega os pacotes usados para manipulação de tabelas, construção de figuras e formatação de tabelas HTML. Os caminhos abaixo assumem que o documento é renderizado a partir da raiz do projeto.
 
 ```{r packages-and-paths}
 rm(list = ls())
@@ -60,7 +57,7 @@ tables_dir <- file.path(project_root, "output", "tables")
 
 ## 2. Catálogo de modelos usado nos resumos de predição
 
-O catálogo define os 18 modelos comparados no estudo. A coluna `Model` apresenta o rótulo usado nas tabelas e figuras do manuscrito (`M1`--`M18`), enquanto `EtaName` preserva o identificador computacional usado internamente em nomes de arquivos e pastas de execução (`Eta1`--`Eta18`).
+O catálogo define os 18 modelos comparados no estudo de predição. A coluna `Model` apresenta o rótulo usado nas tabelas e figuras do manuscrito (`M1`--`M18`), enquanto `EtaName` mantém o identificador computacional usado internamente nos nomes de arquivos e nas pastas de execução do BGLR (`Eta1`--`Eta18`).
 
 ```{r model-catalog}
 model_catalog <- tibble(
@@ -137,7 +134,7 @@ model_catalog <- tibble(
 model_catalog
 ```
 
-## 3. Pares de comparação entre modelos sem W e com W
+## 3. Pares de comparação usados para contrastes entre modelos sem W e com W
 
 Os pares abaixo comparam a mesma via de modelagem e a mesma família de kernel com e sem o kernel climático.
 
@@ -155,7 +152,7 @@ comparison_pairs <- tibble(
 comparison_pairs
 ```
 
-## 4. Carregar tabelas de predição
+## 4. Carregar tabelas de resumo de predição
 
 ```{r load-visualization-tables, include=FALSE}
 cv12_summary <- readr::read_csv(
@@ -315,12 +312,12 @@ cvloo_kernel_family_compare <- cvloo_summary %>%
 
 ## 5. Tabelas Top-3
 
-As próximas tabelas mostram os três modelos com maior capacidade preditiva em cada cenário de validação. A coluna `FullEffects` mostra os efeitos completos, enquanto `Model` mostra o rótulo usado nas figuras.
+As próximas tabelas mostram os três modelos com melhor desempenho em cada configuração de validação. Os efeitos completos são reportados em `FullEffects`, enquanto `Model` fornece o rótulo do manuscrito usado nas figuras.
 
 ```{r table-cv12-top3}
 cv12_top3 %>%
   knitr::kable(
-    caption = "Top 3 modelos para cada traço e esquema de validação em CV1 e CV2.",
+    caption = "Top 3 modelos para cada característica e esquema de validação em CV1 e CV2.",
     align = "llllcc"
   ) %>%
   kableExtra::kable_styling(
@@ -333,7 +330,7 @@ cv12_top3 %>%
 ```{r table-cvloo-top3}
 cvloo_top3 %>%
   knitr::kable(
-    caption = "Top 3 modelos para cada traço, esquema de validação e ambiente omitido em CV0 e CV00.",
+    caption = "Top 3 modelos para cada característica, esquema de validação e ambiente omitido em CV0 e CV00.",
     align = "lllllcc"
   ) %>%
   kableExtra::kable_styling(
@@ -433,9 +430,9 @@ cvloo_kernel_family_compare %>%
 
 ## 8. Resumos automáticos orientados aos resultados
 
-As tabelas abaixo fornecem resumos automáticos compactos para inspeção antes da redação narrativa dos resultados.
+As tabelas abaixo fornecem resumos automáticos compactos que podem ser inspecionados antes da redação narrativa final dos resultados.
 
-```{r automated-results-text-pt, results='asis'}
+```{r automated-results-text, results='asis'}
 cv12_best_models <- cv12_summary %>%
   dplyr::group_by(Trait, CV) %>%
   dplyr::slice_max(order_by = MeanCorrelation, n = 1, with_ties = FALSE) %>%
@@ -480,12 +477,56 @@ dplyr::bind_rows(
 
 ## 9. Figuras
 
-As figuras finais resumem a capacidade preditiva para o catálogo de modelos em `CV1/CV2` e `CV0/CV00`. O eixo x usa `M1`--`M18`; as composições completas dos modelos estão na Tabela Suplementar S1.
+As figuras finais resumem a capacidade preditiva para o catálogo de modelos em `CV1/CV2` e `CV0/CV00`. O eixo x usa `M1`--`M18`; as composições completas dos modelos são fornecidas na Tabela Suplementar S1.
 
-```{r figure-cv12}
+```{r figure-functions}
 group_levels_pt <- c("Genomic", "Phenomic", "Combined")
 model_levels_pt <- model_catalog$Model
 
+base_prediction_plot <- function(plot_data, x_label, y_label, legend_title) {
+  ggplot(plot_data, aes(x = Model, y = MeanCorrelation, fill = Group)) +
+    geom_col(width = 0.75, color = "grey30", linewidth = 0.25, na.rm = TRUE) +
+    geom_errorbar(
+      aes(
+        ymin = MeanCorrelation - SDCorrelation,
+        ymax = MeanCorrelation + SDCorrelation
+      ),
+      width = 0.20,
+      linewidth = 0.35,
+      na.rm = TRUE
+    ) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
+    scale_x_discrete(name = x_label) +
+    scale_y_continuous(
+      name = y_label,
+      breaks = seq(0, 1, by = 0.2),
+      expand = expansion(mult = c(0, 0.02))
+    ) +
+    coord_cartesian(ylim = c(0, 1)) +
+    ggthemes::scale_fill_gdocs(
+      name = legend_title,
+      limits = group_levels_pt,
+      drop = FALSE,
+      guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
+    ) +
+    theme_bw(base_size = 16) +
+    theme(
+      plot.title = element_text(face = "bold", size = 17, hjust = 0.5),
+      axis.text.x = element_text(size = 13, color = "black"),
+      axis.text.y = element_text(size = 12, color = "black"),
+      axis.title = element_text(face = "bold", size = 14),
+      legend.position = "top",
+      legend.title = element_text(face = "bold", size = 14),
+      legend.text = element_text(size = 12),
+      legend.key.width = grid::unit(1.2, "cm"),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor = element_blank(),
+      plot.margin = margin(8, 8, 8, 8)
+    )
+}
+```
+
+```{r figure-cv12}
 cv12_plot_data <- cv12_summary %>%
   dplyr::mutate(
     Group = factor(Group, levels = group_levels_pt),
@@ -495,89 +536,47 @@ cv12_plot_data <- cv12_summary %>%
 
 plot_gy_cv1 <- cv12_plot_data %>%
   dplyr::filter(Trait == "GY", CV == "CV1") %>%
-  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
-  geom_col(width = 0.75, color = "grey30", linewidth = 0.25, na.rm = TRUE) +
-  geom_errorbar(aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation), width = 0.20, linewidth = 0.35, na.rm = TRUE) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
-  scale_x_discrete(name = "Modelo") +
-  scale_y_continuous(name = "Correlação preditiva", breaks = seq(0, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
-  coord_cartesian(ylim = c(0, 1)) +
-  ggthemes::scale_fill_gdocs(
-    name = "Grupo de comparação",
-    limits = group_levels_pt,
-    drop = FALSE,
-    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
-  ) +
-  labs(title = "CV1") +
-  theme_bw(base_size = 16) +
-  theme(plot.title = element_text(face = "bold", size = 17, hjust = 0.5), axis.text.x = element_text(size = 13, color = "black"), axis.text.y = element_text(size = 12, color = "black"), axis.title = element_text(face = "bold", size = 14), legend.position = "top", legend.title = element_text(face = "bold", size = 14), legend.text = element_text(size = 12), legend.key.width = grid::unit(1.2, "cm"), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), plot.margin = margin(8, 8, 8, 8))
+  base_prediction_plot("Modelo", "Correlação preditiva", "Grupo de comparação") +
+  labs(title = "CV1")
 
 plot_gy_cv2 <- cv12_plot_data %>%
   dplyr::filter(Trait == "GY", CV == "CV2") %>%
-  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
-  geom_col(width = 0.75, color = "grey30", linewidth = 0.25, na.rm = TRUE) +
-  geom_errorbar(aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation), width = 0.20, linewidth = 0.35, na.rm = TRUE) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
-  scale_x_discrete(name = "Modelo") +
-  scale_y_continuous(name = "Correlação preditiva", breaks = seq(0, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
-  coord_cartesian(ylim = c(0, 1)) +
-  ggthemes::scale_fill_gdocs(
-    name = "Grupo de comparação",
-    limits = group_levels_pt,
-    drop = FALSE,
-    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
-  ) +
-  labs(title = "CV2") +
-  theme_bw(base_size = 16) +
-  theme(plot.title = element_text(face = "bold", size = 17, hjust = 0.5), axis.text.x = element_text(size = 13, color = "black"), axis.text.y = element_text(size = 12, color = "black"), axis.title = element_text(face = "bold", size = 14), legend.position = "top", legend.title = element_text(face = "bold", size = 14), legend.text = element_text(size = 12), legend.key.width = grid::unit(1.2, "cm"), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), plot.margin = margin(8, 8, 8, 8))
+  base_prediction_plot("Modelo", "Correlação preditiva", "Grupo de comparação") +
+  labs(title = "CV2")
 
 plot_kw_cv1 <- cv12_plot_data %>%
   dplyr::filter(Trait == "KW", CV == "CV1") %>%
-  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
-  geom_col(width = 0.75, color = "grey30", linewidth = 0.25, na.rm = TRUE) +
-  geom_errorbar(aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation), width = 0.20, linewidth = 0.35, na.rm = TRUE) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
-  scale_x_discrete(name = "Modelo") +
-  scale_y_continuous(name = "Correlação preditiva", breaks = seq(0, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
-  coord_cartesian(ylim = c(0, 1)) +
-  ggthemes::scale_fill_gdocs(
-    name = "Grupo de comparação",
-    limits = group_levels_pt,
-    drop = FALSE,
-    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
-  ) +
-  labs(title = "CV1") +
-  theme_bw(base_size = 16) +
-  theme(plot.title = element_text(face = "bold", size = 17, hjust = 0.5), axis.text.x = element_text(size = 13, color = "black"), axis.text.y = element_text(size = 12, color = "black"), axis.title = element_text(face = "bold", size = 14), legend.position = "top", legend.title = element_text(face = "bold", size = 14), legend.text = element_text(size = 12), legend.key.width = grid::unit(1.2, "cm"), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), plot.margin = margin(8, 8, 8, 8))
+  base_prediction_plot("Modelo", "Correlação preditiva", "Grupo de comparação") +
+  labs(title = "CV1")
 
 plot_kw_cv2 <- cv12_plot_data %>%
   dplyr::filter(Trait == "KW", CV == "CV2") %>%
-  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
-  geom_col(width = 0.75, color = "grey30", linewidth = 0.25, na.rm = TRUE) +
-  geom_errorbar(aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation), width = 0.20, linewidth = 0.35, na.rm = TRUE) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
-  scale_x_discrete(name = "Modelo") +
-  scale_y_continuous(name = "Correlação preditiva", breaks = seq(0, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
-  coord_cartesian(ylim = c(0, 1)) +
-  ggthemes::scale_fill_gdocs(
-    name = "Grupo de comparação",
-    limits = group_levels_pt,
-    drop = FALSE,
-    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
-  ) +
-  labs(title = "CV2") +
-  theme_bw(base_size = 16) +
-  theme(plot.title = element_text(face = "bold", size = 17, hjust = 0.5), axis.text.x = element_text(size = 13, color = "black"), axis.text.y = element_text(size = 12, color = "black"), axis.title = element_text(face = "bold", size = 14), legend.position = "top", legend.title = element_text(face = "bold", size = 14), legend.text = element_text(size = 12), legend.key.width = grid::unit(1.2, "cm"), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(), plot.margin = margin(8, 8, 8, 8))
+  base_prediction_plot("Modelo", "Correlação preditiva", "Grupo de comparação") +
+  labs(title = "CV2")
 
 prediction_GY_CV1_CV2_combined <- (plot_gy_cv1 + plot_gy_cv2) +
   patchwork::plot_layout(ncol = 2, guides = "collect") +
-  patchwork::plot_annotation(title = "Capacidade preditiva para produtividade de grãos (GY)", tag_levels = "A") &
-  theme(legend.position = "top", plot.title = element_text(face = "bold", size = 18, hjust = 0.5), plot.tag = element_text(face = "bold", size = 18, color = "black"))
+  patchwork::plot_annotation(
+    title = "Capacidade preditiva para produtividade de grãos (GY)",
+    tag_levels = "A"
+  ) &
+  theme(
+    legend.position = "top",
+    plot.title = element_text(face = "bold", size = 18, hjust = 0.5),
+    plot.tag = element_text(face = "bold", size = 18, color = "black")
+  )
 
 prediction_KW_CV1_CV2_combined <- (plot_kw_cv1 + plot_kw_cv2) +
   patchwork::plot_layout(ncol = 2, guides = "collect") +
-  patchwork::plot_annotation(title = "Capacidade preditiva para peso de grãos (KW)", tag_levels = "A") &
-  theme(legend.position = "top", plot.title = element_text(face = "bold", size = 18, hjust = 0.5), plot.tag = element_text(face = "bold", size = 18, color = "black"))
+  patchwork::plot_annotation(
+    title = "Capacidade preditiva para peso de grãos (KW)",
+    tag_levels = "A"
+  ) &
+  theme(
+    legend.position = "top",
+    plot.title = element_text(face = "bold", size = 18, hjust = 0.5),
+    plot.tag = element_text(face = "bold", size = 18, color = "black")
+  )
 
 prediction_GY_CV1_CV2_combined
 prediction_KW_CV1_CV2_combined
@@ -594,207 +593,31 @@ cvloo_plot_data <- cvloo_summary %>%
 
 plot_gy_cv00 <- cvloo_plot_data %>%
   dplyr::filter(Trait == "GY", CV == "CV00") %>%
-  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
-  geom_col(
-    width = 0.75,
-    color = "grey30",
-    na.rm = TRUE
-  ) +
-  geom_errorbar(
-    aes(
-      ymin = MeanCorrelation - SDCorrelation,
-      ymax = MeanCorrelation + SDCorrelation
-    ),
-    width = 0.20,
-    linewidth = 0.35,
-    na.rm = TRUE
-  ) +
+  base_prediction_plot("Modelo", "Correlação preditiva", "Grupo de comparação") +
   facet_wrap(~ Env_leave, ncol = 2) +
-  geom_hline(
-    yintercept = 0,
-    linetype = "dashed",
-    color = "grey40"
-  ) +
-  scale_x_discrete(name = "Modelo") +
-  scale_y_continuous(
-    name = "Correlação preditiva",
-    breaks = seq(0, 1, by = 0.2),
-    expand = expansion(mult = c(0, 0.02))
-  ) +
-  coord_cartesian(ylim = c(0, 1)) +
-  ggthemes::scale_fill_gdocs(
-    name = "Grupo de comparação",
-    limits = group_levels_pt,
-    drop = FALSE,
-    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
-  ) +
   labs(title = "Capacidade preditiva em CV00 para produtividade de grãos (GY)") +
-  theme_bw(base_size = 16) +
-  theme(
-    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
-    axis.text.x = element_text(size = 12, color = "black"),
-    axis.text.y = element_text(size = 12, color = "black"),
-    axis.title = element_text(face = "bold", size = 14),
-    strip.text = element_text(face = "bold", size = 12),
-    legend.position = "top",
-    legend.title = element_text(face = "bold", size = 14),
-    legend.text = element_text(size = 12),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor = element_blank()
-  )
+  theme(strip.text = element_text(face = "bold", size = 12))
 
 plot_gy_cv0 <- cvloo_plot_data %>%
   dplyr::filter(Trait == "GY", CV == "CV0") %>%
-  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
-  geom_col(
-    width = 0.75,
-    color = "grey30",
-    na.rm = TRUE
-  ) +
-  geom_errorbar(
-    aes(
-      ymin = MeanCorrelation - SDCorrelation,
-      ymax = MeanCorrelation + SDCorrelation
-    ),
-    width = 0.20,
-    linewidth = 0.35,
-    na.rm = TRUE
-  ) +
+  base_prediction_plot("Modelo", "Correlação preditiva", "Grupo de comparação") +
   facet_wrap(~ Env_leave, ncol = 2) +
-  geom_hline(
-    yintercept = 0,
-    linetype = "dashed",
-    color = "grey40"
-  ) +
-  scale_x_discrete(name = "Modelo") +
-  scale_y_continuous(
-    name = "Correlação preditiva",
-    breaks = seq(0, 1, by = 0.2),
-    expand = expansion(mult = c(0, 0.02))
-  ) +
-  coord_cartesian(ylim = c(0, 1)) +
-  ggthemes::scale_fill_gdocs(
-    name = "Grupo de comparação",
-    limits = group_levels_pt,
-    drop = FALSE,
-    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
-  ) +
   labs(title = "Capacidade preditiva em CV0 para produtividade de grãos (GY)") +
-  theme_bw(base_size = 16) +
-  theme(
-    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
-    axis.text.x = element_text(size = 12, color = "black"),
-    axis.text.y = element_text(size = 12, color = "black"),
-    axis.title = element_text(face = "bold", size = 14),
-    strip.text = element_text(face = "bold", size = 12),
-    legend.position = "top",
-    legend.title = element_text(face = "bold", size = 14),
-    legend.text = element_text(size = 12),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor = element_blank()
-  )
+  theme(strip.text = element_text(face = "bold", size = 12))
 
 plot_kw_cv00 <- cvloo_plot_data %>%
   dplyr::filter(Trait == "KW", CV == "CV00") %>%
-  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
-  geom_col(
-    width = 0.75,
-    color = "grey30",
-    na.rm = TRUE
-  ) +
-  geom_errorbar(
-    aes(
-      ymin = MeanCorrelation - SDCorrelation,
-      ymax = MeanCorrelation + SDCorrelation
-    ),
-    width = 0.20,
-    linewidth = 0.35,
-    na.rm = TRUE
-  ) +
+  base_prediction_plot("Modelo", "Correlação preditiva", "Grupo de comparação") +
   facet_wrap(~ Env_leave, ncol = 2) +
-  geom_hline(
-    yintercept = 0,
-    linetype = "dashed",
-    color = "grey40"
-  ) +
-  scale_x_discrete(name = "Modelo") +
-  scale_y_continuous(
-    name = "Correlação preditiva",
-    breaks = seq(0, 1, by = 0.2),
-    expand = expansion(mult = c(0, 0.02))
-  ) +
-  coord_cartesian(ylim = c(0, 1)) +
-  ggthemes::scale_fill_gdocs(
-    name = "Grupo de comparação",
-    limits = group_levels_pt,
-    drop = FALSE,
-    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
-  ) +
   labs(title = "Capacidade preditiva em CV00 para peso de grãos (KW)") +
-  theme_bw(base_size = 16) +
-  theme(
-    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
-    axis.text.x = element_text(size = 12, color = "black"),
-    axis.text.y = element_text(size = 12, color = "black"),
-    axis.title = element_text(face = "bold", size = 14),
-    strip.text = element_text(face = "bold", size = 12),
-    legend.position = "top",
-    legend.title = element_text(face = "bold", size = 14),
-    legend.text = element_text(size = 12),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor = element_blank()
-  )
+  theme(strip.text = element_text(face = "bold", size = 12))
 
 plot_kw_cv0 <- cvloo_plot_data %>%
   dplyr::filter(Trait == "KW", CV == "CV0") %>%
-  ggplot(aes(x = Model, y = MeanCorrelation, fill = Group)) +
-  geom_col(
-    width = 0.75,
-    color = "grey30",
-    na.rm = TRUE
-  ) +
-  geom_errorbar(
-    aes(
-      ymin = MeanCorrelation - SDCorrelation,
-      ymax = MeanCorrelation + SDCorrelation
-    ),
-    width = 0.20,
-    linewidth = 0.35,
-    na.rm = TRUE
-  ) +
+  base_prediction_plot("Modelo", "Correlação preditiva", "Grupo de comparação") +
   facet_wrap(~ Env_leave, ncol = 2) +
-  geom_hline(
-    yintercept = 0,
-    linetype = "dashed",
-    color = "grey40"
-  ) +
-  scale_x_discrete(name = "Modelo") +
-  scale_y_continuous(
-    name = "Correlação preditiva",
-    breaks = seq(0, 1, by = 0.2),
-    expand = expansion(mult = c(0, 0.02))
-  ) +
-  coord_cartesian(ylim = c(0, 1)) +
-  ggthemes::scale_fill_gdocs(
-    name = "Grupo de comparação",
-    limits = group_levels_pt,
-    drop = FALSE,
-    guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
-  ) +
   labs(title = "Capacidade preditiva em CV0 para peso de grãos (KW)") +
-  theme_bw(base_size = 16) +
-  theme(
-    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
-    axis.text.x = element_text(size = 12, color = "black"),
-    axis.text.y = element_text(size = 12, color = "black"),
-    axis.title = element_text(face = "bold", size = 14),
-    strip.text = element_text(face = "bold", size = 12),
-    legend.position = "top",
-    legend.title = element_text(face = "bold", size = 14),
-    legend.text = element_text(size = 12),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor = element_blank()
-  )
+  theme(strip.text = element_text(face = "bold", size = 12))
 
 plot_gy_cv00
 plot_gy_cv0
@@ -804,7 +627,7 @@ plot_kw_cv0
 
 ## 10. Nota final
 
-A etapa de visualização fornece as tabelas e figuras finais usadas para interpretar o comportamento preditivo dos modelos genômicos, fenômicos, integrados, climáticos, Gaussianos e arccosine. Os códigos dos modelos exibidos nas figuras correspondem à Tabela Suplementar S1.
+Esta versão está alinhada ao fluxo final de predição e renderiza as tabelas e figuras diretamente no documento. Ela não salva arquivos de saída e não duplica tabelas ou gráficos em `output/tables/` ou `output/figures/`.
 
 ## Navegação entre etapas
 
