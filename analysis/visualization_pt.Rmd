@@ -27,7 +27,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-**Idioma/ Language:** [Português](visualization_pt.html) | [English](visualization.html)
+**Idioma / Language:** [Português](visualization_pt.html) | [English](visualization.html)
 
 Este módulo prepara os resumos de predição usados nas tabelas do manuscrito, nos resumos automáticos de resultados e nas figuras finais. Ele parte das tabelas de resultados de predição disponíveis em `output/tables/`, anexa o catálogo de modelos, calcula tabelas compactas de comparação e renderiza as saídas orientadas à visualização diretamente no documento.
 
@@ -482,13 +482,13 @@ dplyr::bind_rows(
 As figuras finais resumem a capacidade preditiva para o catálogo de modelos em `CV1/CV2` e `CV0/CV00`. O eixo x usa `M1`--`M18`; as composições completas dos modelos são fornecidas na Tabela Suplementar S1.
 
 ```{r figure-cv12}
-group_levels_en <- c("Genômico", "Fenômico", "Combinado")
-model_levels_en <- model_catalog$Model
+group_levels_pt <- c("Genômico", "Fenômico", "Combinado")
+model_levels_pt <- model_catalog$Model
 
 cv12_plot_data <- cv12_summary %>%
   dplyr::mutate(
-    Group = factor(Group, levels = group_levels_en),
-    Model = factor(Model, levels = model_levels_en),
+    Group = factor(Group, levels = group_levels_pt),
+    Model = factor(Model, levels = model_levels_pt),
     CV = factor(CV, levels = c("CV1", "CV2"))
   )
 
@@ -505,7 +505,7 @@ plot_gy <- cv12_plot_data %>%
   facet_wrap(~ CV) +
   ggthemes::scale_fill_gdocs(
     name = "Grupo de comparação",
-    limits = group_levels_en,
+    limits = group_levels_pt,
     drop = FALSE,
     guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
   ) +
@@ -528,7 +528,7 @@ plot_kw <- cv12_plot_data %>%
   facet_wrap(~ CV) +
   ggthemes::scale_fill_gdocs(
     name = "Grupo de comparação",
-    limits = group_levels_en,
+    limits = group_levels_pt,
     drop = FALSE,
     guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
   ) +
@@ -542,8 +542,8 @@ plot_kw
 ```{r figure-cvloo}
 cvloo_plot_data <- cvloo_summary %>%
   dplyr::mutate(
-    Group = factor(Group, levels = group_levels_en),
-    Model = factor(Model, levels = model_levels_en),
+    Group = factor(Group, levels = group_levels_pt),
+    Model = factor(Model, levels = model_levels_pt),
     Env_leave = factor(Env_leave, levels = c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")),
     CV = factor(CV, levels = c("CV00", "CV0"))
   )
@@ -597,8 +597,8 @@ plot_gy_cv00 <- cvloo_plot_data %>%
   ) +
   coord_cartesian(ylim = c(0, 1)) +
   ggthemes::scale_fill_gdocs(
-    name = "Grupo de Comparação",
-    limits = group_levels_en,
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
     drop = FALSE,
     guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
   ) +
@@ -640,8 +640,8 @@ plot_gy_cv0 <- cvloo_plot_data %>%
   ) +
   coord_cartesian(ylim = c(0, 1)) +
   ggthemes::scale_fill_gdocs(
-    name = "Grupo de Comparação",
-    limits = group_levels_en,
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
     drop = FALSE,
     guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
   ) +
@@ -700,8 +700,8 @@ plot_kw_cv00 <- cvloo_plot_data %>%
   ) +
   coord_cartesian(ylim = c(0, 1)) +
   ggthemes::scale_fill_gdocs(
-    name = "Grupo de Comparação",
-    limits = group_levels_en,
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
     drop = FALSE,
     guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
   ) +
@@ -743,8 +743,8 @@ plot_kw_cv0 <- cvloo_plot_data %>%
   ) +
   coord_cartesian(ylim = c(0, 1)) +
   ggthemes::scale_fill_gdocs(
-    name = "Grupo de Comparação",
-    limits = group_levels_en,
+    name = "Grupo de comparação",
+    limits = group_levels_pt,
     drop = FALSE,
     guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)
   ) +
