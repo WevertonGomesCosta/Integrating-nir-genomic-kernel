@@ -28,7 +28,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-**Language / Idioma:** [English](variance_components.html) | [Português](variance_components_pt.html)
+**Idioma / Language:** [Português](variance_components_pt.html) | [English](variance_components.html)
 
 ## 1. Introdução
 
@@ -115,7 +115,18 @@ input_file_index <- tibble(
   ExpectedPath = file.path(kernel_dir, required_files)
 )
 
-knitr::kable(input_file_index, caption = "Objetos de matrizes e kernels usados nesta etapa.")
+input_file_index %>%
+  knitr::kable(
+    caption = "Objetos de matrizes e kernels usados nesta etapa.",
+    align = "ll"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
 ### 2.3. Rótulos usados nas tabelas e figuras finais

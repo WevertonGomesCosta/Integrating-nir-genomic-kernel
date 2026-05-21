@@ -127,7 +127,18 @@ input_file_index <- tibble(
   ExpectedPath = file.path(kernel_dir, required_files)
 )
 
-knitr::kable(input_file_index, caption = "Required matrix and kernel objects used by this step.")
+input_file_index %>%
+  knitr::kable(
+    caption = "Required matrix and kernel objects used by this step.",
+    align = "ll"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
 ### 2.3. Labels used in the final tables and figures
