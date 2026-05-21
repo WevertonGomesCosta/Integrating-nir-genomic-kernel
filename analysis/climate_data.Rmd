@@ -207,7 +207,7 @@ knitr::kable(
   caption = "Table 1. Sample of daily weather records retrieved from NASA POWER for the Texas trials."
 ) %>%
   kableExtra::kable_styling(
-    full_width = FALSE,
+    full_width = TRUE,
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     position = "center",
     font_size = 13
@@ -894,7 +894,7 @@ knitr::kable(
   caption = "Table 2. Weather-derived covariates used to characterize the growing seasons and to support the construction of the weather kernel."
 ) %>%
   kableExtra::kable_styling(
-    full_width = FALSE,
+    full_width = TRUE,
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     position = "center",
     font_size = 12
@@ -911,7 +911,7 @@ knitr::kable(
   caption = "Table 3. Annual weather-derived covariates derived from NASA POWER data for the 2011 and 2012 growing seasons."
 ) %>%
   kableExtra::kable_styling(
-    full_width = FALSE,
+    full_width = TRUE,
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     position = "center",
     font_size = 11

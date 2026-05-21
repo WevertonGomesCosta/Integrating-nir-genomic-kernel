@@ -199,7 +199,7 @@ knitr::kable(
   caption = "Tabela 1. Exemplo de registros meteorológicos diários recuperados da NASA POWER para os ensaios no Texas."
 ) %>%
   kableExtra::kable_styling(
-    full_width = FALSE,
+    full_width = TRUE,
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     position = "center",
     font_size = 13
@@ -252,7 +252,7 @@ knitr::kable(
   caption = "Tabela 1. Exemplo de registros meteorológicos diários recuperados da NASA POWER para os ensaios no Texas."
 ) %>%
   kableExtra::kable_styling(
-    full_width = FALSE,
+    full_width = TRUE,
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     position = "center",
     font_size = 13
@@ -878,7 +878,7 @@ knitr::kable(
   caption = "Tabela 2. Covariáveis derivadas do clima usadas para caracterizar as safras e apoiar a construção do kernel climático."
 ) %>%
   kableExtra::kable_styling(
-    full_width = FALSE,
+    full_width = TRUE,
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     position = "center",
     font_size = 12
@@ -895,7 +895,7 @@ knitr::kable(
   caption = "Tabela 3. Covariáveis anuais derivadas do clima obtidas dos dados NASA POWER para as safras de 2011 e 2012."
 ) %>%
   kableExtra::kable_styling(
-    full_width = FALSE,
+    full_width = TRUE,
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     position = "center",
     font_size = 11
@@ -958,7 +958,7 @@ knitr::kable(
   caption = "Tabela 2. Covariáveis derivadas do clima usadas para caracterizar as safras e apoiar a construção do kernel climático."
 ) %>%
   kableExtra::kable_styling(
-    full_width = FALSE,
+    full_width = TRUE,
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     position = "center",
     font_size = 12
@@ -971,7 +971,7 @@ knitr::kable(
   caption = "Tabela 3. Covariáveis anuais derivadas do clima obtidas dos dados NASA POWER para as safras de 2011 e 2012."
 ) %>%
   kableExtra::kable_styling(
-    full_width = FALSE,
+    full_width = TRUE,
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     position = "center",
     font_size = 11

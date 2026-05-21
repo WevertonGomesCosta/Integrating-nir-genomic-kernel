@@ -309,8 +309,8 @@ kernel_inventory %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left"
+    full_width = TRUE,
+    position = "center"
   ) %>%
   kableExtra::scroll_box(width = "100%", height = "260px")
 ```
@@ -525,8 +525,8 @@ model_info %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left"
+    full_width = TRUE,
+    position = "center"
   ) %>%
   kableExtra::scroll_box(width = "100%", height = "340px")
 ```
@@ -850,8 +850,8 @@ head(variance_table, 12) %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left"
+    full_width = TRUE,
+    position = "center"
   ) %>%
   kableExtra::scroll_box(width = "100%", height = "320px")
 ```
