@@ -16,7 +16,7 @@ editor_options:
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-**Language / Idioma:** [English](analysis_prediction.html) | [Português](analysis_prediction_pt.html)
+**Idioma / Language:** [Português](analysis_prediction_pt.html) | [English](analysis_prediction.html)
 
 **Navegação do módulo / Module navigation:** [Parte II: execução e organização da predição](analysis_prediction_run_outputs_pt.html)
 
@@ -64,6 +64,8 @@ rm(list = ls())
 options(scipen = 999)
 
 library(parallel)
+library(knitr)
+library(kableExtra)
 ```
 
 ## 3. Objetos de entrada para a predição
@@ -200,7 +202,21 @@ model_catalog <- data.frame(
   stringsAsFactors = FALSE
 )
 
-model_catalog
+model_catalog |>
+  knitr::kable(
+    caption = "Catálogo de modelos usado na configuração da predição.",
+    align = "ccclll",
+    escape = FALSE
+  ) |>
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center",
+    font_size = 13,
+    fixed_thead = TRUE
+  ) |>
+  kableExtra::row_spec(0, bold = TRUE) |>
+  kableExtra::scroll_box(width = "100%", height = "420px")
 ```
 
 ## 6. Especificação dos modelos
@@ -383,7 +399,19 @@ cv_scenarios <- data.frame(
   stringsAsFactors = FALSE
 )
 
-cv_scenarios
+cv_scenarios |>
+  knitr::kable(
+    caption = "Cenários de validação cruzada e seu significado científico.",
+    align = "ccc",
+    escape = FALSE
+  ) |>
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center",
+    font_size = 13
+  ) |>
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
 ### 7.2 Predição quando genótipos estão completamente não observados versus mantidos no treinamento
@@ -404,7 +432,19 @@ cv12_design <- data.frame(
   stringsAsFactors = FALSE
 )
 
-cv12_design
+cv12_design |>
+  knitr::kable(
+    caption = "Lógica do desenho para CV1 e CV2.",
+    align = "ccc",
+    escape = FALSE
+  ) |>
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center",
+    font_size = 13
+  ) |>
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
 ### 7.3 Predição em ambientes que não estão totalmente disponíveis durante o treinamento
@@ -425,7 +465,19 @@ cvloo_design <- data.frame(
   stringsAsFactors = FALSE
 )
 
-cvloo_design
+cvloo_design |>
+  knitr::kable(
+    caption = "Lógica do desenho para CV0 e CV00.",
+    align = "ccc",
+    escape = FALSE
+  ) |>
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center",
+    font_size = 13
+  ) |>
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
 ### 7.4 Nomes de arquivos e reprodutibilidade nas etapas posteriores
@@ -450,7 +502,21 @@ prediction_file_patterns <- data.frame(
   stringsAsFactors = FALSE
 )
 
-prediction_file_patterns
+prediction_file_patterns |>
+  knitr::kable(
+    caption = "Exemplos dos padrões de nomes de arquivos de predição usados nas etapas posteriores.",
+    align = "ccc",
+    escape = FALSE
+  ) |>
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center",
+    font_size = 13,
+    fixed_thead = TRUE
+  ) |>
+  kableExtra::row_spec(0, bold = TRUE) |>
+  kableExtra::scroll_box(width = "100%", height = "360px")
 ```
 
 ## 8. Transição para o submódulo de execução
