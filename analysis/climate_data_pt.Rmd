@@ -25,7 +25,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-**Language / Idioma:** [English](climate_data.html) | [Português](climate_data_pt.html)
+**Idioma / Language:** [Português](climate_data_pt.html) | [English](climate_data.html)
 
 
 ## 1. Introdução
@@ -70,7 +70,7 @@ Cada pacote tem um papel claro no fluxo:
 - `patchwork`: combina múltiplas figuras do `ggplot2` em painéis prontos para publicação.
 - `ggthemes`: fornece as escalas discretas do Google Docs usadas para padronizar cores entre as figuras.
 - `kableExtra`: melhora a apresentação de tabelas HTML no tutorial.
-- `suncalc`: é usado na versão em inglês para calcular nascer e pôr do sol e, a partir deles, o fotoperíodo diário.
+- `suncalc`: calcula nascer e pôr do sol e, a partir deles, o fotoperíodo diário.
 
 ```{r packages}
 # Descomente se a instalação for necessária
