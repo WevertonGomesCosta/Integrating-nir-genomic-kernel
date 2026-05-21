@@ -46,6 +46,7 @@ library(readr)
 library(dplyr)
 library(stringr)
 library(knitr)
+library(kableExtra)
 library(BGLR)
 library(foreach)
 library(doParallel)
@@ -505,58 +506,25 @@ counts_by_trait <- combined_inventory %>%
 write_csv(counts_by_cv, file.path(analysis_tables_dir, "analysis_prediction_counts_by_cv.csv"))
 write_csv(counts_by_trait, file.path(analysis_tables_dir, "analysis_prediction_counts_by_trait.csv"))
 
-knitr::kable(
-  counts_by_cv,
-  caption = "Number of prediction files by validation scheme.",
-  align = "cc"
-)
+counts_by_cv %>%
+  knitr::kable(
+    caption = "Number of prediction files by validation scheme.",
+    align = "cc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
-
-## 11. Examples of the output path pattern
-
-```{r prediction-output-examples}
-output_examples <- bind_rows(
-  tibble::tibble(
-    ExampleType = "CV1/CV2",
-    relative_path = c(
-      "CV1/GY/rep01/fold01/CV1_GY_Eta1_rep01_fold01.csv",
-      "CV2/KW/rep10/fold05/CV2_KW_Eta18_rep10_fold05.csv"
-    ),
-    bglr_example = c(
-      "bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GxE_RKHS_varU.dat",
-      "bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat"
-    ),
-    Meaning = c(
-      "Prediction accuracy for CV1, trait GY, model M1 (EtaName Eta1), repetition 1, fold 1.",
-      "Prediction accuracy for CV2, trait KW, model M18 (EtaName Eta18), repetition 10, fold 5."
-    )
-  ),
-  tibble::tibble(
-    ExampleType = "CV0/CV00",
-    relative_path = c(
-      "CV0/CS11_WS/GY/rep01/fold01/CV0_GY_CS11_WS_Eta1_rep01_fold01.csv",
-      "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
-    ),
-    bglr_example = c(
-      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GxW_RKHS_varU.dat",
-      "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
-    ),
-    Meaning = c(
-      "Prediction accuracy for CV0, trait GY, held-out environment CS11_WS, model M1 (EtaName Eta1), repetition 1, fold 1.",
-      "Prediction accuracy for CV00, trait KW, held-out environment CS12_WW, model M18 (EtaName Eta18), repetition 10, fold 2."
-    )
-  )
-)
-
-write_csv(output_examples, file.path(analysis_tables_dir, "analysis_prediction_output_examples.csv"))
-knitr::kable(output_examples, caption = "Examples of output files stored under the current rep/fold layout, together with the scenario-specific prefixes used for the persistent BGLR artifacts.", align = "c")
-```
-## 12. Note on temporary `BGLR` artifacts
+## 11. Note on temporary `BGLR` artifacts
 
 In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results/bglr_runs/` during each fit and preserved for later convergence diagnostics. The scenario-specific paths now separate `CV1`, `CV2`, `CV0`, and `CV00`, and the persisted filenames use the scenario prefix together with explicit effect labels instead of generic `ETA_1`, `ETA_2`, and similar placeholders. Therefore, this execution module inventories both the final CSV outputs stored under `output/results/` and the hierarchical paths that locate the corresponding BGLR run folders.
 
-## 13. Final note
+## 12. Final note
 
 This file closes the execution layer of the prediction stage while preserving consistency with the reduced 18-model preprocessing module documented in `analysis_prediction.Rmd` and with the current rep/fold output contract used by the downstream summaries.
 

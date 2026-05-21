@@ -16,7 +16,7 @@ editor_options:
 github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 ---
 
-**Language / Idioma:** [English](analysis_prediction_run_outputs.html) | [Português](analysis_prediction_run_outputs_pt.html)
+**Idioma / Language:** [Português](analysis_prediction_run_outputs_pt.html) | [English](analysis_prediction_run_outputs.html)
 
 **Navegação do módulo / Module navigation:** [Parte I: setup, modelos e desenho de CV](analysis_prediction_pt.html)
 
@@ -46,6 +46,7 @@ library(readr)
 library(dplyr)
 library(stringr)
 library(knitr)
+library(kableExtra)
 library(tidyr)
 
 project_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
@@ -491,57 +492,25 @@ counts_by_trait <- combined_inventory %>%
   count(CV, Trait, name = "n_files") %>%
   arrange(CV, Trait)
 
-knitr::kable(
-  counts_by_cv,
-  caption = "Número de arquivos de predição por esquema de validação.",
-  align = "cc"
-)
+counts_by_cv %>%
+  knitr::kable(
+    caption = "Número de arquivos de predição por esquema de validação.",
+    align = "cc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center",
+    font_size = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE)
 ```
 
-
-## 11. Exemplos do padrão de caminhos dos resultados
-
-```{r prediction-output-examples}
-output_examples <- bind_rows(
-  tibble::tibble(
-    ExampleType = "CV1/CV2",
-    relative_path = c(
-      "CV1/GY/rep01/fold01/CV1_GY_Eta1_rep01_fold01.csv",
-      "CV2/KW/rep10/fold05/CV2_KW_Eta18_rep10_fold05.csv"
-    ),
-    bglr_example = c(
-      "bglr_runs/CV1/GY/rep01/fold01/Eta1/CV1_GY_Eta1_rep01_fold01_GxE_RKHS_varU.dat",
-      "bglr_runs/CV2/KW/rep10/fold05/Eta18/CV2_KW_Eta18_rep10_fold05_PAKW_RKHS_varU.dat"
-    ),
-    Meaning = c(
-      "Acurácia preditiva para CV1, trait GY, modelo M1 (EtaName Eta1), repetição 1, fold 1.",
-      "Acurácia preditiva para CV2, trait KW, modelo M18 (EtaName Eta18), repetição 10, fold 5."
-    )
-  ),
-  tibble::tibble(
-    ExampleType = "CV0/CV00",
-    relative_path = c(
-      "CV0/CS11_WS/GY/rep01/fold01/CV0_GY_CS11_WS_Eta1_rep01_fold01.csv",
-      "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
-    ),
-    bglr_example = c(
-      "bglr_runs/CV0/CS11_WS/GY/rep01/fold01/Eta1/CV0_CS11_WS_GY_Eta1_rep01_fold01_GxW_RKHS_varU.dat",
-      "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
-    ),
-    Meaning = c(
-      "Acurácia preditiva para CV0, trait GY, ambiente retirado CS11_WS, modelo M1 (EtaName Eta1), repetição 1, fold 1.",
-      "Acurácia preditiva para CV00, trait KW, ambiente retirado CS12_WW, modelo M18 (EtaName Eta18), repetição 10, fold 2."
-    )
-  )
-)
-
-knitr::kable(output_examples, caption = "Exemplos de arquivos de resultado armazenados no layout atual por repetição e fold, juntamente com os prefixes específicos de cenário usados nos artefatos persistentes do BGLR.", align = "c")
-```
-## 12. Nota sobre artefatos temporários do `BGLR`
+## 11. Nota sobre artefatos temporários do `BGLR`
 
 No workflow atual de 18 modelos, os artefatos persistentes de `saveAt` ficam associados a `output/results/bglr_runs/` e podem ser consultados em análises futuras de convergência. Por isso, este módulo documenta tanto os resultados finais armazenados em `output/results/` quanto os caminhos hierárquicos que localizam as pastas correspondentes de execução do BGLR.
 
-## 13. Nota final
+## 12. Nota final
 
 Este arquivo fecha a documentação da camada de execução da etapa de predição, preservando a consistência com o módulo reduzido de pré-processamento de 18 modelos e com o contrato atual de resultados usado pelos resumos posteriores.
 
