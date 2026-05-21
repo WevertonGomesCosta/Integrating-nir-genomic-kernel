@@ -1222,7 +1222,7 @@ for (file in rds_files) {
 message("Objects reloaded: ", paste(tools::file_path_sans_ext(basename(rds_files)), collapse = ", "))
 ```
 
-## 16. Final remarks
+## 17. Final remarks
 
 This tutorial converts raw genomic, phenomic, and climatic information into a reproducible collection of aligned kernels ready for downstream prediction models.
 

@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-**Language / Idioma:** [English](matrizes.html) | [Português](matrizes_pt.html)
+**Idioma / Language:** [Português](matrizes_pt.html) | [English](matrizes.html)
 
 ## 1. Introdução
 
@@ -1202,7 +1202,7 @@ for (file in rds_files) {
 
 message("Objetos recarregados: ", paste(tools::file_path_sans_ext(basename(rds_files)), collapse = ", "))
 ```
-## 16. Observações finais
+## 17. Observações finais
 
 Este tutorial converte informação genômica, fenômica e climática bruta em uma coleção reprodutível de kernels alinhados e prontos para os modelos preditivos posteriores.
 
