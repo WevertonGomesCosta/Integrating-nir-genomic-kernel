@@ -144,8 +144,8 @@ model_catalog %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 12,
     fixed_thead = TRUE
   ) %>%
@@ -176,8 +176,8 @@ comparison_pairs %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 13
   ) %>%
   kableExtra::row_spec(0, bold = TRUE)
@@ -365,8 +365,8 @@ cv12_top3 %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 13,
     fixed_thead = TRUE
   ) %>%
@@ -383,8 +383,8 @@ cvloo_top3 %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 13,
     fixed_thead = TRUE
   ) %>%
@@ -410,8 +410,8 @@ cv12_w_effect %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 13,
     fixed_thead = TRUE
   ) %>%
@@ -433,8 +433,8 @@ cvloo_w_effect %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 13,
     fixed_thead = TRUE
   ) %>%
@@ -462,8 +462,8 @@ cv12_kernel_family_compare %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 13,
     fixed_thead = TRUE
   ) %>%
@@ -487,8 +487,8 @@ cvloo_kernel_family_compare %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 13,
     fixed_thead = TRUE
   ) %>%
@@ -531,8 +531,8 @@ cv12_best_models %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 13
   ) %>%
   kableExtra::row_spec(0, bold = TRUE)
@@ -545,8 +545,8 @@ cvloo_best_models %>%
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 13,
     fixed_thead = TRUE
   ) %>%
@@ -565,8 +565,8 @@ dplyr::bind_rows(
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "left",
+    full_width = TRUE,
+    position = "center",
     font_size = 13
   ) %>%
   kableExtra::row_spec(0, bold = TRUE)
