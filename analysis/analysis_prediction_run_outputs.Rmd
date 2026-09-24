@@ -520,9 +520,9 @@ counts_by_cv %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-## 11. Note on temporary `BGLR` artifacts
+## 11. Persistent `BGLR` fitting artifacts
 
-In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results/bglr_runs/` during each fit and preserved for later convergence diagnostics. The scenario-specific paths now separate `CV1`, `CV2`, `CV0`, and `CV00`, and the persisted filenames use the scenario prefix together with explicit effect labels instead of generic `ETA_1`, `ETA_2`, and similar placeholders. Therefore, this execution module inventories both the final CSV outputs stored under `output/results/` and the hierarchical paths that locate the corresponding BGLR run folders.
+In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results/bglr_runs/` during each fitted model and preserved for later convergence diagnostics. The CV1 fit generates both CV1 holdout predictions and the associated CV2 training-set recovery diagnostic, so their BGLR artifacts are stored under the `CV1` fit path. Likewise, the leave-one-environment-out fit generates both CV0 and CV00 predictions, so its BGLR artifacts are stored under the `CV0` fit path. Final prediction CSV outputs remain separated by the four evaluation labels (`CV1`, `CV2`, `CV0`, and `CV00`). Persisted filenames use the fitted-scenario prefix together with explicit effect labels instead of generic `ETA_1`, `ETA_2`, and similar placeholders.
 
 ## 12. Final note
 
