@@ -385,10 +385,10 @@ Os três cenários de holdout de segundo estágio e o diagnóstico associado de 
 cv_scenarios <- data.frame(
   CV = c("CV1", "CV2", "CV0", "CV00"),
   WhatIsMasked = c(
-    "Genótipos inteiros",
-    "Genótipos de treinamento sob o mesmo ajuste usado em CV1",
-    "Um ambiente por vez, avaliado em genótipos já vistos",
-    "Genótipos dentro de um ambiente deixado de fora"
+    "Todas as observações dos genótipos mantidos fora do treinamento",
+    "Nenhum novo mascaramento; avaliação dos registros de treinamento do ajuste CV1 correspondente",
+    "Todas as observações de um ambiente retirado após o mascaramento de genótipos de treinamento",
+    "Genótipos mantidos fora do treinamento dentro do mesmo ambiente retirado usado em CV0"
   ),
   MainQuestion = c(
     "O modelo consegue prever genótipos completamente novos?",
