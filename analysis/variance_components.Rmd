@@ -694,13 +694,11 @@ write_csv(all_variance, file.path(results_dir, "variance_components_raw.csv"))
 saveRDS(all_variance, file.path(results_dir, "variance_components_raw.rds"))
 ```
 
-## 7. Consolidating Saved Posterior Summaries
+## 7. Optional reconsolidation of saved posterior summaries
 
-In the current version of the workflow, this is the section used most often. Instead of refitting all models every time, the script reads the previously saved `variance_metrics.rds` files from `output/variance_components/bglr_runs/` and consolidates them into one object. This keeps the tutorial practical and reproducible, while making it clear that this page is mainly a **result-consolidation step** unless the user intentionally reruns the full BGLR estimation stage.
+The publication snapshot is frozen in `output/variance_components/variance_components_raw.csv` and is the default source used by this page. The block below is retained only as an optional regeneration path for a deliberate full rerun. It reads `variance_metrics.rds` files from `output/variance_components/bglr_runs/` and can overwrite the raw summary; therefore, it is disabled during normal rendering.
 
-The saved outputs from the estimation stage are consolidated below into a single structure that can be processed more easily later.
-
-```{r consolidate-saved-results}
+```{r consolidate-saved-results, eval=FALSE}
 rds_files <- list.files(
   path = bglr_runs_dir,
   pattern = "(variance_metrics|_(metrics|metricas))\\.rds$",
@@ -772,14 +770,14 @@ saveRDS(all_variance, file.path(results_dir, "variance_components_all.rds"))
 write_csv(all_variance, file.path(results_dir, "variance_components_raw.csv"))
 ```
 
-## 8. Loading the Consolidated Variance-Component Object
+## 8. Loading the frozen publication snapshot
 
-This section loads the consolidated variance-component results so that they can be summarized and visualized without repeating the expensive estimation.
+This section loads the committed variance-component summary used for the manuscript and supplementary material. Reading the frozen CSV keeps routine website rendering independent of later stochastic BGLR reruns while preserving the optional rerun code above for future methodological work.
 
 ```{r load-results}
-raw_file <- file.path(results_dir, "variance_components_all.rds")
+raw_file <- file.path(results_dir, "variance_components_raw.csv")
 
-all_variance <- readRDS(raw_file)
+all_variance <- readr::read_csv(raw_file, show_col_types = FALSE)
 
 all_variance <- all_variance %>%
   mutate(
