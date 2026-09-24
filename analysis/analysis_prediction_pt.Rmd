@@ -371,7 +371,7 @@ stopifnot(length(Eta_list) == nrow(model_catalog))
 length(Eta_list)
 ```
 
-## 7. Desenho da validação cruzada
+## 7. Desenho da avaliação
 
 A acurácia preditiva depende não apenas do modelo ajustado, mas também do problema de predição que está sendo imposto. O fluxo contém três cenários de holdout de segundo estágio (`CV1`, `CV0` e `CV00`) e o diagnóstico `CV2` de recuperação in-sample do conjunto de treinamento associado ao ajuste correspondente de `CV1`. Computacionalmente, essas configurações são obtidas a partir de duas estruturas de ajuste compartilhadas: um ajuste baseado em genótipos, que produz as predições holdout de CV1 e a recuperação de treinamento CV2, e um ajuste leave-one-environment-out, que produz as predições holdout de CV0 e CV00. Como essas configurações de avaliação não são equivalentes, o desempenho do modelo sempre precisa ser interpretado junto com a regra de mascaramento usada no módulo de execução.
 
