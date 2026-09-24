@@ -344,7 +344,7 @@ As próximas tabelas mostram os três modelos com melhor desempenho em cada conf
 ```{r table-cv12-top3}
 cv12_top3 %>%
   knitr::kable(
-    caption = "Top 3 modelos para cada característica e esquema de validação em CV1 e CV2.",
+    caption = "Top 3 modelos para cada característica em CV1 e no diagnóstico associado de recuperação de treinamento CV2.",
     align = "llllcc",
     escape = FALSE
   ) %>%
@@ -389,7 +389,7 @@ cv12_w_effect %>%
     DeltaWithW = round(DeltaWithW, 3)
   ) %>%
   knitr::kable(
-    caption = "Efeito da adição de W em CV1 e CV2.",
+    caption = "Efeito da adição de W em CV1 e no diagnóstico associado de recuperação de treinamento CV2.",
     align = "lllccc",
     escape = FALSE
   ) %>%
@@ -441,7 +441,7 @@ cv12_kernel_family_compare %>%
     Delta_Arccosine_vs_Linear = round(Delta_Arccosine_vs_Linear, 3)
   ) %>%
   knitr::kable(
-    caption = "Comparação entre famílias de kernel em CV1 e CV2.",
+    caption = "Comparação entre famílias de kernel em CV1 e no diagnóstico associado de recuperação de treinamento CV2.",
     align = "llllccccc",
     escape = FALSE
   ) %>%
@@ -508,7 +508,7 @@ cvloo_w_summary <- cvloo_w_effect %>%
   dplyr::group_by(Trait, CV) %>%
   dplyr::summarise(MeanDeltaWithW = round(mean(DeltaWithW, na.rm = TRUE), 3), .groups = "drop")
 
-cat("### Melhores modelos em CV1 e CV2\n\n")
+cat("### Melhores modelos em CV1 e recuperação de treinamento CV2 associada\n\n")
 cv12_best_models %>%
   knitr::kable(
     align = "llllc",
@@ -559,7 +559,7 @@ dplyr::bind_rows(
 
 ## 9. Figuras
 
-As figuras finais resumem a capacidade preditiva para o catálogo de modelos em `CV1/CV2` e `CV0/CV00`. O eixo x usa `M1`--`M18`; as composições completas dos modelos são fornecidas na Tabela Suplementar S1.
+As figuras finais resumem a capacidade preditiva para o catálogo de modelos no cenário holdout CV1, no diagnóstico associado de recuperação de treinamento CV2 e nos cenários holdout CV0/CV00. O eixo x usa `M1`--`M18`; as composições completas dos modelos são fornecidas na Tabela Suplementar S1.
 
 ```{r figure-cv12}
 group_levels_pt <- c("Genômico", "Fenômico", "Combinado")
