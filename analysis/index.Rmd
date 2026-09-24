@@ -41,7 +41,7 @@ The workflow is divided into the following main steps:
 1. weather data acquisition and processing
 2. construction of genomic and phenomic kernels, the categorical environment matrix, and the weather kernel
 3. estimation of variance components for the reduced set of 18 models
-4. prediction analyses — Part I: setup, model catalog, Eta specification, and cross-validation design
+4. prediction analyses — Part I: setup, model catalog, Eta specification, and evaluation design
 5. prediction analyses — Part II: run outputs, output inventory, and prediction metadata
 6. consolidation of final figures and summary tables
 
@@ -56,7 +56,7 @@ The main pages of the project are:
 - **Climate data**: weather download, processing, and weather covariate generation
 - **Matrices**: aligned kernel construction
 - **Variance components**: decomposition of model variance
-- **Prediction — Part I**: setup, model catalog, Eta specification, and cross-validation design
+- **Prediction — Part I**: setup, model catalog, Eta specification, and evaluation design
 - **Prediction — Part II**: run outputs, output inventory, and prediction metadata
 - **Visualization**: final result summaries
 - **About**: project background and study rationale
@@ -89,7 +89,7 @@ O fluxo de trabalho é dividido nas seguintes etapas principais:
 1. obtenção e processamento de dados climáticos
 2. construção de kernels genômicos e fenômicos, da matriz categórica de ambiente e do kernel climático
 3. estimação de componentes de variância para o conjunto reduzido de 18 modelos
-4. análises preditivas — Parte I: preparação, catálogo de modelos, especificação do Eta e desenho da validação cruzada
+4. análises preditivas — Parte I: preparação, catálogo de modelos, especificação do Eta e desenho da avaliação
 5. análises preditivas — Parte II: saídas da execução, inventário dos outputs e metadados da predição
 6. consolidação das figuras finais e das tabelas-resumo
 
@@ -104,7 +104,7 @@ As páginas principais do projeto são:
 - **Climate data**: download meteorológico, processamento e geração de covariáveis climáticas
 - **Matrices**: construção de kernels alinhados
 - **Variance components**: decomposição da variância dos modelos
-- **Prediction — Part I**: preparação, catálogo de modelos, especificação do Eta e desenho da validação cruzada
+- **Prediction — Part I**: preparação, catálogo de modelos, especificação do Eta e desenho da avaliação
 - **Prediction — Part II**: saídas da execução, inventário dos outputs e metadados da predição
 - **Visualization**: resumos finais dos resultados
 - **About**: contexto do projeto e justificativa do estudo
