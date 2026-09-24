@@ -506,9 +506,9 @@ counts_by_cv %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-## 11. Nota sobre artefatos temporários do `BGLR`
+## 11. Artefatos persistentes de ajuste do `BGLR`
 
-No workflow atual de 18 modelos, os artefatos persistentes de `saveAt` ficam associados a `output/results/bglr_runs/` e podem ser consultados em análises futuras de convergência. Por isso, este módulo documenta tanto os resultados finais armazenados em `output/results/` quanto os caminhos hierárquicos que localizam as pastas correspondentes de execução do BGLR.
+No workflow atual de 18 modelos, os artefatos persistentes de `saveAt` ficam associados a `output/results/bglr_runs/` e podem ser consultados em análises futuras de convergência. O ajuste de CV1 gera tanto as predições holdout de CV1 quanto o diagnóstico associado de recuperação de treinamento CV2; por isso, seus artefatos BGLR ficam armazenados sob o caminho de ajuste `CV1`. Da mesma forma, o ajuste leave-one-environment-out gera as predições de CV0 e CV00, e seus artefatos BGLR ficam armazenados sob o caminho de ajuste `CV0`. Os CSVs finais de predição permanecem separados pelos quatro rótulos de avaliação (`CV1`, `CV2`, `CV0` e `CV00`).
 
 ## 12. Nota final
 
