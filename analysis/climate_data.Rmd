@@ -30,7 +30,7 @@ knitr::opts_chunk$set(
 
 ## 1. Introduction
 
-This tutorial presents the workflow used to obtain and process daily weather data for the maize experiments conducted in College Station, Texas, during the 2011 and 2012 growing seasons.
+This tutorial presents the workflow used to obtain and process daily weather data for the maize experiments conducted at the experimental site in Burleson County, Texas, during the 2011 and 2012 growing seasons.
 
 The purpose of this script is not only to download daily weather records, but to convert those time series into a concise and biologically meaningful set of **weather-derived covariates**. These covariates summarize the main meteorological conditions of each growing season and are later used to build the **weather kernel (W)** in the final prediction pipeline.
 
@@ -43,7 +43,7 @@ In practical terms, the workflow has four goals:
 3. Visually inspect the main weather differences between years.
 4. Derive annual and daily weather descriptors that can later be used to construct the weather kernel.
 
-**Study location:** College Station, Texas, USA  
+**Study location:** Burleson County, Texas, USA  
 **Growing season window:** May 1 to September 30  
 **Study years:** 2011 and 2012
 
@@ -108,8 +108,8 @@ These variables were selected because they allow us to derive weather-derived de
 The next code block defines the study location, the growing-season windows, and the variables that will be requested from NASA POWER. These settings control both the download itself and the labels used later in the summaries.
 
 ```{r parameters}
-# Experimental site coordinates (College Station, TX)
-coords_texas <- c(lon = -96.3344, lat = 30.6282)
+# Experimental site coordinates (Burleson County, TX)
+coords_site <- c(lon = -96.43342, lat = 30.55133)
 
 # Growing season intervals
 start_date_2011 <- "2011-05-01"
@@ -147,7 +147,7 @@ The code below sends two independent requests to the NASA POWER service, one for
 ```{r get_data}
 data_tx_2011 <- get_power(
   community = "AG",
-  lonlat = coords_texas,
+  lonlat = coords_site,
   pars = params,
   dates = c(start_date_2011, end_date_2011),
   temporal_api = "DAILY"
@@ -156,7 +156,7 @@ data_tx_2011 <- get_power(
 
 data_tx_2012 <- get_power(
   community = "AG",
-  lonlat = coords_texas,
+  lonlat = coords_site,
   pars = params,
   dates = c(start_date_2012, end_date_2012),
   temporal_api = "DAILY"
@@ -268,7 +268,7 @@ This first figure provides a direct view of daily rainfall over time. It is usef
 
 The next figure gives a broad visual summary of rainfall behavior across the study conditions.
 
-```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figure 1. Daily precipitation across the 2011 and 2012 maize growing seasons in College Station, Texas. Bars represent corrected daily precipitation obtained from NASA POWER."}
+```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figure 1. Daily precipitation across the 2011 and 2012 maize growing seasons at the experimental site in Burleson County, Texas. Bars represent corrected daily precipitation obtained from NASA POWER."}
 p_precip_daily <- ggplot(
   texas_climate_data,
   aes(x = date, y = PRECTOTCORR, fill = year)
@@ -277,7 +277,7 @@ p_precip_daily <- ggplot(
   facet_wrap(~ year, scales = "free_x") +
   labs(
     title = "Daily precipitation",
-    subtitle = "College Station, Texas, USA, 2011-2012",
+    subtitle = "Burleson County, Texas, USA, 2011-2012",
     x = "Month",
     y = expression("Precipitation (" * mm ~ day^{-1} * ")")  ) +
   scale_x_date(breaks = month_breaks, labels = month_break_labels) +
@@ -356,7 +356,7 @@ Daily precipitation is informative, but monthly totals provide a simpler seasona
 
 The next step summarizes precipitation at the monthly level so that seasonal contrasts can be inspected more clearly than in the daily series alone.
 
-```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figure 3. Monthly precipitation totals during the maize growing seasons of 2011 and 2012 in College Station, Texas."}
+```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figure 3. Monthly precipitation totals during the maize growing seasons of 2011 and 2012 at the experimental site in Burleson County, Texas."}
 monthly_precip <- texas_climate_data %>%
   mutate(
     year = factor(year(date), levels = c(2011, 2012)),
@@ -767,8 +767,8 @@ The code below first creates the daily intermediate variables and then summarize
 photoperiod_tbl <- suncalc::getSunlightTimes(
   data = tibble(
     date = unique(texas_climate_data$date),
-    lat = unname(coords_texas["lat"]),
-    lon = unname(coords_texas["lon"])
+    lat = unname(coords_site["lat"]),
+    lon = unname(coords_site["lon"])
   ),
   keep = c("sunrise", "sunset"),
   tz = "America/Chicago"
