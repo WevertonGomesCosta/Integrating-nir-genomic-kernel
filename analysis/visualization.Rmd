@@ -359,7 +359,7 @@ The next tables show the three best-performing models in each validation setting
 ```{r table-cv12-top3}
 cv12_top3 %>%
   knitr::kable(
-    caption = "Top 3 models for each trait and validation scheme in CV1 and CV2.",
+    caption = "Top 3 models for each trait in CV1 and the associated CV2 training-set recovery diagnostic.",
     align = "llllcc",
     escape = FALSE
   ) %>%
@@ -404,7 +404,7 @@ cv12_w_effect %>%
     DeltaWithW = round(DeltaWithW, 3)
   ) %>%
   knitr::kable(
-    caption = "Effect of adding W in CV1 and CV2.",
+    caption = "Effect of adding W in CV1 and the associated CV2 training-set recovery diagnostic.",
     align = "lllccc",
     escape = FALSE
   ) %>%
@@ -456,7 +456,7 @@ cv12_kernel_family_compare %>%
     Delta_Arccosine_vs_Linear = round(Delta_Arccosine_vs_Linear, 3)
   ) %>%
   knitr::kable(
-    caption = "Comparison among kernel families in CV1 and CV2.",
+    caption = "Comparison among kernel families in CV1 and the associated CV2 training-set recovery diagnostic.",
     align = "llllccccc",
     escape = FALSE
   ) %>%
@@ -523,7 +523,7 @@ cvloo_w_summary <- cvloo_w_effect %>%
   dplyr::group_by(Trait, CV) %>%
   dplyr::summarise(MeanDeltaWithW = round(mean(DeltaWithW, na.rm = TRUE), 3), .groups = "drop")
 
-cat("### Best models in CV1 and CV2\n\n")
+cat("### Best models in CV1 and associated CV2 training-set recovery\n\n")
 cv12_best_models %>%
   knitr::kable(
     align = "llllc",
@@ -574,7 +574,7 @@ dplyr::bind_rows(
 
 ## 9. Figures
 
-The final figures summarize predictive ability for the model catalog in `CV1/CV2` and `CV0/CV00`. The x-axis uses `M1`--`M18`; complete model compositions are provided in Supplementary Table S1.
+The final figures summarize predictive ability for the model catalog in the CV1 holdout scenario, the associated CV2 training-set recovery diagnostic, and the CV0/CV00 holdout scenarios. The x-axis uses `M1`--`M18`; complete model compositions are provided in Supplementary Table S1.
 
 ```{r figure-cv12}
 group_levels_en <- c("Genomic", "Phenomic", "Combined")
