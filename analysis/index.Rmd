@@ -20,7 +20,7 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 ### Project overview
 
-This project investigates whether genomic, phenomic, and weather-derived information can improve prediction for grain yield and 500-kernel weight (KW) in multi-environment maize trials.
+This project compares genomic, phenomic, and weather-derived information for prediction of grain yield and 500-kernel weight (KW) in multi-environment maize trials.
 
 The repository and website were organized as a tutorial-style analytical pipeline. Each page corresponds to one major step of the study, from weather data processing to kernel construction, variance component estimation, prediction analyses, and final visualization.
 
@@ -47,7 +47,7 @@ The workflow is divided into the following main steps:
 
 ### Main analytical message
 
-The current version of the project is structured to support manuscript revision and reproducible reporting. The goal is not to assume that integration automatically improves prediction, but to evaluate whether genomic, phenomic, and weather-derived information provide complementary predictive signals under different kernels and validation scenarios.
+The project is structured to support reproducible reporting and transparent reuse of the analytical workflow. The goal is not to assume that integration automatically improves prediction, but to evaluate whether genomic, phenomic, and weather-derived information provide complementary predictive signals under different kernels and evaluation settings.
 
 ### Website navigation
 
@@ -68,7 +68,7 @@ The main pages of the project are:
 
 ### Visão geral do projeto
 
-Este projeto investiga se informações genômicas, fenômicas e derivadas do clima podem melhorar a predição de produtividade de grãos e peso de 500 grãos (KW) em ensaios de milho multiambientes.
+Este projeto compara informações genômicas, fenômicas e derivadas do clima para a predição de produtividade de grãos e peso de 500 grãos (KW) em ensaios de milho multiambientes.
 
 O repositório e o site foram organizados como um pipeline analítico em formato tutorial. Cada página corresponde a uma etapa importante do estudo, desde o processamento dos dados climáticos até a construção dos kernels, a estimação dos componentes de variância, as análises preditivas e a visualização final.
 
@@ -95,7 +95,7 @@ O fluxo de trabalho é dividido nas seguintes etapas principais:
 
 ### Principal mensagem analítica
 
-A versão atual do projeto foi estruturada para apoiar a revisão do manuscrito e a documentação reprodutível dos resultados. O objetivo não é assumir que a integração melhora automaticamente a predição, mas avaliar se informações genômicas, fenômicas e derivadas do clima fornecem sinais preditivos complementares sob diferentes kernels e cenários de validação.
+O projeto foi estruturado para apoiar a documentação reprodutível dos resultados e o reaproveitamento transparente do fluxo analítico. O objetivo não é assumir que a integração melhora automaticamente a predição, mas avaliar se informações genômicas, fenômicas e derivadas do clima fornecem sinais preditivos complementares sob diferentes kernels e configurações de avaliação.
 
 ### Navegação do site
 
