@@ -1,6 +1,6 @@
 # Integrating Near-Infrared Reflectance Spectroscopy and Genomic Data Using Kernel Methods
 
-This repository contains the official analytical pipeline for integrating genomic, phenomic, environmental, and weather-derived information through kernel methods to improve prediction of grain yield and 500-kernel weight (KW) in multi-environment maize trials.
+This repository contains the analytical pipeline used to compare genomic, phenomic, environmental, and weather-derived information through kernel methods for prediction of grain yield and 500-kernel weight (KW) in multi-environment maize trials.
 
 ## Official workflow
 
@@ -12,7 +12,6 @@ The pipeline follows this sequence:
 4. `analysis_prediction`
 5. `analysis_prediction_run_outputs`
 6. `visualization`
-7. `script_tabelas_resultados_pipeline_v2.R`
 
 ## Bilingual organization
 
@@ -27,7 +26,7 @@ In practice, the English files define the main execution logic. The Portuguese f
 
 The prediction stage is divided into two modules:
 
-- **Part I — `analysis_prediction`**: inputs, MCMC settings, the 18-model catalog, Eta specification, and cross-validation design
+- **Part I — `analysis_prediction`**: inputs, MCMC settings, the 18-model catalog, Eta specification, and evaluation design (CV1, CV0, CV00, plus the CV2 training-set recovery diagnostic)
 - **Part II — `analysis_prediction_run_outputs`**: prediction execution, output inventory, and metadata generated from the prediction stage
 
 ### Current execution standard
@@ -49,7 +48,7 @@ The main prediction outputs are stored in:
 - **Processed summary tables**: `output/tables/`
 - **Figures**: `output/figures/`
 
-The prediction files use the current naming convention based on `Eta1`–`Eta18`, and the fold identifier is stored internally in the `.id` column rather than in the file name.
+The prediction files use the current naming convention based on `Eta1`–`Eta18`. Scenario, trait, repetition, and fold are represented in the hierarchical output paths and file names, with fold metadata also retained in the result tables where applicable.
 
 ## Repository architecture
 
