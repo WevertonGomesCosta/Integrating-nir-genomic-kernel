@@ -373,13 +373,13 @@ length(Eta_list)
 
 ## 7. Desenho da validação cruzada
 
-A acurácia preditiva depende não apenas do modelo ajustado, mas também do problema de predição que está sendo imposto. Neste estudo, quatro esquemas de validação são usados para representar diferentes tipos de generalização: predição de genótipos completamente novos, predição de células ausentes de genótipo por ambiente, predição em um ambiente completamente novo e predição de novos genótipos dentro de um ambiente novo. Como esses cenários não são equivalentes, o desempenho do modelo sempre precisa ser interpretado junto com a estrutura da regra de mascaramento.
+A acurácia preditiva depende não apenas do modelo ajustado, mas também do problema de predição que está sendo imposto. O fluxo contém três cenários de holdout de segundo estágio (`CV1`, `CV0` e `CV00`) e o diagnóstico `CV2` de recuperação in-sample do conjunto de treinamento associado ao ajuste correspondente de `CV1`. Computacionalmente, essas configurações são obtidas a partir de duas estruturas de ajuste compartilhadas: um ajuste baseado em genótipos, que produz as predições holdout de CV1 e a recuperação de treinamento CV2, e um ajuste leave-one-environment-out, que produz as predições holdout de CV0 e CV00. Como essas configurações de avaliação não são equivalentes, o desempenho do modelo sempre precisa ser interpretado junto com a regra de mascaramento usada no módulo de execução.
 
 Esta seção esclarece o que é escondido em cada esquema de validação e qual pergunta científica cada um deles pretende responder. Essa distinção é essencial antes de avançar para a etapa de execução, porque o mesmo modelo pode ter desempenho muito diferente dependendo de o desafio estar no eixo dos genótipos, no eixo dos ambientes ou em ambos simultaneamente.
 
 ### 7.1 Cenários de validação e seu significado científico
 
-Os quatro esquemas de validação adotados neste estudo são resumidos abaixo. Cada um corresponde a um alvo de predição diferente e, portanto, avalia uma noção diferente de generalização. Leia esta tabela como um mapa das perguntas preditivas que serão mais adiante implementadas no submódulo de execução.
+Os três cenários de holdout de segundo estágio e o diagnóstico associado de recuperação de treinamento CV2 são resumidos abaixo. Cada configuração corresponde a um alvo de avaliação diferente. Leia esta tabela como um mapa das perguntas preditivas que serão mais adiante implementadas no submódulo de execução.
 
 ```{r cv-scenarios-table}
 cv_scenarios <- data.frame(
@@ -401,7 +401,7 @@ cv_scenarios <- data.frame(
 
 cv_scenarios |>
   knitr::kable(
-    caption = "Cenários de validação cruzada e seu significado científico.",
+    caption = "Configurações de avaliação e seu significado científico.",
     align = "ccc",
     escape = FALSE
   ) |>
@@ -414,9 +414,9 @@ cv_scenarios |>
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-### 7.2 Predição quando genótipos estão completamente não observados versus mantidos no treinamento
+### 7.2 Predição holdout CV1 e diagnóstico associado de recuperação de treinamento CV2
 
-Os dois primeiros esquemas são gerados a partir do mesmo ajuste por folds. Em `CV1`, o modelo é avaliado em genótipos que foram completamente excluídos do treinamento naquele fold. Em `CV2`, o modelo é avaliado nos genótipos que permaneceram no treinamento sob esse mesmo ajuste. Portanto, `CV2` não é um segundo desenho de mascaramento; ele é a acurácia de referência dentro do fold para os genótipos de treinamento produzida pelo mesmo ajuste usado em `CV1`. O resumo abaixo deixa essa distinção explícita.
+`CV1` é o cenário de holdout de genótipos: o modelo é avaliado em genótipos que foram completamente excluídos do treinamento naquele fold. `CV2` não é um esquema de validação separado e não introduz mascaramento adicional; ele é o diagnóstico in-sample de recuperação do conjunto de treinamento calculado a partir do mesmo modelo ajustado, usando os registros que permaneceram no treinamento. Assim, CV1 mede extrapolação para genótipos não observados, enquanto CV2 mede a recuperação dos registros usados no ajuste correspondente de CV1.
 
 ```{r cv1-cv2-design}
 cv12_design <- data.frame(
@@ -495,9 +495,9 @@ prediction_file_patterns <- data.frame(
   ),
   ExampleBGLR = c(
     "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GxE_RKHS_varU.dat",
-    "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PxW_RKHS_varU.dat",
+    "Compartilhado com o ajuste CV1 correspondente; não há ajuste BGLR separado",
     "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_CS11_WS_GY_Eta10_rep01_fold04_GxW_RKHS_varU.dat",
-    "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+    "Compartilhado com o ajuste CV0 correspondente; não há ajuste BGLR separado"
   ),
   stringsAsFactors = FALSE
 )
