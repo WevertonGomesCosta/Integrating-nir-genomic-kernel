@@ -30,7 +30,7 @@ knitr::opts_chunk$set(
 
 ## 1. Introdução
 
-Este tutorial apresenta o fluxo de trabalho usado para obter e processar dados meteorológicos diários para os experimentos com milho conduzidos em College Station, Texas, durante as safras de 2011 e 2012.
+Este tutorial apresenta o fluxo de trabalho usado para obter e processar dados meteorológicos diários para os experimentos com milho conduzidos no local experimental em Burleson County, Texas, durante as safras de 2011 e 2012.
 
 O objetivo deste fluxo é documentar como registros meteorológicos diários são convertidos em um conjunto conciso e biologicamente interpretável de **covariáveis derivadas do clima**. Essas covariáveis resumem as principais condições meteorológicas de cada safra e são usadas posteriormente para construir o **kernel climático (W)** no pipeline final de predição.
 
@@ -43,7 +43,7 @@ Em termos práticos, o fluxo tem quatro objetivos:
 3. Inspecionar visualmente as principais diferenças climáticas entre os anos.
 4. Derivar descritores climáticos anuais e diários que depois poderão ser usados para construir o kernel climático.
 
-**Local de estudo:** College Station, Texas, EUA  
+**Local de estudo:** Burleson County, Texas, EUA  
 **Janela da safra:** 1º de maio a 30 de setembro  
 **Anos de estudo:** 2011 e 2012
 
@@ -98,8 +98,8 @@ Essas variáveis foram escolhidas porque permitem derivar descritores climático
 Em seguida, definimos locais, anos e metadados básicos que controlam quais séries meteorológicas serão usadas e como os resultados serão identificados.
 
 ```{r parameters}
-# Coordenadas do local experimental (College Station, TX)
-coords_texas <- c(lon = -96.3344, lat = 30.6282)
+# Coordenadas do local experimental (Burleson County, TX)
+coords_site <- c(lon = -96.43342, lat = 30.55133)
 
 # Intervalos das safras
 start_date_2011 <- "2011-05-01"
@@ -139,7 +139,7 @@ A etapa a seguir documenta a consulta principal dos dados meteorológicos diári
 ```{r get_data, eval=FALSE}
 data_tx_2011 <- get_power(
   community = "AG",
-  lonlat = coords_texas,
+  lonlat = coords_site,
   pars = params,
   dates = c(start_date_2011, end_date_2011),
   temporal_api = "DAILY"
@@ -148,7 +148,7 @@ data_tx_2011 <- get_power(
 
 data_tx_2012 <- get_power(
   community = "AG",
-  lonlat = coords_texas,
+  lonlat = coords_site,
   pars = params,
   dates = c(start_date_2012, end_date_2012),
   temporal_api = "DAILY"
@@ -307,7 +307,7 @@ Esta primeira figura fornece uma visão direta da chuva diária ao longo do temp
 
 A primeira visualização de precipitação oferece um resumo amplo do comportamento da chuva nas condições avaliadas.
 
-```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figura 1. Precipitação diária ao longo das safras de milho de 2011 e 2012 em College Station, Texas. As barras representam a precipitação diária corrigida obtida da NASA POWER."}
+```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figura 1. Precipitação diária ao longo das safras de milho de 2011 e 2012 no local experimental em Burleson County, Texas. As barras representam a precipitação diária corrigida obtida da NASA POWER."}
 p_precip_daily <- ggplot(
   texas_climate_data,
   aes(x = date, y = PRECTOTCORR, fill = year)
@@ -316,7 +316,7 @@ p_precip_daily <- ggplot(
   facet_wrap(~ year, scales = "free_x") +
   labs(
     title = "Precipitação diária",
-    subtitle = "College Station, Texas, EUA, 2011-2012",
+    subtitle = "Burleson County, Texas, EUA, 2011-2012",
     x = "Mês",
     y = expression("Precipitação (" * mm ~ day^{-1} * ")"),
     caption = "As barras representam a precipitação total diária corrigida obtida da NASA POWER."
@@ -407,7 +407,7 @@ A precipitação diária é informativa, mas os totais mensais fornecem um resum
 
 Depois disso, a precipitação é resumida em nível mensal para destacar com mais clareza os contrastes sazonais.
 
-```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figura 3. Totais mensais de precipitação durante as safras de milho de 2011 e 2012 em College Station, Texas."}
+```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figura 3. Totais mensais de precipitação durante as safras de milho de 2011 e 2012 no local experimental em Burleson County, Texas."}
 monthly_precip <- texas_climate_data %>%
   mutate(
     year = factor(year(date), levels = c(2011, 2012)),
@@ -741,7 +741,7 @@ Esses resumos foram pensados para capturar aspectos biologicamente relevantes de
 
 Algumas covariáveis derivadas do clima dependem de quantidades que não são fornecidas diretamente pela NASA POWER. Por isso, primeiro calculamos variáveis intermediárias diárias como graus-dia (GDD), fotoperíodo, razão fototérmica (PTR), amplitude térmica diária, temperatura média diária, pressão de vapor de saturação, pressão de vapor real e déficit de pressão de vapor (VPD).
 
-Neste tutorial, `PHOTOPERIOD_HOURS` representa o fotoperíodo diário em horas e é mantido como variável de auditoria. A variável `PTR_DAILY` é a razão entre o fotoperíodo diário e os graus-dia (`GDD`). Ela é calculada apenas quando `GDD > 0`, evitando divisão por zero ou valores sem interpretação biológica. O resumo anual correspondente é `PTR_AVG`.
+Neste tutorial, `PHOTOPERIOD_HOURS` representa o fotoperíodo diário em horas e é mantido como variável intermediária para o cálculo dos descritores fototermais. A variável `PTR_DAILY` é a razão entre o fotoperíodo diário e os graus-dia (`GDD`). Ela é calculada apenas quando `GDD > 0`, evitando divisão por zero ou valores sem interpretação biológica. O resumo anual correspondente é `PTR_AVG`.
 
 Essas variáveis intermediárias são calculadas dia a dia e depois resumidas no nível anual na próxima subseção.
 
@@ -751,8 +751,8 @@ A etapa a seguir documenta o cálculo das covariáveis climáticas anuais e expa
 photoperiod_tbl <- suncalc::getSunlightTimes(
   data = tibble(
     date = unique(texas_climate_data$date),
-    lat = unname(coords_texas["lat"]),
-    lon = unname(coords_texas["lon"])
+    lat = unname(coords_site["lat"]),
+    lon = unname(coords_site["lon"])
   ),
   keep = c("sunrise", "sunset"),
   tz = "America/Chicago"
