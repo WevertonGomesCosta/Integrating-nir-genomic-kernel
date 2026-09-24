@@ -214,7 +214,7 @@ length(Pedigree_communs)
 
 O kernel genômico mede a similaridade entre observações com base nos marcadores SNP.
 
-O pipeline legado usado neste projeto padroniza os valores dos marcadores **dentro de cada bloco de observações específico de ambiente** antes de empilhar os dados. Embora essa não seja a única estratégia possível, nós a preservamos aqui para manter compatibilidade com as análises posteriores já desenvolvidas para o artigo.
+Os valores dos marcadores são padronizados **dentro de cada bloco de observações específico de ambiente** antes do empilhamento dos blocos, preservando o pré-processamento utilizado nas análises ajustadas.
 
 As etapas práticas são:
 
@@ -673,6 +673,8 @@ saveRDS(ZPZE, "output/Matrizes/ZPZE.rds")
 ## 12. Kernels Gaussianos não lineares
 
 Os kernels lineares acima capturam similaridade aditiva. Para explorar relações não lineares, o procedimento também inclui kernels Gaussianos para os espaços genômico e fenômico.
+
+O ajuste dos kernels não lineares documentado abaixo usa a resposta completa de GY antes da validação cruzada. As configurações Gaussianas e as profundidades de recursão arccosine selecionadas são então fixadas e reutilizadas nas etapas posteriores, inclusive para KW. Consequentemente, o ajuste dos kernels não lineares não é aninhado à validação cruzada, e as comparações resultantes devem ser interpretadas condicionalmente a esse procedimento de ajuste.
 
 ### 12.1 Função matemática central para o kernel Gaussiano
 
