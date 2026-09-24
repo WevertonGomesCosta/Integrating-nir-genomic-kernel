@@ -939,7 +939,7 @@ In the final reduced pipeline, these weather-derived outputs are used only in th
 
 ## 7. Save the final outputs
 
-The last section stores the processed climate files required by downstream modeling. Saving the outputs explicitly separates data acquisition from downstream analyses, making the workflow easier to reproduce and audit.
+The last section stores the processed climate files required by downstream modeling. Saving the outputs explicitly separates data acquisition from downstream analyses, making the workflow easier to reproduce and verify.
 
 Three files are exported:
 
