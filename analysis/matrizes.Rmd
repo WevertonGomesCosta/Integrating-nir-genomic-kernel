@@ -219,7 +219,7 @@ length(Pedigree_communs)
 
 The genomic kernel measures similarity among observations based on SNP markers.
 
-The legacy pipeline used in this project standardizes marker values **within each environment-specific observation block** before stacking the data. Although this is not the only possible strategy, we preserve it here to maintain compatibility with the downstream analyses already developed for the article.
+Marker values are standardized **within each environment-specific observation block** before the blocks are stacked, preserving the preprocessing used in the fitted analyses.
 
 The practical steps are:
 
@@ -668,6 +668,8 @@ saveRDS(ZPZE, "output/Matrizes/ZPZE.rds")
 ## 12. Build nonlinear Gaussian kernels
 
 The linear kernels above capture additive similarity. To explore nonlinear relationships, we also build Gaussian kernels for the genomic and phenomic spaces.
+
+The nonlinear-kernel tuning documented below uses the complete GY response before cross-validation. The selected Gaussian settings and arccosine recursion depths are then fixed and reused downstream, including for KW. Consequently, nonlinear-kernel tuning is not nested within cross-validation, and the resulting comparisons should be interpreted conditional on this tuning procedure.
 
 ### 12.1 Core mathematical function for the Gaussian kernel
 
