@@ -24,12 +24,13 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 Este submódulo documenta a camada de execução da predição para o catálogo reduzido de 18 modelos e organiza a leitura dos arquivos de resultado disponíveis em `output/results/`.
 
-O contrato de execução usado aqui segue quatro regras operacionais:
+O contrato de execução usado aqui segue cinco regras operacionais:
 
 - `CV1` e `CV2` são derivados do mesmo ajuste em cada fold;
 - `CV0` e `CV00` são derivados do mesmo ajuste para cada ambiente deixado de fora em cada fold;
-- a partição em folds é determinística para cada tarefa `MODEL × REP × TRAIT` e é reutilizada nos dois blocos de CV;
-- os arquivos de resultado são organizados explicitamente por esquema de validação, ambiente quando aplicável, trait, repetição e fold, com o fold representado tanto na árvore de pastas quanto no nome do arquivo.
+- cada tarefa `MODEL × REP × TRAIT` usa uma partição determinística dos genótipos em cinco folds;
+- o workflow usa 10 repetições, e a mesma partição em folds é reutilizada nos blocos CV1/CV2 e CV0/CV00 para a tarefa correspondente;
+- os CSVs de resultados de predição são organizados por esquema de validação, ambiente quando aplicável, trait, repetição e fold, enquanto os artefatos persistentes do BGLR são armazenados apenas nas árvores dos ajustes de origem, `CV1` e `CV0`.
 
 Os chunks pesados permanecem com `eval=FALSE` para documentar a etapa de ajuste sem rerodar os modelos Bayesianos durante a renderização deste documento.
 
@@ -47,6 +48,10 @@ library(dplyr)
 library(stringr)
 library(knitr)
 library(kableExtra)
+library(BGLR)
+library(foreach)
+library(doParallel)
+library(parallel)
 library(tidyr)
 
 project_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
@@ -204,7 +209,7 @@ Eta_list[[18]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model =
 
 ## 4. Definir o contrato de execução
 
-Este bloco restaura os objetos operacionais usados pelo workflow atual: o conjunto fixo de ambientes leave-one-environment-out, o número de folds e a grade de tarefas `MODEL × REP × TRAIT` para o catálogo de 18 modelos. A lógica de ajuste e de resumo fica escrita diretamente dentro dos blocos de CV para manter o caminho de execução explícito.
+Este bloco restaura os objetos operacionais usados pelo workflow atual: o conjunto fixo de ambientes leave-one-environment-out, a partição dos genótipos em cinco folds e a grade de tarefas `MODEL × REP × TRAIT` para o catálogo de 18 modelos. `num_rep = 10` é definido na configuração anterior; portanto, cada combinação modelo-trait é avaliada em 10 repetições, com cinco ajustes ou alvos em nível de fold dentro de cada repetição. A lógica de ajuste e de resumo fica escrita diretamente dentro dos blocos de CV para manter o caminho de execução explícito.
 
 ```{r define-run-objects, eval=FALSE}
 envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
@@ -241,7 +246,7 @@ cat("Rodando em ", useCores, " núcleos.")
 
 ## 6. Análises preditivas para CV1 e CV2
 
-Este bloco documenta a validação baseada em genótipos para o workflow de 18 modelos. O mapa determinístico de folds, o ajuste do BGLR e o resumo por ambiente ficam escritos diretamente dentro do laço para manter cada etapa explícita. O padrão documentado considera um ajuste por fold e a separação das predições em `CV1` (genótipos deixados de fora) e `CV2` (genótipos de treinamento sob o mesmo ajuste). Nesse padrão, os resultados finais e os artefatos de ajuste do BGLR seguem uma hierarquia rep/fold.
+Este bloco documenta a validação baseada em genótipos para o workflow de 18 modelos. O mapa determinístico de folds, o ajuste do BGLR e o resumo por ambiente ficam escritos diretamente dentro do laço para manter cada etapa explícita. O padrão documentado considera um ajuste por fold e a separação das predições em `CV1` (genótipos deixados de fora) e `CV2` (genótipos de treinamento sob o mesmo ajuste). Árvores separadas de CSVs são gravadas para CV1 e CV2, mas os artefatos persistentes do BGLR são armazenados uma única vez em `bglr_runs/CV1/`, porque CV2 reutiliza o ajuste de CV1. Com 10 repetições e cinco folds por repetição, cada tarefa modelo-trait produz cinco conjuntos de resultados CV1/CV2 em nível de fold dentro de cada repetição.
 
 ```{r run-predictions-cv12, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -319,7 +324,7 @@ foreach(i = seq_len(nrow(combos)),
 ```
 ## 7. Análises preditivas para CV0 e CV00
 
-Este bloco documenta a validação leave-one-environment-out para o mesmo workflow de 18 modelos. Para cada tarefa, o mapa determinístico de folds segue a mesma regra usada em `CV1/CV2`, com um ajuste documentado para cada combinação `env_leave × fold`. As predições são organizadas em `CV0` (genótipos de treinamento sob a máscara do ambiente) e `CV00` (genótipos deixados de fora sob a mesma máscara). Assim como no bloco baseado em genótipos, os resultados seguem uma hierarquia rep/fold, e os artefatos do BGLR são associados às pastas persistentes correspondentes.
+Este bloco documenta a validação leave-one-environment-out para o mesmo workflow de 18 modelos. Para cada tarefa, o mapa determinístico de folds segue a mesma regra usada em `CV1/CV2`, com um ajuste para cada combinação `env_leave × fold`. As predições são organizadas em `CV0` (genótipos de treinamento sob a máscara do ambiente) e `CV00` (genótipos deixados de fora sob a mesma máscara). Árvores separadas de CSVs são gravadas para CV0 e CV00, mas os artefatos persistentes do BGLR são armazenados uma única vez em `bglr_runs/CV0/`, porque CV00 reutiliza o ajuste de CV0. Em cada uma das 10 repetições, a mesma partição de cinco folds é aplicada aos quatro ambientes deixados de fora.
 
 ```{r run-predictions-cv0-cv00, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -508,7 +513,7 @@ counts_by_cv %>%
 
 ## 11. Nota sobre artefatos temporários do `BGLR`
 
-No workflow atual de 18 modelos, os artefatos persistentes de `saveAt` ficam associados a `output/results/bglr_runs/` e podem ser consultados em análises futuras de convergência. Por isso, este módulo documenta tanto os resultados finais armazenados em `output/results/` quanto os caminhos hierárquicos que localizam as pastas correspondentes de execução do BGLR.
+No workflow atual de 18 modelos, os artefatos persistentes de `saveAt` ficam associados a `output/results/bglr_runs/` e podem ser consultados em análises futuras de convergência. Como CV1/CV2 compartilham um ajuste e CV0/CV00 compartilham outro, existem apenas duas árvores de artefatos de ajuste: `bglr_runs/CV1/` e `bglr_runs/CV0/`. CV2 e CV00 possuem árvores próprias de resultados de predição em CSV, mas não geram artefatos BGLR independentes. Essa distinção mantém a documentação alinhada ao código efetivamente executado e evita sugerir que CV2 ou CV00 foram reajustados separadamente.
 
 ## 12. Nota final
 
