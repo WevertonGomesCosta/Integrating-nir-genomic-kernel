@@ -865,6 +865,73 @@ head(variance_table, 12) %>%
   kableExtra::scroll_box(width = "100%", height = "320px")
 ```
 
+### 9.2. Supplementary Table S8 summary
+
+Supplementary Table S8 summarizes each component only across the models in which that component is present. Components absent from a model are not treated as zero. The table below is generated directly from the same frozen publication snapshot used for Figure 3.
+
+```{r supplementary-table-s8}
+component_s8_order <- c(
+  "E", "G", "P", "W",
+  "GGK", "PGK", "GAK", "PAK",
+  "GE", "PE", "GW", "PW",
+  "GGKE", "PGKE", "GGKW", "PGKW",
+  "GAKE", "PAKE", "GAKW", "PAKW",
+  "Residual"
+)
+
+supplementary_s8 <- variance_summary %>%
+  dplyr::mutate(
+    Trait = as.character(Trait),
+    Component = as.character(Component),
+    AllocationPct = 100 * Percentage
+  ) %>%
+  dplyr::group_by(Trait, Component) %>%
+  dplyr::summarise(
+    Models_n = dplyr::n_distinct(Model),
+    MeanAllocationPct = mean(AllocationPct, na.rm = TRUE),
+    MinAllocationPct = min(AllocationPct, na.rm = TRUE),
+    MaxAllocationPct = max(AllocationPct, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    Component = factor(Component, levels = component_s8_order),
+    Trait = factor(Trait, levels = c("GY", "KW"))
+  ) %>%
+  dplyr::arrange(Trait, Component)
+
+readr::write_csv(
+  supplementary_s8,
+  file.path(results_dir, "supplementary_table_s8.csv")
+)
+
+format_s8_pct <- function(x) {
+  ifelse(x < 0.005, "<0.01", sprintf("%.2f", x))
+}
+
+supplementary_s8_display <- supplementary_s8 %>%
+  dplyr::transmute(
+    Trait,
+    Component,
+    `Models (n)` = Models_n,
+    `Mean allocation (%)` = format_s8_pct(MeanAllocationPct),
+    `Range (%)` = ifelse(
+      MaxAllocationPct < 0.005,
+      "<0.01",
+      paste0(format_s8_pct(MinAllocationPct), "-", format_s8_pct(MaxAllocationPct))
+    )
+  )
+
+supplementary_s8_display %>%
+  knitr::kable(
+    caption = "Mean and range of relative posterior variance allocations for model components in GY and KW."
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center"
+  )
+```
+
 ## 10. Figure for the Article
 
 The next figure summarizes the percentage contribution of each variance component across the 18 models for both traits. To keep the x-axis readable, models are displayed as `M1` to `M18`, and the complete composition of each model is provided in Supplementary Table S1.
