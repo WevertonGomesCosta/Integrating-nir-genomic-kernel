@@ -36,7 +36,7 @@ The website and repository were restructured to support two goals at the same ti
 1. provide a reproducible analytical pipeline for the study
 2. serve as a didactic and transparent tutorial for readers who want to understand each analytical step
 
-For this reason, the workflow is organized into separate pages that follow the same order used in the manuscript revision process.
+For this reason, the workflow is organized into separate pages that follow the analytical order of the study.
 
 ### Terminology used in the project
 
@@ -60,7 +60,7 @@ The project includes:
 
 ### Current scientific emphasis
 
-The updated analytical pipeline is designed to support a careful revision of the manuscript. The main emphasis is to evaluate how genomic, phenomic, and weather information behave in the prediction process, rather than to assume that integration necessarily produces better performance.
+The analytical pipeline documents and reproduces the study workflow. The main emphasis is to evaluate how genomic, phenomic, and weather information behave in the prediction process, rather than to assume that integration necessarily produces better performance.
 
 This makes the project useful both as a research report and as a methodological example of multi-source kernel modeling in plant breeding.
 
@@ -86,7 +86,7 @@ O site e o repositório foram reestruturados para atender simultaneamente a dois
 1. fornecer um pipeline analítico reprodutível para o estudo
 2. servir como um tutorial didático e transparente para leitores que desejam entender cada etapa analítica
 
-Por isso, o fluxo de trabalho foi organizado em páginas separadas que seguem a mesma ordem usada no processo de revisão do manuscrito.
+Por isso, o fluxo de trabalho foi organizado em páginas separadas que seguem a ordem analítica do estudo.
 
 ### Terminologia usada no projeto
 
@@ -110,6 +110,6 @@ O projeto inclui:
 
 ### Ênfase científica atual
 
-O pipeline analítico atualizado foi desenhado para apoiar uma revisão cuidadosa do manuscrito. A ênfase principal é avaliar como as informações genômicas, fenômicas e climáticas se comportam no processo de predição, em vez de assumir que a integração necessariamente produz melhor desempenho.
+O pipeline analítico documenta e reproduz o fluxo de trabalho do estudo. A ênfase principal é avaliar como as informações genômicas, fenômicas e climáticas se comportam no processo de predição, em vez de assumir que a integração necessariamente produz melhor desempenho.
 
 Isso torna o projeto útil tanto como relatório de pesquisa quanto como exemplo metodológico de modelagem multi-origem com kernels em melhoramento de plantas.
