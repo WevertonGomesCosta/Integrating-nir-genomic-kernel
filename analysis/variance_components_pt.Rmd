@@ -667,9 +667,9 @@ write_csv(all_variance, file.path(results_dir, "variance_components_raw.csv"))
 saveRDS(all_variance, file.path(results_dir, "variance_components_raw.rds"))
 ```
 
-## 7. Consolidação dos resumos posteriores salvos
+## 7. Reconsolidação opcional dos resumos posteriores salvos
 
-Esta seção documenta como os arquivos `_metrics.rds` podem ser consolidados em um único objeto quando a consolidação precisar ser refeita. Como os resultados já estão disponíveis para renderização, o chunk permanece com `eval=FALSE`.
+O snapshot usado na publicação está congelado em `output/variance_components/variance_components_raw.csv` e é a fonte padrão desta página. O bloco abaixo é mantido apenas como caminho opcional de regeneração para uma reexecução completa deliberada. Como ele lê os arquivos `variance_metrics.rds` de `output/variance_components/bglr_runs/` e pode sobrescrever o resumo bruto, permanece com `eval=FALSE` durante a renderização normal.
 
 ```{r consolidate-saved-results, eval=FALSE}
 rds_files <- list.files(
@@ -743,14 +743,14 @@ saveRDS(all_variance, file.path(results_dir, "variance_components_all.rds"))
 write_csv(all_variance, file.path(results_dir, "variance_components_raw.csv"))
 ```
 
-## 8. Carregamento do objeto consolidado de componentes de variância
+## 8. Carregamento do snapshot congelado da publicação
 
-Esta seção carrega os resultados consolidados e os prepara para o resumo e a visualização sem repetir a estimação computacionalmente pesada.
+Esta seção carrega o resumo de componentes de variância versionado e usado no manuscrito e no material suplementar. A leitura do CSV congelado mantém a renderização rotineira do site independente de novas reexecuções estocásticas do BGLR, preservando o código opcional acima para trabalhos metodológicos futuros.
 
 ```{r load-results, include=FALSE}
-raw_file <- file.path(results_dir, "variance_components_all.rds")
+raw_file <- file.path(results_dir, "variance_components_raw.csv")
 
-all_variance <- readRDS(raw_file)
+all_variance <- readr::read_csv(raw_file, show_col_types = FALSE)
 
 all_variance <- all_variance %>%
   mutate(
