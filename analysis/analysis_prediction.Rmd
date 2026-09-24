@@ -47,7 +47,7 @@ This distinction is important for didactic reasons. Here we focus on understandi
 - General computational settings for model fitting
 - The 18-model catalog used in the study
 - The full `Eta_list` structure that defines each prediction model
-- The cross-validation design used to evaluate prediction performance
+- The evaluation design used to evaluate prediction performance
 - The file-naming rules used downstream in execution, inventory, and visualization
 
 **Previous stage:** `variance_components.Rmd`  
@@ -371,7 +371,7 @@ stopifnot(length(Eta_list) == nrow(model_catalog))
 length(Eta_list)
 ```
 
-## 7. Cross-validation design
+## 7. Evaluation design
 
 Prediction accuracy depends not only on the fitted model, but also on the prediction problem being imposed. The workflow contains three second-stage holdout scenarios (`CV1`, `CV0`, and `CV00`) plus the `CV2` in-sample training-set recovery diagnostic associated with the corresponding `CV1` fit. Computationally, these settings are obtained from two shared fit structures: a genotype-based fit that yields CV1 holdout predictions and CV2 training-set recovery, and a leave-one-environment-out fit that yields CV0 and CV00 holdout predictions. Because these evaluation settings are not equivalent, model performance must always be interpreted together with the exact masking rule used in the execution module.
 
