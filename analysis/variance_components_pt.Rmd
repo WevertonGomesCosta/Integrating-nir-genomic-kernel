@@ -832,6 +832,68 @@ head(variance_table, 12) %>%
   kableExtra::scroll_box(width = "100%", height = "320px")
 ```
 
+### 9.2. Resumo da Tabela Suplementar S8
+
+A Tabela Suplementar S8 resume cada componente apenas entre os modelos nos quais esse componente está presente. Componentes ausentes de um modelo não são tratados como zero. A tabela abaixo é gerada diretamente a partir do mesmo snapshot congelado da publicação usado na Figura 3.
+
+```{r supplementary-table-s8}
+component_s8_order <- c(
+  "E", "G", "P", "W",
+  "GGK", "PGK", "GAK", "PAK",
+  "GE", "PE", "GW", "PW",
+  "GGKE", "PGKE", "GGKW", "PGKW",
+  "GAKE", "PAKE", "GAKW", "PAKW",
+  "Residual"
+)
+
+supplementary_s8 <- variance_summary %>%
+  dplyr::mutate(
+    Trait = as.character(Trait),
+    Component = as.character(Component),
+    AllocationPct = 100 * Percentage
+  ) %>%
+  dplyr::group_by(Trait, Component) %>%
+  dplyr::summarise(
+    Models_n = dplyr::n_distinct(Model),
+    MeanAllocationPct = mean(AllocationPct, na.rm = TRUE),
+    MinAllocationPct = min(AllocationPct, na.rm = TRUE),
+    MaxAllocationPct = max(AllocationPct, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    Component = factor(Component, levels = component_s8_order),
+    Trait = factor(Trait, levels = c("GY", "KW"))
+  ) %>%
+  dplyr::arrange(Trait, Component)
+
+format_s8_pct <- function(x) {
+  ifelse(x < 0.005, "<0.01", sprintf("%.2f", x))
+}
+
+supplementary_s8_display <- supplementary_s8 %>%
+  dplyr::transmute(
+    Trait,
+    Component,
+    `Modelos (n)` = Models_n,
+    `Alocação média (%)` = format_s8_pct(MeanAllocationPct),
+    `Amplitude (%)` = ifelse(
+      MaxAllocationPct < 0.005,
+      "<0.01",
+      paste0(format_s8_pct(MinAllocationPct), "-", format_s8_pct(MaxAllocationPct))
+    )
+  )
+
+supplementary_s8_display %>%
+  knitr::kable(
+    caption = "Média e amplitude das alocações relativas posteriores de variância para os componentes dos modelos em GY e KW."
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE,
+    position = "center"
+  )
+```
+
 ## 10. Figura para o artigo
 
 A figura abaixo resume a contribuição percentual de cada componente de variância nos 18 modelos para ambos os caracteres. Para manter o eixo x legível, os modelos são exibidos como `M1` a `M18`, e a composição completa de cada modelo é apresentada na Tabela Suplementar S1.
