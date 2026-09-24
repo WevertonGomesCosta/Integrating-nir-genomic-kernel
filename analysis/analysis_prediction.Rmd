@@ -373,13 +373,13 @@ length(Eta_list)
 
 ## 7. Cross-validation design
 
-Prediction accuracy depends not only on the fitted model, but also on the prediction problem being imposed. In this workflow, the four validation schemes are implemented through two shared fits: one genotype-based fit that is later decomposed into `CV1` and `CV2`, and one leave-one-environment-out fit that is later decomposed into `CV0` and `CV00`. Because these scenarios are not equivalent, model performance must always be interpreted together with the exact masking rule used in the execution module.
+Prediction accuracy depends not only on the fitted model, but also on the prediction problem being imposed. The workflow contains three second-stage holdout scenarios (`CV1`, `CV0`, and `CV00`) plus the `CV2` in-sample training-set recovery diagnostic associated with the corresponding `CV1` fit. Computationally, these settings are obtained from two shared fit structures: a genotype-based fit that yields CV1 holdout predictions and CV2 training-set recovery, and a leave-one-environment-out fit that yields CV0 and CV00 holdout predictions. Because these evaluation settings are not equivalent, model performance must always be interpreted together with the exact masking rule used in the execution module.
 
 This section clarifies what is hidden in each validation scheme and what scientific question each one is intended to answer. That distinction is essential before moving to the execution stage, because the same model may perform very differently depending on whether the challenge lies on the genotype axis, on the environment axis, or on both simultaneously.
 
 ### 7.1 Validation scenarios and their scientific meaning
 
-The four validation schemes adopted in this study are summarized below. Each one corresponds to a different prediction target and therefore evaluates a different notion of generalization. Read this table as a map of the prediction questions that will later be implemented in the execution submodule.
+The three second-stage holdout scenarios and the associated CV2 training-set recovery diagnostic are summarized below. Each setting corresponds to a different evaluation target. Read this table as a map of the prediction questions that will later be implemented in the execution submodule.
 
 ```{r cv-scenarios-table}
 cv_scenarios <- data.frame(
@@ -401,7 +401,7 @@ cv_scenarios <- data.frame(
 
 cv_scenarios |>
   knitr::kable(
-    caption = "Cross-validation scenarios and their scientific meaning.",
+    caption = "Evaluation settings and their scientific meaning.",
     align = "ccc",
     escape = FALSE
   ) |>
@@ -414,9 +414,9 @@ cv_scenarios |>
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-### 7.2 Prediction when genotypes are partially or completely unobserved
+### 7.2 CV1 holdout prediction and associated CV2 training-set recovery
 
-The first two schemes focus on genotype-level uncertainty, but they are produced from the same fit. In `CV1`, all observations from the held-out genotypes are removed before fitting and the evaluation is performed on those omitted genotypes. In `CV2`, no additional masking is introduced; instead, the same fit is evaluated on the genotypes that remained in training. This difference matters because `CV1` measures extrapolation to unseen genotypes, whereas `CV2` measures in-sample recovery under exactly the same fold split.
+`CV1` is the genotype holdout scenario: all observations from the held-out genotypes are removed before fitting and evaluation is performed on those omitted genotypes. `CV2` is not a separate validation scheme and introduces no additional masking; it is the in-sample training-set recovery diagnostic calculated from the same fitted model using the records that remained in training. Thus, CV1 measures extrapolation to unseen genotypes, whereas CV2 measures recovery of records used to fit the corresponding CV1 model.
 
 ```{r cv1-cv2-design}
 cv12_design <- data.frame(
@@ -495,9 +495,9 @@ prediction_file_patterns <- data.frame(
   ),
   ExampleBGLR = c(
     "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GxE_RKHS_varU.dat",
-    "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PxW_RKHS_varU.dat",
+    "Shared with corresponding CV1 fit (no separate BGLR fit)",
     "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_CS11_WS_GY_Eta10_rep01_fold04_GxW_RKHS_varU.dat",
-    "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+    "Shared with corresponding CV0 fit (no separate BGLR fit)"
   ),
   stringsAsFactors = FALSE
 )
