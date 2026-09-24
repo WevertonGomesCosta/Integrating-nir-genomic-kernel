@@ -12,7 +12,7 @@ Ele deve ser mantido na **raiz do repositório** e servir como referência para:
 - organização da navegação entre etapas;
 - apoio a futuras refatorações do repositório.
 
-Este documento **não substitui** o checklist operacional. Ele funciona como **mapa estrutural permanente** do projeto.
+Este documento funciona como **mapa estrutural permanente** do projeto.
 
 > Este documento deve ser mantido com o nome canônico `ARQUITETURA_OPERACIONAL_PIPELINE.md` na raiz do repositório.
 
@@ -47,8 +47,7 @@ A ordem lógica do pipeline é:
 4. `analysis_prediction`
 5. `analysis_prediction_run_outputs`
 6. `visualization`
-7. `script_tabelas_resultados_pipeline_v2.R`
-8. descrição e interpretação dos resultados
+7. descrição e interpretação dos resultados
 
 Representação simplificada:
 
@@ -64,8 +63,6 @@ analysis_prediction
 analysis_prediction_run_outputs
    ↓
 visualization
-   ↓
-script_tabelas_resultados_pipeline_v2.R
    ↓
 descrição dos resultados
 ```
@@ -117,7 +114,7 @@ Objetos principais:
 - `ZW.rds`
 - interações lineares;
 - kernels Gaussianos;
-- kernels arc-cosine;
+- kernels arccosine;
 - interações derivadas.
 
 ---
@@ -307,26 +304,6 @@ Arquivos principais:
 
 ---
 
-### 7. Script auxiliar de revisão do pipeline
-
-#### Arquivo
-- `script_tabelas_resultados_pipeline_v2.R`
-
-#### Função
-- inventariar arquivos do pipeline;
-- resumir clima;
-- criar inventário leve de `output/Matrizes`;
-- resumir `variance_components`;
-- resumir predição;
-- resumir visualização;
-- gerar tabelas de revisão para inspeção dos resultados.
-
-#### Saída
-Pasta:
-- `output/tables/pipeline_review/`
-
----
-
 ## Estrutura de pastas
 
 ```text
@@ -352,12 +329,8 @@ output/
 ├── results/
 │   └── bglr_runs/
 ├── tables/
-│   ├── analysis_prediction/
-│   └── pipeline_review/
+│   └── analysis_prediction/
 └── figures/
-
-code/
-└── script_tabelas_resultados_pipeline_v2.R
 ```
 
 ---
@@ -426,7 +399,6 @@ A execução principal recomendada é:
 4. `analysis_prediction.Rmd`
 5. `analysis_prediction_run_outputs.Rmd`
 6. `visualization.Rmd`
-7. `script_tabelas_resultados_pipeline_v2.R`
 
 As versões PT entram como:
 - documentação funcional;
@@ -490,11 +462,4 @@ Este arquivo deve ser consultado quando houver necessidade de:
 
 ## Observação final
 
-Este documento descreve a **arquitetura oficial do pipeline**.
-Ele não substitui o checklist operacional, mas serve como mapa estrutural permanente do projeto.
-
-O checklist operacional continua sendo o instrumento adequado para:
-- homologação;
-- testes locais;
-- conferência antes de execução;
-- diagnóstico de falhas.
+Este documento descreve a **arquitetura oficial do pipeline** e serve como mapa estrutural permanente do projeto para manutenção, execução e diagnóstico.
