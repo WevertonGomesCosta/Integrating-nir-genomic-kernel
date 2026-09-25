@@ -212,7 +212,7 @@ Eta_list[[18]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model =
 
 ## 4. Define the execution contract
 
-This block restores the operational objects used by the current workflow: the fixed leave-one-environment-out set, the five-fold genotype partition, and the `MODEL × REP × TRAIT` task grid for the 18-model catalog. `num_rep = 10` is defined in the preceding setup, so each model-trait combination is evaluated over 10 repetitions, with five fold-level fits or fit targets inside each repetition. The fitting and summarization logic are written directly inside the CV blocks so that the execution path stays explicit.
+This block restores the operational objects used by the current workflow: the fixed leave-one-environment-out set, the five-fold genotype partition, and the `MODEL × REP × TRAIT` task grid for the 18-model catalog. `num_rep = 10` is defined in the preceding setup, so each model-trait combination is evaluated over 10 repetitions. Within each repetition, CV1/CV2 use five fold-level fits, whereas CV0/CV00 use the same five genotype folds across four held-out environments, yielding 20 environment × fold fits. The fitting and summarization logic are written directly inside the CV blocks so that the execution path stays explicit.
 
 ```{r define-run-objects, eval=FALSE}
 envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
