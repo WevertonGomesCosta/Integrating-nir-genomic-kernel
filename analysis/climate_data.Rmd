@@ -831,9 +831,8 @@ weather_covariates <- texas_climate_data %>%
   rename(year = year_numeric)
 
 # Optional expanded table: daily weather data plus annual weather summaries
-# The output file names keep the historical term "environmental_covariates"
-# only to preserve compatibility with the downstream scripts already used in
-# the project pipeline.
+# The output file names use "environmental_covariates" to preserve
+# compatibility with the downstream scripts in the project pipeline.
 ecs_expanded <- texas_climate_data %>%
   transmute(
     year = as.integer(as.character(year)),
@@ -941,7 +940,7 @@ In the final reduced pipeline, these weather-derived outputs are used only in th
 
 ## 7. Save the final outputs
 
-The last section stores the processed climate files required by downstream modeling. Saving the outputs explicitly separates data acquisition from downstream analyses, making the workflow easier to reproduce and audit.
+The last section stores the processed climate files required by downstream modeling. Saving the outputs explicitly separates data acquisition from downstream analyses and makes the workflow easier to reproduce and inspect.
 
 Three files are exported:
 
@@ -949,7 +948,7 @@ Three files are exported:
 2. `environmental_covariates.csv`: one row per year with the derived annual weather summaries.
 3. `environmental_covariates_expanded.csv`: cleaned daily weather records linked to the annual weather summaries.
 
-The last two files retain their historical names for compatibility with the downstream scripts, even though they now represent weather-derived covariates.
+The last two files use the `environmental_covariates` names required by the downstream scripts and contain weather-derived covariates.
 
 Finally, the processed climate outputs are written to disk so that later modules can reuse them without repeating the download and preprocessing stages.
 
