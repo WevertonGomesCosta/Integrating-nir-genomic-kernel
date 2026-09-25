@@ -511,7 +511,7 @@ counts_by_cv %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-## 11. Nota sobre artefatos temporários do `BGLR`
+## 11. Artefatos de ajuste do `BGLR`
 
 No workflow atual de 18 modelos, os artefatos persistentes de `saveAt` ficam associados a `output/results/bglr_runs/` e podem ser consultados em análises futuras de convergência. Como CV1/CV2 compartilham um ajuste e CV0/CV00 compartilham outro, existem apenas duas árvores de artefatos de ajuste: `bglr_runs/CV1/` e `bglr_runs/CV0/`. CV2 e CV00 possuem árvores próprias de resultados de predição em CSV, mas não geram artefatos BGLR independentes. Essa distinção mantém a documentação alinhada ao código efetivamente executado e evita sugerir que CV2 ou CV00 foram reajustados separadamente.
 

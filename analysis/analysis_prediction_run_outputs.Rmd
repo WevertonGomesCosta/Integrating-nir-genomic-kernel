@@ -521,7 +521,7 @@ counts_by_cv %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-## 11. Note on temporary `BGLR` artifacts
+## 11. BGLR fitting artifacts
 
 In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results/bglr_runs/` during each fit and preserved for later convergence diagnostics. Because CV1/CV2 share one fit and CV0/CV00 share one fit, there are only two fit-owning BGLR trees: `bglr_runs/CV1/` and `bglr_runs/CV0/`. CV2 and CV00 have separate prediction-result CSV trees, but they do not create independent BGLR artifacts. This distinction keeps the stored artifacts aligned with the actual fitting code and avoids implying that CV2 or CV00 were refitted separately.
 

@@ -1171,7 +1171,7 @@ for (current_name in names(kernel_plot_objects)) {
 
 The kernel objects are computationally expensive to reproduce. For that reason, the final step saves them as `.rds` files and cleans the workspace so later modeling stages can start from a lighter memory state.
 
-This last section is also written in a direct way: we list which objects will be saved, write them to disk, export the diagnostic tables, remove the remaining temporary objects, and then reload the saved matrices.
+This last section is also written in a direct way: we list which objects will be saved, write them to disk, remove the remaining temporary objects, and then reload the saved matrices.
 
 The final code block saves all matrices and kernels to disk and then performs basic cleanup so that later modules can load the artifacts directly.
 
@@ -1196,18 +1196,6 @@ message(
 for (obj_name in to_keep) {
   saveRDS(get(obj_name), file = file.path("output/Matrizes", paste0(obj_name, ".rds")))
 }
-
-write.csv(
-  kernel_inventory_linear,
-  file = "output/Matrizes/kernel_inventory_linear.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  kernel_inventory_nonlinear,
-  file = "output/Matrizes/kernel_inventory_nonlinear.csv",
-  row.names = FALSE
-)
 
 rm(list = to_remove, envir = .GlobalEnv)
 gc()

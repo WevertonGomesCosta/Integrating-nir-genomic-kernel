@@ -12,7 +12,6 @@ The pipeline follows this sequence:
 4. `analysis_prediction`
 5. `analysis_prediction_run_outputs`
 6. `visualization`
-7. `script_tabelas_resultados_pipeline_v2.R`
 
 ## Bilingual organization
 
@@ -44,12 +43,12 @@ These defaults should be kept consistent across the prediction modules and the d
 
 The main prediction outputs are stored in:
 
-- **Final prediction CSV files**: `output/results/`
-- **Persistent BGLR fitting files for convergence diagnostics**: `output/results/bglr_runs/`
-- **Processed summary tables**: `output/tables/`
-- **Figures**: `output/figures/`
+- **Fold-level prediction CSV files (generated locally)**: `output/results/`
+- **BGLR fitting artifacts for convergence diagnostics (generated locally)**: `output/results/bglr_runs/`
+- **Versioned summary and display tables**: `output/tables/`
+- **Generated figures**: `output/figures/`
 
-The prediction files use the current naming convention based on `Eta1`–`Eta18`, and the fold identifier is stored internally in the `.id` column rather than in the file name.
+Prediction files use the current `Eta1`–`Eta18` naming convention. Validation scenario, trait, repetition, and fold are encoded in the directory structure and file names; CV0/CV00 paths also include the held-out environment.
 
 ## Repository architecture
 

@@ -1152,7 +1152,7 @@ for (i in seq_len(nrow(kernel_plot_info))) {
 
 Os objetos de kernel são computacionalmente caros para reproduzir. Por isso, a etapa final documenta quais objetos devem ser preservados em arquivos `.rds` e como uma limpeza básica do workspace pode ser realizada.
 
-Esta última seção também é escrita de forma direta: são listados os objetos de interesse, a preservação em disco é documentada, as tabelas diagnósticas são listadas como parte do fluxo documentado, os objetos temporários são removidos e as matrizes preservadas podem ser recarregadas.
+Esta última seção também é escrita de forma direta: são listados os objetos de interesse, a preservação em disco é documentada, os objetos temporários são removidos e as matrizes preservadas podem ser recarregadas.
 
 O bloco final de código documenta quais matrizes e kernels compõem o conjunto final de objetos e como eles podem ser preservados em disco no fluxo completo.
 
@@ -1177,18 +1177,6 @@ message(
 for (obj_name in to_keep) {
   saveRDS(get(obj_name), file = file.path("output/Matrizes", paste0(obj_name, ".rds")))
 }
-
-write.csv(
-  kernel_inventory_linear,
-  file = "output/Matrizes/kernel_inventory_linear.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  kernel_inventory_nonlinear,
-  file = "output/Matrizes/kernel_inventory_nonlinear.csv",
-  row.names = FALSE
-)
 
 rm(list = to_remove, envir = .GlobalEnv)
 gc()
