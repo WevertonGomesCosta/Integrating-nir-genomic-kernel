@@ -209,7 +209,7 @@ Eta_list[[18]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model =
 
 ## 4. Definir o contrato de execução
 
-Este bloco restaura os objetos operacionais usados pelo workflow atual: o conjunto fixo de ambientes leave-one-environment-out, a partição dos genótipos em cinco folds e a grade de tarefas `MODEL × REP × TRAIT` para o catálogo de 18 modelos. `num_rep = 10` é definido na configuração anterior; portanto, cada combinação modelo-trait é avaliada em 10 repetições, com cinco ajustes ou alvos em nível de fold dentro de cada repetição. A lógica de ajuste e de resumo fica escrita diretamente dentro dos blocos de CV para manter o caminho de execução explícito.
+Este bloco restaura os objetos operacionais usados pelo workflow atual: o conjunto fixo de ambientes leave-one-environment-out, a partição dos genótipos em cinco folds e a grade de tarefas `MODEL × REP × TRAIT` para o catálogo de 18 modelos. `num_rep = 10` é definido na configuração anterior; portanto, cada combinação modelo-trait é avaliada em 10 repetições. Dentro de cada repetição, CV1/CV2 usam cinco ajustes em nível de fold, enquanto CV0/CV00 reutilizam os mesmos cinco folds de genótipos nos quatro ambientes deixados de fora, resultando em 20 ajustes ambiente × fold. A lógica de ajuste e de resumo fica escrita diretamente dentro dos blocos de CV para manter o caminho de execução explícito.
 
 ```{r define-run-objects, eval=FALSE}
 envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
