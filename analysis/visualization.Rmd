@@ -183,7 +183,192 @@ comparison_pairs %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-## 4. Load prediction summary tables
+## 4. Prediction summary tables
+
+### 4.1 Optional reconstruction from fold-level outputs
+
+The final summary tables are versioned so that the visualization module can be rendered without rerunning the computationally expensive prediction stage. When a complete set of fold-level files is available under `output/results/`, the block below reconstructs the two canonical summary tables directly from those files.
+
+For CV1/CV2, correlations are first combined across folds within each environment and repetition and then across the four environments. For CV0/CV00, the five fold-level correlations are combined within each held-out environment and repetition. Final means and standard deviations are then calculated across the 10 repetitions. The block is disabled by default because `output/results/` is intentionally not versioned.
+
+```{r rebuild-prediction-summaries, eval=FALSE}
+prediction_files <- list.files(
+  results_dir,
+  pattern = "\\.csv$",
+  full.names = TRUE,
+  recursive = TRUE
+)
+
+results_root <- normalizePath(results_dir, winslash = "/", mustWork = FALSE)
+
+cv12_files <- prediction_files[
+  stringr::str_detect(basename(prediction_files), "^CV[12]_")
+]
+
+cvloo_files <- prediction_files[
+  stringr::str_detect(basename(prediction_files), "^CV0{1,2}_")
+]
+
+# CV1 / CV2
+cv12_raw <- data.frame()
+
+for (current_file in cv12_files) {
+  current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
+  rel_path <- substring(current_norm, nchar(results_root) + 2)
+  path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
+  current_name <- sub("\\.csv$", "", basename(current_file))
+  name_parts <- strsplit(current_name, "_", fixed = TRUE)[[1]]
+
+  current_data <- readr::read_csv(current_file, show_col_types = FALSE) %>%
+    dplyr::mutate(
+      CV = name_parts[1],
+      Trait = path_parts[2],
+      Rep = as.integer(sub("^rep", "", path_parts[3])),
+      Fold = as.integer(sub("^fold", "", path_parts[4])),
+      Model = name_parts[3],
+      ModelNumber = as.integer(sub("^Eta", "", name_parts[3]))
+    )
+
+  cv12_raw <- dplyr::bind_rows(cv12_raw, current_data)
+}
+
+cv12_env_fold <- cv12_raw %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV, Rep, Fold, Env) %>%
+  dplyr::summarise(
+    EnvCorrelation = mean(cor, na.rm = TRUE),
+    ValidationCount = sum(!is.na(cor)),
+    MeanRuntimeSec = mean(Runtime_sec, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    EnvCorrelation = ifelse(is.nan(EnvCorrelation), NA_real_, EnvCorrelation),
+    MeanRuntimeSec = ifelse(is.nan(MeanRuntimeSec), NA_real_, MeanRuntimeSec)
+  ) %>%
+  dplyr::filter(!is.na(EnvCorrelation), ValidationCount > 0)
+
+cv12_env_rep <- cv12_env_fold %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV, Rep, Env) %>%
+  dplyr::summarise(
+    EnvCorrelation = weighted.mean(
+      EnvCorrelation,
+      w = ValidationCount,
+      na.rm = TRUE
+    ),
+    ValidationCount = sum(ValidationCount, na.rm = TRUE),
+    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+cv12_rep_summary <- cv12_env_rep %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV, Rep) %>%
+  dplyr::summarise(
+    WeightedCorrelation = weighted.mean(
+      EnvCorrelation,
+      w = ValidationCount,
+      na.rm = TRUE
+    ),
+    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+cv12_summary_rebuilt <- cv12_rep_summary %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV) %>%
+  dplyr::summarise(
+    MeanCorrelation = mean(WeightedCorrelation, na.rm = TRUE),
+    SDCorrelation = sd(WeightedCorrelation, na.rm = TRUE),
+    NumberOfRepetitions = dplyr::n(),
+    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation)
+  ) %>%
+  dplyr::arrange(Trait, CV, ModelNumber)
+
+readr::write_csv(
+  cv12_summary_rebuilt,
+  file.path(tables_dir, "prediction_cv1_cv2_summary.csv")
+)
+
+# CV0 / CV00
+cvloo_raw <- data.frame()
+
+for (current_file in cvloo_files) {
+  current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
+  rel_path <- substring(current_norm, nchar(results_root) + 2)
+  path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
+  current_name <- sub("\\.csv$", "", basename(current_file))
+  name_parts <- strsplit(current_name, "_", fixed = TRUE)[[1]]
+  eta_name <- name_parts[length(name_parts) - 2]
+
+  current_data <- readr::read_csv(current_file, show_col_types = FALSE) %>%
+    dplyr::mutate(
+      CV = name_parts[1],
+      Env_leave = path_parts[2],
+      Trait = path_parts[3],
+      Rep = as.integer(sub("^rep", "", path_parts[4])),
+      Fold = as.integer(sub("^fold", "", path_parts[5])),
+      Model = eta_name,
+      ModelNumber = as.integer(sub("^Eta", "", eta_name))
+    )
+
+  cvloo_raw <- dplyr::bind_rows(cvloo_raw, current_data)
+}
+
+cvloo_env_fold <- cvloo_raw %>%
+  dplyr::mutate(
+    Env = as.character(Env),
+    Env_leave = as.character(Env_leave)
+  ) %>%
+  dplyr::filter(Env == Env_leave) %>%
+  dplyr::group_by(
+    ModelNumber, Model, Trait, CV, Env_leave, Rep, Fold, Env
+  ) %>%
+  dplyr::summarise(
+    LOEOCorrelation = mean(cor, na.rm = TRUE),
+    ValidationCount = sum(!is.na(cor)),
+    MeanRuntimeSec = mean(Runtime_sec, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    LOEOCorrelation = ifelse(is.nan(LOEOCorrelation), NA_real_, LOEOCorrelation),
+    MeanRuntimeSec = ifelse(is.nan(MeanRuntimeSec), NA_real_, MeanRuntimeSec)
+  ) %>%
+  dplyr::filter(!is.na(LOEOCorrelation), ValidationCount > 0)
+
+cvloo_rep_summary <- cvloo_env_fold %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV, Env_leave, Rep) %>%
+  dplyr::summarise(
+    LOEOCorrelation = weighted.mean(
+      LOEOCorrelation,
+      w = ValidationCount,
+      na.rm = TRUE
+    ),
+    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+cvloo_summary_rebuilt <- cvloo_rep_summary %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV, Env_leave) %>%
+  dplyr::summarise(
+    MeanCorrelation = mean(LOEOCorrelation, na.rm = TRUE),
+    SDCorrelation = sd(LOEOCorrelation, na.rm = TRUE),
+    NumberOfRuns = dplyr::n(),
+    MeanRuntimeSec = mean(MeanRuntimeSec, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    SDCorrelation = ifelse(is.na(SDCorrelation), 0, SDCorrelation)
+  ) %>%
+  dplyr::arrange(Trait, CV, Env_leave, ModelNumber)
+
+readr::write_csv(
+  cvloo_summary_rebuilt,
+  file.path(tables_dir, "prediction_cv0_cv00_summary.csv")
+)
+```
+
+### 4.2 Load the versioned summary tables
 
 ```{r load-visualization-tables, include=FALSE}
 cv12_summary <- readr::read_csv(
@@ -192,7 +377,7 @@ cv12_summary <- readr::read_csv(
 ) %>%
   dplyr::select(-dplyr::any_of(c(
     "Pathway", "KernelFamily", "WeatherStatus", "Group",
-    "FullEffects", "InterpretiveDescription"
+    "Description", "ShortDescription", "FullEffects", "InterpretiveDescription"
   ))) %>%
   dplyr::mutate(
     Model = stringr::str_replace(as.character(Model), "Eta", "M"),
