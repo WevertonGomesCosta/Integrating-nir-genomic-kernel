@@ -15,8 +15,10 @@
 /data/Article_documents/
 /data/Maize-NIRS-GBS-main/
 
-# Regenerable prediction outputs
-/output/results/**/*.csv
+# Regenerable analysis outputs
+/output/results/
+/output/figures/
+/output/Matrizes/figures/
 /output/tables/analysis_prediction/
 /output/tables/prediction_*_raw.csv
 /output/tables/prediction_*_by_rep.csv
