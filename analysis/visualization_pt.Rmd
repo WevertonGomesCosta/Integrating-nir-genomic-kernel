@@ -179,7 +179,13 @@ comparison_pairs %>%
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-## 4. Carregar tabelas de resumo de predição
+## 4. Tabelas-resumo de predição
+
+### 4.1 Reconstrução opcional a partir dos resultados em nível de fold
+
+A versão em inglês documenta o bloco mecânico que reconstrói `prediction_cv1_cv2_summary.csv` e `prediction_cv0_cv00_summary.csv` diretamente dos arquivos em `output/results/`. Como esses resultados em nível de fold são regeneráveis e não são versionados, a versão em português reutiliza as tabelas-resumo versionadas e evita repetir essa consolidação.
+
+### 4.2 Carregar as tabelas-resumo versionadas
 
 ```{r load-visualization-tables, include=FALSE}
 cv12_summary <- readr::read_csv(
@@ -188,7 +194,7 @@ cv12_summary <- readr::read_csv(
 ) %>%
   dplyr::select(-dplyr::any_of(c(
     "Pathway", "KernelFamily", "WeatherStatus", "Group",
-    "FullEffects", "InterpretiveDescription"
+    "Description", "ShortDescription", "FullEffects", "InterpretiveDescription"
   ))) %>%
   dplyr::mutate(
     Model = stringr::str_replace(as.character(Model), "Eta", "M"),
@@ -221,7 +227,7 @@ cvloo_summary <- readr::read_csv(
 ) %>%
   dplyr::select(-dplyr::any_of(c(
     "Pathway", "KernelFamily", "WeatherStatus", "Group",
-    "FullEffects", "InterpretiveDescription"
+    "Description", "ShortDescription", "FullEffects", "InterpretiveDescription"
   ))) %>%
   dplyr::mutate(
     Model = stringr::str_replace(as.character(Model), "Eta", "M"),
