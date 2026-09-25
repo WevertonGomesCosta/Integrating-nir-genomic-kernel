@@ -815,9 +815,8 @@ weather_covariates <- texas_climate_data %>%
   rename(year = year_numeric)
 
 # Tabela expandida opcional: dados meteorológicos diários mais resumos anuais do clima
-# Os nomes dos arquivos de saída mantêm o termo histórico "environmental_covariates"
-# apenas para preservar compatibilidade com os scripts posteriores já usados em
-# no pipeline do projeto.
+# Os nomes dos arquivos de saída usam "environmental_covariates" para preservar
+# a compatibilidade com os scripts posteriores do pipeline do projeto.
 ecs_expanded <- texas_climate_data %>%
   transmute(
     year = as.integer(as.character(year)),
@@ -1009,7 +1008,7 @@ O fluxo completo usa três arquivos principais:
 2. `environmental_covariates.csv`: uma linha por ano com os resumos climáticos anuais derivados.
 3. `environmental_covariates_expanded.csv`: registros meteorológicos diários limpos vinculados aos resumos climáticos anuais.
 
-Os dois últimos arquivos mantêm seus nomes históricos para compatibilidade com os scripts posteriores, embora agora representem covariáveis derivadas do clima.
+Os dois últimos arquivos usam os nomes `environmental_covariates` requeridos pelos scripts posteriores e contêm covariáveis derivadas do clima.
 
 O bloco abaixo é mantido apenas como referência didática e permanece desativado.
 
