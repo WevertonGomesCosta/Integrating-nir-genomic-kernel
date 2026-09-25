@@ -373,7 +373,7 @@ length(Eta_list)
 
 ## 7. Cross-validation design
 
-Prediction accuracy depends not only on the fitted model, but also on the prediction problem being imposed. In this workflow, the four validation schemes are implemented through two shared fits: one genotype-based fit that is later decomposed into `CV1` and `CV2`, and one leave-one-environment-out fit that is later decomposed into `CV0` and `CV00`. Because these scenarios are not equivalent, model performance must always be interpreted together with the exact masking rule used in the execution module.
+Prediction accuracy depends not only on the fitted model, but also on the prediction problem being imposed. In this workflow, the four validation schemes are obtained from two shared-fit structures: within each repetition, one genotype-based fit is run for each of five folds and its predictions are evaluated as `CV1` and `CV2`; for `CV0` and `CV00`, one leave-one-environment-out fit is run for each environment × fold combination and the two targets are evaluated from that same fit. The execution module uses 10 repetitions, each containing the five-fold genotype partition. Because these scenarios are not equivalent, model performance must always be interpreted together with the exact masking rule used in the execution module.
 
 This section clarifies what is hidden in each validation scheme and what scientific question each one is intended to answer. That distinction is essential before moving to the execution stage, because the same model may perform very differently depending on whether the challenge lies on the genotype axis, on the environment axis, or on both simultaneously.
 
@@ -416,7 +416,7 @@ cv_scenarios |>
 
 ### 7.2 Prediction when genotypes are partially or completely unobserved
 
-The first two schemes focus on genotype-level uncertainty, but they are produced from the same fit. In `CV1`, all observations from the held-out genotypes are removed before fitting and the evaluation is performed on those omitted genotypes. In `CV2`, no additional masking is introduced; instead, the same fit is evaluated on the genotypes that remained in training. This difference matters because `CV1` measures extrapolation to unseen genotypes, whereas `CV2` measures in-sample recovery under exactly the same fold split.
+The first two schemes focus on genotype-level uncertainty, but they are produced from the same fit within each fold. In `CV1`, all observations from the held-out genotypes are removed before fitting and the evaluation is performed on those omitted genotypes. In `CV2`, no additional masking is introduced; instead, the same fit is evaluated on the genotypes that remained in training. This difference matters because `CV1` measures extrapolation to unseen genotypes, whereas `CV2` measures in-sample recovery under exactly the same fold split. Each of the 10 repetitions contains five genotype folds, so five fold-level CV1/CV2 result sets are generated within each repetition before the downstream summaries report performance across the 10 repetitions.
 
 ```{r cv1-cv2-design}
 cv12_design <- data.frame(
@@ -449,7 +449,7 @@ cv12_design |>
 
 ### 7.3 Prediction in environments that are not fully available during training
 
-The schemes `CV0` and `CV00` shift the difficulty from the genotype axis to the environment axis, but they are also generated from the same fit. First, the training response keeps only the genotypes assigned to the training portion of the fold. Then, an entire environment is masked and the model is refit under that leave-one-environment-out rule. `CV0` evaluates the genotypes that were already seen in other environments, whereas `CV00` evaluates the genotypes that were held out by the fold split. This distinction is essential because the second target combines both genotype novelty and environment novelty.
+The schemes `CV0` and `CV00` shift the difficulty from the genotype axis to the environment axis, but they are also generated from the same fit within each environment × fold combination. First, the training response keeps only the genotypes assigned to the training portion of the fold. Then, an entire environment is masked and the model is refit under that leave-one-environment-out rule. `CV0` evaluates the genotypes that were already seen in other environments, whereas `CV00` evaluates the genotypes that were held out by the fold split. Within each of the 10 repetitions, the same five-fold genotype partition is reused across the four held-out environments. Thus, the fold-level files are intermediate validation outputs, whereas the final summaries describe performance across 10 repetitions. This distinction is essential because `CV00` combines both genotype novelty and environment novelty.
 
 ```{r cv0-cv00-design}
 cvloo_design <- data.frame(
@@ -482,7 +482,7 @@ cvloo_design |>
 
 ### 7.4 File naming and downstream reproducibility
 
-The prediction workflow now uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Final CSV summaries are written inside `output/results/` under scenario-specific folders, and the persistent `BGLR` fitting artifacts are written inside `output/results/bglr_runs/` using the same logical structure. In these computational file names, the `EtaName` identifier is used because it is the internal model name used by the fitting routine, whereas the manuscript-facing model label is stored in `Model`. Keeping this pattern explicit is important because the next modules use these paths to inventory, summarize, and visualize the results.
+The prediction workflow uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Scenario-specific CSV files are written under `output/results/`. Persistent `BGLR` fitting artifacts are stored only for the fit-owning scenarios: under `bglr_runs/CV1/` for the shared CV1/CV2 fit and under `bglr_runs/CV0/` for the shared CV0/CV00 fit. Therefore, `CV2` and `CV00` have their own prediction-result CSV trees but do not have independent BGLR fit trees. In these computational paths, `EtaName` is the internal model identifier, whereas the manuscript-facing label is stored in `Model`. Keeping this distinction explicit prevents the result files from being confused with the shared fitting artifacts.
 
 ```{r filename-patterns}
 prediction_file_patterns <- data.frame(
@@ -493,11 +493,11 @@ prediction_file_patterns <- data.frame(
     "CV0/CS11_WS/GY/rep01/fold04/CV0_GY_CS11_WS_Eta10_rep01_fold04.csv",
     "CV00/CS12_WW/KW/rep10/fold02/CV00_KW_CS12_WW_Eta18_rep10_fold02.csv"
   ),
-  ExampleBGLR = c(
-    "bglr_runs/CV1/GY/rep02/fold03/Eta1/CV1_GY_Eta1_rep02_fold03_GxE_RKHS_varU.dat",
-    "bglr_runs/CV2/KW/rep08/fold01/Eta12/CV2_KW_Eta12_rep08_fold01_PxW_RKHS_varU.dat",
-    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/CV0_CS11_WS_GY_Eta10_rep01_fold04_GxW_RKHS_varU.dat",
-    "bglr_runs/CV00/CS12_WW/KW/rep10/fold02/Eta18/CV00_CS12_WW_KW_Eta18_rep10_fold02_PAKW_RKHS_varU.dat"
+  SharedFitLocation = c(
+    "bglr_runs/CV1/GY/rep02/fold03/Eta1/",
+    "Shared with CV1: bglr_runs/CV1/KW/rep08/fold01/Eta12/",
+    "bglr_runs/CV0/CS11_WS/GY/rep01/fold04/Eta10/",
+    "Shared with CV0: bglr_runs/CV0/CS12_WW/KW/rep10/fold02/Eta18/"
   ),
   stringsAsFactors = FALSE
 )

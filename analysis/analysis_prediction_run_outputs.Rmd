@@ -24,12 +24,13 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 This submodule is the execution counterpart of `analysis_prediction.Rmd`. Its role is to run the prediction jobs for the reduced catalog of 18 models, save the CSV files under `output/results/`, and inventory the outputs that will later be consumed by the visualization stage.
 
-The execution contract used here has four operational rules:
+The execution contract used here has five operational rules:
 
 - `CV1` and `CV2` are derived from the same fit within each fold;
 - `CV0` and `CV00` are derived from the same fit for each held-out environment within each fold;
-- the fold partition is deterministic for each `MODEL × REP × TRAIT` task and is reused in both CV blocks;
-- output files are organized explicitly by validation scheme, environment when applicable, trait, repetition, and fold, with the fold represented both in the directory tree and in the file name.
+- each `MODEL × REP × TRAIT` task uses a deterministic five-fold genotype partition;
+- the workflow uses 10 repetitions, and the same fold partition is reused in the CV1/CV2 and CV0/CV00 blocks for the corresponding task;
+- prediction-result CSV files are organized by validation scheme, environment when applicable, trait, repetition, and fold, whereas persistent BGLR artifacts are stored only under the fit-owning `CV1` and `CV0` trees.
 
 The heavy fitting chunks remain disabled by default in the tutorial. Even so, the code shown below is the executable version that should be used when the prediction stage is rerun.
 
@@ -211,7 +212,7 @@ Eta_list[[18]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model =
 
 ## 4. Define the execution contract
 
-This block restores the operational objects used by the current workflow: the fixed leave-one-environment-out set, the number of folds, and the `MODEL × REP × TRAIT` task grid for the 18-model catalog. The fitting and summarization logic are written directly inside the CV blocks so that the execution path stays explicit.
+This block restores the operational objects used by the current workflow: the fixed leave-one-environment-out set, the five-fold genotype partition, and the `MODEL × REP × TRAIT` task grid for the 18-model catalog. `num_rep = 10` is defined in the preceding setup, so each model-trait combination is evaluated over 10 repetitions. Within each repetition, CV1/CV2 use five fold-level fits, whereas CV0/CV00 use the same five genotype folds across four held-out environments, yielding 20 environment × fold fits. The fitting and summarization logic are written directly inside the CV blocks so that the execution path stays explicit.
 
 ```{r define-run-objects, eval=FALSE}
 envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
@@ -249,7 +250,7 @@ cat("Running on ", useCores, " cores.")
 
 ## 6. Run prediction analyses for CV1 and CV2
 
-This block implements genotype-based validation for the 18-model workflow. The deterministic fold map, the BGLR fit, and the environment-wise summary are all written directly inside the loop so that each step stays explicit. One fit is run per fold, and the resulting predictions are split into `CV1` (held-out genotypes) and `CV2` (training genotypes under the same fit). In the current standard, both the final CSV summaries and the BGLR fitting artifacts are stored in a rep/fold hierarchy.
+This block implements genotype-based validation for the 18-model workflow. The deterministic fold map, the BGLR fit, and the environment-wise summary are all written directly inside the loop so that each step stays explicit. One fit is run per fold, and the resulting predictions are split into `CV1` (held-out genotypes) and `CV2` (training genotypes under the same fit). Separate CSV result trees are written for CV1 and CV2, but the persistent BGLR artifacts are stored only once under `bglr_runs/CV1/` because CV2 reuses the CV1 fit. With 10 repetitions and five folds per repetition, each model-trait task produces five fold-level CV1/CV2 result sets within each repetition.
 
 ```{r run-predictions-cv12, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -327,7 +328,7 @@ foreach(i = seq_len(nrow(combos)),
 ```
 ## 7. Run prediction analyses for CV0 and CV00
 
-This block implements leave-one-environment-out validation for the same 18-model workflow. For each task, the deterministic fold map is rebuilt with the same rule used in `CV1/CV2`, one fit is run for each `env_leave × fold` combination, and the predictions are split into `CV0` (training genotypes under the environment mask) and `CV00` (held-out genotypes under the same mask). As in the genotype-based block, the fold construction, the BGLR fit, and the environment-wise summary are all written directly inside the loop so that the execution path remains explicit. The outputs are written in a rep/fold hierarchy and the BGLR artifacts are preserved in matching persistent folders.
+This block implements leave-one-environment-out validation for the same 18-model workflow. For each task, the deterministic fold map is rebuilt with the same rule used in `CV1/CV2`, one fit is run for each `env_leave × fold` combination, and the predictions are split into `CV0` (training genotypes under the environment mask) and `CV00` (held-out genotypes under the same mask). Separate CSV result trees are written for CV0 and CV00, but the persistent BGLR artifacts are stored only once under `bglr_runs/CV0/` because CV00 reuses the CV0 fit. Within each of the 10 repetitions, the same five-fold genotype partition is applied across the four held-out environments.
 
 ```{r run-predictions-cv0-cv00, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -522,7 +523,7 @@ counts_by_cv %>%
 
 ## 11. Note on temporary `BGLR` artifacts
 
-In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results/bglr_runs/` during each fit and preserved for later convergence diagnostics. The scenario-specific paths now separate `CV1`, `CV2`, `CV0`, and `CV00`, and the persisted filenames use the scenario prefix together with explicit effect labels instead of generic `ETA_1`, `ETA_2`, and similar placeholders. Therefore, this execution module inventories both the final CSV outputs stored under `output/results/` and the hierarchical paths that locate the corresponding BGLR run folders.
+In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results/bglr_runs/` during each fit and preserved for later convergence diagnostics. Because CV1/CV2 share one fit and CV0/CV00 share one fit, there are only two fit-owning BGLR trees: `bglr_runs/CV1/` and `bglr_runs/CV0/`. CV2 and CV00 have separate prediction-result CSV trees, but they do not create independent BGLR artifacts. This distinction keeps the stored artifacts aligned with the actual fitting code and avoids implying that CV2 or CV00 were refitted separately.
 
 ## 12. Final note
 
