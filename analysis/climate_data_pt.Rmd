@@ -93,13 +93,20 @@ Nesta seção, definimos as entradas básicas da consulta à NASA POWER. Essas e
 
 As coordenadas geográficas identificam o local experimental. As datas inicial e final definem a janela da safra a ser analisada. O vetor `params` lista as variáveis climáticas diárias necessárias para os resumos posteriores, como precipitação, temperatura, umidade relativa, radiação solar e velocidade do vento.
 
+As coordenadas confirmadas da estação experimental são 30°33′04.8″ N, 96°26′00.3″ W (aproximadamente 30.55133° N, 96.43342° W). Essas coordenadas são usadas no workflow reprodutível atual tanto para a consulta à NASA POWER quanto para os cálculos dependentes de coordenadas, como o fotoperíodo.
+
+Para preservar a proveniência, o workflow arquivado originalmente consultou a NASA POWER em 30.6282° N, 96.3344° W. Durante a revisão do manuscrito, as duas localizações foram consultadas para as mesmas janelas de 2011 e 2012 e retornaram valores diários idênticos para as seis variáveis meteorológicas usadas neste estudo. O recálculo do fotoperíodo e da razão fototérmica nas coordenadas confirmadas produziu apenas diferenças numéricas desprezíveis, e o kernel climático permaneceu inalterado à precisão de máquina. Assim, as coordenadas arquivadas são mantidas abaixo apenas como metadados de proveniência e não são usadas pelo workflow atual.
+
 Essas variáveis foram escolhidas porque permitem derivar descritores climáticos com interpretação agronômica direta, como precipitação acumulada, graus-dia, estresse térmico e déficit de pressão de vapor.
 
-Em seguida, definimos locais, anos e metadados básicos que controlam quais séries meteorológicas serão usadas e como os resultados serão identificados.
+Em seguida, definimos a localização confirmada, o ponto histórico de extração mantido para proveniência, os anos e os metadados básicos que controlam quais séries meteorológicas serão usadas e como os resultados serão identificados.
 
 ```{r parameters}
-# Coordenadas do local experimental (College Station, TX)
-coords_texas <- c(lon = -96.3344, lat = 30.6282)
+# Coordenadas confirmadas da estação experimental usadas pelo workflow atual
+station_coords <- c(lon = -96.43342, lat = 30.55133)
+
+# Ponto histórico da extração NASA POWER, mantido apenas para proveniência
+archived_power_coords <- c(lon = -96.3344, lat = 30.6282)
 
 # Intervalos das safras
 start_date_2011 <- "2011-05-01"
@@ -139,7 +146,7 @@ A etapa a seguir documenta a consulta principal dos dados meteorológicos diári
 ```{r get_data, eval=FALSE}
 data_tx_2011 <- get_power(
   community = "AG",
-  lonlat = coords_texas,
+  lonlat = station_coords,
   pars = params,
   dates = c(start_date_2011, end_date_2011),
   temporal_api = "DAILY"
@@ -148,7 +155,7 @@ data_tx_2011 <- get_power(
 
 data_tx_2012 <- get_power(
   community = "AG",
-  lonlat = coords_texas,
+  lonlat = station_coords,
   pars = params,
   dates = c(start_date_2012, end_date_2012),
   temporal_api = "DAILY"
@@ -741,7 +748,7 @@ Esses resumos foram pensados para capturar aspectos biologicamente relevantes de
 
 Algumas covariáveis derivadas do clima dependem de quantidades que não são fornecidas diretamente pela NASA POWER. Por isso, primeiro calculamos variáveis intermediárias diárias como graus-dia (GDD), fotoperíodo, razão fototérmica (PTR), amplitude térmica diária, temperatura média diária, pressão de vapor de saturação, pressão de vapor real e déficit de pressão de vapor (VPD).
 
-Neste tutorial, `PHOTOPERIOD_HOURS` representa o fotoperíodo diário em horas e é mantido como variável de auditoria. A variável `PTR_DAILY` é a razão entre o fotoperíodo diário e os graus-dia (`GDD`). Ela é calculada apenas quando `GDD > 0`, evitando divisão por zero ou valores sem interpretação biológica. O resumo anual correspondente é `PTR_AVG`.
+Neste tutorial, `PHOTOPERIOD_HOURS` representa o fotoperíodo diário em horas, calculado a partir das coordenadas confirmadas da estação experimental, e é preservado como variável intermediária reprodutível. A variável `PTR_DAILY` é a razão entre o fotoperíodo diário e os graus-dia (`GDD`). Ela é calculada apenas quando `GDD > 0`, evitando divisão por zero ou valores sem interpretação biológica. O resumo anual correspondente é `PTR_AVG`.
 
 Essas variáveis intermediárias são calculadas dia a dia e depois resumidas no nível anual na próxima subseção.
 
@@ -751,8 +758,8 @@ A etapa a seguir documenta o cálculo das covariáveis climáticas anuais e expa
 photoperiod_tbl <- suncalc::getSunlightTimes(
   data = tibble(
     date = unique(texas_climate_data$date),
-    lat = unname(coords_texas["lat"]),
-    lon = unname(coords_texas["lon"])
+    lat = unname(station_coords["lat"]),
+    lon = unname(station_coords["lon"])
   ),
   keep = c("sunrise", "sunset"),
   tz = "America/Chicago"

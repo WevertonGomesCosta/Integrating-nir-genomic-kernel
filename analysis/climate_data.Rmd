@@ -101,15 +101,22 @@ dir.create("output/climate_results", recursive = TRUE, showWarnings = FALSE)
 
 In this section, we define the basic inputs for the NASA POWER query. These inputs determine **where**, **when**, and **which climatic variables** will be retrieved.
 
-The geographic coordinates identify the experimental site. The start and end dates define the crop season window to be analyzed. The vector `params` lists the daily climatic variables required for downstream summaries, such as precipitation, temperature, relative humidity, solar radiation, and wind speed.
+The geographic coordinates identify the experimental site. The confirmed research-station coordinates are 30°33′04.8″ N, 96°26′00.3″ W (approximately 30.55133° N, 96.43342° W), and these coordinates are used in the current reproducible workflow for both the NASA POWER query and coordinate-dependent photoperiod calculations.
+
+For provenance, the archived workflow originally queried NASA POWER at 30.6282° N, 96.3344° W. During manuscript revision, both locations were queried over the same 2011 and 2012 study windows. They returned identical daily values for all six meteorological variables used here. Recalculating photoperiod and the photothermal ratio at the confirmed station coordinates produced only negligible numerical differences, and the resulting weather kernel was unchanged to machine precision. The archived coordinates are therefore retained below only as provenance metadata; they are not used by the current workflow.
+
+The start and end dates define the crop season window to be analyzed. The vector `params` lists the daily climatic variables required for downstream summaries, such as precipitation, temperature, relative humidity, solar radiation, and wind speed.
 
 These variables were selected because they allow us to derive weather-derived descriptors with direct agronomic interpretation, such as accumulated precipitation, growing degree days, thermal stress, and vapor pressure deficit.
 
-The next code block defines the study location, the growing-season windows, and the variables that will be requested from NASA POWER. These settings control both the download itself and the labels used later in the summaries.
+The next code block defines the confirmed study location, the archived extraction point retained for provenance, the growing-season windows, and the variables that will be requested from NASA POWER.
 
 ```{r parameters}
-# Experimental site coordinates (College Station, TX)
-coords_texas <- c(lon = -96.3344, lat = 30.6282)
+# Confirmed research-station coordinates used by the current workflow
+station_coords <- c(lon = -96.43342, lat = 30.55133)
+
+# Archived NASA POWER extraction point retained only for provenance
+archived_power_coords <- c(lon = -96.3344, lat = 30.6282)
 
 # Growing season intervals
 start_date_2011 <- "2011-05-01"
@@ -147,7 +154,7 @@ The code below sends two independent requests to the NASA POWER service, one for
 ```{r get_data}
 data_tx_2011 <- get_power(
   community = "AG",
-  lonlat = coords_texas,
+  lonlat = station_coords,
   pars = params,
   dates = c(start_date_2011, end_date_2011),
   temporal_api = "DAILY"
@@ -156,7 +163,7 @@ data_tx_2011 <- get_power(
 
 data_tx_2012 <- get_power(
   community = "AG",
-  lonlat = coords_texas,
+  lonlat = station_coords,
   pars = params,
   dates = c(start_date_2012, end_date_2012),
   temporal_api = "DAILY"
@@ -755,7 +762,7 @@ Some useful weather descriptors are not downloaded directly from NASA POWER. The
 The main quantities used here are:
 
 - **GDD (growing degree days):** a simple measure of thermal accumulation. Temperatures below the base temperature are treated as too cold for crop development, and temperatures above the upper threshold are capped to avoid overestimating useful heat.
-- **Photoperiod:** the daylight duration, computed from date and experimental coordinates using sunrise and sunset times.
+- **Photoperiod:** the daylight duration, computed from date and the confirmed research-station coordinates using sunrise and sunset times.
 - **PTR (photothermal ratio):** the ratio between photoperiod in hours and GDD. It is calculated only when `GDD > 0`, because the ratio is not defined when thermal accumulation is zero or negative.
 - **DTR (daily temperature range):** the difference between daily maximum and minimum temperature. It summarizes day-night thermal amplitude.
 - **VPD (vapor pressure deficit):** a measure of atmospheric dryness. Higher VPD values indicate stronger evaporative demand, which can increase plant water stress.
@@ -767,8 +774,8 @@ The code below first creates the daily intermediate variables and then summarize
 photoperiod_tbl <- suncalc::getSunlightTimes(
   data = tibble(
     date = unique(texas_climate_data$date),
-    lat = unname(coords_texas["lat"]),
-    lon = unname(coords_texas["lon"])
+    lat = unname(station_coords["lat"]),
+    lon = unname(station_coords["lon"])
   ),
   keep = c("sunrise", "sunset"),
   tz = "America/Chicago"
