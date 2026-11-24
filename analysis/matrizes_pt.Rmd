@@ -997,6 +997,122 @@ GAKW[1:5, 1:5]
 PAKW[1:5, 1:5]
 ```
 
+
+### 13.5 Calibração por característica para peso de grãos (KW), executada uma única vez
+
+As matrizes anteriores reproduzem os kernels não lineares já calibrados para GY. Para construir os kernels Gaussianos e arccosine correspondentes a KW, o chunk abaixo utiliza as mesmas distâncias, limites dos parâmetros, funções de verossimilhança marginal e regras de recursão, substituindo somente a resposta por `Pheno$KW`. O código carrega as entradas salvas e gera arquivos distintos com o sufixo `_KW`, sem repetir a calibração de GY ou a predição BGLR. O chunk permanece desativado na renderização normal e pode ser executado diretamente uma única vez na etapa de calibração de KW.
+
+```{r kw-trait-calibration, eval=FALSE}
+# One-time KW calibration. The Gaussian and arccosine functions are
+# defined above; only the KW-dependent parameters are estimated here.
+Pheno_KW <- readRDS("output/Matrizes/Pheno.rds")
+NIR_KW <- as.matrix(readRDS("output/Matrizes/NIR.all.rds"))
+ZEZE_KW <- as.matrix(readRDS("output/Matrizes/ZEZE.rds"))
+ZW_KW <- as.matrix(readRDS("output/Matrizes/ZW.rds"))
+
+Geno_KW <- data.table::fread(
+  "data/GAPIT.Genotype.Numerical.txt"
+) %>% as.data.frame()
+Geno_KW <- Geno_KW[Geno_KW$taxa %in% Pheno_KW$Pedigree, , drop = FALSE]
+Geno_KW <- Geno_KW[order(Geno_KW$taxa), , drop = FALSE]
+rownames(Geno_KW) <- Geno_KW$taxa
+Geno_KW <- as.matrix(Geno_KW[, -1, drop = FALSE])
+
+# Gaussian genomic kernel: same distance and marginal criterion as GY.
+DG_KW <- (as.matrix(dist(Geno_KW)))^2
+q05G_KW <- quantile(DG_KW, 0.05)
+IDs_KW <- factor(
+  as.character(Pheno_KW$Pedigree),
+  levels = rownames(DG_KW)
+)
+Z_KW <- as.matrix(model.matrix(~ IDs_KW - 1))
+rownames(Z_KW) <- Pheno_KW$ObsID
+DG_KW <- DG_KW[levels(IDs_KW), levels(IDs_KW), drop = FALSE]
+DG_proj_KW <- Z_KW %*% DG_KW %*% t(Z_KW)
+
+solG_KW <- optim(
+  c(1, 1), margh.fun,
+  y = Pheno_KW$KW, D = DG_proj_KW, q = q05G_KW,
+  method = "L-BFGS-B",
+  lower = c(0.05, 0.05), upper = c(6, 30)
+)
+GGK_KW <- exp(-solG_KW$par[1] * DG_proj_KW / q05G_KW)
+
+# Gaussian phenomic kernel: NIR observations remain in Pheno order.
+NIR_KW <- NIR_KW[Pheno_KW$ObsID, , drop = FALSE]
+DP_KW <- (as.matrix(dist(NIR_KW)))^2
+q05P_KW <- quantile(DP_KW, 0.05)
+solP_KW <- optim(
+  c(1, 1), margh.fun,
+  y = Pheno_KW$KW, D = DP_KW, q = q05P_KW,
+  method = "L-BFGS-B",
+  lower = c(0.05, 0.05), upper = c(6, 30)
+)
+PGK_KW <- exp(-solP_KW$par[1] * DP_KW / q05P_KW)
+
+# Arccosine genomic kernel: estimate recursion depth for KW.
+GAK1_KW <- AK1.fun(Geno_KW)
+ZAK_KW <- as.matrix(model.matrix(~ IDs_KW - 1))
+rownames(ZAK_KW) <- Pheno_KW$ObsID
+GAK1_proj_KW <- ZAK_KW %*%
+  GAK1_KW[levels(IDs_KW), levels(IDs_KW), drop = FALSE] %*%
+  t(ZAK_KW)
+Gl_KW <- marg.AK(y = Pheno_KW$KW, AK1 = GAK1_proj_KW, ml = 50)
+GAK_KW <- if (Gl_KW == 0) {
+  GAK1_proj_KW
+} else {
+  AK.fun(AK1 = GAK1_proj_KW, nl = Gl_KW)
+}
+
+# Arccosine phenomic kernel: estimate recursion depth for KW.
+PAK1_KW <- AK1.fun(NIR_KW)
+Pl_KW <- marg.AK(y = Pheno_KW$KW, AK1 = PAK1_KW, ml = 50)
+PAK_KW <- if (Pl_KW == 0) {
+  PAK1_KW
+} else {
+  AK.fun(AK1 = PAK1_KW, nl = Pl_KW)
+}
+
+# Project all KW kernels to the shared observation index.
+kw_ids <- as.character(Pheno_KW$ObsID)
+for (name in c("GGK_KW", "PGK_KW", "GAK_KW", "PAK_KW")) {
+  K <- get(name)
+  rownames(K) <- kw_ids
+  colnames(K) <- kw_ids
+  assign(name, K)
+}
+ZEZE_KW <- ZEZE_KW[kw_ids, kw_ids, drop = FALSE]
+ZW_KW <- ZW_KW[kw_ids, kw_ids, drop = FALSE]
+
+GGKE_KW <- GGK_KW * ZEZE_KW
+PGKE_KW <- PGK_KW * ZEZE_KW
+GGKW_KW <- GGK_KW * ZW_KW
+PGKW_KW <- PGK_KW * ZW_KW
+GAKE_KW <- GAK_KW * ZEZE_KW
+PAKE_KW <- PAK_KW * ZEZE_KW
+GAKW_KW <- GAK_KW * ZW_KW
+PAKW_KW <- PAK_KW * ZW_KW
+
+# Persist only KW parameters and matrices. GY objects are untouched.
+kw_names <- c(
+  "solG_KW", "solP_KW", "Gl_KW", "Pl_KW",
+  "GGK_KW", "PGK_KW", "GAK_KW", "PAK_KW",
+  "GGKE_KW", "PGKE_KW", "GGKW_KW", "PGKW_KW",
+  "GAKE_KW", "PAKE_KW", "GAKW_KW", "PAKW_KW"
+)
+for (name in kw_names) {
+  suffix <- if (name %in% c("solG_KW", "solP_KW")) ".RDS" else ".rds"
+  saveRDS(get(name), file.path("output/Matrizes", paste0(name, suffix)))
+}
+print(data.frame(
+  Trait = "KW",
+  GenomicGaussianH = solG_KW$par[1],
+  PhenomicGaussianH = solP_KW$par[1],
+  GenomicArccosineDepth = Gl_KW,
+  PhenomicArccosineDepth = Pl_KW
+))
+```
+
 ## 14. Resumir os kernels não lineares
 
 A tabela abaixo fornece uma checagem final de integridade dos kernels não lineares antes da exportação.
