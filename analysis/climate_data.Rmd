@@ -32,9 +32,9 @@ knitr::opts_chunk$set(
 
 This tutorial presents the workflow used to obtain and process daily weather data for the maize experiments conducted in College Station, Texas, during the 2011 and 2012 growing seasons.
 
-The purpose of this script is not only to download daily weather records, but to convert those time series into a concise and biologically meaningful set of **weather-derived covariates**. These covariates summarize the main meteorological conditions of each growing season and are later used to build the **weather kernel (W)** in the final prediction pipeline.
+Daily weather records are transformed into a set of biologically interpretable **weather-derived covariates**. These covariates describe the main meteorological conditions of each growing season and provide the information used to construct the **weather kernel (W)** for genomic prediction.
 
-In the reduced set of 18 models used in the project, the weather kernel is included in models **Eta10-Eta18**. In those models, `W` is used to test whether weather-derived similarity adds useful information beyond the categorical environment effect (`E`) and the genomic (`G`) and phenomic (`P`) kernels. Therefore, `W` should be interpreted as a complementary source of meteorological information and **not** as a replacement for `E`.
+In the 18-model specification, the weather kernel is included in models **Eta10-Eta18**. In those models, `W` is used to test whether weather-derived similarity adds useful information beyond the categorical environment effect (`E`) and the genomic (`G`) and phenomic (`P`) kernels. Therefore, `W` should be interpreted as a complementary source of meteorological information and **not** as a replacement for `E`.
 
 In practical terms, the workflow has four goals:
 
@@ -51,7 +51,7 @@ In practical terms, the workflow has four goals:
 
 **Inputs of this step**
 - location and time information required to query NASA POWER
-- internal settings used to aggregate, summarize, and visualize climate variables
+- settings for aggregating, summarizing, and visualizing the weather variables
 
 **Outputs of this step**
 - annual weather covariates
@@ -229,13 +229,13 @@ Before summarizing the data into weather-derived covariates, it is good practice
 
 First, it helps verify that the downloaded data are coherent and free from obvious structural problems. Second, it helps interpret the climatic contrast between the years under study, which is important for the biological discussion of the experiments.
 
-To make the figures suitable for a scientific article, we define a common visual style and standardize axis titles, units, and panel formatting.
+To make the meteorological patterns comparable across figures, we use consistent axis titles, measurement units, scales, and panel formatting.
 
 ### 5.1 Prepare shared labels for the figures
 
 To keep the figures consistent, we define the month labels only once. This avoids mixing different month formats across panels and makes the comparisons easier to read.
 
-To keep the tutorial easy to follow, most graphical settings are written explicitly rather than hidden inside helper functions. This makes the script longer, but it also makes each plotting decision easier to understand for beginners and intermediate readers.
+Each plot specifies its aesthetic mappings and scales explicitly, making it possible to see how each meteorological variable is represented and to interpret its units.
 
 The next block defines shared labels and date breaks so that the precipitation and temperature figures follow the same visual standard throughout the tutorial.
 
@@ -470,11 +470,7 @@ p3
 
 ### 5.6 Combined main climate figure
 
-After creating the main precipitation and temperature plots, we combine them into a single multi-panel figure. This is useful when the final output is intended for reports, manuscripts, or supplementary material.
-
-The figure is also exported as a high-resolution TIFF file, which is a common requirement for journal submission.
-
-The main precipitation and temperature panels are combined below into a single layout that can be used directly in reports or teaching materials.
+The precipitation and temperature plots are arranged in a multi-panel figure to compare rainfall amounts, their distribution across the growing season, and thermal conditions. The combined figure is saved as a high-resolution TIFF so that axis labels, units, and details remain legible when reproduced.
 
 ```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 5. Multi-panel summary of the main climatic contrasts between years, including daily precipitation by month, monthly precipitation totals, and daily air temperature profiles."}
 main_layout <- "
@@ -518,9 +514,9 @@ ggsave(
 
 In addition to precipitation and temperature, the script also examines solar radiation, wind speed, and relative humidity. These variables are important because they help describe evaporative demand, atmospheric dryness, and energy availability during the crop cycle.
 
-The following plots document secondary weather patterns that are not shown in the main combined panel.
+The additional plots examine radiation, wind speed, and relative humidity separately. Their visual information is then presented together in the combined diagnostic panel.
 
-```{r additional_plots, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 6. Additional daily climatic variables monitored during the maize growing seasons, including solar radiation, wind speed, and relative humidity."}
+```{r additional_plots}
 p4 <- ggplot(
   texas_climate_data,
   aes(x = date, y = ALLSKY_SFC_SW_DWN, color = "Solar radiation")
@@ -629,11 +625,11 @@ p6 <- ggplot(
 
 ### 5.8 Combined figure for additional climate variables
 
-As in the previous subsection, we combine the individual plots into a single figure. The layout was built using `patchwork::wrap_plots()`, which avoids the composition error generated when the patchwork operators are not correctly recognized during rendering.
+As in the previous subsection, `patchwork::wrap_plots()` places the individual plots into a specified layout without changing the underlying weather observations.
 
 These complementary weather plots are then arranged into a compact multi-panel figure for downstream inspection.
 
-```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 7. Multi-panel summary of additional climatic variables across years, including shortwave solar radiation, wind speed, and relative humidity."}
+```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figure 6. Multi-panel summary of additional climatic variables across years, including shortwave solar radiation, wind speed, and relative humidity."}
 additional_layout <- "
 AB
 CC
@@ -763,7 +759,7 @@ The main quantities used here are:
 - **VPD (vapor pressure deficit):** a measure of atmospheric dryness. Higher VPD values indicate stronger evaporative demand, which can increase plant water stress.
 - **Stress-day counts:** simple counts of days exceeding biologically meaningful thresholds, such as high temperature, low humidity, or high VPD.
 
-The code below first creates the daily intermediate variables and then summarizes them by year. This explicit step-by-step format is intentional: it makes the calculations easier to inspect, reuse, and modify.
+The code below first creates the daily intermediate variables and then summarizes them by year. Calculating daily variables before annual aggregation makes the units, thresholds, and relationship between daily values and season-level summaries explicit.
 
 ```{r feature_engineering}
 photoperiod_tbl <- suncalc::getSunlightTimes(
@@ -934,7 +930,7 @@ For example:
 - `VPD_AVG` and `VPD_STRESS_DAYS` capture atmospheric dryness.
 - `RAD_CUM` summarizes the seasonal solar energy available to the crop.
 
-This table is the practical output that connects the climate tutorial to the predictive modeling stage of the project and to the subsequent construction of the weather kernel.
+The resulting annual covariate table summarizes the meteorological conditions of each growing season. These covariates, together with the daily records, are used to construct the weather kernel.
 
 In the final reduced pipeline, these weather-derived outputs are used only in the models that explicitly include `W`, namely Eta10-Eta18. They are not intended to replace the categorical environment effect (`E`), which still captures the distinction among the four macro-environments. Because the weather information is summarized at the year level, CS11_WS and CS11_WW share the 2011 weather signature, whereas CS12_WS and CS12_WW share the 2012 weather signature.
 
@@ -948,7 +944,7 @@ Three files are exported:
 2. `environmental_covariates.csv`: one row per year with the derived annual weather summaries.
 3. `environmental_covariates_expanded.csv`: cleaned daily weather records linked to the annual weather summaries.
 
-The last two files use the `environmental_covariates` names required by the downstream scripts and contain weather-derived covariates.
+The annual and expanded covariate files contain complementary levels of detail: season-level summaries and daily records augmented with those summaries.
 
 Finally, the processed climate outputs are written to disk so that later modules can reuse them without repeating the download and preprocessing stages.
 
@@ -970,9 +966,9 @@ cat("Climate files successfully saved in 'output/climate_results/'.")
 
 ## 8. Final remarks
 
-This tutorial establishes a reproducible weather preprocessing pipeline for the study. Starting from daily weather observations, it produces a curated set of weather-derived covariates and article-ready figures.
+Daily observations from NASA POWER are transformed into annual and daily weather-derived covariates, with diagnostic figures showing the meteorological variation across growing seasons.
 
-In the broader workflow of the project, these outputs are not the final goal. They are intermediate scientific objects that support the construction of the weather kernel (`W`) used in models Eta10-Eta18.
+These weather-derived covariates provide the input for the weather kernel (`W`) used in models Eta10-Eta18.
 
 It is also important to note that the weather kernel does not replace the categorical environment effect (`E`). In this dataset, the 2011 weather signature is shared by CS11_WS and CS11_WW, and the 2012 weather signature is shared by CS12_WS and CS12_WW. Therefore, `W` captures year-specific meteorological similarity, whereas `E` still represents the categorical distinction among the four macro-environments.
 
