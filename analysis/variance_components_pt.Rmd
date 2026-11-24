@@ -104,9 +104,12 @@ Esta seção lista os objetos de matrizes e kernels esperados pelo fluxo de comp
 required_files <- c(
   "ZG.rds", "ZP.rds", "ZE.rds", "ZEZE.rds", "ZW.rds",
   "ZGZE.rds", "ZPZE.rds", "ZGZW.rds", "ZPZW.rds",
-  "GGK.rds", "PGK.rds", "GAK.rds", "PAK.rds",
-  "GGKE.rds", "PGKE.rds", "GGKW.rds", "PGKW.rds",
-  "GAKE.rds", "PAKE.rds", "GAKW.rds", "PAKW.rds",
+  "GGK_GY.rds", "PGK_GY.rds", "GAK_GY.rds", "PAK_GY.rds",
+  "GGKE_GY.rds", "PGKE_GY.rds", "GGKW_GY.rds", "PGKW_GY.rds",
+  "GAKE_GY.rds", "PAKE_GY.rds", "GAKW_GY.rds", "PAKW_GY.rds",
+  "GGK_KW.rds", "PGK_KW.rds", "GAK_KW.rds", "PAK_KW.rds",
+  "GGKE_KW.rds", "PGKE_KW.rds", "GGKW_KW.rds", "PGKW_KW.rds",
+  "GAKE_KW.rds", "PAKE_KW.rds", "GAKW_KW.rds", "PAKW_KW.rds",
   "Pheno.rds", "Pedigree.rds"
 )
 
@@ -202,20 +205,32 @@ ZPZE  <- readRDS(file.path(kernel_dir, "ZPZE.rds"))
 ZGZW  <- readRDS(file.path(kernel_dir, "ZGZW.rds"))
 ZPZW  <- readRDS(file.path(kernel_dir, "ZPZW.rds"))
 
-GGK   <- readRDS(file.path(kernel_dir, "GGK.rds"))
-PGK   <- readRDS(file.path(kernel_dir, "PGK.rds"))
-GAK   <- readRDS(file.path(kernel_dir, "GAK.rds"))
-PAK   <- readRDS(file.path(kernel_dir, "PAK.rds"))
+GGK <- readRDS(file.path(kernel_dir, "GGK_GY.rds"))
+GGK_KW <- readRDS(file.path(kernel_dir, "GGK_KW.rds"))
+PGK <- readRDS(file.path(kernel_dir, "PGK_GY.rds"))
+PGK_KW <- readRDS(file.path(kernel_dir, "PGK_KW.rds"))
+GAK <- readRDS(file.path(kernel_dir, "GAK_GY.rds"))
+GAK_KW <- readRDS(file.path(kernel_dir, "GAK_KW.rds"))
+PAK <- readRDS(file.path(kernel_dir, "PAK_GY.rds"))
+PAK_KW <- readRDS(file.path(kernel_dir, "PAK_KW.rds"))
 
-GGKE  <- readRDS(file.path(kernel_dir, "GGKE.rds"))
-PGKE  <- readRDS(file.path(kernel_dir, "PGKE.rds"))
-GGKW  <- readRDS(file.path(kernel_dir, "GGKW.rds"))
-PGKW  <- readRDS(file.path(kernel_dir, "PGKW.rds"))
+GGKE <- readRDS(file.path(kernel_dir, "GGKE_GY.rds"))
+GGKE_KW <- readRDS(file.path(kernel_dir, "GGKE_KW.rds"))
+PGKE <- readRDS(file.path(kernel_dir, "PGKE_GY.rds"))
+PGKE_KW <- readRDS(file.path(kernel_dir, "PGKE_KW.rds"))
+GGKW <- readRDS(file.path(kernel_dir, "GGKW_GY.rds"))
+GGKW_KW <- readRDS(file.path(kernel_dir, "GGKW_KW.rds"))
+PGKW <- readRDS(file.path(kernel_dir, "PGKW_GY.rds"))
+PGKW_KW <- readRDS(file.path(kernel_dir, "PGKW_KW.rds"))
 
-GAKE  <- readRDS(file.path(kernel_dir, "GAKE.rds"))
-PAKE  <- readRDS(file.path(kernel_dir, "PAKE.rds"))
-GAKW  <- readRDS(file.path(kernel_dir, "GAKW.rds"))
-PAKW  <- readRDS(file.path(kernel_dir, "PAKW.rds"))
+GAKE <- readRDS(file.path(kernel_dir, "GAKE_GY.rds"))
+GAKE_KW <- readRDS(file.path(kernel_dir, "GAKE_KW.rds"))
+PAKE <- readRDS(file.path(kernel_dir, "PAKE_GY.rds"))
+PAKE_KW <- readRDS(file.path(kernel_dir, "PAKE_KW.rds"))
+GAKW <- readRDS(file.path(kernel_dir, "GAKW_GY.rds"))
+GAKW_KW <- readRDS(file.path(kernel_dir, "GAKW_KW.rds"))
+PAKW <- readRDS(file.path(kernel_dir, "PAKW_GY.rds"))
+PAKW_KW <- readRDS(file.path(kernel_dir, "PAKW_KW.rds"))
 
 Pheno    <- readRDS(file.path(kernel_dir, "Pheno.rds"))
 Pedigree <- readRDS(file.path(kernel_dir, "Pedigree.rds"))
@@ -243,17 +258,29 @@ ZPZE <- ZPZE[reference_ids, reference_ids, drop = FALSE]
 ZGZW <- ZGZW[reference_ids, reference_ids, drop = FALSE]
 ZPZW <- ZPZW[reference_ids, reference_ids, drop = FALSE]
 GGK  <- GGK[reference_ids, reference_ids, drop = FALSE]
+GGK_KW <- GGK_KW[reference_ids, reference_ids, drop = FALSE]
 PGK  <- PGK[reference_ids, reference_ids, drop = FALSE]
+PGK_KW <- PGK_KW[reference_ids, reference_ids, drop = FALSE]
 GAK  <- GAK[reference_ids, reference_ids, drop = FALSE]
+GAK_KW <- GAK_KW[reference_ids, reference_ids, drop = FALSE]
 PAK  <- PAK[reference_ids, reference_ids, drop = FALSE]
+PAK_KW <- PAK_KW[reference_ids, reference_ids, drop = FALSE]
 GGKE <- GGKE[reference_ids, reference_ids, drop = FALSE]
+GGKE_KW <- GGKE_KW[reference_ids, reference_ids, drop = FALSE]
 PGKE <- PGKE[reference_ids, reference_ids, drop = FALSE]
+PGKE_KW <- PGKE_KW[reference_ids, reference_ids, drop = FALSE]
 GGKW <- GGKW[reference_ids, reference_ids, drop = FALSE]
+GGKW_KW <- GGKW_KW[reference_ids, reference_ids, drop = FALSE]
 PGKW <- PGKW[reference_ids, reference_ids, drop = FALSE]
+PGKW_KW <- PGKW_KW[reference_ids, reference_ids, drop = FALSE]
 GAKE <- GAKE[reference_ids, reference_ids, drop = FALSE]
+GAKE_KW <- GAKE_KW[reference_ids, reference_ids, drop = FALSE]
 PAKE <- PAKE[reference_ids, reference_ids, drop = FALSE]
+PAKE_KW <- PAKE_KW[reference_ids, reference_ids, drop = FALSE]
 GAKW <- GAKW[reference_ids, reference_ids, drop = FALSE]
+GAKW_KW <- GAKW_KW[reference_ids, reference_ids, drop = FALSE]
 PAKW <- PAKW[reference_ids, reference_ids, drop = FALSE]
+PAKW_KW <- PAKW_KW[reference_ids, reference_ids, drop = FALSE]
 
 kernel_inventory <- tibble(
   kernel = c("ZG", "ZP", "ZEZE", "ZW", "GGK", "PGK", "GAK", "PAK"),
@@ -458,6 +485,31 @@ models[[18]] <- list(
 
 names(models) <- paste0("Eta", seq_along(models))
 
+models_GY <- models
+
+kernels_KW <- list(
+  GGK = GGK_KW, PGK = PGK_KW,
+  GAK = GAK_KW, PAK = PAK_KW,
+  GGKE = GGKE_KW, PGKE = PGKE_KW,
+  GGKW = GGKW_KW, PGKW = PGKW_KW,
+  GAKE = GAKE_KW, PAKE = PAKE_KW,
+  GAKW = GAKW_KW, PAKW = PAKW_KW
+)
+
+models_KW <- models_GY
+
+for (i in seq_along(models_KW)) {
+
+  componentes <- intersect(
+    names(models_KW[[i]]),
+    names(kernels_KW)
+  )
+
+  for (componente in componentes) {
+    models_KW[[i]][[componente]]$K <- kernels_KW[[componente]]
+  }
+}
+
 model_component_lookup <- bind_rows(
   lapply(seq_along(models), function(i) {
     tibble(
@@ -535,6 +587,8 @@ traits  <- c("GY", "KW")
 
 Este é o passo computacionalmente mais caro. O chunk é mantido com `eval=FALSE` para documentar a etapa de ajuste sem rerodar os modelos Bayesianos durante a renderização deste documento.
 
+Os kernels não lineares são específicos para cada característica. Os modelos de GY utilizam as matrizes calibradas para GY, enquanto os modelos de KW utilizam as matrizes calibradas para KW. Os kernels lineares, ambientais e climáticos são compartilhados. A composição dos 18 modelos permanece a mesma para ambas as características.
+
 ```{r parallel-run, eval=FALSE}
 numCores <- parallel::detectCores()
 useCores <- max(1, numCores - 1)
@@ -561,6 +615,12 @@ results_list <- foreach(
   pheno <- data.frame(Pheno)
   y_data <- as.numeric(pheno[[Trait]])
 
+  ETA_trait <- if (Trait == "GY") {
+    models_GY[[Model]]
+  } else {
+    models_KW[[Model]]
+  }
+
   out_dir <- file.path(bglr_runs_dir, Trait, rep_label, eta_label)
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -572,7 +632,7 @@ results_list <- foreach(
   start_time <- Sys.time()
   fit <- BGLR(
     y = y_data,
-    ETA = models[[Model]],
+    ETA = ETA_trait,
     nIter = nIter,
     burnIn = burnIn,
     thin = thin,
@@ -580,8 +640,8 @@ results_list <- foreach(
   )
   end_time <- Sys.time()
 
-  effect_names <- names(models[[Model]])
-  effect_models <- vapply(models[[Model]], function(x) x$model, character(1))
+  effect_names <- names(ETA_trait)
+  effect_models <- vapply(ETA_trait, function(x) x$model, character(1))
   effect_labels <- paste0(effect_names, "_", effect_models)
 
   generated_files <- list.files(

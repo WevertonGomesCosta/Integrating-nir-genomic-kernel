@@ -551,10 +551,18 @@ required_matrix_objects <- c(
   "Pheno", "Pedigree", "Pedigree_communs", "Geno.all", "NIR.all", "W"
 )
 
+gy_kernel_names <- c(
+  "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",
+  "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW"
+)
+
 for (obj_name in required_matrix_objects) {
   assign(
     obj_name,
-    readRDS(file.path("output/Matrizes", paste0(obj_name, ".rds"))),
+    readRDS(file.path(
+      "output/Matrizes",
+      paste0(obj_name, if (obj_name %in% gy_kernel_names) "_GY" else "", ".rds")
+    )),
     envir = .GlobalEnv
   )
 }
@@ -735,7 +743,7 @@ solG <- optim(
 A solução de otimização armazenada fornece o parâmetro de largura utilizado para construir a matriz Gaussiana genômica.
 
 ```{r ggk-read-solution, eval=FALSE}
-solG <- readRDS("output/Matrizes/solG.RDS")
+solG <- readRDS("output/Matrizes/solG_GY.RDS")
 ```
 
 A aplicação da função exponencial às distâncias genômicas padronizadas produz os elementos do kernel Gaussiano genômico.
@@ -795,7 +803,7 @@ solP <- optim(
 A solução armazenada contém os parâmetros estimados utilizados na construção do kernel Gaussiano fenômico.
 
 ```{r pgk-read-solution, eval=FALSE}
-solP <- readRDS("output/Matrizes/solP.RDS")
+solP <- readRDS("output/Matrizes/solP_GY.RDS")
 ```
 
 A função Gaussiana converte as distâncias NIR padronizadas na matriz final de similaridade fenômica.
@@ -1264,6 +1272,11 @@ keep_names <- c(
   "Pheno", "Pedigree", "Pedigree_communs", "Geno.all", "NIR.all", "W"
 )
 
+gy_kernel_names <- c(
+  "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",
+  "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW"
+)
+
 current_objs <- ls(envir = .GlobalEnv)
 to_keep <- intersect(current_objs, keep_names)
 to_remove <- setdiff(current_objs, to_keep)
@@ -1275,7 +1288,8 @@ message(
 )
 
 for (obj_name in to_keep) {
-  saveRDS(get(obj_name), file = file.path("output/Matrizes", paste0(obj_name, ".rds")))
+  suffix <- if (obj_name %in% gy_kernel_names) "_GY" else ""
+  saveRDS(get(obj_name), file = file.path("output/Matrizes", paste0(obj_name, suffix, ".rds")))
 }
 
 rm(list = to_remove, envir = .GlobalEnv)
@@ -1284,11 +1298,12 @@ gc()
 rds_files <- list.files("output/Matrizes", pattern = "\\.rds$", full.names = TRUE)
 
 for (file in rds_files) {
-  obj_name <- tools::file_path_sans_ext(basename(file))
+  stored_name <- tools::file_path_sans_ext(basename(file))
+  obj_name <- sub("_GY$", "", stored_name)
   assign(obj_name, readRDS(file), envir = .GlobalEnv)
 }
 
-message("Objetos recarregados: ", paste(tools::file_path_sans_ext(basename(rds_files)), collapse = ", "))
+message("Objetos recarregados: ", paste(sub("_GY$", "", tools::file_path_sans_ext(basename(rds_files))), collapse = ", "))
 ```
 ## 17. Síntese
 

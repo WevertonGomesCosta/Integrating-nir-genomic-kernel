@@ -39,6 +39,8 @@ The heavy fitting chunks remain disabled by default in the tutorial. Even so, th
 The execution module needs both the matrix objects created upstream and the packages used by the parallel fitting layer. The path logic below uses the current working directory as the project root.
 
 
+Results obtained using trait-specific kernels are stored in `output/results_trait_specific/`. Previous results in `output/results/` are preserved and excluded from the inventory of this revision. Inventory tables are associated with a separate directory at `output/tables/analysis_prediction_trait_specific/`.
+
 ```{r setup}
 rm(list = ls())
 options(scipen = 999)
@@ -56,8 +58,8 @@ library(tidyr)
 
 project_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
 
-results_dir <- file.path(project_root, "output", "results")
-analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction")
+results_dir <- file.path(project_root, "output", "results_trait_specific")
+analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction_trait_specific")
 bglr_runs_dir <- file.path(results_dir, "bglr_runs")
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
@@ -70,6 +72,8 @@ dir.create(bglr_runs_dir, recursive = TRUE, showWarnings = FALSE)
 
 This section rebuilds the execution environment when the file is rendered on its own. It follows the contract of `analysis_prediction.Rmd` and recreates the reduced set of 18 ETA objects exactly as defined in Part I.
 
+The 18 models retain the same composition and component order for GY and KW. Nonlinear kernels are trait-specific, whereas linear, environmental, and weather matrices remain shared. The `Eta_by_trait` object selects the appropriate matrices for each trait in every BGLR fit.
+
 ```{r load-required-objects, eval=FALSE}
 matrices_dir <- file.path(project_root, "output", "Matrizes")
 
@@ -77,9 +81,12 @@ required_matrix_files <- c(
   "Pheno.rds",
   "ZG.rds", "ZP.rds", "ZE.rds", "ZW.rds",
   "ZGZE.rds", "ZPZE.rds", "ZGZW.rds", "ZPZW.rds",
-  "GGK.rds", "PGK.rds", "GAK.rds", "PAK.rds",
-  "GGKE.rds", "PGKE.rds", "GAKE.rds", "PAKE.rds",
-  "GGKW.rds", "PGKW.rds", "GAKW.rds", "PAKW.rds"
+  "GGK_GY.rds", "PGK_GY.rds", "GAK_GY.rds", "PAK_GY.rds",
+  "GGKE_GY.rds", "PGKE_GY.rds", "GAKE_GY.rds", "PAKE_GY.rds",
+  "GGKW_GY.rds", "PGKW_GY.rds", "GAKW_GY.rds", "PAKW_GY.rds",
+  "GGK_KW.rds", "PGK_KW.rds", "GAK_KW.rds", "PAK_KW.rds",
+  "GGKE_KW.rds", "PGKE_KW.rds", "GAKE_KW.rds", "PAKE_KW.rds",
+  "GGKW_KW.rds", "PGKW_KW.rds", "GAKW_KW.rds", "PAKW_KW.rds"
 )
 
 Pheno <- readRDS(file.path(matrices_dir, "Pheno.rds"))
@@ -91,18 +98,30 @@ ZGZE <- readRDS(file.path(matrices_dir, "ZGZE.rds"))
 ZPZE <- readRDS(file.path(matrices_dir, "ZPZE.rds"))
 ZGZW <- readRDS(file.path(matrices_dir, "ZGZW.rds"))
 ZPZW <- readRDS(file.path(matrices_dir, "ZPZW.rds"))
-GGK  <- readRDS(file.path(matrices_dir, "GGK.rds"))
-PGK  <- readRDS(file.path(matrices_dir, "PGK.rds"))
-GAK  <- readRDS(file.path(matrices_dir, "GAK.rds"))
-PAK  <- readRDS(file.path(matrices_dir, "PAK.rds"))
-GGKE <- readRDS(file.path(matrices_dir, "GGKE.rds"))
-PGKE <- readRDS(file.path(matrices_dir, "PGKE.rds"))
-GAKE <- readRDS(file.path(matrices_dir, "GAKE.rds"))
-PAKE <- readRDS(file.path(matrices_dir, "PAKE.rds"))
-GGKW <- readRDS(file.path(matrices_dir, "GGKW.rds"))
-PGKW <- readRDS(file.path(matrices_dir, "PGKW.rds"))
-GAKW <- readRDS(file.path(matrices_dir, "GAKW.rds"))
-PAKW <- readRDS(file.path(matrices_dir, "PAKW.rds"))
+GGK <- readRDS(file.path(matrices_dir, "GGK_GY.rds"))
+GGK_KW <- readRDS(file.path(matrices_dir, "GGK_KW.rds"))
+PGK <- readRDS(file.path(matrices_dir, "PGK_GY.rds"))
+PGK_KW <- readRDS(file.path(matrices_dir, "PGK_KW.rds"))
+GAK <- readRDS(file.path(matrices_dir, "GAK_GY.rds"))
+GAK_KW <- readRDS(file.path(matrices_dir, "GAK_KW.rds"))
+PAK <- readRDS(file.path(matrices_dir, "PAK_GY.rds"))
+PAK_KW <- readRDS(file.path(matrices_dir, "PAK_KW.rds"))
+GGKE <- readRDS(file.path(matrices_dir, "GGKE_GY.rds"))
+GGKE_KW <- readRDS(file.path(matrices_dir, "GGKE_KW.rds"))
+PGKE <- readRDS(file.path(matrices_dir, "PGKE_GY.rds"))
+PGKE_KW <- readRDS(file.path(matrices_dir, "PGKE_KW.rds"))
+GAKE <- readRDS(file.path(matrices_dir, "GAKE_GY.rds"))
+GAKE_KW <- readRDS(file.path(matrices_dir, "GAKE_KW.rds"))
+PAKE <- readRDS(file.path(matrices_dir, "PAKE_GY.rds"))
+PAKE_KW <- readRDS(file.path(matrices_dir, "PAKE_KW.rds"))
+GGKW <- readRDS(file.path(matrices_dir, "GGKW_GY.rds"))
+GGKW_KW <- readRDS(file.path(matrices_dir, "GGKW_KW.rds"))
+PGKW <- readRDS(file.path(matrices_dir, "PGKW_GY.rds"))
+PGKW_KW <- readRDS(file.path(matrices_dir, "PGKW_KW.rds"))
+GAKW <- readRDS(file.path(matrices_dir, "GAKW_GY.rds"))
+GAKW_KW <- readRDS(file.path(matrices_dir, "GAKW_KW.rds"))
+PAKW <- readRDS(file.path(matrices_dir, "PAKW_GY.rds"))
+PAKW_KW <- readRDS(file.path(matrices_dir, "PAKW_KW.rds"))
 
 Pedigree <- unique(Pheno$Pedigree)
 
@@ -207,6 +226,66 @@ Eta_list[[16]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model =
 Eta_list[[17]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = PAKE, model = "RKHS"), list(K = PAKW, model = "RKHS"))
 Eta_list[[18]] <- list(list(X = env_design, model = "BRR"), list(K = ZW, model = "RKHS"), list(K = GAK, model = "RKHS"), list(K = PAK, model = "RKHS"), list(K = GAKE, model = "RKHS"), list(K = PAKE, model = "RKHS"), list(K = GAKW, model = "RKHS"), list(K = PAKW, model = "RKHS"))
 
+Eta_list_GY <- Eta_list
+Eta_list_KW <- Eta_list_GY
+
+Eta_list_KW[[3]][[2]]$K <- GGK_KW
+Eta_list_KW[[3]][[3]]$K <- GGKE_KW
+
+Eta_list_KW[[4]][[2]]$K <- PGK_KW
+Eta_list_KW[[4]][[3]]$K <- PGKE_KW
+
+Eta_list_KW[[5]][[2]]$K <- GAK_KW
+Eta_list_KW[[5]][[3]]$K <- GAKE_KW
+
+Eta_list_KW[[6]][[2]]$K <- PAK_KW
+Eta_list_KW[[6]][[3]]$K <- PAKE_KW
+
+Eta_list_KW[[8]][[2]]$K <- GGK_KW
+Eta_list_KW[[8]][[3]]$K <- PGK_KW
+Eta_list_KW[[8]][[4]]$K <- GGKE_KW
+Eta_list_KW[[8]][[5]]$K <- PGKE_KW
+
+Eta_list_KW[[9]][[2]]$K <- GAK_KW
+Eta_list_KW[[9]][[3]]$K <- PAK_KW
+Eta_list_KW[[9]][[4]]$K <- GAKE_KW
+Eta_list_KW[[9]][[5]]$K <- PAKE_KW
+
+Eta_list_KW[[13]][[3]]$K <- GGK_KW
+Eta_list_KW[[13]][[4]]$K <- GGKE_KW
+Eta_list_KW[[13]][[5]]$K <- GGKW_KW
+
+Eta_list_KW[[14]][[3]]$K <- PGK_KW
+Eta_list_KW[[14]][[4]]$K <- PGKE_KW
+Eta_list_KW[[14]][[5]]$K <- PGKW_KW
+
+Eta_list_KW[[15]][[3]]$K <- GGK_KW
+Eta_list_KW[[15]][[4]]$K <- PGK_KW
+Eta_list_KW[[15]][[5]]$K <- GGKE_KW
+Eta_list_KW[[15]][[6]]$K <- PGKE_KW
+Eta_list_KW[[15]][[7]]$K <- GGKW_KW
+Eta_list_KW[[15]][[8]]$K <- PGKW_KW
+
+Eta_list_KW[[16]][[3]]$K <- GAK_KW
+Eta_list_KW[[16]][[4]]$K <- GAKE_KW
+Eta_list_KW[[16]][[5]]$K <- GAKW_KW
+
+Eta_list_KW[[17]][[3]]$K <- PAK_KW
+Eta_list_KW[[17]][[4]]$K <- PAKE_KW
+Eta_list_KW[[17]][[5]]$K <- PAKW_KW
+
+Eta_list_KW[[18]][[3]]$K <- GAK_KW
+Eta_list_KW[[18]][[4]]$K <- PAK_KW
+Eta_list_KW[[18]][[5]]$K <- GAKE_KW
+Eta_list_KW[[18]][[6]]$K <- PAKE_KW
+Eta_list_KW[[18]][[7]]$K <- GAKW_KW
+Eta_list_KW[[18]][[8]]$K <- PAKW_KW
+
+Eta_by_trait <- list(
+  GY = Eta_list_GY,
+  KW = Eta_list_KW
+)
+
 ```
 
 
@@ -293,7 +372,7 @@ foreach(i = seq_len(nrow(combos)),
 
     y_t <- as.numeric(yield$Y2)
     start_time <- Sys.time()
-    fit <- BGLR(y = y_t, ETA = Eta_list[[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_full)
+    fit <- BGLR(y = y_t, ETA = Eta_by_trait[[trait_id]][[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_full)
     end_time <- Sys.time()
     runtime_full <- as.numeric(difftime(end_time, start_time, units = "secs"))
 
@@ -374,7 +453,7 @@ foreach(i = seq_len(nrow(combos)),
 
       y_t <- as.numeric(yield2$Y2)
       start_time <- Sys.time()
-      fit <- BGLR(y = y_t, ETA = Eta_list[[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_env)
+      fit <- BGLR(y = y_t, ETA = Eta_by_trait[[trait_id]][[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_env)
       end_time <- Sys.time()
       runtime_env <- as.numeric(difftime(end_time, start_time, units = "secs"))
 
@@ -421,7 +500,12 @@ foreach::registerDoSEQ()
 The inventories below summarize the CSV files produced by the execution stage using the current rep/fold folder contract for the 18-model workflow.
 
 ```{r prediction-output-inventory}
-prediction_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE, recursive = TRUE)
+prediction_files <- list.files(
+  file.path(results_dir, c("CV1", "CV2", "CV0", "CV00")),
+  pattern = "\\.csv$",
+  full.names = TRUE,
+  recursive = TRUE
+)
 results_root <- normalizePath(results_dir, winslash = "/", mustWork = FALSE)
 
 cv12_files <- prediction_files[
@@ -432,7 +516,17 @@ cvloo_files <- prediction_files[
   stringr::str_detect(basename(prediction_files), "^CV0{1,2}_")
 ]
 
-inventory_cv12 <- data.frame()
+inventory_cv12 <- data.frame(
+  relative_path = character(),
+  file_name = character(),
+  CV = character(),
+  Trait = character(),
+  Rep = character(),
+  Fold = character(),
+  EtaName = character(),
+  Model = character(),
+  stringsAsFactors = FALSE
+)
 
 for (current_file in cv12_files) {
   current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
@@ -458,7 +552,18 @@ for (current_file in cv12_files) {
   )
 }
 
-inventory_cvloo <- data.frame()
+inventory_cvloo <- data.frame(
+  relative_path = character(),
+  file_name = character(),
+  CV = character(),
+  Env_leave = character(),
+  Trait = character(),
+  Rep = character(),
+  Fold = character(),
+  EtaName = character(),
+  Model = character(),
+  stringsAsFactors = FALSE
+)
 
 for (current_file in cvloo_files) {
   current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
@@ -523,7 +628,7 @@ counts_by_cv %>%
 
 ## 11. BGLR fitting artifacts
 
-In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results/bglr_runs/` during each fit and preserved for later convergence diagnostics. Because CV1/CV2 share one fit and CV0/CV00 share one fit, there are only two fit-owning BGLR trees: `bglr_runs/CV1/` and `bglr_runs/CV0/`. CV2 and CV00 have separate prediction-result CSV trees, but they do not create independent BGLR artifacts. This distinction keeps the stored artifacts aligned with the actual fitting code and avoids implying that CV2 or CV00 were refitted separately.
+In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results_trait_specific/bglr_runs/` during each fit and preserved for later convergence diagnostics. Because CV1/CV2 share one fit and CV0/CV00 share one fit, there are only two fit-owning BGLR trees: `bglr_runs/CV1/` and `bglr_runs/CV0/`. CV2 and CV00 have separate prediction-result CSV trees, but they do not create independent BGLR artifacts. This distinction keeps the stored artifacts aligned with the actual fitting code and avoids implying that CV2 or CV00 were refitted separately.
 
 ## 12. Final note
 

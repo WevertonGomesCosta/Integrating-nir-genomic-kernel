@@ -76,6 +76,8 @@ Esses objetos representam partes diferentes do problema. `Pheno` contém a estru
 
 Ler esses objetos diretamente de `output/Matrizes/` é importante por duas razões. Primeiro, isso mantém o fluxo reprodutível, fazendo a predição depender do mesmo conjunto de objetos armazenados ao longo do projeto. Segundo, isso permite ao leitor ver como o módulo de predição está conectado à etapa de harmonização e construção de kernels.
 
+Os kernels não lineares são carregados separadamente para GY e KW, utilizando os arquivos com os respectivos sufixos. As matrizes lineares, ambientais e climáticas são compartilhadas entre as duas características.
+
 ```{r load-inputs}
 Pheno <- readRDS("output/Matrizes/Pheno.rds")
 
@@ -89,20 +91,32 @@ ZPZE <- readRDS("output/Matrizes/ZPZE.rds")
 ZGZW <- readRDS("output/Matrizes/ZGZW.rds")
 ZPZW <- readRDS("output/Matrizes/ZPZW.rds")
 
-GGK  <- readRDS("output/Matrizes/GGK.rds")
-PGK  <- readRDS("output/Matrizes/PGK.rds")
-GAK  <- readRDS("output/Matrizes/GAK.rds")
-PAK  <- readRDS("output/Matrizes/PAK.rds")
+GGK <- readRDS("output/Matrizes/GGK_GY.rds")
+GGK_KW <- readRDS("output/Matrizes/GGK_KW.rds")
+PGK <- readRDS("output/Matrizes/PGK_GY.rds")
+PGK_KW <- readRDS("output/Matrizes/PGK_KW.rds")
+GAK <- readRDS("output/Matrizes/GAK_GY.rds")
+GAK_KW <- readRDS("output/Matrizes/GAK_KW.rds")
+PAK <- readRDS("output/Matrizes/PAK_GY.rds")
+PAK_KW <- readRDS("output/Matrizes/PAK_KW.rds")
 
-GGKE <- readRDS("output/Matrizes/GGKE.rds")
-PGKE <- readRDS("output/Matrizes/PGKE.rds")
-GAKE <- readRDS("output/Matrizes/GAKE.rds")
-PAKE <- readRDS("output/Matrizes/PAKE.rds")
+GGKE <- readRDS("output/Matrizes/GGKE_GY.rds")
+GGKE_KW <- readRDS("output/Matrizes/GGKE_KW.rds")
+PGKE <- readRDS("output/Matrizes/PGKE_GY.rds")
+PGKE_KW <- readRDS("output/Matrizes/PGKE_KW.rds")
+GAKE <- readRDS("output/Matrizes/GAKE_GY.rds")
+GAKE_KW <- readRDS("output/Matrizes/GAKE_KW.rds")
+PAKE <- readRDS("output/Matrizes/PAKE_GY.rds")
+PAKE_KW <- readRDS("output/Matrizes/PAKE_KW.rds")
 
-GGKW <- readRDS("output/Matrizes/GGKW.rds")
-PGKW <- readRDS("output/Matrizes/PGKW.rds")
-GAKW <- readRDS("output/Matrizes/GAKW.rds")
-PAKW <- readRDS("output/Matrizes/PAKW.rds")
+GGKW <- readRDS("output/Matrizes/GGKW_GY.rds")
+GGKW_KW <- readRDS("output/Matrizes/GGKW_KW.rds")
+PGKW <- readRDS("output/Matrizes/PGKW_GY.rds")
+PGKW_KW <- readRDS("output/Matrizes/PGKW_KW.rds")
+GAKW <- readRDS("output/Matrizes/GAKW_GY.rds")
+GAKW_KW <- readRDS("output/Matrizes/GAKW_KW.rds")
+PAKW <- readRDS("output/Matrizes/PAKW_GY.rds")
+PAKW_KW <- readRDS("output/Matrizes/PAKW_KW.rds")
 ```
 
 Na versão atual do pipeline, as matrizes em nível de observação disponíveis em `output/Matrizes/` usam os nomes `ZE`, `ZGZE`, `ZPZE`, `ZGZW` e `ZPZW` para representar o desenho categórico de ambiente e as estruturas de interação que conectam informação genômica e fenômica a ambiente e clima. Manter esses nomes explícitos aqui ajuda o leitor a conectar os arquivos armazenados às estruturas de predição definidas mais adiante neste módulo.
@@ -366,9 +380,79 @@ Eta_list[[18]] <- list(list(X = model.matrix(~ Pheno$Env - 1), model = "BRR"),
 
 Antes de avançar para o desenho da validação, é útil verificar se a representação computacional dos modelos está completa. Essa checagem final confirma que o número de objetos ETA coincide com o número de modelos listados no catálogo. Manter essas duas estruturas alinhadas é essencial, porque as etapas seguintes assumem que rótulos de modelos, números de modelos e especificações ETA se referem ao mesmo conjunto ordenado de 18 modelos.
 
+A lista original define os modelos de GY. Para KW, preservamos a mesma composição e a mesma ordem dos componentes, substituindo apenas as matrizes não lineares pelas matrizes calibradas para essa característica. O objeto `Eta_by_trait` reúne as duas listas para permitir a seleção do modelo de acordo com a característica analisada.
+
 ```{r eta-list-check}
-stopifnot(length(Eta_list) == nrow(model_catalog))
-length(Eta_list)
+Eta_list_GY <- Eta_list
+
+Eta_list_KW <- Eta_list_GY
+
+Eta_list_KW[[3]][[2]]$K <- GGK_KW
+Eta_list_KW[[3]][[3]]$K <- GGKE_KW
+
+Eta_list_KW[[4]][[2]]$K <- PGK_KW
+Eta_list_KW[[4]][[3]]$K <- PGKE_KW
+
+Eta_list_KW[[5]][[2]]$K <- GAK_KW
+Eta_list_KW[[5]][[3]]$K <- GAKE_KW
+
+Eta_list_KW[[6]][[2]]$K <- PAK_KW
+Eta_list_KW[[6]][[3]]$K <- PAKE_KW
+
+Eta_list_KW[[8]][[2]]$K <- GGK_KW
+Eta_list_KW[[8]][[3]]$K <- PGK_KW
+Eta_list_KW[[8]][[4]]$K <- GGKE_KW
+Eta_list_KW[[8]][[5]]$K <- PGKE_KW
+
+Eta_list_KW[[9]][[2]]$K <- GAK_KW
+Eta_list_KW[[9]][[3]]$K <- PAK_KW
+Eta_list_KW[[9]][[4]]$K <- GAKE_KW
+Eta_list_KW[[9]][[5]]$K <- PAKE_KW
+
+Eta_list_KW[[13]][[3]]$K <- GGK_KW
+Eta_list_KW[[13]][[4]]$K <- GGKE_KW
+Eta_list_KW[[13]][[5]]$K <- GGKW_KW
+
+Eta_list_KW[[14]][[3]]$K <- PGK_KW
+Eta_list_KW[[14]][[4]]$K <- PGKE_KW
+Eta_list_KW[[14]][[5]]$K <- PGKW_KW
+
+Eta_list_KW[[15]][[3]]$K <- GGK_KW
+Eta_list_KW[[15]][[4]]$K <- PGK_KW
+Eta_list_KW[[15]][[5]]$K <- GGKE_KW
+Eta_list_KW[[15]][[6]]$K <- PGKE_KW
+Eta_list_KW[[15]][[7]]$K <- GGKW_KW
+Eta_list_KW[[15]][[8]]$K <- PGKW_KW
+
+Eta_list_KW[[16]][[3]]$K <- GAK_KW
+Eta_list_KW[[16]][[4]]$K <- GAKE_KW
+Eta_list_KW[[16]][[5]]$K <- GAKW_KW
+
+Eta_list_KW[[17]][[3]]$K <- PAK_KW
+Eta_list_KW[[17]][[4]]$K <- PAKE_KW
+Eta_list_KW[[17]][[5]]$K <- PAKW_KW
+
+Eta_list_KW[[18]][[3]]$K <- GAK_KW
+Eta_list_KW[[18]][[4]]$K <- PAK_KW
+Eta_list_KW[[18]][[5]]$K <- GAKE_KW
+Eta_list_KW[[18]][[6]]$K <- PAKE_KW
+Eta_list_KW[[18]][[7]]$K <- GAKW_KW
+Eta_list_KW[[18]][[8]]$K <- PAKW_KW
+
+Eta_by_trait <- list(
+  GY = Eta_list_GY,
+  KW = Eta_list_KW
+)
+
+stopifnot(
+  length(Eta_list_GY) == nrow(model_catalog),
+  length(Eta_list_KW) == nrow(model_catalog)
+)
+
+data.frame(
+  Trait = names(Eta_by_trait),
+  Models = lengths(Eta_by_trait)
+)
 ```
 
 ## 7. Desenho da validação cruzada

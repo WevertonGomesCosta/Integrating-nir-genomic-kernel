@@ -730,7 +730,7 @@ solG <- optim(
 The code below reads and inspects the selected genomic Gaussian-kernel solution so the final object can be built explicitly.
 
 ```{r ggk-read-solution, include=FALSE}
-solG <- readRDS("output/Matrizes/solG.RDS")
+solG <- readRDS("output/Matrizes/solG_GY.RDS")
 ```
 
 The code below constructs the final genomic Gaussian kernel using the selected parameter value.
@@ -790,7 +790,7 @@ solP <- optim(
 The code below reads and checks the selected phenomic Gaussian-kernel solution before final construction.
 
 ```{r pgk-read-solution, include=FALSE}
-solP <- readRDS("output/Matrizes/solP.RDS")
+solP <- readRDS("output/Matrizes/solP_GY.RDS")
 ```
 
 The code below builds the final phenomic Gaussian kernel with the chosen bandwidth.
@@ -1282,6 +1282,11 @@ keep_names <- c(
   "Pheno", "Pedigree", "Pedigree_communs", "Geno.all", "NIR.all", "W"
 )
 
+gy_kernel_names <- c(
+  "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",
+  "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW"
+)
+
 current_objs <- ls(envir = .GlobalEnv)
 to_keep <- intersect(current_objs, keep_names)
 to_remove <- setdiff(current_objs, to_keep)
@@ -1293,7 +1298,8 @@ message(
 )
 
 for (obj_name in to_keep) {
-  saveRDS(get(obj_name), file = file.path("output/Matrizes", paste0(obj_name, ".rds")))
+  suffix <- if (obj_name %in% gy_kernel_names) "_GY" else ""
+  saveRDS(get(obj_name), file = file.path("output/Matrizes", paste0(obj_name, suffix, ".rds")))
 }
 
 rm(list = to_remove, envir = .GlobalEnv)
@@ -1302,11 +1308,12 @@ gc()
 rds_files <- list.files("output/Matrizes", pattern = "\\.rds$", full.names = TRUE)
 
 for (file in rds_files) {
-  obj_name <- tools::file_path_sans_ext(basename(file))
+  stored_name <- tools::file_path_sans_ext(basename(file))
+  obj_name <- sub("_GY$", "", stored_name)
   assign(obj_name, readRDS(file), envir = .GlobalEnv)
 }
 
-message("Objects reloaded: ", paste(tools::file_path_sans_ext(basename(rds_files)), collapse = ", "))
+message("Objects reloaded: ", paste(sub("_GY$", "", tools::file_path_sans_ext(basename(rds_files))), collapse = ", "))
 ```
 
 ## 17. Summary
