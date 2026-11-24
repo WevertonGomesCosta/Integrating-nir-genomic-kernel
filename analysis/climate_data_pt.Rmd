@@ -32,13 +32,13 @@ knitr::opts_chunk$set(
 
 Este tutorial apresenta o fluxo de trabalho usado para obter e processar dados meteorológicos diários para os experimentos com milho conduzidos em College Station, Texas, durante as safras de 2011 e 2012.
 
-O objetivo deste fluxo é documentar como registros meteorológicos diários são convertidos em um conjunto conciso e biologicamente interpretável de **covariáveis derivadas do clima**. Essas covariáveis resumem as principais condições meteorológicas de cada safra e são usadas posteriormente para construir o **kernel climático (W)** no pipeline final de predição.
+Os registros meteorológicos diários são transformados em um conjunto de **covariáveis derivadas do clima** com interpretação biológica. Essas covariáveis descrevem as principais condições meteorológicas de cada safra e fornecem as informações usadas na construção do **kernel climático (W)** para predição genômica.
 
-No conjunto reduzido de 18 modelos usado no projeto, o kernel climático é incluído nos modelos **Eta10-Eta18**. Nesses modelos, `W` é usado para testar se a similaridade derivada do clima adiciona informação útil além do efeito categórico de ambiente (`E`) e dos kernels genômico (`G`) e fenômico (`P`). Portanto, `W` deve ser interpretado como uma fonte complementar de informação meteorológica e **não** como substituto de `E`.
+Na especificação de 18 modelos, o kernel climático é incluído nos modelos **Eta10-Eta18**. Nesses modelos, `W` é usado para testar se a similaridade derivada do clima adiciona informação útil além do efeito categórico de ambiente (`E`) e dos kernels genômico (`G`) e fenômico (`P`). Portanto, `W` deve ser interpretado como uma fonte complementar de informação meteorológica e **não** como substituto de `E`.
 
 Em termos práticos, o fluxo tem quatro objetivos:
 
-1. Documentar a recuperação dos dados meteorológicos diários da base NASA POWER.
+1. Obter os dados meteorológicos diários da base NASA POWER.
 2. Organizar os dados brutos em uma tabela reprodutível.
 3. Inspecionar visualmente as principais diferenças climáticas entre os anos.
 4. Derivar descritores climáticos anuais e diários que depois poderão ser usados para construir o kernel climático.
@@ -51,7 +51,7 @@ Em termos práticos, o fluxo tem quatro objetivos:
 
 **Entradas desta etapa**
 - informações de local e tempo necessárias para consultar a NASA POWER
-- configurações internas usadas para agregar, resumir e visualizar as variáveis climáticas
+- configurações para agregar, resumir e visualizar as variáveis meteorológicas
 
 **Saídas desta etapa**
 - covariáveis climáticas anuais
@@ -63,14 +63,17 @@ Em termos práticos, o fluxo tem quatro objetivos:
 
 ## 2. Ambiente em R
 
-Cada pacote tem um papel claro no fluxo:
+Antes de iniciar a análise, carregamos os pacotes necessários à recuperação dos dados, à manipulação das tabelas e à construção das figuras.
 
-- `tidyverse`: apoia manipulação de dados e gráficos.
+Cada pacote tem um papel claro no procedimento:
+
+- `nasapower`: fornece a interface de consulta à base NASA POWER.
+- `tidyverse`: apoia a manipulação de dados e a construção de gráficos.
 - `lubridate`: simplifica conversão de datas e operações baseadas em calendário.
 - `patchwork`: combina múltiplas figuras do `ggplot2` em painéis prontos para publicação.
 - `ggthemes`: fornece as escalas discretas do Google Docs usadas para padronizar cores entre as figuras.
 - `kableExtra`: melhora a apresentação de tabelas HTML no tutorial.
-- `suncalc`: calcula nascer e pôr do sol e, a partir deles, o fotoperíodo diário.
+- `suncalc`: permite calcular os horários do nascer e do pôr do sol utilizados para determinar o fotoperíodo.
 
 ```{r packages}
 # Descomente se a instalação for necessária
@@ -89,15 +92,15 @@ climate_results_dir <- "output/climate_results"
 
 ## 3. Parâmetros da consulta
 
-Nesta seção, definimos as entradas básicas da consulta à NASA POWER. Essas entradas determinam **onde**, **quando** e **quais variáveis climáticas** serão recuperadas.
+Nesta seção, definimos as entradas da consulta à NASA POWER. Elas determinam **onde**, **quando** e **quais variáveis climáticas** serão obtidas.
 
-As coordenadas geográficas identificam o local experimental. As datas inicial e final definem a janela da safra a ser analisada. O vetor `params` lista as variáveis climáticas diárias necessárias para os resumos posteriores, como precipitação, temperatura, umidade relativa, radiação solar e velocidade do vento.
+A estação experimental estava localizada em 30°33′04.8″ N, 96°26′00.3″ W (aproximadamente 30.55133° N, 96.43342° W). Essas coordenadas são utilizadas tanto na consulta à NASA POWER quanto nos cálculos de fotoperíodo.
 
-A estação experimental estava localizada em 30°33′04.8″ N, 96°26′00.3″ W (aproximadamente 30.55133° N, 96.43342° W). Essas coordenadas são usadas tanto para a consulta à NASA POWER quanto para os cálculos dependentes de coordenadas, como o fotoperíodo.
+As datas de início e término delimitam a janela da safra. O vetor `params` especifica as variáveis meteorológicas diárias utilizadas nos resumos posteriores, como precipitação, temperatura, umidade relativa, radiação solar e velocidade do vento.
 
 Essas variáveis foram escolhidas porque permitem derivar descritores climáticos com interpretação agronômica direta, como precipitação acumulada, graus-dia, estresse térmico e déficit de pressão de vapor.
 
-Em seguida, definimos a localização do estudo, os anos e os metadados básicos que controlam quais séries meteorológicas serão usadas e como os resultados serão identificados.
+O próximo bloco define a localização do experimento, os períodos das safras e as variáveis solicitadas à NASA POWER.
 
 ```{r parameters}
 # Coordenadas da estação experimental
@@ -126,17 +129,15 @@ params <- c(
 )
 ```
 
-## 4. Documentação da recuperação dos dados na NASA POWER
+## 4. Obter os dados meteorológicos da NASA POWER
 
-Esta seção documenta a lógica usada para obter os dados climáticos diários da NASA POWER. A consulta é apresentada apenas como referência didática; a base usada neste documento é lida a partir dos arquivos já disponíveis em `output/climate_results/`.
+Esta etapa recupera os dados meteorológicos diários da NASA POWER.
 
-A consulta é documentada separadamente para cada safra. Isso mantém o fluxo transparente e facilita conferir a origem de cada ano experimental. Depois que as tabelas anuais estão disponíveis, elas podem ser reunidas em um único objeto para as etapas restantes da análise.
+Uma consulta é realizada para cada safra, o que permite conferir separadamente os registros dos dois anos experimentais. Em seguida, as tabelas anuais são reunidas em um único conjunto de dados para as análises posteriores.
 
-### 4.1 Código de consulta dos dados climáticos diários de cada ano
+### 4.1 Consultar os dados climáticos diários de cada ano
 
-O código abaixo documenta duas requisições independentes ao serviço NASA POWER, uma para 2011 e outra para 2012. Um identificador `year` é adicionado imediatamente após a obtenção para que a origem de cada registro permaneça explícita ao longo de todo o fluxo.
-
-A etapa a seguir documenta a consulta principal dos dados meteorológicos diários da NASA POWER e a construção da tabela bruta usada nas etapas seguintes.
+O código envia duas consultas independentes à NASA POWER, uma para 2011 e outra para 2012. Após a obtenção dos dados, o identificador `year` é acrescentado a cada conjunto, permitindo reconhecer a origem de cada registro nas etapas seguintes.
 
 ```{r get_data, eval=FALSE}
 data_tx_2011 <- get_power(
@@ -158,13 +159,13 @@ data_tx_2012 <- get_power(
   mutate(year = 2012)
 ```
 
-### 4.2 Código de organização da base bruta
+### 4.2 Reunir, formatar e salvar os dados brutos
 
 Depois que as duas tabelas anuais estão disponíveis, elas são reunidas em um único conjunto de dados e a coluna de data é convertida para um formato de data apropriado do R. Essa etapa é essencial porque a data original é retornada como uma string numérica, e as visualizações posteriores dependem de um objeto de data válido.
 
-No fluxo completo, o conjunto bruto diário é preservado como arquivo CSV. Isso é importante para reprodutibilidade porque mantém a versão exata dos dados recuperados usada na análise.
+Os registros diários brutos também são salvos em um arquivo CSV. Essa etapa preserva a versão dos dados meteorológicos utilizada nas análises e permite reproduzir os resultados.
 
-Na sequência, as tabelas anuais são reunidas e as variáveis meteorológicas necessárias são completadas para formar o conjunto climático final do pipeline.
+As tabelas anuais são reunidas, as datas são convertidas para o formato adequado do R e uma amostra das observações é apresentada para inspeção antes do salvamento.
 
 ```{r get_data2, eval=FALSE}
 texas_climate_data <- bind_rows(data_tx_2011, data_tx_2012) %>%
@@ -262,21 +263,21 @@ knitr::kable(
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
-## 5. Análise exploratória e leitura das figuras
+## 5. Análise exploratória e construção das figuras
 
 Antes de resumir os dados em covariáveis derivadas do clima, é boa prática inspecionar visualmente as séries diárias. Essa etapa cumpre dois objetivos.
 
 Primeiro, ajuda a verificar se os dados disponíveis são coerentes e livres de problemas estruturais evidentes. Segundo, ajuda a interpretar o contraste climático entre os anos em estudo, o que é importante para a discussão biológica dos experimentos.
 
-As figuras são construídas durante a renderização a partir dos dados já carregados. Nesta etapa, os gráficos aparecem diretamente no HTML do tutorial, sem comandos de salvamento de figura.
+Para comparar os padrões meteorológicos entre as figuras, utilizamos títulos de eixos, unidades de medida, escalas e formatos de painéis consistentes.
 
-### 5.1 Documentar os rótulos compartilhados usados nas figuras
+### 5.1 Preparar os rótulos compartilhados das figuras
 
 Para manter as figuras consistentes, definimos os rótulos dos meses apenas uma vez. Isso evita misturar formatos diferentes de mês entre os painéis e torna as comparações mais fáceis de ler.
 
-Neste tutorial, as configurações gráficas são escritas diretamente dentro de cada figura. Isso torna o código mais longo, mas também mais fácil de acompanhar para leitores que ainda estão aprendendo como cada gráfico é construído.
+Cada gráfico especifica suas variáveis estéticas e escalas de forma explícita, permitindo compreender como cada variável meteorológica é representada e interpretar suas unidades.
 
-As configurações gráficas compartilhadas abaixo garantem que as figuras de precipitação e temperatura sigam o mesmo padrão visual.
+O bloco seguinte define rótulos e marcações de datas compartilhados para que as figuras de precipitação e temperatura usem a mesma apresentação ao longo do tutorial.
 
 ```{r figure_settings}
 month_levels <- 5:9
@@ -307,7 +308,7 @@ daily_data_with_parts <- texas_climate_data %>%
 
 Esta primeira figura fornece uma visão direta da chuva diária ao longo do tempo. Ela é útil para identificar períodos secos, concentração de chuvas e diferenças amplas entre os dois anos.
 
-A primeira visualização de precipitação oferece um resumo amplo do comportamento da chuva nas condições avaliadas.
+O gráfico permite observar a distribuição diária da precipitação e identificar períodos secos, concentração de eventos chuvosos e diferenças entre os anos.
 
 ```{r plot_precipitation_overview, fig.width=10, fig.height=5.8, fig.align="center", fig.cap="Figura 1. Precipitação diária ao longo das safras de milho de 2011 e 2012 em College Station, Texas. As barras representam a precipitação diária corrigida obtida da NASA POWER."}
 p_precip_daily <- ggplot(
@@ -359,7 +360,7 @@ A figura seguinte reorganiza a mesma informação de chuva de uma forma que faci
 
 Esse layout é especialmente útil quando o objetivo é verificar se uma safra foi sistematicamente mais seca ou mais chuvosa em períodos específicos do desenvolvimento da cultura.
 
-Em seguida, a precipitação é reorganizada em visualizações agrupadas para facilitar a comparação entre ambientes.
+O código reorganiza os dados em grupos mensais para facilitar a comparação dos padrões de precipitação entre os anos.
 
 ```{r plot_precipitation_grouped, fig.width=12, fig.height=6.4, fig.align="center", fig.cap="Figura 2. Precipitação diária organizada por dia do mês dentro de cada mês para facilitar a comparação entre anos durante a safra."}
 p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill = Year)) +
@@ -407,7 +408,7 @@ p1
 
 A precipitação diária é informativa, mas os totais mensais fornecem um resumo sazonal mais simples. Esta figura agrega a série diária e permite uma comparação mais limpa da entrada cumulativa de água entre anos e meses.
 
-Depois disso, a precipitação é resumida em nível mensal para destacar com mais clareza os contrastes sazonais.
+O agrupamento por ano e mês produz totais de precipitação que permitem comparar a disponibilidade de chuva durante as safras.
 
 ```{r plot_monthly_precipitation, fig.width=8.5, fig.height=5.4, fig.align="center", fig.cap="Figura 3. Totais mensais de precipitação durante as safras de milho de 2011 e 2012 em College Station, Texas."}
 monthly_precip <- texas_climate_data %>%
@@ -463,7 +464,7 @@ A temperatura é outro descritor central do ambiente de cultivo. Nesta figura, c
 
 As linhas suavizadas tracejadas não substituem os dados originais. Seu papel é apenas ajudar a visualizar as tendências sazonais gerais para cada métrica de temperatura.
 
-A figura de temperatura abaixo é usada para comparar o perfil térmico dos ambientes ao longo do tempo.
+As curvas de temperatura mínima, média e máxima permitem identificar a amplitude térmica diária e os contrastes entre as safras.
 
 ```{r plot_temperature, fig.width=10, fig.height=6, fig.align="center", fig.cap="Figura 4. Temperatura mínima, média e máxima diária do ar durante as safras de milho de 2011 e 2012. As linhas tracejadas indicam tendências LOESS usadas apenas para auxiliar a interpretação visual."}
 temperature_data <- texas_climate_data %>%
@@ -533,9 +534,7 @@ p3
 
 ### 5.6 Figura climática principal combinada
 
-Depois que os gráficos principais de precipitação e temperatura estão disponíveis, eles podem ser organizados em uma única figura multipainel. Isso é útil quando a saída final se destina a relatórios, manuscritos ou material suplementar.
-
-Os principais painéis de precipitação e temperatura são organizados abaixo em um único arranjo, pronto para inspeção ou uso em relatórios.
+Os gráficos de precipitação e temperatura são organizados em uma figura com múltiplos painéis para comparar a quantidade de chuva, sua distribuição ao longo da safra e as condições térmicas. A figura combinada é salva como TIFF de alta resolução para preservar a legibilidade dos eixos, unidades e detalhes quando reproduzida.
 
 ```{r combined_main_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 5. Resumo em múltiplos painéis dos principais contrastes climáticos entre os anos, incluindo precipitação diária por mês, totais mensais de precipitação e perfis diários de temperatura do ar."}
 main_layout <- "
@@ -573,9 +572,9 @@ print(combined_plot)
 
 Além de precipitação e temperatura, o script também examina radiação solar, velocidade do vento e umidade relativa. Essas variáveis são importantes porque ajudam a descrever demanda evaporativa, secura atmosférica e disponibilidade de energia ao longo do ciclo da cultura.
 
-Os gráficos complementares abaixo são preparados para documentar padrões climáticos secundários que não aparecem no painel principal.
+Os gráficos adicionais examinam separadamente radiação solar, velocidade do vento e umidade relativa. Essas informações são apresentadas em conjunto no painel diagnóstico combinado.
 
-```{r additional_plots, include=FALSE}
+```{r additional_plots}
 p4 <- ggplot(
   texas_climate_data,
   aes(x = date, y = ALLSKY_SFC_SW_DWN, color = "Radiação solar")
@@ -697,11 +696,11 @@ p6 <- ggplot(
 
 ### 5.8 Figura combinada para variáveis climáticas adicionais
 
-Como na subseção anterior, os gráficos individuais são combinados em uma única figura. O layout usa `patchwork::wrap_plots()`, o que evita erros de composição quando os operadores do patchwork não são reconhecidos corretamente durante a renderização.
+Como na subseção anterior, `patchwork::wrap_plots()` organiza os gráficos individuais em um arranjo especificado, sem alterar as observações meteorológicas subjacentes.
 
-As figuras climáticas complementares são organizadas abaixo em um painel compacto de múltiplos gráficos.
+Os gráficos complementares são apresentados abaixo em um único painel, permitindo comparar seus padrões sazonais.
 
-```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 7. Resumo em múltiplos painéis das variáveis climáticas adicionais entre os anos, incluindo radiação solar de ondas curtas, velocidade do vento e umidade relativa."}
+```{r combined_additional_plot, fig.width=12, fig.height=10, fig.align="center", fig.cap="Figura 6. Resumo em múltiplos painéis das variáveis climáticas adicionais entre os anos, incluindo radiação solar de ondas curtas, velocidade do vento e umidade relativa."}
 additional_layout <- "
 AB
 CC
@@ -735,19 +734,24 @@ print(combined_additional_plots)
 
 ## 6. Covariáveis derivadas do clima
 
-A próxima etapa transforma os registros climáticos diários em variáveis-resumo anuais. Esta é a transição analítica mais importante do script, porque converte uma série temporal bruta em atributos que podem ser usados em modelos preditivos posteriores.
+A etapa seguinte transforma os registros climáticos diários em variáveis-resumo anuais. Essa passagem converte séries temporais em características utilizadas nos modelos de predição.
 
 Esses resumos foram pensados para capturar aspectos biologicamente relevantes de cada safra, incluindo acúmulo térmico, disponibilidade de água, secura atmosférica e frequência de estresse.
 
-### 6.1 Derivar variáveis intermediárias diárias
+### 6.1 Calcular as variáveis intermediárias diárias
 
-Algumas covariáveis derivadas do clima dependem de quantidades que não são fornecidas diretamente pela NASA POWER. Por isso, primeiro calculamos variáveis intermediárias diárias como graus-dia (GDD), fotoperíodo, razão fototérmica (PTR), amplitude térmica diária, temperatura média diária, pressão de vapor de saturação, pressão de vapor real e déficit de pressão de vapor (VPD).
+Alguns descritores meteorológicos úteis não são disponibilizados diretamente pela NASA POWER. É necessário calculá-los a partir das variáveis diárias.
 
-Neste tutorial, `PHOTOPERIOD_HOURS` representa o fotoperíodo diário em horas, calculado a partir das coordenadas da estação experimental, e é preservado como variável intermediária reprodutível. A variável `PTR_DAILY` é a razão entre o fotoperíodo diário e os graus-dia (`GDD`). Ela é calculada apenas quando `GDD > 0`, evitando divisão por zero ou valores sem interpretação biológica. O resumo anual correspondente é `PTR_AVG`.
+As principais quantidades utilizadas são:
 
-Essas variáveis intermediárias são calculadas dia a dia e depois resumidas no nível anual na próxima subseção.
+- **GDD (graus-dia de desenvolvimento):** medida do acúmulo térmico. Temperaturas abaixo da temperatura-base são consideradas insuficientes para o desenvolvimento da cultura, enquanto temperaturas acima do limite superior são restringidas para evitar superestimar o calor útil.
+- **Fotoperíodo:** duração diária da luz, calculada a partir da data e das coordenadas da estação experimental por meio dos horários de nascer e pôr do sol.
+- **PTR (razão fototérmica):** razão entre o fotoperíodo em horas e os GDD diários. É calculada apenas quando `GDD > 0`, pois a razão não é definida quando o acúmulo térmico é nulo ou negativo.
+- **DTR (amplitude térmica diária):** diferença entre as temperaturas máxima e mínima diárias, que resume a amplitude térmica entre dia e noite.
+- **VPD (déficit de pressão de vapor):** indicador de secura atmosférica. Valores elevados de VPD indicam maior demanda evaporativa, o que pode intensificar o estresse hídrico das plantas.
+- **Contagem de dias de estresse:** número de dias que excedem limiares biologicamente relevantes, como temperatura elevada, baixa umidade relativa ou VPD alto.
 
-A etapa a seguir documenta o cálculo das covariáveis climáticas anuais e expandidas que serão usadas depois na construção das entradas derivadas do clima.
+Primeiro são calculadas as variáveis intermediárias diárias; em seguida, elas são resumidas por ano. Essa separação torna explícitas as unidades, os limiares e a relação entre valores diários e resumos da safra.
 
 ```{r feature_engineering, eval=FALSE}
 photoperiod_tbl <- suncalc::getSunlightTimes(
@@ -994,23 +998,23 @@ Por exemplo:
 - `VPD_AVG` e `VPD_STRESS_DAYS` capturam a secura atmosférica.
 - `RAD_CUM` resume a energia solar sazonal disponível para a cultura.
 
-Esta tabela é a saída prática que conecta o tutorial climático à etapa de modelagem preditiva do projeto e à posterior construção do kernel climático.
+A tabela anual de covariáveis resultante resume as condições meteorológicas de cada safra. Essas covariáveis, juntamente com os registros diários, são utilizadas na construção do kernel climático.
 
 No pipeline final reduzido, essas saídas derivadas do clima são usadas apenas nos modelos que incluem explicitamente `W`, isto é, Eta10-Eta18. Elas não se destinam a substituir o efeito categórico de ambiente (`E`), que ainda captura a distinção entre os quatro macroambientes. Como a informação climática é resumida no nível do ano, `CS11_WS` e `CS11_WW` compartilham a assinatura climática de 2011, enquanto `CS12_WS` e `CS12_WW` compartilham a assinatura climática de 2012.
 
-## 7. Saídas finais documentadas
+## 7. Salvar os arquivos finais
 
-A última seção documenta os arquivos processados usados nas etapas posteriores do estudo. Eles são apenas lidos para conferência e interpretação, sem novo salvamento.
+A última etapa armazena os arquivos climáticos processados necessários às análises posteriores. O salvamento das saídas separa a obtenção e o processamento dos dados de sua utilização posterior e facilita a reprodução dos cálculos.
 
-O fluxo completo usa três arquivos principais:
+São produzidos três arquivos:
 
 1. `texas_climate_data_raw.csv`: registros meteorológicos diários brutos.
 2. `environmental_covariates.csv`: uma linha por ano com os resumos climáticos anuais derivados.
 3. `environmental_covariates_expanded.csv`: registros meteorológicos diários limpos vinculados aos resumos climáticos anuais.
 
-Os dois últimos arquivos usam os nomes `environmental_covariates` requeridos pelos scripts posteriores e contêm covariáveis derivadas do clima.
+Os arquivos de covariáveis anual e expandida apresentam níveis complementares de detalhe: resumos por safra e registros diários acrescidos desses resumos.
 
-O bloco abaixo é mantido apenas como referência didática e permanece desativado.
+Os arquivos de covariáveis são gravados em disco para serem reutilizados nas etapas seguintes, sem repetir a obtenção e o pré-processamento dos dados meteorológicos.
 
 ```{r save_csv, eval=FALSE}
 write.csv(
@@ -1030,7 +1034,9 @@ cat("Climate files successfully saved in 'output/climate_results/'.")
 
 ## 8. Observações finais
 
-No fluxo mais amplo do projeto, essas saídas não são o objetivo final. Elas são objetos científicos intermediários que apoiam a construção do kernel climático (`W`) usado nos modelos Eta10-Eta18.
+Os registros diários da NASA POWER são transformados em covariáveis meteorológicas anuais e diárias, com figuras diagnósticas que mostram a variação climática entre safras.
+
+Essas covariáveis fornecem os dados de entrada para o kernel climático (`W`) utilizado nos modelos Eta10-Eta18.
 
 Também é importante observar que o kernel climático não substitui o efeito categórico de ambiente (`E`). Neste conjunto de dados, a assinatura climática de 2011 é compartilhada por `CS11_WS` e `CS11_WW`, e a assinatura climática de 2012 é compartilhada por `CS12_WS` e `CS12_WW`. Portanto, `W` captura similaridade meteorológica específica do ano, enquanto `E` continua representando a distinção categórica entre os quatro macroambientes.
 
