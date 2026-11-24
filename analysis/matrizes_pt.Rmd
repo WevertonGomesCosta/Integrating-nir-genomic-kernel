@@ -1138,7 +1138,7 @@ for (i in seq_len(nrow(kernel_plot_info))) {
 
 Cada arquivo `.rds` preserva um objeto do R, incluindo os valores numéricos da matriz e os identificadores de suas linhas e colunas. Essa persistência permite reutilizar as matrizes em análises posteriores sem repetir as transformações anteriores.
 
-O vetor `keep_names` especifica quais matrizes e dados associados devem ser salvos. O bloco mostra como gravar os objetos disponíveis em `output/Matrizes/`, remover objetos temporários, solicitar a liberação de memória com `gc()` e carregar os arquivos novamente. Na versão portuguesa, o chunk está configurado com `eval=FALSE`; portanto, essas operações são apresentadas para estudo, mas não são executadas durante a renderização da página.
+O vetor `keep_names` identifica as matrizes e os dados associados que devem ser salvos. O código salva os objetos presentes no ambiente, remove os objetos temporários, chama `gc()` para solicitar a liberação de memória e recarrega os arquivos `.rds` de `output/Matrizes/`.
 
 ```{r save-and-clean, message=FALSE, eval=FALSE}
 keep_names <- c(
