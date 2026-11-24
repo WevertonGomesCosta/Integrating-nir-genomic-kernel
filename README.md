@@ -17,8 +17,8 @@ The pipeline follows this sequence:
 
 The repository follows a fixed bilingual rule:
 
-- **EN** = main mechanical version
-- **PT** = functional version dependent on EN
+- **EN** = primary computational implementation
+- **PT** = faithful Portuguese translation that reuses generated results
 
 In practice, the English files define the main execution logic. The Portuguese files preserve the same didactic structure in translated form and reuse artifacts already produced by the English workflow whenever necessary. This keeps the tutorial readable in both languages while avoiding unnecessary reprocessing of heavy steps.
 
@@ -29,15 +29,15 @@ The prediction stage is divided into two modules:
 - **Part I — `analysis_prediction`**: inputs, MCMC settings, the 18-model catalog, Eta specification, and cross-validation design
 - **Part II — `analysis_prediction_run_outputs`**: prediction execution, output inventory, and metadata generated from the prediction stage
 
-### Current execution standard
+### Prediction configuration
 
-The current project standard is:
+The prediction workflow uses:
 
 - **18 prediction models**
 - **5,000 MCMC iterations**
 - **10 repetitions**
 
-These defaults should be kept consistent across the prediction modules and the downstream documentation unless a future methodological revision explicitly changes them.
+These settings define the prediction workflow and should remain consistent across the corresponding analytical modules and result summaries.
 
 ## Output conventions
 
