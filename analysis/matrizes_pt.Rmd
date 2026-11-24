@@ -48,6 +48,8 @@ As matrizes resultantes representam diferentes fontes de similaridade:
 
 Na especificação de 18 modelos, `Eta1`-`Eta9` combinam o efeito categórico de ambiente com informações genômicas e/ou fenômicas, enquanto `Eta10`-`Eta18` também incorporam a similaridade derivada do clima e suas interações. Essa distinção separa a identificação categórica dos ambientes das condições meteorológicas medidas.
 
+Os kernels lineares e suas interações são compartilhados entre as características. Os kernels Gaussianos e arccosine, incluindo suas interações, são armazenados com os sufixos `_GY` e `_KW` (12 por característica). Nos exemplos de construção de GY, os objetos em memória mantêm os nomes sem sufixo; os objetos KW utilizam `_KW`.
+
 Todos os kernels devem apresentar a **mesma ordem de observações** nas linhas e colunas. Caso contrário, uma posição em uma matriz poderá representar uma observação diferente da posição correspondente em outra matriz, invalidando seu uso conjunto no modelo preditivo.
 
 ## Entradas, objetos finais e próxima etapa
@@ -59,8 +61,8 @@ Todos os kernels devem apresentar a **mesma ordem de observações** nas linhas 
 **Objetos finais desta etapa**
 - objetos observacionais alinhados
 - estruturas de desenho ambiental e climático
-- kernels lineares e não lineares
-- kernels de interação usados nas etapas seguintes
+- kernels lineares e suas interações, compartilhados entre GY e KW
+- 12 kernels não lineares e de interação por característica, com os sufixos `_GY` e `_KW`
 
 **Próxima etapa**
 - os objetos de kernel documentados nesta etapa são usados nas etapas de componentes de variância e análise preditiva.
@@ -96,7 +98,7 @@ suppressPackageStartupMessages({
 ```
 ## 3. Carregar os dados brutos
 
-A próxima seção lê as entradas brutas usadas no pipeline de construção de kernels. Neste estágio, o objetivo é apenas importar os dados e inspecionar a estrutura básica de cada fonte.
+A próxima seção documenta a leitura das entradas brutas e a construção dos kernels. Os chunks de construção e calibração permanecem disponíveis para reprodução explícita, mas não são executados na renderização convencional, que carrega as matrizes já persistidas. Assim, os diagnósticos e as figuras não recalibram nem sobrescrevem os arquivos RDS.
 
 ### 3.1 Carregar os registros NIR e os fenótipos
 
@@ -543,28 +545,29 @@ print(paste("ZW and ZG aligned:", identical(rownames(ZW), rownames(ZG))))
 print(paste("ZW and ZP aligned:", identical(rownames(ZW), rownames(ZP))))
 ```
 
-```{r load-existing-matrices, include=FALSE}
-required_matrix_objects <- c(
+Os nomes abaixo distinguem os objetos compartilhados e os kernels específicos por característica. Os arquivos GY mantêm os aliases sem sufixo em memória, enquanto os arquivos KW utilizam `_KW`.
+
+```{r matrix-file-names}
+shared_matrix_names <- c(
   "ZE", "ZEZE", "ZG", "ZP", "ZGZE", "ZPZE", "ZW", "ZGZW", "ZPZW",
-  "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",
-  "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW",
   "Pheno", "Pedigree", "Pedigree_communs", "Geno.all", "NIR.all", "W"
 )
 
-gy_kernel_names <- c(
+nonlinear_names <- c(
   "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",
   "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW"
 )
 
-for (obj_name in required_matrix_objects) {
-  assign(
-    obj_name,
-    readRDS(file.path(
-      "output/Matrizes",
-      paste0(obj_name, if (obj_name %in% gy_kernel_names) "_GY" else "", ".rds")
-    )),
-    envir = .GlobalEnv
-  )
+matrix_files <- c(
+  setNames(paste0(shared_matrix_names, ".rds"), shared_matrix_names),
+  setNames(paste0(nonlinear_names, "_GY.rds"), nonlinear_names),
+  setNames(paste0(nonlinear_names, "_KW.rds"), paste0(nonlinear_names, "_KW"))
+)
+```
+
+```{r load-existing-matrices}
+for (obj_name in names(matrix_files)) {
+  assign(obj_name, readRDS(file.path("output/Matrizes", matrix_files[[obj_name]])))
 }
 ```
 
@@ -738,6 +741,7 @@ solG <- optim(
   lower = c(0.05, 0.05),
   upper = c(6, 30)
 )
+saveRDS(solG, "output/Matrizes/solG_GY.RDS")
 ```
 
 A solução de otimização armazenada fornece o parâmetro de largura utilizado para construir a matriz Gaussiana genômica.
@@ -763,7 +767,7 @@ GGK[1:5, 1:5]
 
 O kernel Gaussiano fenômico usa distâncias euclidianas derivadas da matriz NIR padronizada.
 
-O cálculo da verossimilhança marginal utiliza `Pheno$GY` para selecionar a largura do kernel Gaussiano fenômico. Assim, o kernel é calibrado com fenótipos de GY, mesmo quando reutilizado nas predições de KW; o código atual não estima uma largura específica para KW.
+Para GY, o cálculo da verossimilhança marginal utiliza `Pheno$GY` para selecionar a largura do kernel Gaussiano fenômico. A calibração correspondente a KW utiliza `Pheno$KW`, conforme a Seção 13.5. Os dois kernels são armazenados separadamente.
 
 As distâncias entre perfis NIR são transformadas em similaridades candidatas para o ajuste do kernel Gaussiano fenômico.
 
@@ -798,6 +802,7 @@ solP <- optim(
   lower = c(0.05, 0.05),
   upper = c(6, 30)
 )
+saveRDS(solP, "output/Matrizes/solP_GY.RDS")
 ```
 
 A solução armazenada contém os parâmetros estimados utilizados na construção do kernel Gaussiano fenômico.
@@ -915,7 +920,7 @@ AK.fun <- function(AK1, nl) {
 ```
 ### 13.2 Kernel arccosine genômico (`GAK`)
 
-A profundidade da recursão é selecionada pelo critério marginal avaliado com `Pheno$GY`. O kernel arccosine genômico obtido é, portanto, calibrado com GY e posteriormente reutilizado para ambos os caracteres.
+Para GY, a profundidade da recursão é selecionada pelo critério marginal avaliado com `Pheno$GY`. O kernel arccosine genômico correspondente a KW é calibrado separadamente, conforme a Seção 13.5.
 
 A transformação arccosine aplicada aos marcadores genômicos produz similaridades não lineares com a profundidade selecionada.
 
@@ -952,7 +957,7 @@ GAK[1:5, 1:5]
 ```
 ### 13.3 Kernel arccosine fenômico (`PAK`)
 
-A profundidade da recursão do kernel arccosine fenômico também é estimada com `Pheno$GY`. Isso resulta em um kernel fenômico calibrado com GY que, na implementação atual, também é utilizado para KW.
+A profundidade da recursão do kernel arccosine fenômico é estimada com `Pheno$GY` para GY e com `Pheno$KW` para KW. Mesmo quando os valores selecionados coincidem, as matrizes são identificadas pela característica.
 
 A transformação arccosine aplicada aos dados NIR produz uma matriz de similaridade fenômica não linear.
 
@@ -1121,6 +1126,37 @@ print(data.frame(
 ))
 ```
 
+Os parâmetros Gaussianos e as profundidades KW são recuperados dos arquivos de calibração persistidos. As profundidades GY (49 para os dois kernels) correspondem aos valores registrados no manuscrito anterior; não foram armazenadas como objetos RDS separados. A tabela apresenta esses resultados históricos sem repetir a busca.
+
+```{r kernel-parameters}
+solG <- readRDS("output/Matrizes/solG_GY.RDS")
+solP <- readRDS("output/Matrizes/solP_GY.RDS")
+solG_KW <- readRDS("output/Matrizes/solG_KW.RDS")
+solP_KW <- readRDS("output/Matrizes/solP_KW.RDS")
+Gl_KW <- readRDS("output/Matrizes/Gl_KW.rds")
+Pl_KW <- readRDS("output/Matrizes/Pl_KW.rds")
+
+kernel_parameters <- data.frame(
+  Trait = c("GY", "KW"),
+  GenomicGaussianH = c(solG$par[1], solG_KW$par[1]),
+  PhenomicGaussianH = c(solP$par[1], solP_KW$par[1]),
+  GenomicGaussianPhi = c(solG$par[2], solG_KW$par[2]),
+  PhenomicGaussianPhi = c(solP$par[2], solP_KW$par[2]),
+  GenomicArccosineDepth = c(49L, Gl_KW),
+  PhenomicArccosineDepth = c(49L, Pl_KW)
+)
+
+knitr::kable(
+  kernel_parameters,
+  digits = 7,
+  caption = "Parâmetros dos kernels não lineares por característica."
+) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE
+  )
+```
+
 ## 14. Resumir os kernels não lineares
 
 A tabela abaixo fornece uma checagem final de integridade dos kernels não lineares antes da exportação.
@@ -1129,40 +1165,38 @@ A saída abaixo resume os kernels não lineares e suas interações, oferecendo 
 
 ```{r kernel-summary-nonlinear}
 kernel_inventory_nonlinear <- data.frame(
-  kernel = c("GGK", "PGK", "GAK", "PAK", "GGKE", "PGKE", "GGKW", "PGKW", "GAKE", "PAKE", "GAKW", "PAKW"),
-  n_rows = c(nrow(GGK), nrow(PGK), nrow(GAK), nrow(PAK), nrow(GGKE), nrow(PGKE), nrow(GGKW), nrow(PGKW), nrow(GAKE), nrow(PAKE), nrow(GAKW), nrow(PAKW)),
-  n_cols = c(ncol(GGK), ncol(PGK), ncol(GAK), ncol(PAK), ncol(GGKE), ncol(PGKE), ncol(GGKW), ncol(PGKW), ncol(GAKE), ncol(PAKE), ncol(GAKW), ncol(PAKW)),
-  is_square = c(
-    nrow(GGK) == ncol(GGK), nrow(PGK) == ncol(PGK), nrow(GAK) == ncol(GAK), nrow(PAK) == ncol(PAK),
-    nrow(GGKE) == ncol(GGKE), nrow(PGKE) == ncol(PGKE), nrow(GGKW) == ncol(GGKW), nrow(PGKW) == ncol(PGKW),
-    nrow(GAKE) == ncol(GAKE), nrow(PAKE) == ncol(PAKE), nrow(GAKW) == ncol(GAKW), nrow(PAKW) == ncol(PAKW)
-  ),
-  symmetric_names = c(
-    identical(rownames(GGK), colnames(GGK)), identical(rownames(PGK), colnames(PGK)),
-    identical(rownames(GAK), colnames(GAK)), identical(rownames(PAK), colnames(PAK)),
-    identical(rownames(GGKE), colnames(GGKE)), identical(rownames(PGKE), colnames(PGKE)),
-    identical(rownames(GGKW), colnames(GGKW)), identical(rownames(PGKW), colnames(PGKW)),
-    identical(rownames(GAKE), colnames(GAKE)), identical(rownames(PAKE), colnames(PAKE)),
-    identical(rownames(GAKW), colnames(GAKW)), identical(rownames(PAKW), colnames(PAKW))
-  ),
-  aligned_with_reference = c(
-    identical(rownames(GGK), reference_ids), identical(rownames(PGK), reference_ids),
-    identical(rownames(GAK), reference_ids), identical(rownames(PAK), reference_ids),
-    identical(rownames(GGKE), reference_ids), identical(rownames(PGKE), reference_ids),
-    identical(rownames(GGKW), reference_ids), identical(rownames(PGKW), reference_ids),
-    identical(rownames(GAKE), reference_ids), identical(rownames(PAKE), reference_ids),
-    identical(rownames(GAKW), reference_ids), identical(rownames(PAKW), reference_ids)
-  )
+  Trait = rep(c("GY", "KW"), each = length(nonlinear_names)),
+  Kernel = rep(nonlinear_names, times = 2),
+  Object = c(nonlinear_names, paste0(nonlinear_names, "_KW"))
 )
 
+kernel_inventory_nonlinear$File <- unname(
+  matrix_files[kernel_inventory_nonlinear$Object]
+)
+
+kernel_inventory_nonlinear$n_rows <- NA_integer_
+kernel_inventory_nonlinear$n_cols <- NA_integer_
+kernel_inventory_nonlinear$is_square <- NA
+kernel_inventory_nonlinear$is_symmetric <- NA
+kernel_inventory_nonlinear$is_finite <- NA
+kernel_inventory_nonlinear$aligned_with_reference <- NA
+
+for (i in seq_len(nrow(kernel_inventory_nonlinear))) {
+  K <- get(kernel_inventory_nonlinear$Object[i])
+  kernel_inventory_nonlinear$n_rows[i] <- nrow(K)
+  kernel_inventory_nonlinear$n_cols[i] <- ncol(K)
+  kernel_inventory_nonlinear$is_square[i] <- nrow(K) == ncol(K)
+  kernel_inventory_nonlinear$is_symmetric[i] <- isSymmetric(K)
+  kernel_inventory_nonlinear$is_finite[i] <- all(is.finite(K))
+  kernel_inventory_nonlinear$aligned_with_reference[i] <-
+    identical(rownames(K), reference_ids) &&
+    identical(colnames(K), reference_ids)
+}
+
 kernel_inventory_nonlinear %>%
-  dplyr::mutate(
-    n_rows = format(n_rows, big.mark = ","),
-    n_cols = format(n_cols, big.mark = ",")
-  ) %>%
+  dplyr::select(-Object) %>%
   knitr::kable(
-    caption = "Resumo diagnóstico dos kernels não lineares e de interação.",
-    align = "lcccccc"
+    caption = "Resumo diagnóstico dos 24 kernels não lineares e de interação."
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
@@ -1181,20 +1215,31 @@ d_{ij}=\sqrt{K_{ii}+K_{jj}-2K_{ij}}
 
 A mesma ordem de clustering é então aplicada às linhas e colunas da matriz. Isso facilita identificar estrutura em blocos, padrões locais de similaridade e contrastes entre os kernels lineares, Gaussianos e arccosine.
 
-Como essas matrizes são quadradas, cada mapa de calor é exibido com `coord_fixed()` e exportado com `width = height` para que a razão visual corresponda à estrutura matemática da matriz.
+Como essas matrizes são quadradas, cada mapa de calor é exibido com `coord_fixed()`. A versão em inglês também exporta as figuras com `width = height`, preservando a razão visual da matriz.
 
-A figura abaixo compara visualmente o comportamento dos principais kernels.
+Os mapas de calor abaixo apresentam os dois kernels lineares compartilhados e os oito kernels não lineares principais, identificados por característica. Cada matriz mantém sua própria ordenação por agrupamento e sua escala de cores; a comparação visual é estrutural, e não uma comparação direta da intensidade das cores entre painéis.
 
 ```{r kernel-diagnostic-figure-square, fig.width=8, fig.height=8}
 kernel_plot_info <- data.frame(
-  KernelName = c("ZG", "GGK", "GAK", "ZP", "PGK", "PAK"),
+  KernelName = c(
+    "ZG", "GGK_GY", "GGK_KW", "GAK_GY", "GAK_KW",
+    "ZP", "PGK_GY", "PGK_KW", "PAK_GY", "PAK_KW"
+  ),
+  Object = c(
+    "ZG", "GGK", "GGK_KW", "GAK", "GAK_KW",
+    "ZP", "PGK", "PGK_KW", "PAK", "PAK_KW"
+  ),
   KernelLabel = c(
-    "Kernel genômico linear",
-    "Kernel genômico Gaussiano",
-    "Kernel genômico arccosine",
-    "Kernel fenômico linear",
-    "Kernel fenômico Gaussiano",
-    "Kernel fenômico arccosine"
+    "Kernel genômico linear (compartilhado)",
+    "Kernel genômico Gaussiano (GY)",
+    "Kernel genômico Gaussiano (KW)",
+    "Kernel genômico arccosine (GY)",
+    "Kernel genômico arccosine (KW)",
+    "Kernel fenômico linear (compartilhado)",
+    "Kernel fenômico Gaussiano (GY)",
+    "Kernel fenômico Gaussiano (KW)",
+    "Kernel fenômico arccosine (GY)",
+    "Kernel fenômico arccosine (KW)"
   ),
   stringsAsFactors = FALSE
 )
@@ -1203,7 +1248,7 @@ for (i in seq_len(nrow(kernel_plot_info))) {
 
   current_name <- kernel_plot_info$KernelName[i]
   current_label <- kernel_plot_info$KernelLabel[i]
-  current_matrix <- get(current_name)
+  current_matrix <- get(kernel_plot_info$Object[i])
 
   current_matrix <- as.matrix(current_matrix)
   current_matrix <- (current_matrix + t(current_matrix)) / 2
@@ -1262,52 +1307,28 @@ for (i in seq_len(nrow(kernel_plot_info))) {
 
 Cada arquivo `.rds` preserva um objeto do R, incluindo os valores numéricos da matriz e os identificadores de suas linhas e colunas. Essa persistência permite reutilizar as matrizes em análises posteriores sem repetir as transformações anteriores.
 
-O vetor `keep_names` identifica as matrizes e os dados associados que devem ser salvos. O código salva os objetos presentes no ambiente, remove os objetos temporários, chama `gc()` para solicitar a liberação de memória e recarrega os arquivos `.rds` de `output/Matrizes/`.
+O chunk abaixo documenta a persistência dos objetos compartilhados e GY, usando os nomes explícitos definidos anteriormente. Para reproduzir a construção desde os dados brutos, execute os chunks de construção e calibração em ordem, execute `matrix-file-names` sem carregar as matrizes existentes e grave os objetos compartilhados e GY antes de executar `kw-trait-calibration`, que utiliza essas entradas persistidas. A gravação dos kernels KW e dos seus parâmetros é documentada na Seção 13.5. Durante a renderização normal, nenhum desses chunks de gravação é executado.
 
 ```{r save-and-clean, message=FALSE, eval=FALSE}
-keep_names <- c(
-  "ZE", "ZEZE", "ZG", "ZP", "ZGZE", "ZPZE", "ZW", "ZGZW", "ZPZW",
-  "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",
-  "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW",
-  "Pheno", "Pedigree", "Pedigree_communs", "Geno.all", "NIR.all", "W"
-)
+gy_and_shared_names <- c(shared_matrix_names, nonlinear_names)
 
-gy_kernel_names <- c(
-  "GGK", "PGK", "GGKE", "PGKE", "GGKW", "PGKW",
-  "GAK", "PAK", "GAKE", "PAKE", "GAKW", "PAKW"
-)
+dir.create("output/Matrizes", recursive = TRUE, showWarnings = FALSE)
 
-current_objs <- ls(envir = .GlobalEnv)
-to_keep <- intersect(current_objs, keep_names)
-to_remove <- setdiff(current_objs, to_keep)
-
-message("Objetos mantidos (", length(to_keep), "): ", paste(to_keep, collapse = ", "))
-message(
-  "Objetos removidos (", length(to_remove), "): ",
-  paste(to_remove, collapse = ", ")
-)
-
-for (obj_name in to_keep) {
-  suffix <- if (obj_name %in% gy_kernel_names) "_GY" else ""
-  saveRDS(get(obj_name), file = file.path("output/Matrizes", paste0(obj_name, suffix, ".rds")))
+for (obj_name in gy_and_shared_names) {
+  saveRDS(
+    get(obj_name),
+    file.path("output/Matrizes", matrix_files[[obj_name]])
+  )
 }
 
-rm(list = to_remove, envir = .GlobalEnv)
-gc()
-
-rds_files <- list.files("output/Matrizes", pattern = "\\.rds$", full.names = TRUE)
-
-for (file in rds_files) {
-  stored_name <- tools::file_path_sans_ext(basename(file))
-  obj_name <- sub("_GY$", "", stored_name)
-  assign(obj_name, readRDS(file), envir = .GlobalEnv)
+# Recuperar somente os objetos gravados, com seus nomes explícitos.
+for (obj_name in gy_and_shared_names) {
+  assign(obj_name, readRDS(file.path("output/Matrizes", matrix_files[[obj_name]])))
 }
-
-message("Objetos recarregados: ", paste(sub("_GY$", "", tools::file_path_sans_ext(basename(rds_files))), collapse = ", "))
 ```
 ## 17. Síntese
 
-Os kernels construídos descrevem similaridades genômicas, fenômicas derivadas de NIR, ambientais categóricas e meteorológicas. Suas matrizes de interação combinam essas fontes por produtos elemento a elemento. A consistência dos identificadores e da ordem das observações permite utilizar conjuntamente as matrizes em análises de componentes de variância e predição genômica.
+Os kernels descrevem similaridades genômicas, fenômicas derivadas de NIR, ambientais categóricas e meteorológicas. As interações combinam essas fontes por produtos elemento a elemento. Os kernels lineares são compartilhados, enquanto os 24 kernels não lineares e de interação são identificados por GY ou KW. A renderização utiliza os arquivos persistidos, preservando os valores calibrados e a ordem das observações para as análises de componentes de variância e predição genômica.
 
 ## Navegação entre etapas
 
