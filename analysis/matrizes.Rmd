@@ -1156,7 +1156,7 @@ for (current_name in names(kernel_plot_objects)) {
 
 Each `.rds` file preserves an R object, including its numerical matrix entries and row and column labels. Saving the constructed kernels allows subsequent analyses to read the same objects without recalculating the preceding transformations.
 
-The `keep_names` vector identifies the matrices and associated data to save. The code saves objects present in the workspace, removes temporary objects, calls `gc()` to request memory reclamation, and reloads the `.rds` files from `output/Matrizes/`. Because this chunk executes when the English page is built, the workspace is modified by these operations.
+The `keep_names` vector identifies the matrices and associated data to save. The code saves objects present in the workspace, removes temporary objects, calls `gc()` to request memory reclamation, and reloads the `.rds` files from `output/Matrizes/`.
 
 ```{r save-and-clean, message=FALSE}
 keep_names <- c(
