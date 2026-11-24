@@ -1009,9 +1009,9 @@ NIR_KW <- as.matrix(readRDS("output/Matrizes/NIR.all.rds"))
 ZEZE_KW <- as.matrix(readRDS("output/Matrizes/ZEZE.rds"))
 ZW_KW <- as.matrix(readRDS("output/Matrizes/ZW.rds"))
 
-Geno_KW <- data.table::fread(
+Geno_KW <- as.data.frame(data.table::fread(
   "data/GAPIT.Genotype.Numerical.txt"
-) %>% as.data.frame()
+))
 Geno_KW <- Geno_KW[Geno_KW$taxa %in% Pheno_KW$Pedigree, , drop = FALSE]
 Geno_KW <- Geno_KW[order(Geno_KW$taxa), , drop = FALSE]
 rownames(Geno_KW) <- Geno_KW$taxa
