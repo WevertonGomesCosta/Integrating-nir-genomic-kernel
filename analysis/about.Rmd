@@ -27,20 +27,17 @@ The study focuses on two agronomic traits:
 - grain yield (GY)
 - 500-kernel weight (KW)
 
-The analyses were conducted in four macro-environments formed by the combination of year and water regime.
+The field trials were conducted in College Station, Texas, in 2011 and 2012 under well-watered (WW) and water-stressed (WS) conditions. The combination of year and water regime defined four macro-environments: `CS11_WS`, `CS11_WW`, `CS12_WS`, and `CS12_WW`.
 
-### Why this project was organized this way
+### Analytical sequence
 
-The website and repository were restructured to support two goals at the same time:
+The analyses begin with meteorological data acquisition and preprocessing, followed by harmonization of phenotypic records, SNP markers, and NIR spectra. The aligned observations provide the basis for genomic, phenomic, and weather-derived kernels. These matrices are then used to estimate variance components, fit prediction models, evaluate validation scenarios, and summarize the results in figures and tables.
 
-1. provide a reproducible analytical pipeline for the study
-2. serve as a didactic and transparent tutorial for readers who want to understand each analytical step
+Following this sequence makes the relationship between input data, kernel construction, and predictive assessment explicit.
 
-For this reason, the workflow is organized into separate pages that follow the analytical sequence from data processing to final prediction summaries.
+### Representation of environments and weather
 
-### Terminology used in the project
-
-A key adjustment in the current version of the project is the distinction between **environment** and **weather**.
+The models distinguish between the categorical identification of field environments and similarity derived from meteorological measurements.
 
 - **Environment (`E`)** refers to the categorical macro-environment effect used in the models.
 - **Weather (`W`)** refers to the kernel derived from meteorological covariates obtained from NASA POWER.
@@ -58,11 +55,20 @@ The project includes:
 - interaction terms such as `G × E`, `P × E`, `G × W`, and `P × W`
 - Bayesian multi-kernel prediction using `BGLR`
 
-### Current scientific emphasis
+### Validation scenarios
 
-The analytical pipeline is designed to document how genomic, phenomic, and weather information behave in the prediction process, rather than to assume that integration necessarily produces better performance.
+The four prediction scenarios assess different targets:
 
-This makes the project useful both as a research report and as a methodological example of multi-source kernel modeling in plant breeding.
+- **CV1** evaluates predictions for genotypes excluded from model fitting.
+- **CV2** evaluates genotypes retained in training using the same fitted model as CV1; it describes in-sample prediction rather than an independent validation set.
+- **CV0** evaluates previously observed genotypes in an environment excluded from fitting.
+- **CV00** evaluates genotypes excluded from training in an environment also excluded from fitting.
+
+Interpreting predictive ability requires distinguishing these targets, especially between in-sample evaluation and prediction of previously unobserved genotypes or environments.
+
+### Scientific question
+
+The comparison examines whether combining genomic, NIR-based phenomic, and weather-derived similarities improves prediction relative to models based on fewer information sources. Any advantage must be assessed for each trait and validation scenario rather than presumed from the number of kernels included.
 
 ---
 
@@ -77,20 +83,17 @@ O estudo é focado em dois caracteres agronômicos:
 - produtividade de grãos (GY)
 - peso de 500 grãos (KW)
 
-As análises foram conduzidas em quatro macroambientes formados pela combinação entre ano e regime hídrico.
+Os ensaios de campo foram conduzidos em College Station, Texas, em 2011 e 2012, sob condições de irrigação plena (*well-watered*, WW) e de estresse hídrico (*water-stressed*, WS). A combinação entre ano e regime hídrico definiu quatro macroambientes: `CS11_WS`, `CS11_WW`, `CS12_WS` e `CS12_WW`.
 
-### Por que este projeto foi organizado dessa forma
+### Sequência analítica
 
-O site e o repositório foram reestruturados para atender simultaneamente a dois objetivos:
+As análises começam pela obtenção e pelo pré-processamento dos dados meteorológicos, seguidos pela harmonização dos registros fenotípicos, marcadores SNP e espectros NIR. As observações alinhadas constituem a base dos kernels genômicos, fenômicos e derivados do clima. Essas matrizes são utilizadas para estimar componentes de variância, ajustar modelos de predição, avaliar cenários de validação e sintetizar os resultados em figuras e tabelas.
 
-1. fornecer um pipeline analítico reprodutível para o estudo
-2. servir como um tutorial didático e transparente para leitores que desejam entender cada etapa analítica
+Essa sequência explicita a relação entre os dados de entrada, a construção dos kernels e a avaliação preditiva.
 
-Por isso, o fluxo de trabalho foi organizado em páginas separadas que seguem a sequência analítica desde o processamento dos dados até os resumos finais de predição.
+### Representação dos ambientes e do clima
 
-### Terminologia usada no projeto
-
-Um ajuste central na versão atual do projeto é a distinção entre **environment** e **weather**.
+Os modelos distinguem a identificação categórica dos ambientes de campo da similaridade derivada das medições meteorológicas.
 
 - **Environment (`E`)** refere-se ao efeito categórico de macroambiente usado nos modelos.
 - **Weather (`W`)** refere-se ao kernel derivado de covariáveis meteorológicas obtidas da NASA POWER.
@@ -108,8 +111,17 @@ O projeto inclui:
 - termos de interação como `G × E`, `P × E`, `G × W` e `P × W`
 - predição Bayesiana multi-kernel usando `BGLR`
 
-### Ênfase científica atual
+### Cenários de validação
 
-O pipeline analítico foi desenhado para documentar como as informações genômicas, fenômicas e climáticas se comportam no processo de predição, em vez de assumir que a integração necessariamente produz melhor desempenho.
+Os quatro cenários de predição avaliam alvos diferentes:
 
-Isso torna o projeto útil tanto como relatório de pesquisa quanto como exemplo metodológico de modelagem multi-origem com kernels em melhoramento de plantas.
+- **CV1** avalia predições para genótipos excluídos do ajuste do modelo.
+- **CV2** avalia genótipos mantidos no treinamento usando o mesmo modelo ajustado em CV1; descreve predição dentro da amostra, e não um conjunto de validação independente.
+- **CV0** avalia genótipos previamente observados em um ambiente excluído do ajuste.
+- **CV00** avalia genótipos excluídos do treinamento em um ambiente também excluído do ajuste.
+
+A interpretação da capacidade preditiva exige distinguir esses alvos, especialmente entre a avaliação dentro da amostra e a predição de genótipos ou ambientes não observados anteriormente.
+
+### Questão científica
+
+A comparação examina se a combinação das similaridades genômicas, fenômicas derivadas de NIR e meteorológicas melhora a predição em relação a modelos baseados em menos fontes de informação. Qualquer vantagem deve ser avaliada por caráter e cenário de validação, em vez de ser presumida pelo número de kernels incluídos.
