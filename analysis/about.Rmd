@@ -83,7 +83,7 @@ O estudo é focado em dois caracteres agronômicos:
 - produtividade de grãos (GY)
 - peso de 500 grãos (KW)
 
-Os ensaios de campo foram conduzidos em College Station, Texas, em 2011 e 2012, sob condições de irrigação plena (*well-watered*, WW) e de estresse hídrico (*water-stressed*, WS). A combinação entre ano e regime hídrico definiu quatro macroambientes: `CS11_WS`, `CS11_WW`, `CS12_WS` e `CS12_WW`.
+Os ensaios de campo foram conduzidos em College Station, Texas, em 2011 e 2012, sob condições de suprimento hídrico adequado (*well-watered*, WW) e de estresse hídrico (*water-stressed*, WS). A combinação entre ano e regime hídrico definiu quatro macroambientes: `CS11_WS`, `CS11_WW`, `CS12_WS` e `CS12_WW`.
 
 ### Sequência analítica
 
