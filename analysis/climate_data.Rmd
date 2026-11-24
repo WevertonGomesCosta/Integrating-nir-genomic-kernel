@@ -326,7 +326,7 @@ p1 <- ggplot(daily_data_with_parts, aes(x = Day_of_month, y = PRECTOTCORR, fill 
     x = "Day of month",
     y = expression("Precipitation (" * mm ~ day^{-1} * ")"),
     fill = "Year") +
-  scale_x_discrete(breaks = c("1", "5", "10", "15", "20", "25", "30", "31")) +
+  scale_x_discrete(breaks = c("1", "5", "10", "15", "20", "25", "30")) +
   ggthemes::scale_fill_gdocs(limits = c("2011", "2012"), guide = guide_legend(title.position = "top", nrow = 1, byrow = TRUE)) +
   theme_bw(base_size = 20) +
   theme(
@@ -438,7 +438,7 @@ p3 <- ggplot(temperature_data, aes(x = date, y = Temperature, color = Temperatur
   facet_wrap(~ year, scales = "free_x") +
   labs(
     title = "Daily air temperature",
-    subtitle = "Minimum, mean, and maximum values; dashed lines indicate LOESS trends",
+    subtitle = "Minimum, mean, maximum; LOESS trends",
     x = "Month",
     y = expression("Air temperature (" * degree * "C)"),
     color = "Temperature metric") +
