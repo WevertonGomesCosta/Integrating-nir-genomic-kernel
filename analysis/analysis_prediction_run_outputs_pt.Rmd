@@ -926,7 +926,7 @@ No workflow atual de 18 modelos, os artefatos persistentes de `saveAt` ficam ass
 
 ## 12. Nota final
 
-A etapa gera 1.800 ajustes CV1/CV2 e 7.200 ajustes CV0/CV00, totalizando 9.000 ajustes BGLR. As predições individuais permitem construir gráficos de valores observados versus preditos e realizar o bootstrap pareado por genótipo sem ajustar novamente os modelos. A consolidação e a comparação estatística são realizadas no módulo de visualização.
+A etapa gera 1.800 ajustes CV1/CV2 e 7.200 ajustes CV0/CV00, totalizando 9.000 ajustes BGLR. As predições individuais permitem construir gráficos de valores observados versus preditos e rankings globais dos genótipos. As métricas dos folds permitem obter resumos aritméticos e comparações pareadas de Pearson por bootstrap em blocos de repetições, sem ajustar novamente os modelos. Spearman e Czekanowski são métricas complementares descritivas. A consolidação e a comparação estatística são realizadas no módulo de visualização.
 
 ## Navegação entre etapas
 

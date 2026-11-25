@@ -925,7 +925,7 @@ In the current 18-model workflow, persistent `saveAt` artifacts are written unde
 
 ## 12. Final note
 
-The stage runs 1,800 CV1/CV2 fits and 7,200 CV0/CV00 fits, totaling 9,000 BGLR fits. Individual predictions allow observed-versus-predicted plots and paired genotype bootstrap comparisons without refitting the models. Consolidation and statistical comparisons are performed in the visualization module.
+The stage runs 1,800 CV1/CV2 fits and 7,200 CV0/CV00 fits, totaling 9,000 BGLR fits. Individual predictions allow observed-versus-predicted plots and global genotype rankings. Fold-level metrics support arithmetic summaries and paired repetition-block bootstrap comparisons of Pearson correlation, without refitting the models. Spearman and Czekanowski are descriptive complementary metrics. Consolidation and statistical comparisons are performed in the visualization module.
 
 ## Stage navigation
 
