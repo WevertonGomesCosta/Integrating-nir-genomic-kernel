@@ -125,13 +125,17 @@ Na versão atual do pipeline, as matrizes em nível de observação disponíveis
 
 Uma vez que as entradas estejam disponíveis, o próximo passo é definir as configurações computacionais que controlam o ajuste dos modelos e a validação repetida. Esses valores não mudam a pergunta científica em estudo, mas determinam como as distribuições a posteriori são exploradas e quão estáveis podem ser os resumos preditivos obtidos em repetições sucessivas.
 
-As configurações do MCMC (`nIter`, `burnIn` e `thin`) definem como a estimação Bayesiana será conduzida. O número de repetições (`num_rep`) controla quantas partições independentes serão mais adiante usadas nos esquemas de validação. O número de núcleos de processamento (`n_cores`) é registrado aqui porque o módulo de execução pode usar computação paralela quando a etapa cara de predição for ativada.
+As configurações do MCMC (`nIter`, `burnIn` e `thin`) definem como a estimação Bayesiana será conduzida. O número de repetições (`num_rep`) e o número de folds (`num_fold`) definem as dez partições aleatórias em cinco folds. A população experimental é a mesma entre repetições, e cada partição é compartilhada pelos modelos e pelas características. Os quatro ambientes de exclusão são explicitados em `envs_leaveout`; a semente das partições é definida separadamente das sementes dos ajustes MCMC. O número de núcleos de processamento (`n_cores`) é registrado aqui porque o módulo de execução pode usar computação paralela quando a etapa cara de predição for ativada.
 
 ```{r mcmc-settings}
 nIter <- 5000
 burnIn <- 1000
 thin <- 10
 num_rep <- 10
+num_fold <- 5
+traits_to_run <- c("GY", "KW")
+envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
+partition_seed <- 20250829L
 
 n_cores <- max(1, parallel::detectCores() - 1)
 
@@ -139,6 +143,10 @@ nIter
 burnIn
 thin
 num_rep
+num_fold
+traits_to_run
+envs_leaveout
+partition_seed
 n_cores
 ```
 
@@ -461,6 +469,73 @@ A acurácia preditiva depende não apenas do modelo ajustado, mas também do pro
 
 Esta seção esclarece o que é escondido em cada esquema de validação e qual pergunta científica cada um deles pretende responder. Essa distinção é essencial antes de avançar para a etapa de execução, porque o mesmo modelo pode ter desempenho muito diferente dependendo de o desafio estar no eixo dos genótipos, no eixo dos ambientes ou em ambos simultaneamente.
 
+Antes de definir os alvos de avaliação, distribuímos os identificadores únicos `Pedigree` em cinco folds, uma vez por repetição. Mantemos a distribuição aleatória original, utilizando uma semente que depende apenas da repetição. Todas as observações de um genótipo recebem a mesma atribuição, independentemente do ambiente. Os 18 modelos, GY, KW e os quatro cenários utilizam a mesma partição dentro de cada repetição. A semente MCMC de cada ajuste será definida separadamente na Parte II.
+
+```{r shared-fold-partitions}
+Pedigree <- unique(Pheno$Pedigree)
+
+obs_per_fold <- ceiling(length(Pedigree) / num_fold)
+fold_partitions <- vector("list", num_rep)
+
+for (rep_num in seq_len(num_rep)) {
+  set.seed(partition_seed + rep_num)
+
+  folds <- sample(rep(
+    seq_len(num_fold),
+    each = obs_per_fold,
+    length.out = length(Pedigree)
+  ))
+
+  fold_partitions[[rep_num]] <- data.frame(
+    Pedigree = Pedigree,
+    Rep = rep_num,
+    Fold = folds,
+    stringsAsFactors = FALSE
+  )
+}
+
+fold_partitions <- do.call(rbind, fold_partitions)
+rownames(fold_partitions) <- NULL
+```
+
+A tabela apresenta o número de genótipos por fold em cada repetição. O número de observações efetivamente avaliadas em cada ambiente pode variar conforme a disponibilidade dos dados fenotípicos.
+
+```{r fold-partition-summary}
+fold_counts <- with(fold_partitions, table(Rep, Fold))
+
+fold_counts_table <- data.frame(
+  Rep = as.integer(rownames(fold_counts)),
+  as.data.frame.matrix(fold_counts),
+  Total = rowSums(fold_counts),
+  check.names = FALSE,
+  row.names = NULL
+)
+
+names(fold_counts_table)[seq_len(num_fold) + 1L] <-
+  paste("Fold", seq_len(num_fold))
+
+knitr::kable(
+  fold_counts_table,
+  caption = "Número de genótipos por repetição e fold."
+) |>
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE
+  )
+```
+
+A tabela completa de atribuições será gravada uma única vez antes dos ajustes na Parte II e lida pelos dois fluxos de execução (CV1/CV2 e CV0/CV00). O chunk de gravação abaixo documenta o formato, mas fica desativado durante a renderização. Assim, nenhum documento sobrescreve as partições utilizadas em uma execução já realizada.
+
+```{r save-fold-partitions, eval=FALSE}
+dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
+
+write.csv(
+  fold_partitions,
+  "output/results/fold_partitions.csv",
+  row.names = FALSE
+)
+```
+
 ### 7.1 Cenários de validação e seu significado científico
 
 Os quatro esquemas de validação adotados neste estudo são resumidos abaixo. Cada um corresponde a um alvo de predição diferente e, portanto, avalia uma noção diferente de generalização. Leia esta tabela como um mapa das perguntas preditivas que serão mais adiante implementadas no submódulo de execução.
@@ -469,10 +544,10 @@ Os quatro esquemas de validação adotados neste estudo são resumidos abaixo. C
 cv_scenarios <- data.frame(
   CV = c("CV1", "CV2", "CV0", "CV00"),
   WhatIsMasked = c(
-    "Genótipos inteiros",
-    "Genótipos de treinamento sob o mesmo ajuste usado em CV1",
-    "Um ambiente por vez, avaliado em genótipos já vistos",
-    "Genótipos dentro de um ambiente deixado de fora"
+    "Todas as observações dos genótipos excluídos",
+    "Sem mascaramento adicional; avaliação nos genótipos do conjunto de treinamento de CV1",
+    "Genótipos excluídos e todas as observações de um ambiente retirado",
+    "Mesmo mascaramento de CV0; avaliação nos genótipos excluídos no ambiente retirado"
   ),
   MainQuestion = c(
     "O modelo consegue prever genótipos completamente novos?",
@@ -564,6 +639,8 @@ cvloo_design |>
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
+A atribuição ao conjunto de treinamento refere-se à partição dos genótipos. A disponibilidade efetiva de respostas nos ambientes de treinamento depende dos dados observados. A avaliação mantém os critérios originais de inclusão e mascaramento; não se exige uma nova filtragem de genótipos.
+
 ### 7.4 Nomes de arquivos e reprodutibilidade nas etapas posteriores
 
 O fluxo de predição organiza muitos arquivos, e seus nomes precisam carregar informação suficiente para identificar o cenário de validação, o trait, o modelo ajustado, a repetição e o fold ou ambiente deixado de fora. Os CSVs específicos de cada cenário são gravados em `output/results/`. Já os artefatos persistentes de ajuste do `BGLR` são armazenados apenas para os cenários que possuem o ajuste compartilhado: em `bglr_runs/CV1/` para o ajuste comum a CV1/CV2 e em `bglr_runs/CV0/` para o ajuste comum a CV0/CV00. Portanto, `CV2` e `CV00` possuem suas próprias árvores de resultados de predição em CSV, mas não possuem árvores independentes de ajuste do BGLR. Nesses caminhos computacionais, `EtaName` é o identificador interno do modelo, enquanto o rótulo usado no manuscrito fica armazenado em `Model`.
@@ -603,9 +680,45 @@ prediction_file_patterns |>
   kableExtra::scroll_box(width = "100%", height = "360px")
 ```
 
+Além dos CSVs agregados existentes, a Parte II armazenará as predições individuais em `output/results/individual_predictions/`, organizadas pelos cenários e pelas mesmas combinações de identificação. Os valores observados e preditos serão preservados sem arredondamento para apresentação. A tabela a seguir define os campos necessários para as métricas, os gráficos e as comparações pareadas.
+
+| Coluna | Descrição |
+|---|---|
+| `ObsID` | Identificador da observação |
+| `Pedigree` | Identificador do genótipo |
+| `Env` | Ambiente da observação |
+| `Trait` | GY ou KW |
+| `Model` | Identificador do modelo no manuscrito (M1–M18) |
+| `Rep` | Repetição |
+| `Fold` | Fold de avaliação |
+| `Env_leave` | Ambiente mascarado (NA para CV1/CV2) |
+| `Observed` | Valor fenotípico observado |
+| `Predicted` | Média posterior retornada em fit$yHat |
+| `Training` | Indica se a resposta esteve disponível para o ajuste |
+| `CV` | Cenário de avaliação |
+
+### 7.5 Métricas de avaliação e resumo dos resultados
+
+A associação linear entre os valores observados ($y$) e preditos ($\hat y$) permanece como a métrica principal, calculada pela correlação de Pearson. A correlação de Spearman e o índice de coincidência de Czekanowski complementam essa avaliação, respectivamente, quanto à ordenação e à seleção de genótipos.
+
+$$r=\operatorname{cor}(y,\hat y),\qquad
+\rho_s=\operatorname{cor}(\operatorname{rank}(y),\operatorname{rank}(\hat y)).$$
+
+Para Spearman, valores empatados recebem postos médios. Para Czekanowski, consideramos os conjuntos $S_y$ e $S_{\hat y}$ dos genótipos selecionados pelos maiores valores observados e preditos, respectivamente:
+
+$$CZ=\frac{2|S_y\cap S_{\hat y}|}{|S_y|+|S_{\hat y}|}.$$
+
+Adota-se como especificação de seleção uma intensidade de 20%, com $k=\lceil 0.20n\rceil$, onde $n$ é o número de genótipos elegíveis com pares válidos no grupo avaliado. Com ambos os conjuntos de tamanho $k$, o índice é $|S_y\cap S_{\hat y}|/k$. Empates no limite de seleção são resolvidos pela ordem crescente do identificador Pedigree, de forma determinística. O cálculo pressupõe uma observação por genótipo no ambiente avaliado; a unicidade deverá ser verificada antes da aplicação.
+
+As três métricas são calculadas dentro de cada combinação de modelo, característica, cenário, repetição, fold e ambiente, usando os mesmos pares válidos de valores observados e preditos. Correlações indefinidas não são convertidas em zero. O cálculo de Pearson e sua agregação original são mantidos; as métricas adicionais seguem a mesma hierarquia de resumo. As médias dos folds são consolidadas dentro de cada repetição, mantendo os resultados por ambiente e a agregação entre ambientes quando aplicável. As barras de erro representam o desvio-padrão das dez médias por repetição, não intervalos de confiança. Para CV2, os resultados são de ajuste dentro da amostra.
+
+### 7.6 Comparação estatística por bootstrap pareado
+
+Os mesmos genótipos são reamostrados com reposição para os modelos comparados, preservando seus registros de observações e predições ao longo de ambientes, folds e repetições. O bootstrap avalia diferenças de desempenho condicionais às predições já obtidas, sem novos ajustes do BGLR. A configuração proposta é de 5.000 reamostragens e nível de confiança de 95%. Os intervalos para diferenças entre modelos não são as barras de erro descritivas das repetições. A especificação das famílias de comparações, o controle de multiplicidade e o tratamento de genótipos repetidos no cálculo de Czekanowski durante a reamostragem serão definidos na etapa de análise dos resultados; não se pressupõe que as 50 combinações de repetição e fold sejam independentes.
+
 ## 8. Transição para o submódulo de execução
 
-Neste ponto, a etapa de predição já foi organizada a partir de três perspectivas complementares: as entradas analíticas estão definidas, o catálogo reduzido de 18 modelos está explícito e os esquemas de validação estão ligados às perguntas científicas que pretendem responder. Isso significa que a etapa de execução não precisa mais introduzir novos conceitos. Seu papel é aplicar a estrutura definida aqui e organizar os arquivos de predição que mais adiante serão resumidos e visualizados.
+Neste ponto, a etapa de predição já foi organizada a partir de três perspectivas complementares: as entradas analíticas estão definidas, o catálogo reduzido de 18 modelos está explícito e os esquemas de validação estão ligados às perguntas científicas que pretendem responder. O papel da etapa de execução é utilizar as partições compartilhadas, aplicar as regras originais de mascaramento, armazenar as predições individuais e calcular as três métricas. O bootstrap pareado será realizado na análise posterior dos resultados.
 
 O próximo submódulo, `analysis_prediction_run_outputs_pt.Rmd`, passa então do desenho à implementação. Ali o foco deixa de estar na definição dos modelos e na lógica da validação e passa para os registros de execução, o inventário de arquivos e as tabelas leves que tornam o fluxo de predição mais fácil de inspecionar e reaproveitar nos módulos posteriores.
 

@@ -125,13 +125,17 @@ In the current version of the pipeline, the observation-level matrices available
 
 Once the inputs are available, the next step is to define the computational settings that control model fitting and repeated validation. These values do not change the scientific question being asked, but they determine how the posterior distributions are explored and how stable the repeated prediction summaries can be.
 
-The MCMC settings (`nIter`, `burnIn`, and `thin`) define how the Bayesian estimation is run. The number of repetitions (`num_rep`) controls how many independent partitions will later be used in the validation schemes. The number of processor cores (`n_cores`) is recorded here because the execution module can use parallel computation when the expensive prediction stage is activated.
+The MCMC settings (`nIter`, `burnIn`, and `thin`) define how the Bayesian estimation is run. The number of repetitions (`num_rep`) and the number of folds (`num_fold`) define the ten random five-fold partitions. The experimental population is the same across repetitions, and each partition is shared across models and traits. The four held-out environments are specified in `envs_leaveout`; the partition seed is defined separately from the MCMC fitting seeds. The number of processor cores (`n_cores`) is recorded here because the execution module can use parallel computation when the expensive prediction stage is activated.
 
 ```{r mcmc-settings}
 nIter <- 5000
 burnIn <- 1000
 thin <- 10
 num_rep <- 10
+num_fold <- 5
+traits_to_run <- c("GY", "KW")
+envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
+partition_seed <- 20250829L
 
 n_cores <- max(1, parallel::detectCores() - 1)
 
@@ -139,6 +143,10 @@ nIter
 burnIn
 thin
 num_rep
+num_fold
+traits_to_run
+envs_leaveout
+partition_seed
 n_cores
 ```
 
@@ -461,6 +469,73 @@ Prediction accuracy depends not only on the fitted model, but also on the predic
 
 This section clarifies what is hidden in each validation scheme and what scientific question each one is intended to answer. That distinction is essential before moving to the execution stage, because the same model may perform very differently depending on whether the challenge lies on the genotype axis, on the environment axis, or on both simultaneously.
 
+Before defining the evaluation targets, we allocate unique `Pedigree` identifiers to five folds, once per repetition. The original random allocation is retained, with a seed depending only on the repetition. All observations of a genotype receive the same assignment, regardless of environment. All 18 models, GY, KW and the four scenarios use the same partition within a repetition. Each fit's MCMC seed will be defined separately in Part II.
+
+```{r shared-fold-partitions}
+Pedigree <- unique(Pheno$Pedigree)
+
+obs_per_fold <- ceiling(length(Pedigree) / num_fold)
+fold_partitions <- vector("list", num_rep)
+
+for (rep_num in seq_len(num_rep)) {
+  set.seed(partition_seed + rep_num)
+
+  folds <- sample(rep(
+    seq_len(num_fold),
+    each = obs_per_fold,
+    length.out = length(Pedigree)
+  ))
+
+  fold_partitions[[rep_num]] <- data.frame(
+    Pedigree = Pedigree,
+    Rep = rep_num,
+    Fold = folds,
+    stringsAsFactors = FALSE
+  )
+}
+
+fold_partitions <- do.call(rbind, fold_partitions)
+rownames(fold_partitions) <- NULL
+```
+
+The table reports the number of genotypes per fold in each repetition. The number of observations actually evaluated in each environment may vary with phenotypic data availability.
+
+```{r fold-partition-summary}
+fold_counts <- with(fold_partitions, table(Rep, Fold))
+
+fold_counts_table <- data.frame(
+  Rep = as.integer(rownames(fold_counts)),
+  as.data.frame.matrix(fold_counts),
+  Total = rowSums(fold_counts),
+  check.names = FALSE,
+  row.names = NULL
+)
+
+names(fold_counts_table)[seq_len(num_fold) + 1L] <-
+  paste("Fold", seq_len(num_fold))
+
+knitr::kable(
+  fold_counts_table,
+  caption = "Number of genotypes by repetition and fold."
+) |>
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE
+  )
+```
+
+The complete assignment table will be written once before fitting in Part II and read by both execution flows (CV1/CV2 and CV0/CV00). The writing chunk below documents the format but is disabled during rendering. Thus, neither document overwrites partitions used in a completed run.
+
+```{r save-fold-partitions, eval=FALSE}
+dir.create("output/results", recursive = TRUE, showWarnings = FALSE)
+
+write.csv(
+  fold_partitions,
+  "output/results/fold_partitions.csv",
+  row.names = FALSE
+)
+```
+
 ### 7.1 Validation scenarios and their scientific meaning
 
 The four validation schemes adopted in this study are summarized below. Each one corresponds to a different prediction target and therefore evaluates a different notion of generalization. Read this table as a map of the prediction questions that will later be implemented in the execution submodule.
@@ -471,8 +546,8 @@ cv_scenarios <- data.frame(
   WhatIsMasked = c(
     "All observations from held-out genotypes",
     "No new masking; evaluation on training genotypes from the CV1 fit",
-    "All observations from one held-out environment after genotype-based training masking",
-    "Held-out genotypes inside one held-out environment under the same CV0 fit"
+    "All observations from held-out genotypes and one held-out environment",
+    "Same masking as CV0; evaluation of held-out genotypes in the held-out environment"
   ),
   MainQuestion = c(
     "Can the model predict completely new genotypes?",
@@ -564,6 +639,8 @@ cvloo_design |>
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
+Assignment to the training set refers to the genotype partition. Actual response availability in the training environments depends on the observed data. Evaluation retains the original inclusion and masking rules; no new genotype filtering is imposed.
+
 ### 7.4 File naming and downstream reproducibility
 
 The prediction workflow uses a hierarchical output layout so that each validation scenario, environment, trait, repetition, and fold can be inspected independently. Scenario-specific CSV files are written under `output/results/`. Persistent `BGLR` fitting artifacts are stored only for the fit-owning scenarios: under `bglr_runs/CV1/` for the shared CV1/CV2 fit and under `bglr_runs/CV0/` for the shared CV0/CV00 fit. Therefore, `CV2` and `CV00` have their own prediction-result CSV trees but do not have independent BGLR fit trees. In these computational paths, `EtaName` is the internal model identifier, whereas the manuscript-facing label is stored in `Model`. Keeping this distinction explicit prevents the result files from being confused with the shared fitting artifacts.
@@ -603,9 +680,45 @@ prediction_file_patterns |>
   kableExtra::scroll_box(width = "100%", height = "360px")
 ```
 
+In addition to the existing aggregate CSVs, Part II will store individual predictions under `output/results/individual_predictions/`, organized by scenario and the same identification combinations. Observed and predicted values will be retained without presentation rounding. The following table defines the fields needed for metrics, plots and paired comparisons.
+
+| Column | Description |
+|---|---|
+| `ObsID` | Observation identifier |
+| `Pedigree` | Genotype identifier |
+| `Env` | Observation environment |
+| `Trait` | GY or KW |
+| `Model` | Manuscript model identifier (M1–M18) |
+| `Rep` | Repetition |
+| `Fold` | Evaluation fold |
+| `Env_leave` | Masked environment (NA for CV1/CV2) |
+| `Observed` | Observed phenotype |
+| `Predicted` | Posterior mean of fit$yHat |
+| `Training` | Whether the response was available to the fit |
+| `CV` | Evaluation scenario |
+
+### 7.5 Evaluation metrics and result summaries
+
+Linear association between observed ($y$) and predicted ($\hat y$) values remains the primary metric, calculated using Pearson correlation. Spearman correlation and the Czekanowski coincidence index complement this assessment in terms of genotype ranking and selection, respectively.
+
+$$r=\operatorname{cor}(y,\hat y),\qquad
+\rho_s=\operatorname{cor}(\operatorname{rank}(y),\operatorname{rank}(\hat y)).$$
+
+For Spearman, ties receive average ranks. For Czekanowski, let $S_y$ and $S_{\hat y}$ be the sets of genotypes selected by the highest observed and predicted values, respectively:
+
+$$CZ=\frac{2|S_y\cap S_{\hat y}|}{|S_y|+|S_{\hat y}|}.$$
+
+The selection specification is a 20% intensity, with $k=\lceil 0.20n\rceil$, where $n$ is the number of eligible genotypes with valid pairs in the evaluation group. With both sets of size $k$, the index is $|S_y\cap S_{\hat y}|/k$. Ties at the selection boundary are resolved deterministically by ascending Pedigree identifier. This calculation assumes one observation per genotype in the evaluated environment; uniqueness must be verified before application.
+
+All three metrics are calculated within each model, trait, scenario, repetition, fold and environment combination, using the same valid pairs of observed and predicted values. Undefined correlations are not converted to zero. The original Pearson calculation and aggregation are retained; the additional metrics follow the same summary hierarchy. Fold means are consolidated within each repetition, retaining environment-specific results and aggregation across environments where applicable. Error bars represent the standard deviation of the ten repetition means, not confidence intervals. For CV2, results describe in-sample fit.
+
+### 7.6 Statistical comparison by paired bootstrap
+
+The same genotypes are resampled with replacement for the models being compared, retaining their observed and predicted records across environments, folds and repetitions. The bootstrap assesses differences in performance conditional on the existing predictions, without additional BGLR fits. The proposed configuration is 5,000 resamples and a 95% confidence level. Intervals for differences between models are distinct from descriptive error bars across repetitions. Comparison families, multiplicity control and the treatment of repeated genotypes in Czekanowski during resampling will be specified at the results-analysis stage; the 50 repetition-fold combinations are not assumed to be independent.
+
 ## 8. Transition to the execution submodule
 
-At this point, the prediction stage has been organized from three complementary perspectives: the analytical inputs are defined, the reduced catalog of 18 models is made explicit, and the validation schemes are linked to the scientific questions they are meant to answer. This means that the execution stage no longer needs to introduce new concepts. Its role is to apply the structure defined here and organize the prediction files that will later be summarized and visualized.
+At this point, the prediction stage has been organized from three complementary perspectives: the analytical inputs are defined, the reduced catalog of 18 models is made explicit, and the validation schemes are linked to the scientific questions they are meant to answer. The execution stage will use the shared partitions, apply the original masking rules, store individual predictions and calculate all three metrics. Paired bootstrap comparisons will be performed in the subsequent results analysis.
 
 The next submodule, `analysis_prediction_run_outputs.Rmd`, therefore moves from design to implementation. There the emphasis shifts from model definition and validation logic to execution records, persistent `BGLR` artifacts organized by scenario, and recursive inventories that make the prediction workflow easier to inspect and reuse in the downstream modules.
 
@@ -615,4 +728,3 @@ This module connects the structural definition of the prediction analysis to the
 
 **Previous stage:** [Variance components](variance_components.html)  
 **Next stage:** [Prediction — Part II](analysis_prediction_run_outputs.html)
-
