@@ -29,7 +29,7 @@ knitr::opts_chunk$set(
 
 **Idioma / Language:** [Português](visualization_pt.html) | [English](visualization.html)
 
-Este módulo prepara os resumos de predição usados nas tabelas do manuscrito, nos resumos automáticos de resultados e nas figuras finais. Ele parte das tabelas de resultados de predição disponíveis em `output/tables/`, anexa o catálogo de modelos, calcula tabelas compactas de comparação e renderiza as saídas orientadas à visualização diretamente no documento.
+Este módulo consolida as métricas de predição, compara os modelos por bootstrap pareado de Pearson e apresenta as tabelas e figuras do manuscrito. Os cálculos e exportações são executados explicitamente na versão EN; a renderização de ambas as versões utiliza os resultados novos, sem reajustar modelos ou sobrescrever arquivos.
 
 ## 1. Carregar pacotes e localizar as pastas do projeto
 
@@ -55,6 +55,8 @@ project_root <- getwd()
 results_dir <- file.path(project_root, "output", "results")
 figures_dir <- file.path(project_root, "output", "figures")
 tables_dir <- file.path(project_root, "output", "tables")
+individual_predictions_dir <- file.path(results_dir, "individual_predictions")
+env_levels <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
 ```
 
 ## 2. Catálogo de modelos usado nos resumos de predição
@@ -181,13 +183,407 @@ comparison_pairs %>%
 
 ## 4. Tabelas-resumo de predição
 
-### 4.1 Reconstrução opcional a partir dos resultados em nível de fold
+### 4.1 Consolidação dos resultados por fold
 
-A versão em inglês documenta o bloco mecânico que reconstrói `prediction_cv1_cv2_summary.csv` e `prediction_cv0_cv00_summary.csv` diretamente dos arquivos em `output/results/`. Como esses resultados em nível de fold são regeneráveis e não são versionados, a versão em português reutiliza as tabelas-resumo versionadas e evita repetir essa consolidação.
+Os 18.000 CSVs de métricas e os respectivos RDS individuais são identificados pelos caminhos esperados da Parte II. A execução explícita ocorre na versão EN, após a validação dos novos ajustes. As três métricas são calculadas na Parte II, e aqui consolidadas sem ponderação pelo número de pares ou correlações válidas.
 
-### 4.2 Carregar as tabelas-resumo versionadas
+Para cada ambiente, a média e o desvio-padrão amostral são calculados diretamente sobre as 50 métricas (dez repetições e cinco folds). A média conjunta é a média aritmética das quatro médias ambientais, equivalente à média direta dos 200 valores quando completos. O desvio-padrão conjunto descreve a dispersão das métricas individuais disponíveis, inclusive entre ambientes. As contagens válidas são reportadas; uma média ambiental indefinida impede a média dos quatro ambientes.
 
-```{r load-visualization-tables, include=FALSE}
+```{r rebuild-prediction-summaries, eval=FALSE}
+# Expected file paths follow the design in Part I.
+inventory_cv12 <- expand.grid(
+  CV = c("CV1", "CV2"), Trait = c("GY", "KW"),
+  Rep = sprintf("rep%02d", 1:10), Fold = sprintf("fold%02d", 1:5),
+  EtaName = paste0("Eta", 1:18), stringsAsFactors = FALSE
+)
+
+inventory_cv12$Model <- sub("Eta", "M", inventory_cv12$EtaName)
+inventory_cv12$file_name <- with(inventory_cv12,
+  paste0(CV, "_", Trait, "_", EtaName, "_", Rep, "_", Fold, ".csv"))
+inventory_cv12$relative_path <- with(inventory_cv12,
+  file.path(CV, Trait, Rep, Fold, file_name))
+
+inventory_cvloo <- expand.grid(
+  CV = c("CV0", "CV00"), Env_leave = c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW"),
+  Trait = c("GY", "KW"), Rep = sprintf("rep%02d", 1:10),
+  Fold = sprintf("fold%02d", 1:5), EtaName = paste0("Eta", 1:18),
+  stringsAsFactors = FALSE
+)
+
+inventory_cvloo$Model <- sub("Eta", "M", inventory_cvloo$EtaName)
+inventory_cvloo$file_name <- with(inventory_cvloo,
+  paste0(CV, "_", Trait, "_", Env_leave, "_", EtaName, "_", Rep, "_", Fold, ".csv"))
+inventory_cvloo$relative_path <- with(inventory_cvloo,
+  file.path(CV, Env_leave, Trait, Rep, Fold, file_name))
+
+inventory_cv12 <- inventory_cv12[, c("relative_path", "file_name", "CV", "Trait",
+                                      "Rep", "Fold", "EtaName", "Model")]
+inventory_cvloo <- inventory_cvloo[, c("relative_path", "file_name", "CV", "Env_leave",
+                                       "Trait", "Rep", "Fold", "EtaName", "Model")]
+
+combined_inventory <- dplyr::bind_rows(
+  inventory_cv12 %>% dplyr::mutate(Env_leave = NA_character_),
+  inventory_cvloo
+)
+
+combined_inventory$individual_path <- file.path(
+  "individual_predictions",
+  sub("\\.csv$", ".rds", combined_inventory$relative_path)
+)
+
+combined_inventory$Metrics_available <- file.exists(
+  file.path(results_dir, combined_inventory$relative_path)
+)
+combined_inventory$Individual_available <- file.exists(
+  file.path(results_dir, combined_inventory$individual_path)
+)
+
+# The expected inventory is fixed by the validation design.
+# Historical CSVs without the new metrics cannot enter the consolidation.
+stopifnot(
+  nrow(combined_inventory) == 18000L,
+  all(combined_inventory$Metrics_available),
+  all(combined_inventory$Individual_available),
+  file.exists(file.path(results_dir, "fold_partitions.csv"))
+)
+
+metric_columns <- c("Env", "cor", "Spearman", "Czekanowski", "N",
+                    "N_selected", "N_coincident", "Runtime_sec", "Fold")
+
+metric_records <- vector("list", nrow(combined_inventory))
+
+for (i in seq_len(nrow(combined_inventory))) {
+  entry <- combined_inventory[i, ]
+  x <- read.csv(file.path(results_dir, entry$relative_path),
+                stringsAsFactors = FALSE)
+
+  expected_env <- if (is.na(entry$Env_leave)) env_levels else entry$Env_leave
+
+  stopifnot(
+    identical(names(x), metric_columns),
+    !anyDuplicated(x$Env),
+    setequal(x$Env, expected_env),
+    all(x$Fold == entry$Fold)
+  )
+
+  x$CV <- entry$CV
+  x$Trait <- entry$Trait
+  x$Rep <- as.integer(sub("rep", "", entry$Rep))
+  x$Fold <- as.integer(sub("fold", "", entry$Fold))
+  x$Model <- entry$EtaName
+  x$ModelNumber <- as.integer(sub("Eta", "", entry$EtaName))
+  x$Env_leave <- entry$Env_leave
+
+  metric_records[[i]] <- x
+}
+
+prediction_raw <- dplyr::bind_rows(metric_records)
+
+stopifnot(
+  nrow(prediction_raw) == 28800L,
+  !anyDuplicated(prediction_raw[, c("CV", "Trait", "Env", "Rep", "Fold", "Model")]),
+  all(is.na(prediction_raw$cor) | abs(prediction_raw$cor) <= 1),
+  all(is.na(prediction_raw$Spearman) | abs(prediction_raw$Spearman) <= 1),
+  all(is.na(prediction_raw$Czekanowski) |
+      (prediction_raw$Czekanowski >= 0 & prediction_raw$Czekanowski <= 1))
+)
+
+rm(metric_records)
+
+cv12_raw <- prediction_raw %>%
+  dplyr::filter(CV %in% c("CV1", "CV2")) %>%
+  dplyr::select(-Env_leave)
+
+cvloo_raw <- prediction_raw %>%
+  dplyr::filter(CV %in% c("CV0", "CV00"))
+```
+
+```{r summarize-prediction-metrics, eval=FALSE}
+# Keep the individual fold metrics as the descriptive units.
+metrics_by_environment <- prediction_raw %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV, Env) %>%
+  dplyr::summarise(
+    MeanCorrelation = mean(cor, na.rm = TRUE),
+    SDCorrelation = sd(cor, na.rm = TRUE),
+    MeanSpearman = mean(Spearman, na.rm = TRUE),
+    SDSpearman = sd(Spearman, na.rm = TRUE),
+    MeanCzekanowski = mean(Czekanowski, na.rm = TRUE),
+    SDCzekanowski = sd(Czekanowski, na.rm = TRUE),
+    N_Pearson = sum(is.finite(cor)),
+    N_Spearman = sum(is.finite(Spearman)),
+    N_Czekanowski = sum(is.finite(Czekanowski)),
+    NumberOfRepetitions = dplyr::n_distinct(Rep[is.finite(cor)]),
+    MeanRuntimeSec = mean(Runtime_sec, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(dplyr::across(where(is.numeric), ~ replace(.x, is.nan(.x), NA_real_)))
+
+# Equal environmental weights even when valid-fold counts differ.
+across_means <- metrics_by_environment %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV) %>%
+  dplyr::summarise(
+    MeanCorrelation = mean(MeanCorrelation),
+    MeanSpearman = mean(MeanSpearman),
+    MeanCzekanowski = mean(MeanCzekanowski),
+    .groups = "drop"
+  )
+
+across_dispersion <- prediction_raw %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV) %>%
+  dplyr::summarise(
+    SDCorrelation = sd(cor, na.rm = TRUE),
+    SDSpearman = sd(Spearman, na.rm = TRUE),
+    SDCzekanowski = sd(Czekanowski, na.rm = TRUE),
+    N_Pearson = sum(is.finite(cor)),
+    N_Spearman = sum(is.finite(Spearman)),
+    N_Czekanowski = sum(is.finite(Czekanowski)),
+    NumberOfRepetitions = dplyr::n_distinct(Rep[is.finite(cor)]),
+    MeanRuntimeSec = mean(Runtime_sec, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+metrics_across_environments <- dplyr::left_join(
+  across_means, across_dispersion, by = c("ModelNumber", "Model", "Trait", "CV")
+)
+
+cv12_summary_rebuilt <- metrics_across_environments %>%
+  dplyr::filter(CV %in% c("CV1", "CV2")) %>%
+  dplyr::arrange(Trait, CV, ModelNumber)
+
+cvloo_summary_rebuilt <- metrics_by_environment %>%
+  dplyr::filter(CV %in% c("CV0", "CV00")) %>%
+  dplyr::rename(Env_leave = Env, NumberOfRuns = NumberOfRepetitions) %>%
+  dplyr::arrange(Trait, CV, Env_leave, ModelNumber)
+
+# Retain the intermediate tables for inspection, not as inputs to the SD.
+cv12_env_fold <- cv12_raw %>%
+  dplyr::mutate(EnvCorrelation = cor, ValidationCount = as.integer(is.finite(cor)),
+                MeanRuntimeSec = Runtime_sec)
+
+cvloo_env_fold <- cvloo_raw %>%
+  dplyr::mutate(LOEOCorrelation = cor, ValidationCount = as.integer(is.finite(cor)),
+                MeanRuntimeSec = Runtime_sec)
+
+cv12_env_rep <- cv12_env_fold %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV, Rep, Env) %>%
+  dplyr::summarise(
+    EnvCorrelation = mean(cor, na.rm = TRUE),
+    Spearman = mean(Spearman, na.rm = TRUE),
+    Czekanowski = mean(Czekanowski, na.rm = TRUE),
+    ValidationCount = sum(ValidationCount),
+    MeanRuntimeSec = mean(Runtime_sec, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+cvloo_rep_summary <- cvloo_env_fold %>%
+  dplyr::group_by(ModelNumber, Model, Trait, CV, Env_leave, Rep) %>%
+  dplyr::summarise(
+    LOEOCorrelation = mean(cor, na.rm = TRUE),
+    Spearman = mean(Spearman, na.rm = TRUE),
+    Czekanowski = mean(Czekanowski, na.rm = TRUE),
+    ValidationCount = sum(ValidationCount),
+    MeanRuntimeSec = mean(Runtime_sec, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+stopifnot(nrow(metrics_by_environment) == 576L,
+          nrow(metrics_across_environments) == 144L,
+          nrow(cv12_summary_rebuilt) == 72L,
+          nrow(cvloo_summary_rebuilt) == 288L)
+```
+
+#### Comparações pareadas de Pearson
+
+A comparação inferencial é restrita a Pearson. Cada reamostragem sorteia dez repetições com reposição, mantendo os cinco folds, os ambientes pertinentes e os 18 modelos emparelhados. As médias das repetições são utilizadas apenas como forma computacional equivalente de calcular a média bootstrap das métricas completas. Para os 153 contrastes de cada combinação característica × cenário × ambiente (ou média dos quatro), calculamos o erro centrado de cada diferença e o quantil de 95% do maior erro absoluto. O intervalo simultâneo aproximado é a diferença observada mais ou menos esse quantil. A família incompleta é identificada e não recebe inferência; nenhuma correlação indefinida é substituída por zero. A reamostragem não estima a incerteza de uma nova população de genótipos; com dez blocos, a cobertura é aproximada e condicionada aos dados e ajustes existentes. Spearman e Czekanowski permanecem descritivos.
+
+```{r paired-pearson-bootstrap, eval=FALSE}
+n_boot <- 5000L
+bootstrap_seed <- 20261125L
+confidence_level <- 0.95
+model_names <- paste0("M", 1:18)
+model_pairs <- combn(model_names, 2L)
+
+set.seed(bootstrap_seed)
+
+# Each row contains the frequency of each of the ten sampled repetitions.
+# Use identical draws for all 18 models and all evaluation families.
+bootstrap_weights <- t(replicate(
+  n_boot, tabulate(sample.int(10L, 10L, replace = TRUE), nbins = 10L)
+)) / 10
+
+bootstrap_families <- expand.grid(
+  Trait = c("GY", "KW"),
+  CV = c("CV1", "CV2", "CV0", "CV00"),
+  Scope = c(env_levels, "Across"),
+  stringsAsFactors = FALSE
+)
+
+bootstrap_results <- vector("list", nrow(bootstrap_families))
+
+for (g in seq_len(nrow(bootstrap_families))) {
+  family <- bootstrap_families[g, ]
+  records <- prediction_raw %>%
+    dplyr::filter(Trait == family$Trait, CV == family$CV)
+
+  target_env <- if (family$Scope == "Across") env_levels else family$Scope
+  records <- records %>% dplyr::filter(Env %in% target_env)
+
+  # Complete paired families only. Missing correlations are never zero.
+  expected_n <- 18L * 10L * 5L * length(target_env)
+  complete_family <- nrow(records) == expected_n && all(is.finite(records$cor))
+
+  result <- data.frame(
+    Trait = family$Trait, CV = family$CV, Scope = family$Scope,
+    ModelA = model_pairs[1, ], ModelB = model_pairs[2, ],
+    MeanA = NA_real_, MeanB = NA_real_, Difference = NA_real_,
+    Lower95 = NA_real_, Upper95 = NA_real_, Significant = NA,
+    SimultaneousHalfWidth = NA_real_, B = n_boot,
+    N_Repetitions = if (complete_family) 10L else NA_integer_, N_ValidMetrics = sum(is.finite(records$cor)),
+    Status = if (complete_family) "Complete" else "Undefined Pearson metric",
+    stringsAsFactors = FALSE
+  )
+
+  # Descriptive means remain available even if a family cannot be tested.
+  descriptive <- if (family$Scope == "Across") metrics_across_environments else
+    metrics_by_environment[metrics_by_environment$Env == family$Scope, ]
+  descriptive <- descriptive[descriptive$Trait == family$Trait &
+                               descriptive$CV == family$CV, ]
+  descriptive_means <- setNames(descriptive$MeanCorrelation,
+                                sub("Eta", "M", descriptive$Model))
+  result$MeanA <- unname(descriptive_means[result$ModelA])
+  result$MeanB <- unname(descriptive_means[result$ModelB])
+  result$Difference <- result$MeanB - result$MeanA
+
+  if (complete_family) {
+    repetition_means <- records %>%
+      dplyr::mutate(Model = sub("Eta", "M", Model)) %>%
+      dplyr::group_by(Rep, Model) %>%
+      dplyr::summarise(Score = mean(cor), .groups = "drop") %>%
+      tidyr::pivot_wider(names_from = Model, values_from = Score) %>%
+      dplyr::arrange(Rep)
+
+    score_matrix <- as.matrix(repetition_means[, model_names])
+    observed_means <- colMeans(score_matrix)
+
+    stopifnot(
+      identical(dim(score_matrix), c(10L, 18L)),
+      isTRUE(all.equal(unname(observed_means),
+                       unname(descriptive_means[model_names]), tolerance = 1e-12))
+    )
+
+    boot_means <- bootstrap_weights %*% score_matrix
+
+    mean_a <- observed_means[model_pairs[1, ]]
+    mean_b <- observed_means[model_pairs[2, ]]
+    observed_delta <- mean_b - mean_a
+    bootstrap_delta <- boot_means[, model_pairs[2, ], drop = FALSE] -
+      boot_means[, model_pairs[1, ], drop = FALSE]
+
+    # Center each contrast on its observed estimate before taking the maximum.
+    # The 95th percentile of the maximum absolute error gives one
+    # simultaneous half-width for all 153 contrasts on the Pearson scale.
+    centered <- sweep(bootstrap_delta, 2L, observed_delta, "-")
+    max_error <- apply(abs(centered), 1L, max)
+    half_width <- as.numeric(quantile(max_error, confidence_level, type = 1))
+
+    result$MeanA <- unname(mean_a)
+    result$MeanB <- unname(mean_b)
+    result$Difference <- unname(observed_delta)
+    result$Lower95 <- unname(observed_delta - half_width)
+    result$Upper95 <- unname(observed_delta + half_width)
+    result$Significant <- result$Lower95 > 0 | result$Upper95 < 0
+    result$SimultaneousHalfWidth <- half_width
+
+    stopifnot(
+      all(result$Lower95 <= result$Difference),
+      all(result$Upper95 >= result$Difference),
+      mean(max_error <= half_width) >= confidence_level
+    )
+  }
+
+  bootstrap_results[[g]] <- result
+}
+
+bootstrap_comparisons <- dplyr::bind_rows(bootstrap_results)
+
+# Tag matched contrasts for discussion without limiting the comparisons.
+scientific_pairs <- data.frame(
+  ModelA = paste0("M", c(1,3,5,2,4,6,7,8,9,
+                         1,1,2,2,7,7,10,10,11,11,12,12,
+                         1,2,3,4,5,6,10,11,13,14,16,17)),
+  ModelB = paste0("M", c(10,13,16,11,14,17,12,15,18,
+                         3,5,4,6,8,9,13,16,14,17,15,18,
+                         7,7,8,8,9,9,12,12,15,15,18,18)),
+  ScientificContrast = rep(c("Weather", "Kernel", "Integration"), c(9,12,12)),
+  stringsAsFactors = FALSE
+)
+
+bootstrap_comparisons <- bootstrap_comparisons %>%
+  dplyr::left_join(scientific_pairs, by = c("ModelA", "ModelB")) %>%
+  dplyr::mutate(ScientificContrast = tidyr::replace_na(ScientificContrast, "Other"))
+
+stopifnot(nrow(bootstrap_comparisons) == 6120L,
+          sum(bootstrap_comparisons$ScientificContrast != "Other") == 1320L,
+          !anyDuplicated(bootstrap_comparisons[, c("Trait", "CV", "Scope", "ModelA", "ModelB")]))
+```
+
+A exportação é executada uma única vez na versão EN.
+
+```{r export-prediction-summaries, eval=FALSE}
+dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
+
+readr::write_csv(cv12_raw, file.path(tables_dir, "prediction_cv1_cv2_raw.csv"))
+readr::write_csv(cvloo_raw, file.path(tables_dir, "prediction_cv0_cv00_raw.csv"))
+readr::write_csv(cv12_env_fold, file.path(tables_dir, "prediction_cv1_cv2_by_rep_fold_env.csv"))
+readr::write_csv(cvloo_env_fold, file.path(tables_dir, "prediction_cv0_cv00_by_rep_fold_env.csv"))
+readr::write_csv(cv12_env_rep, file.path(tables_dir, "prediction_cv1_cv2_by_rep_env.csv"))
+readr::write_csv(cvloo_rep_summary, file.path(tables_dir, "prediction_cv0_cv00_by_run.csv"))
+readr::write_csv(cv12_summary_rebuilt, file.path(tables_dir, "prediction_cv1_cv2_summary.csv"))
+readr::write_csv(cvloo_summary_rebuilt, file.path(tables_dir, "prediction_cv0_cv00_summary.csv"))
+readr::write_csv(metrics_by_environment, file.path(tables_dir, "prediction_metrics_by_environment.csv"))
+readr::write_csv(metrics_across_environments, file.path(tables_dir, "prediction_metrics_across_environments.csv"))
+
+readr::write_csv(
+  bootstrap_comparisons %>% dplyr::filter(Trait == "GY"),
+  file.path(tables_dir, "prediction_pearson_bootstrap_GY.csv")
+)
+readr::write_csv(
+  bootstrap_comparisons %>% dplyr::filter(Trait == "KW"),
+  file.path(tables_dir, "prediction_pearson_bootstrap_KW.csv")
+)
+```
+
+### 4.2 Carregar as novas tabelas-resumo
+
+```{r load-complementary-results}
+metrics_by_environment <- readr::read_csv(
+  file.path(tables_dir, "prediction_metrics_by_environment.csv"), show_col_types = FALSE
+)
+metrics_across_environments <- readr::read_csv(
+  file.path(tables_dir, "prediction_metrics_across_environments.csv"), show_col_types = FALSE
+)
+
+bootstrap_comparisons <- dplyr::bind_rows(
+  readr::read_csv(file.path(tables_dir, "prediction_pearson_bootstrap_GY.csv"), show_col_types = FALSE),
+  readr::read_csv(file.path(tables_dir, "prediction_pearson_bootstrap_KW.csv"), show_col_types = FALSE)
+)
+
+# New summaries are required; older Pearson-only summaries are not valid inputs.
+stopifnot(
+  nrow(metrics_by_environment) == 576L,
+  nrow(metrics_across_environments) == 144L,
+  nrow(bootstrap_comparisons) == 6120L,
+  all(c("MeanSpearman", "MeanCzekanowski", "N_Pearson") %in% names(metrics_by_environment))
+)
+
+metric_summary <- dplyr::bind_rows(
+  metrics_by_environment %>% dplyr::rename(Scope = Env),
+  metrics_across_environments %>% dplyr::mutate(Scope = "Across")
+) %>%
+  dplyr::mutate(Model = sub("Eta", "M", Model))
+```
+
+```{r load-visualization-tables}
 cv12_summary <- readr::read_csv(
   file.path(tables_dir, "prediction_cv1_cv2_summary.csv"),
   show_col_types = FALSE
@@ -253,6 +649,16 @@ cvloo_summary <- readr::read_csv(
       .default = KernelFamily
     )
   )
+
+# Both canonical summaries must contain the new metrics.
+stopifnot(
+  nrow(cv12_summary) == 72L,
+  nrow(cvloo_summary) == 288L,
+  all(c("MeanSpearman", "SDSpearman", "MeanCzekanowski", "SDCzekanowski", "N_Pearson") %in%
+      names(cv12_summary)),
+  all(c("MeanSpearman", "SDSpearman", "MeanCzekanowski", "SDCzekanowski", "N_Pearson") %in%
+      names(cvloo_summary))
+)
 
 cv12_display <- cv12_summary %>%
   dplyr::arrange(Trait, CV, Pathway, KernelFamily, WeatherStatus, ModelNumber) %>%
@@ -341,6 +747,17 @@ cvloo_kernel_family_compare <- cvloo_summary %>%
     Delta_Arccosine_vs_Linear = Arccosine - Linear
   ) %>%
   dplyr::arrange(Trait, CV, Env_leave, Pathway, WeatherStatus)
+```
+
+```{r save-visualization-tables, eval=FALSE}
+readr::write_csv(cv12_display, file.path(tables_dir, "prediction_cv1_cv2_display_table.csv"))
+readr::write_csv(cvloo_display, file.path(tables_dir, "prediction_cv0_cv00_display_table.csv"))
+readr::write_csv(cv12_top3, file.path(tables_dir, "prediction_cv1_cv2_top3.csv"))
+readr::write_csv(cvloo_top3, file.path(tables_dir, "prediction_cv0_cv00_top3.csv"))
+readr::write_csv(cv12_w_effect, file.path(tables_dir, "prediction_cv1_cv2_w_effect_pairs.csv"))
+readr::write_csv(cvloo_w_effect, file.path(tables_dir, "prediction_cv0_cv00_w_effect_pairs.csv"))
+readr::write_csv(cv12_kernel_family_compare, file.path(tables_dir, "prediction_cv1_cv2_kernel_family_compare.csv"))
+readr::write_csv(cvloo_kernel_family_compare, file.path(tables_dir, "prediction_cv0_cv00_kernel_family_compare.csv"))
 ```
 
 ## 5. Tabelas Top-3
@@ -563,9 +980,148 @@ dplyr::bind_rows(
   kableExtra::row_spec(0, bold = TRUE)
 ```
 
+### 8.1 Métricas complementares e comparações suplementares
+
+A tabela completa de métricas inclui os quatro ambientes e a média conjunta, com as contagens válidas. As comparações de Pearson são exportadas em dois CSVs, um por característica, com 3.060 linhas cada. Diferenças positivas favorecem o modelo B; intervalos simultâneos que excluem zero indicam diferenças detectáveis no nível da família. Os contrastes científicos orientam a discussão. Não são realizadas comparações inferenciais para Spearman ou Czekanowski.
+
+```{r complementary-metric-table}
+metric_summary %>%
+  dplyr::select(Trait, CV, Scope, Model, MeanCorrelation, SDCorrelation,
+                MeanSpearman, SDSpearman, MeanCzekanowski, SDCzekanowski,
+                N_Pearson, N_Spearman, N_Czekanowski) %>%
+  knitr::kable(caption = "Métricas por ambiente e entre ambientes.", digits = 4) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE, position = "center", font_size = 13
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
+```
+
+```{r bootstrap-coverage-table}
+bootstrap_coverage <- bootstrap_comparisons %>%
+  dplyr::group_by(Trait, CV, Scope, Status) %>%
+  dplyr::summarise(Pairs = dplyr::n(),
+                   Significant = if (all(is.na(Significant))) NA_integer_ else sum(Significant, na.rm = TRUE),
+                   .groups = "drop")
+
+bootstrap_coverage %>%
+  knitr::kable(caption = "Cobertura das comparações de Pearson.", digits = 4) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE, position = "center", font_size = 13
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
+```
+
+```{r scientific-bootstrap-table}
+bootstrap_comparisons %>%
+  dplyr::filter(ScientificContrast != "Other") %>%
+  dplyr::select(Trait, CV, Scope, ScientificContrast, ModelA, ModelB,
+                MeanA, MeanB, Difference, Lower95, Upper95, Significant, Status) %>%
+  knitr::kable(caption = "Contrastes científicos; todos os pares nos CSVs suplementares.", digits = 4) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE, position = "center", font_size = 13
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
+```
+
+### 8.2 Ranqueamento global dos genótipos
+
+Carregamos todas as predições individuais. Somente para o ranking, calculamos a média das predições de cada observação dentro da repetição, depois a média das dez repetições. O ranking é construído separadamente por característica, cenário, ambiente e modelo; os empates são resolvidos por Pedigree e a seleção usa os 20% superiores, com arredondamento para cima. Esses resultados não substituem as métricas dos folds. CV2 é uma avaliação dentro da amostra.
+
+```{r load-individual-predictions}
+individual_files <- sort(list.files(
+  individual_predictions_dir, pattern = "\\.rds$", recursive = TRUE, full.names = TRUE
+))
+
+stopifnot(length(individual_files) == 18000L)
+
+individual_predictions <- dplyr::bind_rows(lapply(individual_files, readRDS))
+
+stopifnot(
+  nrow(individual_predictions) == 3535200L,
+  all(c("ObsID", "Pedigree", "Env", "Trait", "Model", "Rep", "Fold",
+        "Env_leave", "Observed", "Predicted", "Training", "CV") %in%
+      names(individual_predictions)),
+  !anyDuplicated(individual_predictions[, c("ObsID", "Trait", "Model", "Rep", "Fold", "CV")]),
+  all(is.finite(individual_predictions$Observed)),
+  all(is.finite(individual_predictions$Predicted))
+)
+```
+
+```{r rank-genotypes, eval=FALSE}
+# Retain all observations for the plots. Average only for global rankings.
+ranking_by_rep <- individual_predictions %>%
+  dplyr::group_by(Trait, CV, Env, Model, ObsID, Pedigree, Rep) %>%
+  dplyr::summarise(
+    Observed = dplyr::first(Observed),
+    Predicted = mean(Predicted),
+    N_Predictions = dplyr::n(),
+    .groups = "drop"
+  )
+
+genotype_ranking <- ranking_by_rep %>%
+  dplyr::group_by(Trait, CV, Env, Model, ObsID, Pedigree) %>%
+  dplyr::summarise(
+    Observed = dplyr::first(Observed),
+    MeanPredicted = mean(Predicted),
+    N_Repetitions = dplyr::n_distinct(Rep),
+    N_Predictions = sum(N_Predictions),
+    .groups = "drop"
+  ) %>%
+  dplyr::group_by(Trait, CV, Env, Model) %>%
+  dplyr::arrange(desc(Observed), Pedigree, .by_group = TRUE) %>%
+  dplyr::mutate(ObservedRank = dplyr::row_number()) %>%
+  dplyr::arrange(desc(MeanPredicted), Pedigree, .by_group = TRUE) %>%
+  dplyr::mutate(
+    PredictedRank = dplyr::row_number(),
+    N_Selected = ceiling(0.20 * dplyr::n()),
+    ObservedSelected = ObservedRank <= N_Selected,
+    PredictedSelected = PredictedRank <= N_Selected
+  ) %>%
+  dplyr::ungroup()
+
+stopifnot(nrow(genotype_ranking) == 141408L,
+          all(genotype_ranking$N_Repetitions == 10L),
+          all(genotype_ranking$N_Predictions ==
+                ifelse(genotype_ranking$CV %in% c("CV1", "CV00"), 10L, 40L)))
+```
+
+```{r export-genotype-ranking, eval=FALSE}
+readr::write_csv(genotype_ranking, file.path(tables_dir, "prediction_genotype_ranking.csv"))
+```
+
+A renderização utiliza o ranking exportado após o cálculo explícito na versão EN.
+
+```{r load-genotype-ranking}
+genotype_ranking <- readr::read_csv(
+  file.path(tables_dir, "prediction_genotype_ranking.csv"),
+  col_types = readr::cols(ObsID = readr::col_character(), Pedigree = readr::col_character()),
+  show_col_types = FALSE
+)
+
+stopifnot(nrow(genotype_ranking) == 141408L)
+```
+
+```{r ranking-preview}
+genotype_ranking %>%
+  dplyr::filter(PredictedRank <= 3L) %>%
+  dplyr::select(Trait, CV, Env, Model, Pedigree, Observed, MeanPredicted,
+                ObservedRank, PredictedRank, N_Predictions) %>%
+  knitr::kable(caption = "Três genótipos mais bem classificados por grupo; ranking completo no CSV.", digits = 4) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE, position = "center", font_size = 13
+  ) %>%
+  kableExtra::scroll_box(width = "100%", height = "360px")
+```
+
+
+
 ## 9. Figuras
 
-As figuras finais resumem a capacidade preditiva para o catálogo de modelos em `CV1/CV2` e `CV0/CV00`. O eixo x usa `M1`--`M18`; as composições completas dos modelos são fornecidas na Tabela Suplementar S1.
+As figuras originais de Pearson preservam o catálogo M1–M18 e o estilo de apresentação. As barras representam médias aritméticas; as barras de erro são desvios-padrão das métricas individuais dos folds, não erros-padrão ou intervalos de confiança. Para CV1/CV2 o resumo reúne os quatro ambientes; CV0/CV00 mantém o ambiente retirado fixo em cada painel. Os genótipos dos folds variam entre repetições, além da variabilidade MCMC. CV2 representa recuperação dentro da amostra.
 
 ```{r figure-cv12}
 group_levels_pt <- c("Genômico", "Fenômico", "Combinado")
@@ -586,9 +1142,8 @@ plot_gy <- cv12_plot_data %>%
   geom_errorbar(aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation), width = 0.20, linewidth = 0.35, na.rm = TRUE) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
   scale_x_discrete(name = "Modelo") +
-  scale_y_continuous(name = "Correlação preditiva", breaks = seq(0, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
-  coord_cartesian(ylim = c(0, 1)) +
-  facet_wrap(~ CV) +
+  scale_y_continuous(name = "Correlação preditiva", breaks = seq(-1, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
+    facet_wrap(~ CV) +
   ggthemes::scale_fill_gdocs(
     name = "Grupo de comparação",
     limits = group_levels_pt,
@@ -609,9 +1164,8 @@ plot_kw <- cv12_plot_data %>%
   geom_errorbar(aes(ymin = MeanCorrelation - SDCorrelation, ymax = MeanCorrelation + SDCorrelation), width = 0.20, linewidth = 0.35, na.rm = TRUE) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40", linewidth = 0.35) +
   scale_x_discrete(name = "Modelo") +
-  scale_y_continuous(name = "Correlação preditiva", breaks = seq(0, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
-  coord_cartesian(ylim = c(0, 1)) +
-  facet_wrap(~ CV) +
+  scale_y_continuous(name = "Correlação preditiva", breaks = seq(-1, 1, by = 0.2), expand = expansion(mult = c(0, 0.02))) +
+    facet_wrap(~ CV) +
   ggthemes::scale_fill_gdocs(
     name = "Grupo de comparação",
     limits = group_levels_pt,
@@ -623,6 +1177,12 @@ plot_kw <- cv12_plot_data %>%
   theme(plot.title = element_text(face = "bold", size = 18, hjust = 0.5), axis.text.x = element_text(size = 16, color = "black"), axis.text.y = element_text(size = 14, color = "black"), axis.title = element_text(face = "bold", size = 16), legend.position = "top", legend.title = element_text(face = "bold", size = 16), legend.text = element_text(size = 14))
 
 plot_kw
+```
+
+```{r save-figure-cv12, eval=FALSE}
+dir.create(figures_dir, recursive = TRUE, showWarnings = FALSE)
+ggsave(file.path(figures_dir, "prediction_GY_CV1_CV2_combined.tiff"), plot = plot_gy, width = 16, height = 10, dpi = 600, compression = "lzw", bg = "white")
+ggsave(file.path(figures_dir, "prediction_KW_CV1_CV2_combined.tiff"), plot = plot_kw, width = 16, height = 10, dpi = 600, compression = "lzw", bg = "white")
 ```
 
 ```{r figure-cvloo}
@@ -678,10 +1238,9 @@ plot_gy_cv00 <- cvloo_plot_data %>%
   scale_x_discrete(name = "Modelo") +
   scale_y_continuous(
     name = "Correlação preditiva",
-    breaks = seq(0, 1, by = 0.2),
+    breaks = seq(-1, 1, by = 0.2),
     expand = expansion(mult = c(0, 0.02))
   ) +
-  coord_cartesian(ylim = c(0, 1)) +
   ggthemes::scale_fill_gdocs(
     name = "Grupo de comparação",
     limits = group_levels_pt,
@@ -721,10 +1280,9 @@ plot_gy_cv0 <- cvloo_plot_data %>%
   scale_x_discrete(name = "Modelo") +
   scale_y_continuous(
     name = "Correlação preditiva",
-    breaks = seq(0, 1, by = 0.2),
+    breaks = seq(-1, 1, by = 0.2),
     expand = expansion(mult = c(0, 0.02))
   ) +
-  coord_cartesian(ylim = c(0, 1)) +
   ggthemes::scale_fill_gdocs(
     name = "Grupo de comparação",
     limits = group_levels_pt,
@@ -781,10 +1339,9 @@ plot_kw_cv00 <- cvloo_plot_data %>%
   scale_x_discrete(name = "Modelo") +
   scale_y_continuous(
     name = "Correlação preditiva",
-    breaks = seq(0, 1, by = 0.2),
+    breaks = seq(-1, 1, by = 0.2),
     expand = expansion(mult = c(0, 0.02))
   ) +
-  coord_cartesian(ylim = c(0, 1)) +
   ggthemes::scale_fill_gdocs(
     name = "Grupo de comparação",
     limits = group_levels_pt,
@@ -824,10 +1381,9 @@ plot_kw_cv0 <- cvloo_plot_data %>%
   scale_x_discrete(name = "Modelo") +
   scale_y_continuous(
     name = "Correlação preditiva",
-    breaks = seq(0, 1, by = 0.2),
+    breaks = seq(-1, 1, by = 0.2),
     expand = expansion(mult = c(0, 0.02))
   ) +
-  coord_cartesian(ylim = c(0, 1)) +
   ggthemes::scale_fill_gdocs(
     name = "Grupo de comparação",
     limits = group_levels_pt,
@@ -841,9 +1397,103 @@ plot_kw_cv0 <- cvloo_plot_data %>%
 plot_kw_cv0
 ```
 
+```{r save-figure-cvloo, eval=FALSE}
+ggsave(file.path(figures_dir, "prediction_GY_CV00.tiff"), plot = plot_gy_cv00, width = 16, height = 10, dpi = 600, compression = "lzw", bg = "white")
+ggsave(file.path(figures_dir, "prediction_GY_CV0.tiff"), plot = plot_gy_cv0, width = 16, height = 10, dpi = 600, compression = "lzw", bg = "white")
+ggsave(file.path(figures_dir, "prediction_KW_CV00.tiff"), plot = plot_kw_cv00, width = 16, height = 10, dpi = 600, compression = "lzw", bg = "white")
+ggsave(file.path(figures_dir, "prediction_KW_CV0.tiff"), plot = plot_kw_cv0, width = 16, height = 10, dpi = 600, compression = "lzw", bg = "white")
+```
+
+### 9.1 Spearman e Czekanowski
+
+As figuras suplementares são descritivas e apresentam médias e desvios-padrão dos valores dos folds.
+
+```{r figure-complementary-metrics}
+complementary_plot_data <- metric_summary %>%
+  tidyr::pivot_longer(
+    cols = c(MeanSpearman, SDSpearman, MeanCzekanowski, SDCzekanowski),
+    names_to = c(".value", "Metric"), names_pattern = "(Mean|SD)(.*)"
+  ) %>%
+  dplyr::mutate(Model = factor(Model, levels = model_catalog$Model),
+                Scope = factor(Scope, levels = c(env_levels, "Across")))
+
+complementary_plots <- list()
+
+for (trait in c("GY", "KW")) {
+  for (cv in c("CV1", "CV2", "CV0", "CV00")) {
+    for (metric in c("Spearman", "Czekanowski")) {
+      plot_data <- complementary_plot_data %>%
+        dplyr::filter(Trait == trait, CV == cv, Metric == metric)
+
+      plot_name <- paste(trait, cv, metric, sep = "_")
+
+      complementary_plots[[plot_name]] <- ggplot(plot_data, aes(Model, Mean, fill = Metric)) +
+        geom_col(width = 0.75, color = "grey30", linewidth = 0.25) +
+        geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD), width = 0.2) +
+        facet_wrap(~ Scope, ncol = 2) +
+  ggthemes::scale_fill_gdocs(guide = "none") +
+        labs(title = paste(trait, cv, metric, sep = " | "),
+             x = "Modelo", y = "Média da métrica") +
+        theme_bw(base_size = 13)
+
+      print(complementary_plots[[plot_name]])
+    }
+  }
+}
+```
+
+### 9.2 Valores observados e preditos
+
+Cada figura reúne os 18 modelos para uma característica, cenário e ambiente. Todos os pontos são mantidos, sem médias por observação; as mesmas observações aparecem em vários folds ou repetições e não são independentes. A linha tracejada indica identidade. CV2 é recuperação dentro da amostra.
+
+```{r figure-observed-predicted, fig.width=16, fig.height=10}
+observed_predicted_plots <- list()
+
+for (trait in c("GY", "KW")) {
+  for (cv in c("CV1", "CV2", "CV0", "CV00")) {
+    for (env in env_levels) {
+      plot_data <- individual_predictions %>%
+        dplyr::filter(Trait == trait, CV == cv, Env == env) %>%
+        dplyr::mutate(Model = factor(Model, levels = model_catalog$Model))
+
+      plot_name <- paste(trait, cv, env, sep = "_")
+
+      observed_predicted_plots[[plot_name]] <- ggplot(plot_data, aes(Observed, Predicted)) +
+        geom_point(alpha = 0.18, size = 0.6, color = ggthemes::gdocs_pal()(3)[1]) +
+        geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "grey40") +
+        facet_wrap(~ Model, ncol = 6) +
+        coord_equal() +
+        labs(title = paste(trait, cv, env, sep = " | "),
+             x = "Observado", y = "Predito") +
+        theme_bw(base_size = 12)
+
+      print(observed_predicted_plots[[plot_name]])
+    }
+  }
+}
+```
+
+As exportações de TIFF são executadas explicitamente somente na versão EN.
+
+```{r export-supplementary-figures, eval=FALSE}
+dir.create(figures_dir, recursive = TRUE, showWarnings = FALSE)
+
+for (plot_name in names(complementary_plots)) {
+  ggsave(file.path(figures_dir, paste0("prediction_", plot_name, ".tiff")),
+         plot = complementary_plots[[plot_name]], width = 16, height = 10,
+         dpi = 300, compression = "lzw", bg = "white")
+}
+
+for (plot_name in names(observed_predicted_plots)) {
+  ggsave(file.path(figures_dir, paste0("prediction_observed_predicted_", plot_name, ".tiff")),
+         plot = observed_predicted_plots[[plot_name]], width = 16, height = 10,
+         dpi = 300, compression = "lzw", bg = "white")
+}
+```
+
 ## 10. Nota final
 
-Esta versão está alinhada ao fluxo final de predição e renderiza as tabelas e figuras diretamente no documento. Ela não salva arquivos de saída e não duplica tabelas ou gráficos em `output/tables/` ou `output/figures/`.
+Este módulo preserva as dez seções originais e reúne os resultados descritivos e as comparações de Pearson. As diferenças entre modelos são apresentadas em tabelas suplementares, não em figuras de contrastes. A renderização lê os resultados novos e não reajusta modelos nem exporta arquivos.
 
 ## Navegação entre etapas
 
