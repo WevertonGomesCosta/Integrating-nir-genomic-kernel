@@ -32,7 +32,7 @@ knitr::opts_chunk$set(
 
 ## 1. Introdução
 
-Este tutorial resume os **componentes de variância** dos modelos preditivos usados neste estudo. No fluxo atual, a análise pesada já foi realizada anteriormente; por isso, o documento preserva a estrutura do código, mas mantém o ajuste dos modelos com `eval=FALSE`.
+Este tutorial apresenta a estimação e o resumo dos **componentes de variância** dos 18 modelos para GY e KW. Os ajustes são executados explicitamente na Seção 6; a renderização convencional utiliza os resultados consolidados pela versão em inglês.
 
 O objetivo é quantificar quanto da variância fenotípica total é atribuída aos efeitos principais e aos termos de interação incluídos em cada modelo. Em termos práticos, este script ajuda a responder perguntas como:
 
@@ -46,7 +46,7 @@ Este script está organizado em quatro estágios:
 
 1. **Carregar os kernels e os dados fenotípicos** disponíveis em `output/Matrizes/`.
 2. **Definir os 18 modelos de componentes de variância**.
-3. **Ler os resumos de componentes de variância disponíveis**, mantendo o ajuste pesado apenas documentado com `eval=FALSE`.
+3. **Ajustar os 360 modelos e consolidar os resumos posteriores**, com a execução computacional explícita e a renderização separada.
 4. **Processar e visualizar a decomposição da variância** para produtividade de grãos (GY) e peso de 500 grãos (KW).
 
 Uma grande proporção de variância associada a uma dada fonte não deve ser interpretada automaticamente como evidência de complementaridade biológica ou de melhor desempenho preditivo. Esse ponto é especialmente importante para **P**, porque a similaridade baseada em NIRS pode refletir forte resposta fisiológica ao ambiente além de qualquer sinal biológico estável, e para **W**, porque o kernel climático complementa, mas não substitui, o efeito categórico de ambiente.
@@ -67,7 +67,7 @@ Uma grande proporção de variância associada a uma dada fonte não deve ser in
 
 ## 2. Ambiente em R e entradas necessárias
 
-Primeiro, carregamos apenas os pacotes necessários para manipular os dados disponíveis, organizar tabelas e renderizar as figuras finais em padrão de artigo.
+Primeiro, carregamos os pacotes necessários para o ajuste bayesiano, a manipulação dos dados, as tabelas e as figuras finais.
 
 ```{r load-packages}
 library(dplyr)
@@ -77,6 +77,10 @@ library(stringr)
 library(tibble)
 library(ggplot2)
 library(patchwork)
+library(BGLR)
+library(parallel)
+library(doParallel)
+library(foreach)
 library(ggthemes)
 library(scales)
 library(fs)
@@ -282,57 +286,55 @@ GAKW_KW <- GAKW_KW[reference_ids, reference_ids, drop = FALSE]
 PAKW <- PAKW[reference_ids, reference_ids, drop = FALSE]
 PAKW_KW <- PAKW_KW[reference_ids, reference_ids, drop = FALSE]
 
-kernel_inventory <- tibble(
-  kernel = c("ZG", "ZP", "ZEZE", "ZW", "GGK", "PGK", "GAK", "PAK"),
-  n_rows = c(nrow(ZG), nrow(ZP), nrow(ZEZE), nrow(ZW), nrow(GGK), nrow(PGK), nrow(GAK), nrow(PAK)),
-  n_cols = c(ncol(ZG), ncol(ZP), ncol(ZEZE), ncol(ZW), ncol(GGK), ncol(PGK), ncol(GAK), ncol(PAK)),
-  is_square = c(
-    nrow(ZG) == ncol(ZG),
-    nrow(ZP) == ncol(ZP),
-    nrow(ZEZE) == ncol(ZEZE),
-    nrow(ZW) == ncol(ZW),
-    nrow(GGK) == ncol(GGK),
-    nrow(PGK) == ncol(PGK),
-    nrow(GAK) == ncol(GAK),
-    nrow(PAK) == ncol(PAK)
-  ),
-  symmetric_names = c(
-    identical(rownames(ZG), colnames(ZG)),
-    identical(rownames(ZP), colnames(ZP)),
-    identical(rownames(ZEZE), colnames(ZEZE)),
-    identical(rownames(ZW), colnames(ZW)),
-    identical(rownames(GGK), colnames(GGK)),
-    identical(rownames(PGK), colnames(PGK)),
-    identical(rownames(GAK), colnames(GAK)),
-    identical(rownames(PAK), colnames(PAK))
-  ),
-  aligned_with_reference = c(
-    identical(rownames(ZG), reference_ids),
-    identical(rownames(ZP), reference_ids),
-    identical(rownames(ZEZE), reference_ids),
-    identical(rownames(ZW), reference_ids),
-    identical(rownames(GGK), reference_ids),
-    identical(rownames(PGK), reference_ids),
-    identical(rownames(GAK), reference_ids),
-    identical(rownames(PAK), reference_ids)
-  )
+shared_kernels <- c("ZG", "ZP", "ZEZE", "ZW", "ZGZE", "ZPZE", "ZGZW", "ZPZW")
+nonlinear_kernels <- c(
+  "GGK", "PGK", "GAK", "PAK", "GGKE", "PGKE",
+  "GGKW", "PGKW", "GAKE", "PAKE", "GAKW", "PAKW"
 )
 
+kernel_inventory <- tibble(
+  kernel = c(shared_kernels, paste0(nonlinear_kernels, "_GY"), paste0(nonlinear_kernels, "_KW")),
+  trait = c(rep("Shared", length(shared_kernels)), rep(c("GY", "KW"), each = length(nonlinear_kernels))),
+  object = c(shared_kernels, nonlinear_kernels, paste0(nonlinear_kernels, "_KW"))
+)
+
+kernel_inventory$n_rows <- NA_integer_
+kernel_inventory$n_cols <- NA_integer_
+kernel_inventory$is_symmetric <- NA
+kernel_inventory$is_finite <- NA
+kernel_inventory$aligned_with_reference <- NA
+
+for (i in seq_len(nrow(kernel_inventory))) {
+  K <- get(kernel_inventory$object[i])
+  kernel_inventory$n_rows[i] <- nrow(K)
+  kernel_inventory$n_cols[i] <- ncol(K)
+  kernel_inventory$is_symmetric[i] <- isSymmetric(K)
+  kernel_inventory$is_finite[i] <- all(is.finite(K))
+  kernel_inventory$aligned_with_reference[i] <-
+    identical(rownames(K), reference_ids) &&
+    identical(colnames(K), reference_ids)
+}
+
 kernel_inventory %>%
-  dplyr::mutate(
-    n_rows = format(n_rows, big.mark = ","),
-    n_cols = format(n_cols, big.mark = ",")
-  ) %>%
+  select(-object) %>%
   knitr::kable(
-    caption = "Resumo diagnóstico dos principais kernels usados na análise de componentes de variância após alinhamento explícito à ordem das observações fenotípicas.",
-    align = "lcccccc"
+    caption = "Diagnóstico dos 32 kernels compartilhados e específicos por característica, após o alinhamento."
   ) %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     full_width = TRUE,
     position = "center"
   ) %>%
-  kableExtra::scroll_box(width = "100%", height = "260px")
+  kableExtra::scroll_box(width = "100%", height = "320px")
+
+tibble(
+  Matrix = "ZE",
+  Rows = nrow(ZE),
+  Columns = ncol(ZE),
+  Aligned = identical(rownames(ZE), reference_ids),
+  Finite = all(is.finite(ZE))
+) %>%
+  knitr::kable(caption = "Matriz de incidência ambiental (BRR).")
 ```
 
 ## 4. Definição dos 18 modelos preditivos
@@ -585,7 +587,7 @@ traits  <- c("GY", "KW")
 
 ## 6. Ajuste do BGLR para cada modelo
 
-Este é o passo computacionalmente mais caro. O chunk é mantido com `eval=FALSE` para documentar a etapa de ajuste sem rerodar os modelos Bayesianos durante a renderização deste documento.
+Este é o passo computacionalmente mais caro: 18 modelos × 2 características × 10 repetições = 360 ajustes. O chunk permanece com `eval=FALSE`. Execute a etapa de estimação uma única vez na versão em inglês, após preservar os resultados anteriores fora do diretório de saída. Cada ajuste recebe uma semente determinística associada à sua posição na grade de combinações. Os arquivos `.dat` do BGLR contêm os registros MCMC; o RDS armazena as médias posteriores dos parâmetros de variância, o DIC, o tempo e a semente.
 
 Os kernels não lineares são específicos para cada característica. Os modelos de GY utilizam as matrizes calibradas para GY, enquanto os modelos de KW utilizam as matrizes calibradas para KW. Os kernels lineares, ambientais e climáticos são compartilhados. A composição dos 18 modelos permanece a mesma para ambas as características.
 
@@ -629,6 +631,9 @@ results_list <- foreach(
     paste0("VC_", Trait, "_", eta_label, "_", rep_label, "_")
   )
 
+  seed_value <- 20250829L + as.integer(i)
+  set.seed(seed_value)
+
   start_time <- Sys.time()
   fit <- BGLR(
     y = y_data,
@@ -670,44 +675,44 @@ results_list <- foreach(
     }
   }
 
-  variance_samples <- list()
+  variance_means <- setNames(vector("list", length(effect_names)), effect_names)
 
-  if (!is.null(fit$ETA)) {
-    if (is.null(effect_names)) {
-      effect_names <- paste0("Effect_", seq_along(fit$ETA))
-    }
-
-    for (j in seq_along(fit$ETA)) {
-      parameter_names <- names(fit$ETA[[j]])
-      var_parameter <- parameter_names[grepl("^var", parameter_names)]
-
-      if (length(var_parameter) > 0) {
-        variance_samples[[effect_names[j]]] <- fit$ETA[[j]][[var_parameter[1]]]
-      }
-    }
+  for (j in seq_along(effect_names)) {
+    var_parameter <- if (effect_models[j] == "BRR") "varB" else "varU"
+    variance_means[[j]] <- fit$ETA[[j]][[var_parameter]]
   }
 
   metrics_object <- list(
-    varE_samples = fit$varE,
-    variances_samples = variance_samples,
+    varE_mean = fit$varE,
+    variances_mean = variance_means,
     DIC = fit$fit$DIC,
+    seed = seed_value,
     runtime_sec = as.numeric(difftime(end_time, start_time, units = "secs"))
   )
+
+  posterior_means <- c(metrics_object$varE_mean, unlist(metrics_object$variances_mean))
+  if (!identical(names(metrics_object$variances_mean), effect_names) ||
+      length(metrics_object$varE_mean) != 1L ||
+      any(lengths(metrics_object$variances_mean) != 1L) ||
+      length(posterior_means) != length(effect_names) + 1L ||
+      any(!is.finite(posterior_means) | posterior_means < 0)) {
+    stop("Invalid posterior variance estimates: ", Trait, "/", rep_label, "/", eta_label)
+  }
 
   saveRDS(metrics_object, file.path(out_dir, "variance_metrics.rds"))
 
   result_table <- tibble(
     Component = "Residual",
-    MeanVar = mean(metrics_object$varE_samples, na.rm = TRUE)
+    MeanVar = mean(metrics_object$varE_mean, na.rm = TRUE)
   )
 
-  if (length(metrics_object$variances_samples) > 0) {
-    for (nm in names(metrics_object$variances_samples)) {
+  if (length(metrics_object$variances_mean) > 0) {
+    for (nm in names(metrics_object$variances_mean)) {
       result_table <- bind_rows(
         result_table,
         tibble(
           Component = nm,
-          MeanVar = mean(metrics_object$variances_samples[[nm]], na.rm = TRUE)
+          MeanVar = mean(metrics_object$variances_mean[[nm]], na.rm = TRUE)
         )
       )
     }
@@ -729,72 +734,68 @@ saveRDS(all_variance, file.path(results_dir, "variance_components_raw.rds"))
 
 ## 7. Consolidação dos resumos posteriores salvos
 
-Esta seção documenta como os arquivos `_metrics.rds` podem ser consolidados em um único objeto quando a consolidação precisar ser refeita. Como os resultados já estão disponíveis para renderização, o chunk permanece com `eval=FALSE`.
+Cada combinação de modelo, característica e repetição possui um arquivo `variance_metrics.rds`. A consolidação utiliza apenas os 360 caminhos esperados e verifica os componentes antes de reunir os resultados. A versão em inglês é responsável por executar a consolidação e exportar os arquivos; esta versão documenta o mesmo procedimento.
 
 ```{r consolidate-saved-results, eval=FALSE}
-rds_files <- list.files(
-  path = bglr_runs_dir,
-  pattern = "(variance_metrics|_(metrics|metricas))\\.rds$",
-  recursive = TRUE,
-  full.names = TRUE
+expected_runs <- expand.grid(
+  Model = seq_along(models_GY),
+  Rep = seq_len(num_rep),
+  Trait = traits,
+  stringsAsFactors = FALSE
 )
 
-all_tables <- vector("list", length(rds_files))
+rds_files <- file.path(
+  bglr_runs_dir,
+  expected_runs$Trait,
+  sprintf("rep%02d", expected_runs$Rep),
+  paste0("Eta", expected_runs$Model),
+  "variance_metrics.rds"
+)
 
-for (i in seq_along(rds_files)) {
-  current_file <- normalizePath(rds_files[i], winslash = "/", mustWork = FALSE)
-  path_parts <- str_split(current_file, "/")[[1]]
+found_runs <- file.exists(rds_files)
+coverage <- expected_runs %>%
+  mutate(Available = found_runs) %>%
+  group_by(Trait) %>%
+  summarise(Expected = n(), Available = sum(Available), .groups = "drop")
 
-  rep_part <- path_parts[str_detect(path_parts, "^rep[0-9]+$|^rep_[0-9]+$")][1]
-  eta_part <- path_parts[str_detect(path_parts, "^Eta")][1]
-  trait_part <- path_parts[path_parts %in% traits][1]
+print(coverage)
 
-  rep_value <- as.integer(str_remove(rep_part, "^rep_?0*"))
-  model_value <- as.integer(str_remove(eta_part, "^Eta0*"))
-  trait_value <- trait_part
+if (!all(found_runs)) {
+  stop("Missing variance summaries: ", paste(rds_files[!found_runs], collapse = ", "))
+}
 
-  current_object <- readRDS(current_file)
+all_tables <- vector("list", nrow(expected_runs))
 
-  residual_table <- tibble(
+for (i in seq_len(nrow(expected_runs))) {
+  rep_value <- expected_runs$Rep[i]
+  model_value <- expected_runs$Model[i]
+  trait_value <- expected_runs$Trait[i]
+
+  current_object <- readRDS(rds_files[i])
+  expected_components <- model_component_lookup$ComponentBase[
+    model_component_lookup$ModelID == model_value
+  ]
+
+  variance_means <- current_object$variances_mean
+  posterior_means <- c(current_object$varE_mean, unlist(variance_means))
+
+  if (!identical(names(variance_means), expected_components) ||
+      length(current_object$varE_mean) != 1L ||
+      any(lengths(variance_means) != 1L) ||
+      length(posterior_means) != length(expected_components) + 1L ||
+      any(!is.finite(posterior_means) | posterior_means < 0)) {
+    stop("Invalid or incompatible variance summary: ", rds_files[i])
+  }
+
+  all_tables[[i]] <- tibble(
     Rep = rep_value,
     Model = model_value,
     Trait = trait_value,
-    Component = "Residual",
-    MeanVar = mean(current_object$varE_samples, na.rm = TRUE),
+    Component = c("Residual", expected_components),
+    MeanVar = posterior_means,
     DIC = current_object$DIC,
     runtime_sec = current_object$runtime_sec
   )
-
-  variance_means <- colMeans(
-    as.data.frame(current_object$variances_samples),
-    na.rm = TRUE
-  )
-
-  variance_table <- tibble(
-    ComponentRaw = names(variance_means),
-    MeanVar = as.numeric(variance_means)
-  ) %>%
-    mutate(
-      EtaIndex = suppressWarnings(as.integer(str_match(ComponentRaw, "^ETA_([0-9]+)")[, 2])),
-      ComponentClean = sub("_(BRR|RKHS)$", "", ComponentRaw)
-    ) %>%
-    left_join(
-      model_component_lookup %>%
-        filter(ModelID == model_value) %>%
-        select(EtaIndex, ComponentBase),
-      by = "EtaIndex"
-    ) %>%
-    transmute(
-      Rep = rep_value,
-      Model = model_value,
-      Trait = trait_value,
-      Component = coalesce(ComponentBase, ComponentClean),
-      MeanVar = MeanVar,
-      DIC = current_object$DIC,
-      runtime_sec = current_object$runtime_sec
-    )
-
-  all_tables[[i]] <- bind_rows(residual_table, variance_table)
 }
 
 all_variance <- bind_rows(all_tables)
@@ -820,11 +821,33 @@ all_variance <- all_variance %>%
   )
 
 cat("Number of rows in consolidated variance object:", nrow(all_variance), "\n")
+
+expected_components <- bind_rows(lapply(seq_along(models_GY), function(i) {
+  tibble(Model = i, Component = c("Residual", names(models_GY[[i]])))
+}))
+
+expected_rows <- merge(
+  expand.grid(Model = seq_along(models_GY), Rep = seq_len(num_rep),
+              Trait = traits, stringsAsFactors = FALSE),
+  expected_components, by = "Model"
+)
+
+key_columns <- c("Model", "Rep", "Trait", "Component")
+actual_keys <- all_variance[, key_columns]
+
+if (anyDuplicated(actual_keys) ||
+    nrow(anti_join(expected_rows, actual_keys, by = key_columns)) > 0L ||
+    nrow(anti_join(actual_keys, expected_rows, by = key_columns)) > 0L ||
+    any(!is.finite(all_variance$MeanVar) | all_variance$MeanVar < 0)) {
+  stop("Incomplete or invalid consolidated variance components.")
+}
+
+cat("Estimativas iguais a zero:", sum(all_variance$MeanVar == 0), "\n")
 ```
 
 ## 9. Resumo dos componentes de variância
 
-Agora calculamos a média dos valores posteriores ao longo das repetições para cada modelo, caráter e componente. Em seguida, convertemos os resultados em **percentuais da variância total**, o que torna os modelos diretamente comparáveis.
+Calculamos a média das estimativas posteriores de cada parâmetro de variância ao longo das dez repetições e dividimos essa média pela soma das médias dos componentes do modelo, incluindo o resíduo. Mantemos o cálculo original. Os percentuais representam proporções dos parâmetros de variância sob a parametrização adotada; como os kernels podem ter escalas distintas, não devem ser interpretados como frações da variância fenotípica em uma escala comum nem como efeitos causais.
 
 ```{r process-variance-components}
 variance_summary <- all_variance %>%
