@@ -24,12 +24,12 @@ github-repo: WevertonGomesCosta/Integrating-nir-genomic-kernel
 
 This submodule is the execution counterpart of `analysis_prediction.Rmd`. Its role is to run the prediction jobs for the reduced catalog of 18 models, save the CSV files under `output/results/`, and inventory the outputs that will later be consumed by the visualization stage.
 
-The execution contract used here has five operational rules:
+The execution design follows five rules:
 
 - `CV1` and `CV2` are derived from the same fit within each fold;
 - `CV0` and `CV00` are derived from the same fit for each held-out environment within each fold;
-- each `MODEL × REP × TRAIT` task uses a deterministic five-fold genotype partition;
-- the workflow uses 10 repetitions, and the same fold partition is reused in the CV1/CV2 and CV0/CV00 blocks for the corresponding task;
+- the five-fold partition is generated once per repetition and shared across models, traits and scenarios;
+- the ten partitions are saved before fitting; every fit uses a separate MCMC seed;
 - prediction-result CSV files are organized by validation scheme, environment when applicable, trait, repetition, and fold, whereas persistent BGLR artifacts are stored only under the fit-owning `CV1` and `CV0` trees.
 
 The heavy fitting chunks remain disabled by default in the tutorial. Even so, the code shown below is the executable version that should be used when the prediction stage is rerun.
@@ -39,7 +39,7 @@ The heavy fitting chunks remain disabled by default in the tutorial. Even so, th
 The execution module needs both the matrix objects created upstream and the packages used by the parallel fitting layer. The path logic below uses the current working directory as the project root.
 
 
-Results obtained using trait-specific kernels are stored in `output/results_trait_specific/`. Previous results in `output/results/` are preserved and excluded from the inventory of this revision. Inventory tables are associated with a separate directory at `output/tables/analysis_prediction_trait_specific/`.
+New results use `output/results/`; inventories are exported to `output/tables/analysis_prediction/`. Before the complete rerun, archive historical results outside the repository and prepare empty result directories. Normal rendering only inspects available files; it does not write partitions, metrics or predictions.
 
 ```{r setup}
 rm(list = ls())
@@ -58,19 +58,16 @@ library(tidyr)
 
 project_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
 
-results_dir <- file.path(project_root, "output", "results_trait_specific")
-analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction_trait_specific")
+results_dir <- file.path(project_root, "output", "results")
+analysis_tables_dir <- file.path(project_root, "output", "tables", "analysis_prediction")
 bglr_runs_dir <- file.path(results_dir, "bglr_runs")
-
-dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
-dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
-dir.create(bglr_runs_dir, recursive = TRUE, showWarnings = FALSE)
+individual_predictions_dir <- file.path(results_dir, "individual_predictions")
 ```
 
 
 ## 3. Reload the execution objects from Part I
 
-This section rebuilds the execution environment when the file is rendered on its own. It follows the contract of `analysis_prediction.Rmd` and recreates the reduced set of 18 ETA objects exactly as defined in Part I.
+This section rebuilds the execution environment when the file is rendered on its own. It follows the design of `analysis_prediction.Rmd` and recreates the reduced set of 18 ETA objects exactly as defined in Part I.
 
 The 18 models retain the same composition and component order for GY and KW. Nonlinear kernels are trait-specific, whereas linear, environmental, and weather matrices remain shared. The `Eta_by_trait` object selects the appropriate matrices for each trait in every BGLR fit.
 
@@ -289,15 +286,17 @@ Eta_by_trait <- list(
 ```
 
 
-## 4. Define the execution contract
+## 4. Define the execution objects
 
-This block restores the operational objects used by the current workflow: the fixed leave-one-environment-out set, the five-fold genotype partition, and the `MODEL × REP × TRAIT` task grid for the 18-model catalog. `num_rep = 10` is defined in the preceding setup, so each model-trait combination is evaluated over 10 repetitions. Within each repetition, CV1/CV2 use five fold-level fits, whereas CV0/CV00 use the same five genotype folds across four held-out environments, yielding 20 environment × fold fits. The fitting and summarization logic are written directly inside the CV blocks so that the execution path stays explicit.
+The grid retains 18 models, two traits and ten repetitions. Fold generation is identical to Part I. The table is written before parallel processing and read once so every fit uses the same assignments. Each task runs five CV1/CV2 fits and 20 CV0/CV00 fits. MCMC seeds are separate from the partition seed: each task receives a block of 25 distinct seeds, five for CV1/CV2 and 20 for CV0/CV00. Selection intensity is 20%. Execute the computational chunks explicitly in the English version once, after archiving the previous results.
 
 ```{r define-run-objects, eval=FALSE}
 envs_leaveout <- c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW")
-envs_leaveout <- envs_leaveout[envs_leaveout %in% unique(Pheno$Env)]
-
 num_fold <- 5L
+partition_seed <- 20250829L
+mcmc_seed <- 300000000L
+selection_intensity <- 0.20
+
 n_hybrids <- length(Pedigree)
 combos <- expand.grid(
   MODEL = seq_along(Eta_list),
@@ -305,6 +304,46 @@ combos <- expand.grid(
   TRAIT = traits_to_run,
   stringsAsFactors = FALSE
 )
+
+Pedigree <- unique(Pheno$Pedigree)
+
+obs_per_fold <- ceiling(length(Pedigree) / num_fold)
+fold_partitions <- vector("list", num_rep)
+
+for (rep_num in seq_len(num_rep)) {
+  set.seed(partition_seed + rep_num)
+
+  folds <- sample(rep(
+    seq_len(num_fold),
+    each = obs_per_fold,
+    length.out = length(Pedigree)
+  ))
+
+  fold_partitions[[rep_num]] <- data.frame(
+    Pedigree = Pedigree,
+    Rep = rep_num,
+    Fold = folds,
+    stringsAsFactors = FALSE
+  )
+}
+
+fold_partitions <- do.call(rbind, fold_partitions)
+rownames(fold_partitions) <- NULL
+
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+
+write.csv(
+  fold_partitions,
+  file.path(results_dir, "fold_partitions.csv"),
+  row.names = FALSE
+)
+
+fold_partitions <- read.csv(
+  file.path(results_dir, "fold_partitions.csv"),
+  colClasses = c(Pedigree = "character", Rep = "integer", Fold = "integer")
+)
+
+table(fold_partitions$Rep, fold_partitions$Fold)
 ```
 
 ## 5. Start the parallel backend
@@ -329,7 +368,7 @@ cat("Running on ", useCores, " cores.")
 
 ## 6. Run prediction analyses for CV1 and CV2
 
-This block implements genotype-based validation for the 18-model workflow. The deterministic fold map, the BGLR fit, and the environment-wise summary are all written directly inside the loop so that each step stays explicit. One fit is run per fold, and the resulting predictions are split into `CV1` (held-out genotypes) and `CV2` (training genotypes under the same fit). Separate CSV result trees are written for CV1 and CV2, but the persistent BGLR artifacts are stored only once under `bglr_runs/CV1/` because CV2 reuses the CV1 fit. With 10 repetitions and five folds per repetition, each model-trait task produces five fold-level CV1/CV2 result sets within each repetition.
+Each fold uses the persisted shared partition. Original masking is retained: CV1 evaluates held-out genotypes and CV2 evaluates the training genotypes from the same fit. BGLR is run once per fold with the same MCMC settings. Posterior means from `fit$yHat` are split into two evaluation sets and saved as RDS without rounding, with the 12 fields defined in Part I. CSVs retain `cor` for Pearson and include Spearman, Czekanowski, and counts of valid pairs and selected genotypes. Czekanowski selects the highest values within each environment, using 20% rounded up and ascending Pedigree identifiers to resolve ties. All three metrics use the same finite pairs; undefined correlations remain missing. CV2 is an in-sample evaluation.
 
 ```{r run-predictions-cv12, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -340,12 +379,7 @@ foreach(i = seq_len(nrow(combos)),
 
   pheno <- data.frame(Pheno)
 
-  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + as.numeric(as.factor(combos$TRAIT[i])))
-  set.seed(seed_value)
-  obs_per_fold <- ceiling(length(Pedigree) / num_fold)
-  folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
-
-  folds_df <- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
+  folds_df <- fold_partitions[fold_partitions$Rep == rep_num, , drop = FALSE]
 
   for (fold_num in seq_len(num_fold)) {
     rep_label <- sprintf("rep%02d", rep_num)
@@ -359,7 +393,7 @@ foreach(i = seq_len(nrow(combos)),
     cv1_file <- file.path(cv1_dir, paste0("CV1_", trait_id, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
     cv2_file <- file.path(cv2_dir, paste0("CV2_", trait_id, "_Eta", MODEL, "_", rep_label, "_", fold_label, ".csv"))
 
-    train_geno <- folds_df$Pedigree[folds_df$fold != fold_num]
+    train_geno <- folds_df$Pedigree[folds_df$Fold != fold_num]
 
     yield <- pheno
     yield$Y2 <- NA
@@ -371,6 +405,7 @@ foreach(i = seq_len(nrow(combos)),
     save_prefix_full <- file.path(run_dir, paste0("CV1_", trait_id, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
     y_t <- as.numeric(yield$Y2)
+    set.seed(mcmc_seed + (i - 1L) * 25L + fold_num)
     start_time <- Sys.time()
     fit <- BGLR(y = y_t, ETA = Eta_by_trait[[trait_id]][[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_full)
     end_time <- Sys.time()
@@ -383,23 +418,80 @@ foreach(i = seq_len(nrow(combos)),
     df_test <- yield[!yield$Pedigree %in% train_geno, ]
     df_train <- yield[yield$Pedigree %in% train_geno, ]
 
-    tmp1 <- df_test %>%
-      dplyr::group_by(Env) %>%
-      dplyr::summarize(cor = cor(.data[[trait_id]], yhat, use = "complete.obs"), .groups = "drop") %>%
-      as.data.frame()
+    evaluation_sets <- list(CV1 = df_test, CV2 = df_train)
+    metric_files <- c(CV1 = cv1_file, CV2 = cv2_file)
 
-    tmp2 <- df_train %>%
-      dplyr::group_by(Env) %>%
-      dplyr::summarize(cor = cor(.data[[trait_id]], yhat, use = "complete.obs"), .groups = "drop") %>%
-      as.data.frame()
+    for (cv in names(evaluation_sets)) {
+      evaluated <- evaluation_sets[[cv]]
 
-    tmp1$Runtime_sec <- runtime_full
-    tmp2$Runtime_sec <- runtime_full
-    tmp1$Fold <- fold_label
-    tmp2$Fold <- fold_label
+      individual <- data.frame(
+        ObsID = as.character(evaluated$ObsID),
+        Pedigree = as.character(evaluated$Pedigree),
+        Env = as.character(evaluated$Env),
+        Trait = rep(trait_id, nrow(evaluated)),
+        Model = rep(paste0("M", MODEL), nrow(evaluated)),
+        Rep = rep(rep_num, nrow(evaluated)),
+        Fold = rep(fold_num, nrow(evaluated)),
+        Env_leave = rep(NA_character_, nrow(evaluated)),
+        Observed = as.numeric(evaluated[[trait_id]]),
+        Predicted = as.numeric(evaluated$yhat),
+        Training = !is.na(evaluated$Y2),
+        CV = rep(cv, nrow(evaluated)),
+        stringsAsFactors = FALSE
+      )
 
-    write.csv(tmp1, file = cv1_file, row.names = FALSE)
-    write.csv(tmp2, file = cv2_file, row.names = FALSE)
+      individual_dir <- file.path(
+        individual_predictions_dir, cv, trait_id, rep_label, fold_label
+      )
+      dir.create(individual_dir, recursive = TRUE, showWarnings = FALSE)
+      individual_file <- file.path(
+        individual_dir, sub("\\.csv$", ".rds", basename(metric_files[[cv]]))
+      )
+      saveRDS(individual, individual_file)
+
+      metrics <- data.frame(
+        Env = character(), cor = numeric(), Spearman = numeric(),
+        Czekanowski = numeric(), N = integer(), N_selected = integer(),
+        N_coincident = integer(), Runtime_sec = numeric(), Fold = character()
+      )
+
+      for (env_eval in unique(as.character(pheno$Env))) {
+        pairs <- individual[individual$Env == env_eval, , drop = FALSE]
+        pairs <- pairs[is.finite(pairs$Observed) & is.finite(pairs$Predicted), , drop = FALSE]
+        n <- nrow(pairs)
+
+        pearson <- NA_real_
+        spearman <- NA_real_
+        if (n >= 2L && sd(pairs$Observed) > 0 && sd(pairs$Predicted) > 0) {
+          pearson <- cor(pairs$Observed, pairs$Predicted, use = "complete.obs")
+          spearman <- cor(pairs$Observed, pairs$Predicted, method = "spearman")
+        }
+
+        k <- as.integer(ceiling(selection_intensity * n))
+        coincident <- 0L
+        czekanowski <- NA_real_
+
+        if (k > 0L) {
+          observed_order <- order(-pairs$Observed, pairs$Pedigree, method = "radix")
+          predicted_order <- order(-pairs$Predicted, pairs$Pedigree, method = "radix")
+
+          observed_selection <- pairs$Pedigree[observed_order[seq_len(k)]]
+          predicted_selection <- pairs$Pedigree[predicted_order[seq_len(k)]]
+
+          coincident <- length(intersect(observed_selection, predicted_selection))
+          czekanowski <- coincident / k
+        }
+
+        metrics <- rbind(metrics, data.frame(
+          Env = env_eval, cor = pearson, Spearman = spearman,
+          Czekanowski = czekanowski, N = n, N_selected = k,
+          N_coincident = coincident, Runtime_sec = runtime_full,
+          Fold = fold_label
+        ))
+      }
+
+      write.csv(metrics, file = metric_files[[cv]], row.names = FALSE)
+    }
   }
 
   NULL
@@ -407,7 +499,7 @@ foreach(i = seq_len(nrow(combos)),
 ```
 ## 7. Run prediction analyses for CV0 and CV00
 
-This block implements leave-one-environment-out validation for the same 18-model workflow. For each task, the deterministic fold map is rebuilt with the same rule used in `CV1/CV2`, one fit is run for each `env_leave × fold` combination, and the predictions are split into `CV0` (training genotypes under the environment mask) and `CV00` (held-out genotypes under the same mask). Separate CSV result trees are written for CV0 and CV00, but the persistent BGLR artifacts are stored only once under `bglr_runs/CV0/` because CV00 reuses the CV0 fit. Within each of the 10 repetitions, the same five-fold genotype partition is applied across the four held-out environments.
+For each held-out environment and fold, the original code masks all held-out genotypes and all observations in the held-out environment. The same fit produces CV0 for genotypes assigned to training and CV00 for held-out genotypes, both evaluated exclusively in the held-out environment. Thus, `Training` is false in both evaluation sets. The partition is the same as in CV1/CV2. Individual RDS files and metrics are saved separately for each scenario, with no additional fitting.
 
 ```{r run-predictions-cv0-cv00, eval=FALSE}
 foreach(i = seq_len(nrow(combos)),
@@ -418,15 +510,10 @@ foreach(i = seq_len(nrow(combos)),
 
   pheno <- data.frame(Pheno)
 
-  seed_value <- as.integer(100000L * MODEL + 100L * rep_num + as.numeric(as.factor(combos$TRAIT[i])))
-  set.seed(seed_value)
-  obs_per_fold <- ceiling(length(Pedigree) / num_fold)
-  folds <- sample(rep(seq_len(num_fold), each = obs_per_fold, length.out = length(Pedigree)))
-
-  folds_df <- data.frame(Pedigree = Pedigree, fold = folds, stringsAsFactors = FALSE)
+  folds_df <- fold_partitions[fold_partitions$Rep == rep_num, , drop = FALSE]
 
   for (fold_num in seq_len(num_fold)) {
-    train_geno <- folds_df$Pedigree[folds_df$fold != fold_num]
+    train_geno <- folds_df$Pedigree[folds_df$Fold != fold_num]
     rep_label <- sprintf("rep%02d", rep_num)
     fold_label <- sprintf("fold%02d", fold_num)
 
@@ -452,6 +539,7 @@ foreach(i = seq_len(nrow(combos)),
       save_prefix_env <- file.path(run_dir, paste0("CV0_", env_name, "_", trait_id, "_Eta", MODEL, "_", rep_label, "_", fold_label, "_"))
 
       y_t <- as.numeric(yield2$Y2)
+      set.seed(mcmc_seed + (i - 1L) * 25L + 5L + (fold_num - 1L) * 4L + env_idx)
       start_time <- Sys.time()
       fit <- BGLR(y = y_t, ETA = Eta_by_trait[[trait_id]][[MODEL]], nIter = nIter, burnIn = burnIn, thin = thin, saveAt = save_prefix_env)
       end_time <- Sys.time()
@@ -464,23 +552,80 @@ foreach(i = seq_len(nrow(combos)),
       df_test2 <- yield2[!yield2$Pedigree %in% train_geno & yield2$Env == env_name, , drop = FALSE]
       df_train2 <- yield2[yield2$Pedigree %in% train_geno & yield2$Env == env_name, , drop = FALSE]
 
-      tmp00 <- df_test2 %>%
-        dplyr::group_by(Env) %>%
-        dplyr::summarize(cor = cor(.data[[trait_id]], yhat, use = "complete.obs"), .groups = "drop") %>%
-        as.data.frame()
+      evaluation_sets <- list(CV0 = df_train2, CV00 = df_test2)
+      metric_files <- c(CV0 = cv0_file, CV00 = cv00_file)
 
-      tmp0 <- df_train2 %>%
-        dplyr::group_by(Env) %>%
-        dplyr::summarize(cor = cor(.data[[trait_id]], yhat, use = "complete.obs"), .groups = "drop") %>%
-        as.data.frame()
+      for (cv in names(evaluation_sets)) {
+        evaluated <- evaluation_sets[[cv]]
 
-      tmp00$Runtime_sec <- runtime_env
-      tmp0$Runtime_sec <- runtime_env
-      tmp00$Fold <- fold_label
-      tmp0$Fold <- fold_label
+        individual <- data.frame(
+          ObsID = as.character(evaluated$ObsID),
+          Pedigree = as.character(evaluated$Pedigree),
+          Env = as.character(evaluated$Env),
+          Trait = rep(trait_id, nrow(evaluated)),
+          Model = rep(paste0("M", MODEL), nrow(evaluated)),
+          Rep = rep(rep_num, nrow(evaluated)),
+          Fold = rep(fold_num, nrow(evaluated)),
+          Env_leave = rep(env_name, nrow(evaluated)),
+          Observed = as.numeric(evaluated[[trait_id]]),
+          Predicted = as.numeric(evaluated$yhat),
+          Training = !is.na(evaluated$Y2),
+          CV = rep(cv, nrow(evaluated)),
+          stringsAsFactors = FALSE
+        )
 
-      write.csv(tmp00, file = cv00_file, row.names = FALSE)
-      write.csv(tmp0, file = cv0_file, row.names = FALSE)
+        individual_dir <- file.path(
+          individual_predictions_dir, cv, env_name, trait_id, rep_label, fold_label
+        )
+        dir.create(individual_dir, recursive = TRUE, showWarnings = FALSE)
+        individual_file <- file.path(
+          individual_dir, sub("\\.csv$", ".rds", basename(metric_files[[cv]]))
+        )
+        saveRDS(individual, individual_file)
+
+        metrics <- data.frame(
+          Env = character(), cor = numeric(), Spearman = numeric(),
+          Czekanowski = numeric(), N = integer(), N_selected = integer(),
+          N_coincident = integer(), Runtime_sec = numeric(), Fold = character()
+        )
+
+        for (env_eval in env_name) {
+          pairs <- individual[individual$Env == env_eval, , drop = FALSE]
+          pairs <- pairs[is.finite(pairs$Observed) & is.finite(pairs$Predicted), , drop = FALSE]
+          n <- nrow(pairs)
+
+          pearson <- NA_real_
+          spearman <- NA_real_
+          if (n >= 2L && sd(pairs$Observed) > 0 && sd(pairs$Predicted) > 0) {
+            pearson <- cor(pairs$Observed, pairs$Predicted, use = "complete.obs")
+            spearman <- cor(pairs$Observed, pairs$Predicted, method = "spearman")
+          }
+
+          k <- as.integer(ceiling(selection_intensity * n))
+          coincident <- 0L
+          czekanowski <- NA_real_
+
+          if (k > 0L) {
+            observed_order <- order(-pairs$Observed, pairs$Pedigree, method = "radix")
+            predicted_order <- order(-pairs$Predicted, pairs$Pedigree, method = "radix")
+
+            observed_selection <- pairs$Pedigree[observed_order[seq_len(k)]]
+            predicted_selection <- pairs$Pedigree[predicted_order[seq_len(k)]]
+
+            coincident <- length(intersect(observed_selection, predicted_selection))
+            czekanowski <- coincident / k
+          }
+
+          metrics <- rbind(metrics, data.frame(
+            Env = env_eval, cor = pearson, Spearman = spearman,
+            Czekanowski = czekanowski, N = n, N_selected = k,
+            N_coincident = coincident, Runtime_sec = runtime_env,
+            Fold = fold_label
+          ))
+        }
+
+        write.csv(metrics, file = metric_files[[cv]], row.names = FALSE)
+      }
     }
   }
 
@@ -497,145 +642,292 @@ foreach::registerDoSEQ()
 
 ## 9. Inventory of the prediction output files
 
-The inventories below summarize the CSV files produced by the execution stage using the current rep/fold folder contract for the 18-model workflow.
+The inventory enumerates paths expected from the design and checks whether they exist. There are 18,000 expected metric CSVs and 18,000 individual prediction RDS files. This inspection is read-only and may show historical metric files before the rerun; file presence does not establish provenance or validity. The content check in Section 10 is required after the new fits.
 
 ```{r prediction-output-inventory}
+# Expected file paths follow the design in Part I.
+inventory_cv12 <- expand.grid(
+  CV = c("CV1", "CV2"), Trait = c("GY", "KW"),
+  Rep = sprintf("rep%02d", 1:10), Fold = sprintf("fold%02d", 1:5),
+  EtaName = paste0("Eta", 1:18), stringsAsFactors = FALSE
+)
+
+inventory_cv12$Model <- sub("Eta", "M", inventory_cv12$EtaName)
+inventory_cv12$file_name <- with(inventory_cv12,
+  paste0(CV, "_", Trait, "_", EtaName, "_", Rep, "_", Fold, ".csv"))
+inventory_cv12$relative_path <- with(inventory_cv12,
+  file.path(CV, Trait, Rep, Fold, file_name))
+
+inventory_cvloo <- expand.grid(
+  CV = c("CV0", "CV00"), Env_leave = c("CS11_WS", "CS11_WW", "CS12_WS", "CS12_WW"),
+  Trait = c("GY", "KW"), Rep = sprintf("rep%02d", 1:10),
+  Fold = sprintf("fold%02d", 1:5), EtaName = paste0("Eta", 1:18),
+  stringsAsFactors = FALSE
+)
+
+inventory_cvloo$Model <- sub("Eta", "M", inventory_cvloo$EtaName)
+inventory_cvloo$file_name <- with(inventory_cvloo,
+  paste0(CV, "_", Trait, "_", Env_leave, "_", EtaName, "_", Rep, "_", Fold, ".csv"))
+inventory_cvloo$relative_path <- with(inventory_cvloo,
+  file.path(CV, Env_leave, Trait, Rep, Fold, file_name))
+
+inventory_cv12 <- inventory_cv12[, c("relative_path", "file_name", "CV", "Trait",
+                                      "Rep", "Fold", "EtaName", "Model")]
+inventory_cvloo <- inventory_cvloo[, c("relative_path", "file_name", "CV", "Env_leave",
+                                       "Trait", "Rep", "Fold", "EtaName", "Model")]
+
+combined_inventory <- dplyr::bind_rows(
+  inventory_cv12 %>% dplyr::mutate(Env_leave = NA_character_),
+  inventory_cvloo
+)
+
+combined_inventory$individual_path <- file.path(
+  "individual_predictions",
+  sub("\\.csv$", ".rds", combined_inventory$relative_path)
+)
+
+combined_inventory$Metrics_available <- file.exists(
+  file.path(results_dir, combined_inventory$relative_path)
+)
+combined_inventory$Individual_available <- file.exists(
+  file.path(results_dir, combined_inventory$individual_path)
+)
+
 prediction_files <- list.files(
   file.path(results_dir, c("CV1", "CV2", "CV0", "CV00")),
-  pattern = "\\.csv$",
-  full.names = TRUE,
-  recursive = TRUE
+  pattern = "\\.csv$", full.names = TRUE, recursive = TRUE
 )
+individual_files <- list.files(
+  individual_predictions_dir,
+  pattern = "\\.rds$", full.names = TRUE, recursive = TRUE
+)
+
 results_root <- normalizePath(results_dir, winslash = "/", mustWork = FALSE)
+actual_metrics <- substring(normalizePath(prediction_files, winslash = "/", mustWork = FALSE),
+                            nchar(results_root) + 2L)
+actual_individual <- substring(normalizePath(individual_files, winslash = "/", mustWork = FALSE),
+                               nchar(results_root) + 2L)
 
-cv12_files <- prediction_files[
-  stringr::str_detect(basename(prediction_files), "^CV[12]_")
-]
+unexpected_metrics <- setdiff(actual_metrics, combined_inventory$relative_path)
+unexpected_individual <- setdiff(actual_individual, combined_inventory$individual_path)
 
-cvloo_files <- prediction_files[
-  stringr::str_detect(basename(prediction_files), "^CV0{1,2}_")
-]
-
-inventory_cv12 <- data.frame(
-  relative_path = character(),
-  file_name = character(),
-  CV = character(),
-  Trait = character(),
-  Rep = character(),
-  Fold = character(),
-  EtaName = character(),
-  Model = character(),
-  stringsAsFactors = FALSE
-)
-
-for (current_file in cv12_files) {
-  current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
-  rel_path <- substring(current_norm, nchar(results_root) + 2)
-  path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
-  current_name <- basename(current_file)
-  current_name_no_ext <- sub("\\.csv$", "", current_name)
-  current_parts <- strsplit(current_name_no_ext, "_")[[1]]
-
-  inventory_cv12 <- dplyr::bind_rows(
-    inventory_cv12,
-    data.frame(
-      relative_path = rel_path,
-      file_name = current_name,
-      CV = current_parts[1],
-      Trait = path_parts[2],
-      Rep = path_parts[3],
-      Fold = path_parts[4],
-      EtaName = current_parts[3],
-      Model = stringr::str_replace(current_parts[3], "Eta", "M"),
-      stringsAsFactors = FALSE
-    )
-  )
-}
-
-inventory_cvloo <- data.frame(
-  relative_path = character(),
-  file_name = character(),
-  CV = character(),
-  Env_leave = character(),
-  Trait = character(),
-  Rep = character(),
-  Fold = character(),
-  EtaName = character(),
-  Model = character(),
-  stringsAsFactors = FALSE
-)
-
-for (current_file in cvloo_files) {
-  current_norm <- normalizePath(current_file, winslash = "/", mustWork = FALSE)
-  rel_path <- substring(current_norm, nchar(results_root) + 2)
-  path_parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
-  current_name <- basename(current_file)
-  current_name_no_ext <- sub("\\.csv$", "", current_name)
-  current_parts <- strsplit(current_name_no_ext, "_")[[1]]
-
-  inventory_cvloo <- dplyr::bind_rows(
-    inventory_cvloo,
-    data.frame(
-      relative_path = rel_path,
-      file_name = current_name,
-      CV = current_parts[1],
-      Env_leave = path_parts[2],
-      Trait = path_parts[3],
-      Rep = path_parts[4],
-      Fold = path_parts[5],
-      EtaName = current_parts[length(current_parts) - 2],
-      Model = stringr::str_replace(current_parts[length(current_parts) - 2], "Eta", "M"),
-      stringsAsFactors = FALSE
-    )
-  )
-}
-
-write_csv(inventory_cv12, file.path(analysis_tables_dir, "analysis_prediction_inventory_cv12.csv"))
-write_csv(inventory_cvloo, file.path(analysis_tables_dir, "analysis_prediction_inventory_cvloo.csv"))
+inventory_cv12 <- combined_inventory[combined_inventory$CV %in% c("CV1", "CV2"), ]
+inventory_cvloo <- combined_inventory[combined_inventory$CV %in% c("CV0", "CV00"), ]
 ```
 ## 10. Counts of files by validation scheme and trait
 
 ```{r prediction-output-counts}
-combined_inventory <- bind_rows(
-  inventory_cv12 %>% mutate(Env_leave = NA_character_),
-  inventory_cvloo
+counts_by_trait <- combined_inventory %>%
+  dplyr::group_by(CV, Trait) %>%
+  dplyr::summarise(
+    Expected = dplyr::n(),
+    n_files = sum(Metrics_available),
+    n_individual = sum(Individual_available),
+    Missing_metrics = sum(!Metrics_available),
+    Missing_individual = sum(!Individual_available),
+    .groups = "drop"
+  )
+
+counts_by_cv <- counts_by_trait %>%
+  dplyr::group_by(CV) %>%
+  dplyr::summarise(dplyr::across(where(is.numeric), sum), .groups = "drop")
+
+unexpected_counts <- data.frame(
+  Metrics = length(unexpected_metrics),
+  Individual = length(unexpected_individual)
 )
 
-counts_by_cv <- combined_inventory %>%
-  count(CV, name = "n_files") %>%
-  arrange(CV)
-
-counts_by_trait <- combined_inventory %>%
-  count(CV, Trait, name = "n_files") %>%
-  arrange(CV, Trait)
-
-write_csv(counts_by_cv, file.path(analysis_tables_dir, "analysis_prediction_counts_by_cv.csv"))
-write_csv(counts_by_trait, file.path(analysis_tables_dir, "analysis_prediction_counts_by_trait.csv"))
-
 counts_by_cv %>%
-  knitr::kable(
-    caption = "Number of prediction files by validation scheme.",
-    align = "cc"
-  ) %>%
+  knitr::kable(caption = "File coverage by scenario.") %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = TRUE,
-    position = "center",
-    font_size = 13
-  ) %>%
-  kableExtra::row_spec(0, bold = TRUE)
+    full_width = TRUE
+  )
+
+counts_by_trait %>%
+  knitr::kable(caption = "Coverage by scenario and trait.") %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE
+  )
+
+unexpected_counts %>%
+  knitr::kable(caption = "Files not expected by the design.") %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = TRUE
+  )
+```
+
+After the complete rerun, the following chunk checks observation identifiers, fold membership, masking, observed phenotypes, prediction validity and reproduction of all three metrics from the RDS files. Expected counts are 3,535,200 individual records and 28,800 metric records. Content validation is not executed during normal rendering.
+
+```{r validate-prediction-outputs, eval=FALSE}
+# Run explicitly after all predictions have finished.
+# Verify coverage and the observation-level keys against the saved partitions.
+fold_partitions <- read.csv(file.path(results_dir, "fold_partitions.csv"),
+                            colClasses = c(Pedigree = "character", Rep = "integer", Fold = "integer"))
+Pheno <- as.data.frame(readRDS(file.path(project_root, "output", "Matrizes", "Pheno.rds")))
+
+stopifnot(
+  nrow(fold_partitions) == 3290L,
+  !anyNA(fold_partitions),
+  !anyDuplicated(fold_partitions[, c("Pedigree", "Rep")]),
+  setequal(fold_partitions$Rep, 1:10),
+  setequal(fold_partitions$Fold, 1:5),
+  all(table(fold_partitions$Rep, fold_partitions$Fold) ==
+        matrix(rep(c(66L, 66L, 66L, 66L, 65L), each = 10L), nrow = 10L)),
+  all(combined_inventory$Metrics_available),
+  all(combined_inventory$Individual_available),
+  length(unexpected_metrics) == 0L,
+  length(unexpected_individual) == 0L
+)
+
+for (r in 1:10) {
+  stopifnot(setequal(fold_partitions$Pedigree[fold_partitions$Rep == r],
+                     as.character(Pheno$Pedigree)))
+}
+
+required_columns <- c("ObsID", "Pedigree", "Env", "Trait", "Model", "Rep",
+                      "Fold", "Env_leave", "Observed", "Predicted", "Training", "CV")
+metric_columns <- c("Env", "cor", "Spearman", "Czekanowski", "N",
+                    "N_selected", "N_coincident", "Runtime_sec", "Fold")
+
+individual_rows <- integer(nrow(combined_inventory))
+metric_rows <- integer(nrow(combined_inventory))
+
+for (i in seq_len(nrow(combined_inventory))) {
+  entry <- combined_inventory[i, ]
+  rep_num <- as.integer(sub("rep", "", entry$Rep))
+  fold_num <- as.integer(sub("fold", "", entry$Fold))
+  fold_map <- fold_partitions[fold_partitions$Rep == rep_num, ]
+  held <- fold_map$Pedigree[fold_map$Fold == fold_num]
+  in_held <- Pheno$Pedigree %in% held
+
+  selected <- if (entry$CV %in% c("CV1", "CV00")) in_held else !in_held
+  if (!is.na(entry$Env_leave)) {
+    selected <- selected & Pheno$Env == entry$Env_leave
+  }
+
+  expected <- Pheno[selected, , drop = FALSE]
+  individual <- readRDS(file.path(results_dir, entry$individual_path))
+  metrics <- read.csv(file.path(results_dir, entry$relative_path),
+                      stringsAsFactors = FALSE)
+
+  stopifnot(
+    identical(names(individual), required_columns),
+    identical(names(metrics), metric_columns),
+    !anyDuplicated(individual$ObsID),
+    setequal(individual$ObsID, as.character(expected$ObsID)),
+    nrow(individual) == nrow(expected),
+    all(individual$CV == entry$CV),
+    all(individual$Trait == entry$Trait),
+    all(individual$Model == entry$Model),
+    all(individual$Rep == rep_num),
+    all(individual$Fold == fold_num),
+    all(individual$Training == (entry$CV == "CV2")),
+    all(is.finite(individual$Predicted))
+  )
+
+  expected <- expected[match(individual$ObsID, expected$ObsID), , drop = FALSE]
+  stopifnot(
+    identical(individual$Pedigree, as.character(expected$Pedigree)),
+    identical(individual$Env, as.character(expected$Env)),
+    identical(individual$Observed, as.numeric(expected[[entry$Trait]])),
+    if (is.na(entry$Env_leave)) all(is.na(individual$Env_leave))
+      else all(individual$Env_leave == entry$Env_leave)
+  )
+
+  expected_env <- if (is.na(entry$Env_leave)) unique(as.character(Pheno$Env)) else entry$Env_leave
+  stopifnot(!anyDuplicated(metrics$Env), setequal(metrics$Env, expected_env),
+            all(metrics$Fold == entry$Fold))
+
+  for (j in seq_len(nrow(metrics))) {
+    pairs <- individual[individual$Env == metrics$Env[j], , drop = FALSE]
+    pairs <- pairs[is.finite(pairs$Observed) & is.finite(pairs$Predicted), , drop = FALSE]
+    n <- nrow(pairs)
+    k <- as.integer(ceiling(0.20 * n))
+    pearson <- spearman <- czekanowski <- NA_real_
+    coincident <- 0L
+
+    if (n >= 2L && sd(pairs$Observed) > 0 && sd(pairs$Predicted) > 0) {
+      pearson <- cor(pairs$Observed, pairs$Predicted, use = "complete.obs")
+      spearman <- cor(pairs$Observed, pairs$Predicted, method = "spearman")
+    }
+
+    if (k > 0L) {
+      selected_observed <- head(pairs$Pedigree[order(-pairs$Observed, pairs$Pedigree, method = "radix")], k)
+      selected_predicted <- head(pairs$Pedigree[order(-pairs$Predicted, pairs$Pedigree, method = "radix")], k)
+      coincident <- length(intersect(selected_observed, selected_predicted))
+      czekanowski <- coincident / k
+    }
+
+    stopifnot(
+      metrics$N[j] == n, metrics$N_selected[j] == k,
+      metrics$N_coincident[j] == coincident,
+      isTRUE(all.equal(as.numeric(metrics$cor[j]), pearson, tolerance = 1e-12)),
+      isTRUE(all.equal(as.numeric(metrics$Spearman[j]), spearman, tolerance = 1e-12)),
+      isTRUE(all.equal(as.numeric(metrics$Czekanowski[j]), czekanowski, tolerance = 1e-12))
+    )
+  }
+
+  individual_rows[i] <- nrow(individual)
+  metric_rows[i] <- nrow(metrics)
+}
+
+validated_counts <- combined_inventory %>%
+  dplyr::mutate(Individual_rows = individual_rows, Metric_rows = metric_rows) %>%
+  dplyr::group_by(CV) %>%
+  dplyr::summarise(
+    Individual_rows = sum(Individual_rows), Metric_rows = sum(Metric_rows),
+    .groups = "drop"
+  )
+
+print(validated_counts)
+stopifnot(sum(individual_rows) == 3535200L, sum(metric_rows) == 28800L)
+
+# Check the two fit-owning trees; CV2 and CV00 reuse these fits.
+fit_inventory <- combined_inventory[combined_inventory$CV %in% c("CV1", "CV0"), ]
+fit_paths <- ifelse(
+  fit_inventory$CV == "CV1",
+  with(fit_inventory, file.path(bglr_runs_dir, CV, Trait, Rep, Fold, EtaName)),
+  with(fit_inventory, file.path(bglr_runs_dir, CV, Env_leave, Trait, Rep, Fold, EtaName))
+)
+fit_prefixes <- ifelse(
+  fit_inventory$CV == "CV1",
+  with(fit_inventory, paste0(CV, "_", Trait, "_", EtaName, "_", Rep, "_", Fold, "_")),
+  with(fit_inventory, paste0(CV, "_", Env_leave, "_", Trait, "_", EtaName, "_", Rep, "_", Fold, "_"))
+)
+
+stopifnot(
+  length(fit_paths) == 9000L,
+  !anyDuplicated(fit_paths),
+  all(file.exists(file.path(fit_paths, paste0(fit_prefixes, "mu.dat")))),
+  all(file.exists(file.path(fit_paths, paste0(fit_prefixes, "varE.dat"))))
+)
+
+table(fit_inventory$CV)
+```
+
+Inventory exports are executed explicitly in the English version after validation; they are not repeated during Portuguese rendering.
+
+```{r export-prediction-inventories, eval=FALSE}
+dir.create(analysis_tables_dir, recursive = TRUE, showWarnings = FALSE)
+
+write_csv(inventory_cv12, file.path(analysis_tables_dir, "analysis_prediction_inventory_cv12.csv"))
+write_csv(inventory_cvloo, file.path(analysis_tables_dir, "analysis_prediction_inventory_cvloo.csv"))
+write_csv(counts_by_cv, file.path(analysis_tables_dir, "analysis_prediction_counts_by_cv.csv"))
+write_csv(counts_by_trait, file.path(analysis_tables_dir, "analysis_prediction_counts_by_trait.csv"))
 ```
 
 ## 11. BGLR fitting artifacts
 
-In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results_trait_specific/bglr_runs/` during each fit and preserved for later convergence diagnostics. Because CV1/CV2 share one fit and CV0/CV00 share one fit, there are only two fit-owning BGLR trees: `bglr_runs/CV1/` and `bglr_runs/CV0/`. CV2 and CV00 have separate prediction-result CSV trees, but they do not create independent BGLR artifacts. This distinction keeps the stored artifacts aligned with the actual fitting code and avoids implying that CV2 or CV00 were refitted separately.
+In the current 18-model workflow, persistent `saveAt` artifacts are written under `output/results/bglr_runs/` during each fit and preserved for later convergence diagnostics. Because CV1/CV2 share one fit and CV0/CV00 share one fit, there are only two fit-owning BGLR trees: `bglr_runs/CV1/` and `bglr_runs/CV0/`. CV2 and CV00 have separate prediction-result CSV trees, but they do not create independent BGLR artifacts. This distinction keeps the stored artifacts aligned with the actual fitting code and avoids implying that CV2 or CV00 were refitted separately.
 
 ## 12. Final note
 
-This file closes the execution layer of the prediction stage while preserving consistency with the reduced 18-model preprocessing module documented in `analysis_prediction.Rmd` and with the current rep/fold output contract used by the downstream summaries.
+The stage runs 1,800 CV1/CV2 fits and 7,200 CV0/CV00 fits, totaling 9,000 BGLR fits. Individual predictions allow observed-versus-predicted plots and paired genotype bootstrap comparisons without refitting the models. Consolidation and statistical comparisons are performed in the visualization module.
 
 ## Stage navigation
 
 **Previous stage:** [Prediction — Part I](analysis_prediction.html)  
 **Next stage:** [Visualization](visualization.html)
-
